@@ -1,0 +1,44 @@
+Kryvos
+========
+
+Kryvos is a file encryptor and decryptor. It encrypts files with AES using the Botan cryptography library.
+
+Getting Started
+---------------
+To install Krvyos, extract the files from the Kryvos archive. Execute the Kryvos executable in the extracted directory to begin.
+More detailed instructions can be found in the INSTALL file.
+
+Theming
+-------
+Kryvos supports user theming. To create your own theme, start with the kryvos.qss file in the themes directory as your template.
+The kryvos.qss file is a stylesheet file that has syntax very similar to CSS. Colors, fonts, and many other attributes can be styled.
+Save your stylesheet file inside of the themes folder. To apply your theme to Kryvos, edit the settings.ini file located in the same
+directory as kryvos.exe. Change the value styleSheetPath to your newly created stylesheet file.
+
+Example: You created a new theme and saved the stylesheet to myTheme.qss in the themes folder. You would then update settings.ini with
+this value: styleSheetPath=myTheme.qss
+
+License
+-------
+Kryvos is released under the GNU GPL License. Read LICENSE.GPL for more information about the license.
+
+Botan is licensed under the BSD-2 license. It is found in Botan License and at http://botan.randombit.net/license.html
+
+Qt is licensed under the GNU GPL License.
+
+Source Code
+-----------
+Kryvos source code is available on Github at https://github.com/adolby/Kryvos
+
+Botan source code is available at http://botan.randombit.net/download.html
+
+Qt source code is available at http://qt-project.org/downloads
+
+Developers
+----------
+If you'd like to contribute to Kryvos, check the project out on Github. You'll need the Qt 5 libraries and Botan 1.11. Development is
+performed primarily in Qt Creator with gcc (MinGW-w64 on Windows) for cross-platform compatibility.
+
+Contact
+-------
+You can contact the project creator via email at andrewdolby@gmail.com
