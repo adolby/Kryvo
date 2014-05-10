@@ -24,7 +24,7 @@
 #include <QtCore/QThread>
 
 /*!
- * \brief The Kryvos::KryvosPrivate class
+ * \brief KryvosPrivate class
  */
 class Kryvos::KryvosPrivate
 {

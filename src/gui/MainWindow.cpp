@@ -47,7 +47,7 @@
 #include <QtCore/QString>
 
 /*!
- * \brief The MainWindow::MainWindowPrivate class
+ * \brief MainWindowPrivate class
  */
 class MainWindow::MainWindowPrivate
 {
@@ -63,16 +63,16 @@ class MainWindow::MainWindowPrivate
    * themes folder with the name specified in the local kryvos.ini file. If the
    * load fails, the method will load the default stylesheet from the
    * application resources.
-   * \param styleFile The string representing the name of the stylesheet without
+   * \param styleFile String representing the name of the stylesheet without
    * a file extension.
-   * \return
+   * \return String containing the stylesheet file contents.
    */
   QString loadStyleSheet(const QString& styleFile);
 
   /*!
    * \brief addFilePathToModel Adds a file to the model that represents the list
    * to be encrypted/decrypted.
-   * \param filePath The string representing the path to a file.
+   * \param filePath String representing the path to a file.
    */
   void addFilePathToModel(const QString& filePath);
 
@@ -83,13 +83,13 @@ class MainWindow::MainWindowPrivate
 
   /*!
    * \brief busy Sets the busy status received from the cipher operation.
-   * \param busy The boolean representing the busy status.
+   * \param busy Boolean representing the busy status.
    */
   void busy(bool busy);
 
   /*!
    * \brief isBusy Returns the busy status received from the cipher operation.
-   * \return
+   * \return Boolean representing the busy status.
    */
   bool isBusy() const;
 
@@ -292,7 +292,7 @@ MainWindow::~MainWindow() {}
 
 void MainWindow::onAddFilesClicked()
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   // Open a file dialog to get files
   const QStringList files = QFileDialog::getOpenFileNames(this,
@@ -309,13 +309,14 @@ void MainWindow::onAddFilesClicked()
 
     // Save this directory to return to later
     const QString fileName = files[0];
-    pimpl->lastDirectory = fileName.left(fileName.lastIndexOf("/"));
+    QFileInfo file(fileName);
+    pimpl->lastDirectory = file.absolutePath();
   }
 }
 
 void MainWindow::onRemoveFilesClicked()
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   // Signal to abort current cipher operation if it's in progress
   emit abortCipher();
@@ -325,7 +326,8 @@ void MainWindow::onRemoveFilesClicked()
 
 void MainWindow::removeFile(const QModelIndex& index)
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
+  Q_ASSERT(pimpl->fileListModel);
 
   QStandardItem* testItem = pimpl->fileListModel->item(index.row(), 0);
 
@@ -338,9 +340,9 @@ void MainWindow::removeFile(const QModelIndex& index)
 
 void MainWindow::encryptFiles()
 {
-  Q_ASSERT(nullptr != pimpl);
-  Q_ASSERT(nullptr != pimpl->passwordLineEdit);
-  Q_ASSERT(nullptr != pimpl->fileListModel);
+  Q_ASSERT(pimpl);
+  Q_ASSERT(pimpl->passwordLineEdit);
+  Q_ASSERT(pimpl->fileListModel);
 
   if (!pimpl->isBusy())
   {
@@ -377,14 +379,14 @@ void MainWindow::encryptFiles()
 
 void MainWindow::decryptFiles()
 {
-  Q_ASSERT(nullptr != pimpl);
-  Q_ASSERT(nullptr != pimpl->passwordLineEdit);
-  Q_ASSERT(nullptr != pimpl->fileListModel);
+  Q_ASSERT(pimpl);
+  Q_ASSERT(pimpl->passwordLineEdit);
+  Q_ASSERT(pimpl->fileListModel);
 
   if (!pimpl->isBusy())
   {
     // Get passphrase from line edit
-    QString passphrase{pimpl->passwordLineEdit->text()};
+    const QString passphrase{pimpl->passwordLineEdit->text()};
 
     if (!passphrase.isEmpty())
     {
@@ -416,8 +418,8 @@ void MainWindow::decryptFiles()
 
 void MainWindow::updateProgress(const QString& path, qint64 percent)
 {
-  Q_ASSERT(nullptr != pimpl);
-  Q_ASSERT(nullptr != pimpl->fileListModel);
+  Q_ASSERT(pimpl);
+  Q_ASSERT(pimpl->fileListModel);
 
   QList<QStandardItem*> items = pimpl->fileListModel->findItems(path);
 
@@ -427,7 +429,7 @@ void MainWindow::updateProgress(const QString& path, qint64 percent)
 
     if (nullptr != item)
     {
-      int index = item->row();
+      const int index = item->row();
 
       QStandardItem* progressItem = pimpl->fileListModel->item(index, 1);
 
@@ -441,8 +443,8 @@ void MainWindow::updateProgress(const QString& path, qint64 percent)
 
 void MainWindow::updateStatusMessage(const QString& message)
 {
-  Q_ASSERT(nullptr != pimpl);
-  Q_ASSERT(nullptr != pimpl->messageTextEdit);
+  Q_ASSERT(pimpl);
+  Q_ASSERT(pimpl->messageTextEdit);
 
   pimpl->messageTextEdit->appendPlainText(message);
 }
@@ -455,7 +457,7 @@ void MainWindow::updateError(const QString& path, const QString& message)
 
 void MainWindow::updateBusyStatus(bool busy)
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   pimpl->busy(busy);
 }
@@ -480,12 +482,11 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 
 void MainWindow::dropEvent(QDropEvent* event)
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   // Check for the URL MIME type, which is a list of files
   if (event->mimeData()->hasUrls())
-  {
-    // Extract the local path from the file(s)
+  { // Extract the local path from the file(s)
     for (const QUrl& url : event->mimeData()->urls())
     {
       pimpl->addFilePathToModel(url.toLocalFile());
@@ -521,15 +522,14 @@ void MainWindow::updatePauseButtonIcon(bool toggle)
 
 void MainWindow::importSettings()
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   QSettings settings("settings.ini", QSettings::IniFormat);
 
   settings.beginGroup("MainWindow");
 
   if (settings.value("maximized").toBool())
-  {
-    // Move first to ensure maximize occurs on correct screen
+  { // Move first to ensure maximize occurs on correct screen
     this->move(settings.value("maximizedPos", QPoint(200, 200)).toPoint());
 
     this->setWindowState(this->windowState() | Qt::WindowMaximized);
@@ -551,7 +551,7 @@ void MainWindow::importSettings()
 
 void MainWindow::exportSettings() const
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   QSettings settings("settings.ini", QSettings::IniFormat);
 

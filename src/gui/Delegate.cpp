@@ -115,14 +115,14 @@ bool Delegate::editorEvent(QEvent* event,
                            const QStyleOptionViewItem& option,
                            const QModelIndex& index)
 {
-  if (index.column() == 2)
+  if (2 == index.column())
   {
-    if ((event->type() == QEvent::MouseButtonRelease) ||
-        (event->type() == QEvent::MouseButtonDblClick))
+    if ((QEvent::MouseButtonRelease == event->type()) ||
+        (QEvent::MouseButtonDblClick == event->type()))
     {
       QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
 
-      if ((mouseEvent->button() == Qt::LeftButton) &&
+      if ((Qt::LeftButton == mouseEvent->button()) &&
           option.rect.contains(mouseEvent->pos()))
       {
         emit removeRow(index);

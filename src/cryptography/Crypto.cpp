@@ -30,7 +30,7 @@
 using namespace Botan;
 
 /*!
- * \brief The Crypto::CryptoPrivate class
+ * \brief CryptoPrivate class
  */
 class Crypto::CryptoPrivate
 {
@@ -44,10 +44,10 @@ class Crypto::CryptoPrivate
    * \brief removeExtension Attempts to return the file name string input
    * without the last extension. It's used to extract an extension to determine
    * a decrypted file name.
-   * \param fileName The string representing the file name.
-   * \param extension The string representing the extension to remove from the
+   * \param fileName String representing the file name.
+   * \param extension String representing the extension to remove from the
    * file name.
-   * \return
+   * \return String representing a file name without an extension.
    */
   QString removeExtension(const QString& fileName,
                           const QString& extension);
@@ -55,38 +55,38 @@ class Crypto::CryptoPrivate
   /*!
    * \brief uniqueFileName Returns a unique file name from the input file name
    * by appending numbers, if necessary.
-   * \param fileName The string representing the file name that will be tested
+   * \param fileName String representing the file name that will be tested
    * for uniqueness.
-   * \return
+   * \return String representing a unique file name from input file name.
    */
   QString uniqueFileName(const QString& fileName);
 
   /*!
-   * \brief resetState Resets status flags to default values.
+   * \brief resetFlags Resets the status flags, except pause, to default values.
    */
-  void resetState();
+  void resetFlags();
 
   /*!
    * \brief abort Updates the abort status.
-   * \param abort
+   * \param abort Boolean representing the abort status.
    */
   void abort(bool abort);
 
   /*!
    * \brief isAborted Returns the current abort status.
-   * \return
+   * \return Boolean representing the abort status.
    */
   bool isAborted() const;
 
   /*!
    * \brief pause Updates the pause status.
-   * \param pause
+   * \param pause Boolean representing the pause status.
    */
   void pause(bool pause);
 
   /*!
    * \brief isPaused Returns the current pause status.
-   * \return
+   * \return Boolean representing the pause status.
    */
   bool isPaused() const;
 
@@ -94,8 +94,9 @@ class Crypto::CryptoPrivate
    * \brief stop Updates a stop status in the stop status container. A stop
    * status corresponds with a filename and is used to decide whether to stop
    * encrypting/decrypting a file.
-   * \param fileName
-   * \param stop
+   * \param fileName String containing the filename to set to stopped.
+   * \param stop Boolean representing the stop status for the file represented
+   * by fileName.
    */
   void stop(const QString& fileName, bool stop);
 
@@ -103,19 +104,23 @@ class Crypto::CryptoPrivate
    * \brief isStopped Returns a stop status in the stop status container. A stop
    * status corresponds with a filename and is used to decide whether to stop
    * encrypting/decrypting a file.
-   * \param fileName
-   * \return
+   * \param fileName String containing the file name to check the stop status
+   * for.
+   * \return Boolean Boolean representing the stop status for the file
+   * represented by fileName.
    */
   bool isStopped(const QString& fileName) const;
 
   /*!
-   * \brief clearStopFlags Clears all of the stop statuses in the stop status
-   * container.
+   * \brief busy Updates the busy status.
+   * \param busy Boolean representing the busy status.
    */
-  void clearStopFlags();
-
   void busy(bool busy);
 
+  /*!
+   * \brief isBusy Returns the busy status.
+   * \return Boolean representing the busy status.
+   */
   bool isBusy() const;
 
   // The abort status, when set to true, will stop an executing cryptopgraphic
@@ -153,16 +158,13 @@ void Crypto::encrypt(const QString& passphrase,
                      const QStringList& inputFileNames,
                      const QString& algorithm)
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   pimpl->busy(true);
   emit busyStatus(pimpl->isBusy());
 
-  // Reset abort flag
-  pimpl->abort(false);
-
-  // Clear stop status
-  pimpl->clearStopFlags();
+  // Reset status flags
+  pimpl->resetFlags();
 
   QString algorithmName;
 
@@ -207,11 +209,8 @@ void Crypto::encrypt(const QString& passphrase,
     }
   } // End file loop
 
-  // Reset abort flag
-  pimpl->abort(false);
-
-  // Clear stop status
-  pimpl->clearStopFlags();
+  // Reset status flags
+  pimpl->resetFlags();
 
   pimpl->busy(false);
   emit busyStatus(pimpl->isBusy());
@@ -220,16 +219,13 @@ void Crypto::encrypt(const QString& passphrase,
 void Crypto::decrypt(const QString& passphrase,
                      const QStringList& inputFileNames)
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   pimpl->busy(true);
   emit busyStatus(pimpl->isBusy());
 
-  // Reset abort flag
-  pimpl->abort(false);
-
-  // Clear stop status
-  pimpl->clearStopFlags();
+  // Reset status flags
+  pimpl->resetFlags();
 
   const int inputFileNamesSize = inputFileNames.size();
   for (int i = 0; i < inputFileNamesSize; ++i)
@@ -274,11 +270,8 @@ void Crypto::decrypt(const QString& passphrase,
     }
   } // End file loop
 
-  // Reset abort flag
-  pimpl->abort(false);
-
-  // Clear stop status
-  pimpl->clearStopFlags();
+  // Reset status flags
+  pimpl->resetFlags();
 
   pimpl->busy(false);
   emit busyStatus(pimpl->isBusy());
@@ -286,7 +279,7 @@ void Crypto::decrypt(const QString& passphrase,
 
 void Crypto::abort()
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   if (pimpl->isBusy())
   {
@@ -296,14 +289,14 @@ void Crypto::abort()
 
 void Crypto::pause(bool pause)
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   pimpl->pause(pause);
 }
 
 void Crypto::stop(const QString& fileName)
 {
-  Q_ASSERT(nullptr != pimpl);
+  Q_ASSERT(pimpl);
 
   if (pimpl->isBusy())
   {
@@ -594,12 +587,6 @@ QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
   return uniqueFileName;
 }
 
-void Crypto::CryptoPrivate::resetState()
-{
-  this->aborted = false;
-  this->paused = false;
-}
-
 void Crypto::CryptoPrivate::abort(bool abort)
 {
   this->aborted = abort;
@@ -630,8 +617,9 @@ bool Crypto::CryptoPrivate::isStopped(const QString& fileName) const
   return this->stopped.value(fileName, false);
 }
 
-void Crypto::CryptoPrivate::clearStopFlags()
+void Crypto::CryptoPrivate::resetFlags()
 {
+  aborted = false;
   this->stopped.clear();
 }
 

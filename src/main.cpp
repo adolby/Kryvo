@@ -22,10 +22,10 @@
 #include <QtWidgets/QApplication>
 
 /*!
- * \brief main
+ * \brief main Main function.
  * \param argc
  * \param argv
- * \return
+ * \return Integer exit code.
  */
 int main(int argc, char* argv[])
 {

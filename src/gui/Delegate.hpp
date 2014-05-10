@@ -25,7 +25,7 @@
 #include <QtCore/QSize>
 
 /*!
- * \brief The Delegate class
+ * \brief Delegate class
  */
 class Delegate : public QStyledItemDelegate
 {
@@ -33,7 +33,7 @@ class Delegate : public QStyledItemDelegate
 
  public:
   /*!
-   * \brief Delegate The ProgressDelegate displays a progress bar in a
+   * \brief Delegate Delegate displays a progress bar in a
    * model view.
    * \param parent
    */
@@ -46,7 +46,7 @@ class Delegate : public QStyledItemDelegate
   /*!
    * \brief setFocusBorderEnabled Enables/disables the focus dotted line border
    * that appears on click.
-   * \param enabled The boolean representing whether to enable or disable the
+   * \param enabled Boolean representing whether to enable or disable the
    * focus border.
    */
   void setFocusBorderEnabled(bool enabled);
@@ -54,43 +54,43 @@ class Delegate : public QStyledItemDelegate
  protected:
   /*!
    * \brief initStyleOption Initializes the style option for this delegate. Used
-   * to remove the focus
-   * \param option The style view options object.
-   * \param index The index of the current cell in the model.
+   * to remove the focus.
+   * \param option Style view options object.
+   * \param index Index of the current cell in the model.
    */
   virtual void initStyleOption(QStyleOptionViewItem* option,
                                const QModelIndex& index) const;
 
   /*!
    * \brief paint Paints the progress bar and the close button.
-   * \param painter The painter object.
-   * \param option The style view options object. Passed on to parent's paint.
-   * \param index The index of the current cell in the model to paint.
+   * \param painter Painter object.
+   * \param option Style view options object. Passed on to parent's paint.
+   * \param index Index of the current cell in the model to paint.
    */
   virtual void paint(QPainter* painter, const QStyleOptionViewItem& option,
                      const QModelIndex& index) const;
 
   /*!
    * \brief editorEvent Event to handle mouse clicks on the remove button.
-   * \param event The editing event.
-   * \param model The model.
-   * \param option The style option view item.
-   * \param index The index in the model.
+   * \param event Editing event.
+   * \param model Model.
+   * \param option Style option view item.
+   * \param index Index of the current cell in the model.
    * \return
    */
-  bool editorEvent(QEvent* event,
-                   QAbstractItemModel* model,
-                   const QStyleOptionViewItem& option,
-                   const QModelIndex& index);
+  virtual bool editorEvent(QEvent* event,
+                           QAbstractItemModel* model,
+                           const QStyleOptionViewItem& option,
+                           const QModelIndex& index);
 
   /*!
    * \brief sizeHint Returns the size of this delegate.
    * \param option The style view options object.
-   * \param index
-   * \return
+   * \param index Index of the current cell in the model.
+   * \return Size of this delegate.
    */
   virtual QSize sizeHint(const QStyleOptionViewItem& option,
-                 const QModelIndex& index) const;
+                         const QModelIndex& index) const;
 
  protected:
   bool focusBorderEnabled;

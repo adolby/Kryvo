@@ -25,7 +25,7 @@
 #include <memory>
 
 /*!
- * \brief The MainWindow class
+ * \brief MainWindow class
  */
 class MainWindow : public QMainWindow
 {
@@ -34,7 +34,7 @@ class MainWindow : public QMainWindow
  public:
   /*!
    * \brief MainWindow Constructs the application's main window.
-   * \param parent The parent of a MainWindow.
+   * \param parent
    */
   explicit MainWindow(QWidget* parent = nullptr);
 
@@ -47,9 +47,9 @@ class MainWindow : public QMainWindow
   /*!
    * \brief encrypt Emitted when the user provides all required data for
    * encryption and clicks the Encrypt push button.
-   * \param passphrase The string representing the user supplied passphrase.
-   * \param inputFileNames The list of input file strings.
-   * \param algorithmName The string representing the current algorithm.
+   * \param passphrase String representing the user supplied passphrase.
+   * \param inputFileNames List of input file strings.
+   * \param algorithmName String representing the current algorithm.
    * Example: "AES-128/GCM" will encrypt files with AES 128-bit key size in
    * Gallois Counter Mode.
    */
@@ -60,7 +60,7 @@ class MainWindow : public QMainWindow
   /*!
    * \brief decrypt Emitted when the user provides all required data for
    * decryption and clicks the Decrypt push button.
-   * \param passphrase The string representing the user supplied passphrase.
+   * \param passphrase String representing the user supplied passphrase.
    * \param inputFileNames The list of input file strings.
    */
   void decrypt(const QString& passphrase, const QStringList& inputFileNames);
@@ -83,8 +83,7 @@ class MainWindow : public QMainWindow
 
  public slots:
   /*!
-   * \brief addFiles Executed when the Add Files toolbar push button is
-   * clicked.
+   * \brief addFiles Executed when the Add Files toolbar push button is clicked.
    */
   void onAddFilesClicked();
 
@@ -95,7 +94,7 @@ class MainWindow : public QMainWindow
   void onRemoveFilesClicked();
 
   /*!
-   * \brief removeFile
+   * \brief removeFile Removes the file name at the input index in the model.
    */
   void removeFile(const QModelIndex& index);
 
@@ -117,22 +116,22 @@ class MainWindow : public QMainWindow
   /*!
    * \brief updateProgress Executed when the cipher operation progress is
    * updated. Updates the progress bar for the item at the specified index.
-   * \param index The integer representing the file list index to update.
-   * \param percent The qint64 representing the current progress in percent.
+   * \param index Integer representing the file list index to update.
+   * \param percent Integer representing the current progress in percent.
    */
   void updateProgress(const QString& path, qint64 percent);
 
   /*!
    * \brief updateStatusMessage Executed when a message should be displayed to
    * the user. Updates the message text edit text to the message.
-   * \param message The string representing the message.
+   * \param message String representing the message.
    */
   void updateStatusMessage(const QString& message);
 
   /*!
    * \brief updateError Executed when a cipher operation fails.
-   * \param index The integer representing the file list index to update.
-   * \param message The string representing the error message.
+   * \param index Integer representing the file list index to update.
+   * \param message String representing the error message.
    */
   void updateError(const QString& path, const QString& message);
 
@@ -140,39 +139,39 @@ class MainWindow : public QMainWindow
    * \brief updateBusyStatus Executed when the cipher operation updates its busy
    * status. Stores the status to allow the GUI to decide when the user can
    * request new encryption events.
-   * \param busy The boolean representing the busy status.
+   * \param busy Boolean representing the busy status.
    */
   void updateBusyStatus(bool busy);
 
  protected:
   /*!
    * \brief closeEvent Executed when a close event occurs on the main window.
-   * \param event The close event.
+   * \param event Close event.
    */
   virtual void closeEvent(QCloseEvent* event);
 
   /*!
    * \brief dragEnterEvent Executed when a drag enter event occurs on the main
    * window.
-   * \param event The drag enter event.
+   * \param event Drag enter event.
    */
   virtual void dragEnterEvent(QDragEnterEvent* event);
 
   /*!
    * \brief dropEvent Executed when a drop event occurs on the main window.
-   * \param event The drop event.
+   * \param event Drop event.
    */
   virtual void dropEvent(QDropEvent* event);
 
   /*!
    * \brief sizeHint Returns the preferred size of the main window.
-   * \return
+   * \return Preferred size.
    */
   virtual QSize sizeHint() const;
 
   /*!
    * \brief minimumSizeHint Returns the minimum size of the main window.
-   * \return
+   * \return Maximum size.
    */
   virtual QSize minimumSizeHint() const;
 

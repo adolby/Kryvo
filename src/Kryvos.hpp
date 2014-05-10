@@ -25,7 +25,7 @@
 #include <memory>
 
 /*!
- * \brief The Kryvos class
+ * \brief Kryvos class
  */
 class Kryvos : public QObject
 {
@@ -38,14 +38,14 @@ class Kryvos : public QObject
    * thread. Starts the thread and shows the GUI main window.
    * \param parent
    */
-  Kryvos(QObject* parent = nullptr);
+  explicit Kryvos(QObject* parent = nullptr);
 
   /*!
    * \brief ~Kryvos Destroys the Kryvos class. Aborts the current threaded
    * operation and then quits the thread. If the thread doesn't respond, it will
    * be terminated so the application can exit.
    */
-  ~Kryvos();
+  virtual ~Kryvos();
 
  private:
   class KryvosPrivate;
