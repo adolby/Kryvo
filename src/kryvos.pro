@@ -6,12 +6,19 @@ TEMPLATE = app
 
 CONFIG += c++11
 
-INCLUDEPATH += ../include/windows/x64
+unix {
+    INCLUDEPATH += ../include/linux/x64
+    LIBS += -L../../../lib/linux/x64
+}
+win32 {
+    INCLUDEPATH += ../include/windows/x64
+    LIBS += -L../../../lib/windows/x64
 
-LIBS += -L../../../lib/windows/x64 -lbotan-1.11
+    #INCLUDEPATH += ../include/windows/x86
+    #LIBS += -L../../../lib/windows/x86
+}
 
-#INCLUDEPATH += ../include/windows/x86
-#LIBS += -L../../../lib/windows/x86 -lbotan-1.11
+LIBS += -lbotan-1.11
 
 SOURCES += \
     main.cpp \
