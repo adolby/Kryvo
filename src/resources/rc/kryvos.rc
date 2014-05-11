@@ -3,8 +3,8 @@
 #include <windows.h>
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     1,0,0,0
-PRODUCTVERSION  1,0,0,0
+FILEVERSION     0,9,2,0
+PRODUCTVERSION  0,9,2,0
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
@@ -17,7 +17,7 @@ BEGIN
             VALUE "LegalCopyright",     "Copyright © 2014 The Kryvos project"
             VALUE "OriginalFilename",   "kryvos.exe"
             VALUE "ProductName",        "Kryvos"
-            VALUE "ProductVersion",     "1.0.0.0"
+            VALUE "ProductVersion",     "0.9.2.0"
         END
     END
 

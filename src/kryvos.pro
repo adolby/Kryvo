@@ -16,8 +16,8 @@ win32 {
     INCLUDEPATH += ../include/windows/x64
     LIBS += -L../../../lib/windows/x64
 
-    #INCLUDEPATH += ../include/windows/x86
-    #LIBS += -L../../../lib/windows/x86
+#    INCLUDEPATH += ../include/windows/x86
+#    LIBS += -L../../../lib/windows/x86
 }
 
 LIBS += -lbotan-1.11
