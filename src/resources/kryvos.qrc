@@ -1,7 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>fonts/Lato-Reg.otf</file>
-        <file>fonts/Bariol_Regular.otf</file>
         <file>stylesheets/kryvos.qss</file>
         <file>images/addFilesIcon.svg</file>
         <file>images/clearFilesIcon.svg</file>

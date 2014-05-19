@@ -57,7 +57,6 @@
     #cryptButton {
         color: white;
         background-color: #2980b9;
-        font-family: "Lato Regular";
         font-size: 21px;
         padding: 10px 20px 10px 20px;
         border: none;
@@ -75,7 +74,6 @@
     #addButton {
         color: white;
         background-color: #27ae60;
-        font-family: "Lato Regular";
         font-size: 20px;
         padding: 10px 20px 10px 20px;
         border: none;
@@ -89,7 +87,6 @@
     #clearButton {
         color: white;
         background-color: #c0392b;
-        font-family: "Lato Regular";
         font-size: 20px;
         padding: 10px 20px 10px 20px;
         border: none;
@@ -103,7 +100,6 @@
     #pauseButton {
         color: white;
         background-color: #2980b9;
-        font-family: "Lato Regular";
         font-size: 20px;
         padding: 10px 20px 10px 20px;
         border: none;
@@ -122,23 +118,17 @@
     /*--------- Text ---------*/
     QLabel#text {
         color: white;
-        font-family: "Lato Regular";
         font-size: 20px;
     }
 
     QLabel#headerText {
         color: #fab52a;
-        font-family: "Bariol Regular";
         font-size: 48px;
     }
 
     #message {
         color: white;
-        /*background-color: #34495e;*/
-        /*background-color: #336e7b;*/
-        /*background-color: #2980b9;*/
         background-color: #4b77be;
-        font-family: "Lato Regular";
         font-size: 18px;
         border: none;
     }

@@ -5,7 +5,7 @@ Kryvos is a file encryptor and decryptor. It encrypts files with AES using the B
 
 Getting Started
 ---------------
-To install Krvyos, extract the files from the Kryvos archive. Execute the Kryvos executable in the extracted directory to begin. More detailed instructions can be found in the INSTALL file.
+To install Krvyos, run the installer executable or extract the files from the Kryvos archive. Once the install files are copied, run the Kryvos executable. More detailed instructions can be found in the INSTALL file.
 
 Theming
 -------
@@ -13,24 +13,28 @@ Kryvos supports user theming. To create your own theme, start with the kryvos.qs
 
 Example: You created a new theme and saved the stylesheet to myTheme.qss in the themes folder. You would then update settings.ini with this value: styleSheetPath=myTheme.qss
 
-License
--------
-Kryvos is released under the GNU GPL License. Read LICENSE.GPL for more information about the license. Kryvos source code is available on GitHub at https://github.com/adolby/Kryvos
+Licenses
+--------
+Kryvos is licensed under the GNU GPL License. Read LICENSE.GPL for more information about the license.
+Kryvos source code and binaries are available on GitHub at https://github.com/adolby/Kryvos
 
-Botan is licensed under the BSD-2 license. It is found in the Botan License file and at http://botan.randombit.net/license.html Botan source code is available at http://botan.randombit.net/download.html
+Botan is licensed under the BSD-2 License. Read the Botan License file for more information about the license. It can also be found at http://botan.randombit.net/license.html 
+Botan source code is available at http://botan.randombit.net/download.html
 
-Qt is licensed under the GNU GPL License. Qt source code is available at http://qt-project.org/downloads
+Qt is licensed under the GNU GPL License. Read LICENSE.GPL for more information about the license.
+Qt source code is available at http://qt-project.org/downloads
 
 Developers
 ----------
-If you'd like to contribute to Kryvos, check the project out on GitHub. You'll need Qt 5 and Botan 1.11. Development is performed primarily in Qt Creator with gcc (MinGW-w64 on Windows) for cross-platform compatibility.
+If you'd like to contribute to Kryvos, check the project out on GitHub. To build Kryvos, you'll need Qt 5 and Botan 1.11. Development is performed primarily in Qt Creator with gcc. (gcc from MinGW-w64 on Windows)
 
 Windows
-A build of Botan performed with MinGW-w64 for x64 and x86 is located in the include and lib folder on Github. You can use it or build your own.
-To build x64 or x86, comment and uncomment the lines containing x64 or x86, respectively, in the kryvos.pro file.
+A build of Botan performed with gcc from MinGW-w64 for x64 and x86 is located in the include and lib folders in the Kryvos Github repository. You can use that build or configure and build your own.
+To build Kryvos for x64 or x86, comment and uncomment the lines for x64 or x86, respectively, in the kryvos.pro file.
 
 Linux
-Botan hasn't been built for Linux yet, but will be soon. The kryvos.pro file contains a conditional build rule for directories with Linux compatible include and library files.
+A build of Botan performed with gcc for x86_64 and x86 is located in the include and lib folders in the Kryvos Github repository. You can use that build or configure and build your own.
+To build Kryvos for x86_64 or x86, comment and uncomment the lines for x86_64 or x86, respectively, in the kryvos.pro file.
 
 Contact
 -------

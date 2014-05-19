@@ -136,9 +136,7 @@ MainWindow::MainWindow(QWidget* parent) :
   headerLayout->addWidget(headerLabel);
 
   const QIcon pauseIcon(":/images/pauseIcon.svg");
-  pimpl->pauseButton = new QPushButton{pauseIcon,
-                                             tr(" Pause"),
-                                             headerFrame};
+  pimpl->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), headerFrame};
   pimpl->pauseButton->setObjectName("pauseButton");
   pimpl->pauseButton->setCheckable(true);
   pimpl->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);

@@ -6,11 +6,14 @@ TEMPLATE = app
 
 CONFIG += c++11
 
-INCLUDEPATH += ../include/
+INCLUDEPATH += ../include/common
 
 unix {
-    INCLUDEPATH += ../include/linux/x64
-    LIBS += -L../../../lib/linux/x64
+    INCLUDEPATH += ../include/linux/x86_64
+    LIBS += -L../../../lib/linux/x86_64
+
+#    INCLUDEPATH += ../include/linux/x86
+#    LIBS += -L../../../lib/linux/x86
 }
 win32 {
     INCLUDEPATH += ../include/windows/x64
