@@ -10,7 +10,7 @@ INCLUDEPATH += ../include/common
 
 unix {
     INCLUDEPATH += ../include/linux/x86_64
-    LIBS += -L../../../lib/linux/x86_64
+    LIBS += -L../../../../lib/linux/x86_64
 
 #    INCLUDEPATH += ../include/linux/x86
 #    LIBS += -L../../../lib/linux/x86
@@ -39,5 +39,8 @@ HEADERS += \
     cryptography/Crypto.hpp
 
 RESOURCES += resources/kryvos.qrc
+
+QMAKE_CXXFLAGS += -fstack-protector
+QMAKE_LFLAGS += -fstack-protector
 
 RC_FILE = resources/rc/kryvos.rc
