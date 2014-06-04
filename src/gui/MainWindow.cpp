@@ -135,14 +135,14 @@ MainWindow::MainWindow(QWidget* parent) :
   headerLabel->setObjectName("headerText");
   headerLayout->addWidget(headerLabel);
 
-  const QIcon pauseIcon(":/images/pauseIcon.svg");
+  const QIcon pauseIcon(":/images/pauseIcon.png");
   pimpl->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), headerFrame};
   pimpl->pauseButton->setObjectName("pauseButton");
   pimpl->pauseButton->setCheckable(true);
   pimpl->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   headerLayout->addWidget(pimpl->pauseButton);
 
-  const QIcon addFilesIcon(":/images/addFilesIcon.svg");
+  const QIcon addFilesIcon(":/images/addFilesIcon.png");
   QPushButton* addFilesButton = new QPushButton{addFilesIcon,
                                                 tr(" Add files"),
                                                 headerFrame};
@@ -150,7 +150,7 @@ MainWindow::MainWindow(QWidget* parent) :
   addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   headerLayout->addWidget(addFilesButton);
 
-  const QIcon clearFilesIcon(":/images/clearFilesIcon.svg");
+  const QIcon clearFilesIcon(":/images/clearFilesIcon.png");
   QPushButton* clearFilesButton = new QPushButton{clearFilesIcon,
                                                   tr(" Remove all files"),
                                                   headerFrame};
@@ -221,7 +221,7 @@ MainWindow::MainWindow(QWidget* parent) :
   // Encrypt and decrypt control button frame
   QFrame* buttonFrame = new QFrame{contentFrame};
 
-  const QIcon lockIcon{":/images/lockIcon.svg"};
+  const QIcon lockIcon{":/images/lockIcon.png"};
   QPushButton* encryptButton = new QPushButton{lockIcon,
                                                tr(" Encrypt"),
                                                buttonFrame};
@@ -229,7 +229,7 @@ MainWindow::MainWindow(QWidget* parent) :
   encryptButton->setObjectName("cryptButton");
   encryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const QIcon unlockedIcon{":/images/unlockIcon.svg"};
+  const QIcon unlockedIcon{":/images/unlockIcon.png"};
   QPushButton* decryptButton = new QPushButton{unlockedIcon,
                                                tr(" Decrypt"),
                                                buttonFrame};
@@ -506,13 +506,13 @@ void MainWindow::updatePauseButtonIcon(bool toggle)
 {
   if (toggle)
   {
-    const QIcon resumeIcon{":/images/resumeIcon.svg"};
+    const QIcon resumeIcon{":/images/resumeIcon.png"};
     pimpl->pauseButton->setIcon(resumeIcon);
     pimpl->pauseButton->setText(" Resume");
   }
   else
   {
-    const QIcon pauseIcon(":/images/pauseIcon.svg");
+    const QIcon pauseIcon(":/images/pauseIcon.png");
     pimpl->pauseButton->setIcon(pauseIcon);
     pimpl->pauseButton->setText(" Pause");
   }

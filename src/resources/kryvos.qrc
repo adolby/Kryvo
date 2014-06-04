@@ -1,12 +1,12 @@
 <RCC>
     <qresource prefix="/">
         <file>stylesheets/kryvos.qss</file>
-        <file>images/addFilesIcon.svg</file>
-        <file>images/clearFilesIcon.svg</file>
-        <file>images/closeFileIcon.svg</file>
-        <file>images/lockIcon.svg</file>
-        <file>images/pauseIcon.svg</file>
-        <file>images/resumeIcon.svg</file>
-        <file>images/unlockIcon.svg</file>
+        <file>images/addFilesIcon.png</file>
+        <file>images/clearFilesIcon.png</file>
+        <file>images/closeFileIcon.png</file>
+        <file>images/lockIcon.png</file>
+        <file>images/pauseIcon.png</file>
+        <file>images/resumeIcon.png</file>
+        <file>images/unlockIcon.png</file>
     </qresource>
 </RCC>
