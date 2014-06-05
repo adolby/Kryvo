@@ -1,4 +1,4 @@
-QT += core gui widgets svg
+QT += core gui widgets
 
 TARGET = kryvos
 
