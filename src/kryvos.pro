@@ -25,18 +25,16 @@ win32 {
 
 LIBS += -lbotan-1.11
 
-SOURCES += \
-    main.cpp \
-    Kryvos.cpp \
-    gui/MainWindow.cpp \
-    gui/Delegate.cpp \
-    cryptography/Crypto.cpp
+SOURCES += main.cpp \
+           Kryvos.cpp \
+           gui/MainWindow.cpp \
+           gui/Delegate.cpp \
+           cryptography/Crypto.cpp
 
-HEADERS += \
-    Kryvos.hpp \
-    gui/MainWindow.hpp \
-    gui/Delegate.hpp \
-    cryptography/Crypto.hpp
+HEADERS += Kryvos.hpp \
+           gui/MainWindow.hpp \
+           gui/Delegate.hpp \
+           cryptography/Crypto.hpp
 
 RESOURCES += resources/kryvos.qrc
 

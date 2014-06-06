@@ -12,10 +12,8 @@ INCLUDEPATH += .. \
 LIBS += -L../../../../lib/x64 -lbotan-1.11
 
 # Input
-SOURCES += \
-    ../cryptography/Crypto.cpp \
-    test_Crypto.cpp
+SOURCES += ../cryptography/Crypto.cpp \
+           test_Crypto.cpp
 
-HEADERS += \
-    ../cryptography/Crypto.hpp \
-    test_Crypto.hpp
+HEADERS += ../cryptography/Crypto.hpp \
+           test_Crypto.hpp
