@@ -99,7 +99,7 @@ class MainWindow::MainWindowPrivate
   QLineEdit* passwordLineEdit;
   QPushButton* pauseButton;
 
-  // The busy status, when set to true, indicates that this class is currently
+  // The busy status, when set to true, indicates that this object is currently
   // executing a cipher operation. The status allows the GUI to decide whether
   // to send new encryption/decryption requests.
   bool busyStatus;
@@ -589,7 +589,7 @@ MainWindow::MainWindowPrivate::MainWindowPrivate() :
 QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
 {
   // Try to load user theme, if it exists
-  QString styleSheetPath{"themes/" + styleFile};
+  const QString styleSheetPath{"themes/" + styleFile};
   QFile userTheme{styleSheetPath};
 
   QString styleSheet;
