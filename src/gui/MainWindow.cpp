@@ -247,11 +247,28 @@ MainWindow::MainWindow(QWidget* parent) :
 
   this->setCentralWidget(mainFrame);
 
+  // Actions
+
+  // Add files action
+  QAction* addFilesAction = new QAction(this);
+  addFilesAction->setShortcut(Qt::Key_O | Qt::CTRL);
+
+  connect(addFilesAction, &QAction::triggered,
+          this, &MainWindow::addFiles);
+  this->addAction(addFilesAction);
+
+  // Quit action
+  QAction* quitAction = new QAction(this);
+  quitAction->setShortcut(Qt::Key_Q | Qt::CTRL);
+
+  connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
+  this->addAction(quitAction);
+
   // File connections
   connect(addFilesButton, &QPushButton::clicked,
-          this, &MainWindow::onAddFilesClicked);
+          this, &MainWindow::addFiles);
   connect(clearFilesButton, &QPushButton::clicked,
-          this, &MainWindow::onRemoveFilesClicked);
+          this, &MainWindow::removeFiles);
 
   // Encryption connections
   connect(encryptButton, &QPushButton::clicked,
@@ -263,7 +280,8 @@ MainWindow::MainWindow(QWidget* parent) :
   connect(pimpl->pauseButton, &QPushButton::toggled,
           this, &MainWindow::updatePauseButtonIcon);
 
-  connect(delegate, &Delegate::removeRow, this, &MainWindow::removeFile);
+  connect(delegate, &Delegate::removeRow,
+          this, &MainWindow::removeFileFromModel);
 
   // Set object name
   this->setObjectName("MainWindow");
@@ -288,7 +306,7 @@ MainWindow::MainWindow(QWidget* parent) :
 
 MainWindow::~MainWindow() {}
 
-void MainWindow::onAddFilesClicked()
+void MainWindow::addFiles()
 {
   Q_ASSERT(pimpl);
 
@@ -312,7 +330,7 @@ void MainWindow::onAddFilesClicked()
   }
 }
 
-void MainWindow::onRemoveFilesClicked()
+void MainWindow::removeFiles()
 {
   Q_ASSERT(pimpl);
 
@@ -322,7 +340,7 @@ void MainWindow::onRemoveFilesClicked()
   pimpl->clearModel();
 }
 
-void MainWindow::removeFile(const QModelIndex& index)
+void MainWindow::removeFileFromModel(const QModelIndex& index)
 {
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->fileListModel);

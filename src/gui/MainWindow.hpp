@@ -85,18 +85,19 @@ class MainWindow : public QMainWindow
   /*!
    * \brief addFiles Executed when the Add Files toolbar push button is clicked.
    */
-  void onAddFilesClicked();
+  void addFiles();
 
   /*!
-   * \brief onClearFilesClicked Executed when the Remove All Files toolbar push
+   * \brief removeFiles Executed when the Remove All Files toolbar push
    * button is clicked.
    */
-  void onRemoveFilesClicked();
+  void removeFiles();
 
   /*!
-   * \brief removeFile Removes the file name at the input index in the model.
+   * \brief removeFileFromModel Removes the file name at the input index in the
+   * model.
    */
-  void removeFile(const QModelIndex& index);
+  void removeFileFromModel(const QModelIndex& index);
 
   /*!
    * \brief encryptFiles Executed when the encrypt push button is clicked.
