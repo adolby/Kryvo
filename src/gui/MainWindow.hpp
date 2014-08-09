@@ -27,8 +27,7 @@
 /*!
  * \brief MainWindow class
  */
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
@@ -175,13 +174,6 @@ class MainWindow : public QMainWindow
    * \return Maximum size.
    */
   virtual QSize minimumSizeHint() const;
-
- private slots:
-  /*!
-   * \brief updatePauseButtonIcon Updates the pause button icon and text when it
-   * is checked.
-   */
-  void updatePauseButtonIcon(bool toggle);
 
  private:
   /*!

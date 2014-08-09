@@ -19,6 +19,8 @@
  */
 
 #include "gui/MainWindow.hpp"
+#include "gui/PasswordFrame.hpp"
+#include "gui/HeaderFrame.hpp"
 #include "gui/Delegate.hpp"
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
@@ -49,8 +51,7 @@
 /*!
  * \brief MainWindowPrivate class
  */
-class MainWindow::MainWindowPrivate
-{
+class MainWindow::MainWindowPrivate {
  public:
   /*!
    * \brief MainWindowPrivate Constructs the MainWindow private implementation.
@@ -93,16 +94,11 @@ class MainWindow::MainWindowPrivate
    */
   bool isBusy() const;
 
+  HeaderFrame* headerFrame;
   std::unique_ptr<QStandardItemModel> fileListModel;
   QTableView* fileListView;
   QPlainTextEdit* messageTextEdit;
-  QLineEdit* passwordLineEdit;
-  QPushButton* pauseButton;
-
-  // The busy status, when set to true, indicates that this object is currently
-  // executing a cipher operation. The status allows the GUI to decide whether
-  // to send new encryption/decryption requests.
-  bool busyStatus;
+  PasswordFrame* passwordFrame;
 
   // Messages to display to user
   const QStringList messages;
@@ -111,6 +107,12 @@ class MainWindow::MainWindowPrivate
   QString lastDirectory;
   QString lastAlgorithmName;
   QString styleSheetPath;
+
+ private:
+  // The busy status, when set to true, indicates that this object is currently
+  // executing a cipher operation. The status allows the GUI to decide whether
+  // to send new encryption/decryption requests.
+  bool busyStatus;
 };
 
 MainWindow::MainWindow(QWidget* parent) :
@@ -123,42 +125,11 @@ MainWindow::MainWindow(QWidget* parent) :
 
   QFrame* contentFrame = new QFrame{mainFrame};
   contentFrame->setObjectName("contentFrame");
-
   QVBoxLayout* contentLayout = new QVBoxLayout{contentFrame};
 
-  QFrame* headerFrame = new QFrame{contentFrame};
-  headerFrame->setObjectName("headerFrame");
-
-  QHBoxLayout* headerLayout = new QHBoxLayout{headerFrame};
-
-  QLabel* headerLabel = new QLabel{tr("Kryvos"), headerFrame};
-  headerLabel->setObjectName("headerText");
-  headerLayout->addWidget(headerLabel);
-
-  const QIcon pauseIcon(":/images/pauseIcon.png");
-  pimpl->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), headerFrame};
-  pimpl->pauseButton->setObjectName("pauseButton");
-  pimpl->pauseButton->setCheckable(true);
-  pimpl->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  headerLayout->addWidget(pimpl->pauseButton);
-
-  const QIcon addFilesIcon(":/images/addFilesIcon.png");
-  QPushButton* addFilesButton = new QPushButton{addFilesIcon,
-                                                tr(" Add files"),
-                                                headerFrame};
-  addFilesButton->setObjectName("addButton");
-  addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  headerLayout->addWidget(addFilesButton);
-
-  const QIcon clearFilesIcon(":/images/clearFilesIcon.png");
-  QPushButton* clearFilesButton = new QPushButton{clearFilesIcon,
-                                                  tr(" Remove all files"),
-                                                  headerFrame};
-  clearFilesButton->setObjectName("clearButton");
-  clearFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  headerLayout->addWidget(clearFilesButton);
-
-  contentLayout->addWidget(headerFrame);
+  pimpl->headerFrame = new HeaderFrame{contentFrame};
+  pimpl->headerFrame->setObjectName("headerFrame");
+  contentLayout->addWidget(pimpl->headerFrame);
 
   // File list
   pimpl->fileListModel->setHeaderData(0, Qt::Horizontal, tr("Files"));
@@ -203,20 +174,8 @@ MainWindow::MainWindow(QWidget* parent) :
   contentLayout->addWidget(messageFrame, 1);
 
   // Password entry frame
-  QFrame* passwordFrame = new QFrame{contentFrame};
-
-  QLabel* passwordLabel = new QLabel{tr("Password "), passwordFrame};
-  passwordLabel->setObjectName("text");
-
-  pimpl->passwordLineEdit->setParent(passwordFrame);
-  pimpl->passwordLineEdit->setObjectName("passwordLineEdit");
-  pimpl->passwordLineEdit->setEchoMode(QLineEdit::PasswordEchoOnEdit);
-
-  QHBoxLayout* passwordLayout = new QHBoxLayout{passwordFrame};
-  passwordLayout->addWidget(passwordLabel);
-  passwordLayout->addWidget(pimpl->passwordLineEdit);
-
-  contentLayout->addWidget(passwordFrame);
+  pimpl->passwordFrame = new PasswordFrame{contentFrame};
+  contentLayout->addWidget(pimpl->passwordFrame);
 
   // Encrypt and decrypt control button frame
   QFrame* buttonFrame = new QFrame{contentFrame};
@@ -264,10 +223,12 @@ MainWindow::MainWindow(QWidget* parent) :
   connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
   this->addAction(quitAction);
 
-  // File connections
-  connect(addFilesButton, &QPushButton::clicked,
+  // Header tool connections
+  connect(pimpl->headerFrame, &HeaderFrame::pause,
+          this, &MainWindow::pauseCipher);
+  connect(pimpl->headerFrame, &HeaderFrame::addFiles,
           this, &MainWindow::addFiles);
-  connect(clearFilesButton, &QPushButton::clicked,
+  connect(pimpl->headerFrame, &HeaderFrame::removeFiles,
           this, &MainWindow::removeFiles);
 
   // Encryption connections
@@ -275,10 +236,6 @@ MainWindow::MainWindow(QWidget* parent) :
           this, &MainWindow::encryptFiles);
   connect(decryptButton, &QPushButton::clicked,
           this, &MainWindow::decryptFiles);
-  connect(pimpl->pauseButton, &QPushButton::toggled,
-          this, &MainWindow::pauseCipher);
-  connect(pimpl->pauseButton, &QPushButton::toggled,
-          this, &MainWindow::updatePauseButtonIcon);
 
   connect(delegate, &Delegate::removeRow,
           this, &MainWindow::removeFileFromModel);
@@ -357,13 +314,14 @@ void MainWindow::removeFileFromModel(const QModelIndex& index)
 void MainWindow::encryptFiles()
 {
   Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->passwordLineEdit);
+  Q_ASSERT(pimpl->passwordFrame->passwordLineEdit());
   Q_ASSERT(pimpl->fileListModel);
 
   if (!pimpl->isBusy())
   {
     // Get passphrase from line edit
-    const QString passphrase{pimpl->passwordLineEdit->text()};
+    const QString passphrase{pimpl->passwordFrame->
+                               passwordLineEdit()->text()};
 
     if (!passphrase.isEmpty())
     {
@@ -396,13 +354,13 @@ void MainWindow::encryptFiles()
 void MainWindow::decryptFiles()
 {
   Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->passwordLineEdit);
+  Q_ASSERT(pimpl->passwordFrame->passwordLineEdit());
   Q_ASSERT(pimpl->fileListModel);
 
   if (!pimpl->isBusy())
   {
     // Get passphrase from line edit
-    const QString passphrase{pimpl->passwordLineEdit->text()};
+    const QString passphrase{pimpl->passwordFrame->passwordLineEdit()->text()};
 
     if (!passphrase.isEmpty())
     {
@@ -520,22 +478,6 @@ QSize MainWindow::minimumSizeHint() const
   return QSize(600, 350);
 }
 
-void MainWindow::updatePauseButtonIcon(bool toggle)
-{
-  if (toggle)
-  {
-    const QIcon resumeIcon{":/images/resumeIcon.png"};
-    pimpl->pauseButton->setIcon(resumeIcon);
-    pimpl->pauseButton->setText(" Resume");
-  }
-  else
-  {
-    const QIcon pauseIcon(":/images/pauseIcon.png");
-    pimpl->pauseButton->setIcon(pauseIcon);
-    pimpl->pauseButton->setText(" Pause");
-  }
-}
-
 void MainWindow::importSettings()
 {
   Q_ASSERT(pimpl);
@@ -595,14 +537,16 @@ void MainWindow::exportSettings() const
 }
 
 MainWindow::MainWindowPrivate::MainWindowPrivate() :
-  fileListModel{new QStandardItemModel{}}, fileListView{nullptr},
+  headerFrame{nullptr}, fileListModel{new QStandardItemModel{}},
+  fileListView{nullptr},
   messageTextEdit{new QPlainTextEdit{tr("To add files, click the add files"
                                         " button or drag and drop files.")}},
-  passwordLineEdit{new QLineEdit{}}, busyStatus{false},
+  passwordFrame{nullptr},
   messages{tr("A password is required to encrypt or decrypt files. Please enter"
               " one to continue."),
            tr("Encryption/decryption is already in progress. Please wait until"
-              " the current operation finishes.")} {}
+              " the current operation finishes.")},
+  busyStatus{false} {}
 
 QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
 {

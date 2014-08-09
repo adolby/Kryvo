@@ -27,8 +27,7 @@
 /*!
  * \brief Delegate class
  */
-class Delegate : public QStyledItemDelegate
-{
+class Delegate : public QStyledItemDelegate {
   Q_OBJECT
 
  public:

@@ -29,12 +29,16 @@ SOURCES += main.cpp \
            Kryvos.cpp \
            gui/MainWindow.cpp \
            gui/Delegate.cpp \
-           cryptography/Crypto.cpp
+           cryptography/Crypto.cpp \
+    gui/PasswordFrame.cpp \
+    gui/HeaderFrame.cpp
 
 HEADERS += Kryvos.hpp \
            gui/MainWindow.hpp \
            gui/Delegate.hpp \
-           cryptography/Crypto.hpp
+           cryptography/Crypto.hpp \
+    gui/PasswordFrame.hpp \
+    gui/HeaderFrame.hpp
 
 RESOURCES += resources/kryvos.qrc
 
