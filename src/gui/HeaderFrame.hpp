@@ -32,14 +32,25 @@ class HeaderFrame : public QFrame {
   virtual ~HeaderFrame();
 
  signals:
+  /*!
+   * \brief addFiles Emitted when the add files button is clicked.
+   */
   void addFiles();
+  /*!
+   * \brief removeFiles Emitted when the remove files button is clicked.
+   */
   void removeFiles();
+  /*!
+   * \brief pause Emitted when the pause/resume button is checked/unchecked.
+   * \param pause The boolean represenitng the pause/resume state of the
+   * pause/resume button.
+   */
   void pause(bool pause);
 
  private slots:
   /*!
-   * \brief togglePauseIcon Toggles the pause button icon and text when it
-   * is checked.
+   * \brief togglePauseIcon Toggles the pause button icon and text when the
+   * paused button is checked.
    */
   void togglePauseIcon(bool toggle);
 

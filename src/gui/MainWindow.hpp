@@ -95,6 +95,7 @@ class MainWindow : public QMainWindow {
   /*!
    * \brief removeFileFromModel Removes the file name at the input index in the
    * model.
+   * \param index The index of the file name to remove from the model.
    */
   void removeFileFromModel(const QModelIndex& index);
 
