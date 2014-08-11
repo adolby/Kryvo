@@ -22,6 +22,7 @@
 #include "gui/PasswordFrame.hpp"
 #include "gui/HeaderFrame.hpp"
 #include "gui/Delegate.hpp"
+#include "utility/make_unique.h"
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPlainTextEdit>
@@ -116,16 +117,16 @@ class MainWindow::MainWindowPrivate {
 };
 
 MainWindow::MainWindow(QWidget* parent) :
-  QMainWindow{parent}, pimpl{new MainWindowPrivate{}}
+  QMainWindow{parent}, pimpl{make_unique<MainWindowPrivate>()}
 {
-  QFrame* mainFrame = new QFrame{this};
+  auto mainFrame = new QFrame{this};
   mainFrame->setObjectName("mainFrame");
 
-  QVBoxLayout* mainLayout = new QVBoxLayout{mainFrame};
+  auto mainLayout = new QVBoxLayout{mainFrame};
 
-  QFrame* contentFrame = new QFrame{mainFrame};
+  auto contentFrame = new QFrame{mainFrame};
   contentFrame->setObjectName("contentFrame");
-  QVBoxLayout* contentLayout = new QVBoxLayout{contentFrame};
+  auto contentLayout = new QVBoxLayout{contentFrame};
 
   pimpl->headerFrame = new HeaderFrame{contentFrame};
   pimpl->headerFrame->setObjectName("headerFrame");
@@ -147,13 +148,13 @@ MainWindow::MainWindow(QWidget* parent) :
   pimpl->fileListView->setShowGrid(false);
 
   // Custom delegate paints progress bar and file close button for each file
-  Delegate* delegate = new Delegate{this};
+  auto delegate = new Delegate{this};
   pimpl->fileListView->setItemDelegate(delegate);
 
   contentLayout->addWidget(pimpl->fileListView, 20);
 
   // Message text edit display
-  QFrame* messageFrame = new QFrame{contentFrame};
+  auto messageFrame = new QFrame{contentFrame};
   messageFrame->setObjectName("message");
   messageFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   messageFrame->setContentsMargins(0, 0, 0, 0);
@@ -166,7 +167,7 @@ MainWindow::MainWindow(QWidget* parent) :
   pimpl->messageTextEdit->setSizePolicy(QSizePolicy::Expanding,
                                         QSizePolicy::Preferred);
 
-  QHBoxLayout* messageLayout = new QHBoxLayout{messageFrame};
+  auto messageLayout = new QHBoxLayout{messageFrame};
   messageLayout->addWidget(pimpl->messageTextEdit);
   messageLayout->setContentsMargins(0, 0, 0, 0);
   messageLayout->setSpacing(0);
@@ -178,25 +179,25 @@ MainWindow::MainWindow(QWidget* parent) :
   contentLayout->addWidget(pimpl->passwordFrame);
 
   // Encrypt and decrypt control button frame
-  QFrame* buttonFrame = new QFrame{contentFrame};
+  auto buttonFrame = new QFrame{contentFrame};
 
-  const QIcon lockIcon{":/images/lockIcon.png"};
-  QPushButton* encryptButton = new QPushButton{lockIcon,
-                                               tr(" Encrypt"),
-                                               buttonFrame};
+  const auto lockIcon = QIcon{":/images/lockIcon.png"};
+  auto encryptButton = new QPushButton{lockIcon,
+                                       tr(" Encrypt"),
+                                       buttonFrame};
   encryptButton->setIconSize(QSize{19, 19});
   encryptButton->setObjectName("cryptButton");
   encryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const QIcon unlockedIcon{":/images/unlockIcon.png"};
-  QPushButton* decryptButton = new QPushButton{unlockedIcon,
-                                               tr(" Decrypt"),
-                                               buttonFrame};
+  const auto unlockedIcon = QIcon{":/images/unlockIcon.png"};
+  auto decryptButton = new QPushButton{unlockedIcon,
+                                       tr(" Decrypt"),
+                                       buttonFrame};
   decryptButton->setIconSize(QSize{19, 19});
   decryptButton->setObjectName("cryptButton");
   decryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  QHBoxLayout* buttonLayout = new QHBoxLayout{buttonFrame};
+  auto buttonLayout = new QHBoxLayout{buttonFrame};
   buttonLayout->addWidget(encryptButton);
   buttonLayout->addWidget(decryptButton);
 
@@ -209,7 +210,7 @@ MainWindow::MainWindow(QWidget* parent) :
   // Actions
 
   // Add files action
-  QAction* addFilesAction = new QAction(this);
+  auto addFilesAction = new QAction(this);
   addFilesAction->setShortcut(Qt::Key_O | Qt::CTRL);
 
   connect(addFilesAction, &QAction::triggered,
@@ -217,10 +218,11 @@ MainWindow::MainWindow(QWidget* parent) :
   this->addAction(addFilesAction);
 
   // Quit action
-  QAction* quitAction = new QAction(this);
+  auto quitAction = new QAction(this);
   quitAction->setShortcut(Qt::Key_Q | Qt::CTRL);
 
-  connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
+  connect(quitAction, &QAction::triggered,
+          this, &QMainWindow::close);
   this->addAction(quitAction);
 
   // Header tool connections
@@ -250,7 +252,7 @@ MainWindow::MainWindow(QWidget* parent) :
   this->importSettings();
 
   // Load stylesheet
-  const QString styleSheet = pimpl->loadStyleSheet(pimpl->styleSheetPath);
+  const auto styleSheet = pimpl->loadStyleSheet(pimpl->styleSheetPath);
 
   if (!styleSheet.isEmpty())
   {
@@ -268,21 +270,21 @@ void MainWindow::addFiles()
   Q_ASSERT(pimpl);
 
   // Open a file dialog to get files
-  const QStringList files = QFileDialog::getOpenFileNames(this,
-                                                          tr("Add Files"),
-                                                          pimpl->lastDirectory,
-                                                          tr("Any files (*)"));
+  const auto files = QFileDialog::getOpenFileNames(this,
+                                                   tr("Add Files"),
+                                                   pimpl->lastDirectory,
+                                                   tr("Any files (*)"));
 
   if (!files.isEmpty())
   { // If files were selected, add them to the model
-    for (const QString& file : files)
+    for (const auto& file : files)
     {
       pimpl->addFilePathToModel(file);
     }
 
     // Save this directory to return to later
-    const QString fileName = files[0];
-    QFileInfo file(fileName);
+    const auto fileName = files[0];
+    QFileInfo file{fileName};
     pimpl->lastDirectory = file.absolutePath();
   }
 }
@@ -302,7 +304,7 @@ void MainWindow::removeFileFromModel(const QModelIndex& index)
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->fileListModel);
 
-  QStandardItem* testItem = pimpl->fileListModel->item(index.row(), 0);
+  auto testItem = pimpl->fileListModel->item(index.row(), 0);
 
   // Signal that this file shouldn't be encrypted or decrypted
   emit stopFile(testItem->text());
@@ -320,19 +322,18 @@ void MainWindow::encryptFiles()
   if (!pimpl->isBusy())
   {
     // Get passphrase from line edit
-    const QString passphrase{pimpl->passwordFrame->
-                               passwordLineEdit()->text()};
+    const QString passphrase{pimpl->passwordFrame->passwordLineEdit()->text()};
 
     if (!passphrase.isEmpty())
     {
-      const int rowCount = pimpl->fileListModel->rowCount();
+      const auto rowCount = pimpl->fileListModel->rowCount();
       if (0 < rowCount)
       {
         QStringList fileList;
 
         for (int row = 0; row < rowCount; ++row)
         {
-          QStandardItem* item = pimpl->fileListModel->item(row, 0);
+          auto item = pimpl->fileListModel->item(row, 0);
           fileList.append(item->text());
         }
 
@@ -371,7 +372,7 @@ void MainWindow::decryptFiles()
 
         for (int row = 0; row < rowCount; ++row)
         {
-          QStandardItem* item = pimpl->fileListModel->item(row, 0);
+          auto item = pimpl->fileListModel->item(row, 0);
           fileList.append(item->text());
         }
 
@@ -399,13 +400,13 @@ void MainWindow::updateProgress(const QString& path, qint64 percent)
 
   if (0 < items.size())
   {
-    QStandardItem* item = items[0];
+    auto item = items[0];
 
     if (nullptr != item)
     {
       const int index = item->row();
 
-      QStandardItem* progressItem = pimpl->fileListModel->item(index, 1);
+      auto progressItem = pimpl->fileListModel->item(index, 1);
 
       if (nullptr != progressItem)
       {
@@ -461,7 +462,7 @@ void MainWindow::dropEvent(QDropEvent* event)
   // Check for the URL MIME type, which is a list of files
   if (event->mimeData()->hasUrls())
   { // Extract the local path from the file(s)
-    for (const QUrl& url : event->mimeData()->urls())
+    for (const auto& url : event->mimeData()->urls())
     {
       pimpl->addFilePathToModel(url.toLocalFile());
     }
@@ -482,7 +483,7 @@ void MainWindow::importSettings()
 {
   Q_ASSERT(pimpl);
 
-  QSettings settings("settings.ini", QSettings::IniFormat);
+  QSettings settings{"settings.ini", QSettings::IniFormat};
 
   settings.beginGroup("MainWindow");
 
@@ -511,7 +512,7 @@ void MainWindow::exportSettings() const
 {
   Q_ASSERT(pimpl);
 
-  QSettings settings("settings.ini", QSettings::IniFormat);
+  QSettings settings{"settings.ini", QSettings::IniFormat};
 
   settings.beginGroup("MainWindow");
 
@@ -537,7 +538,7 @@ void MainWindow::exportSettings() const
 }
 
 MainWindow::MainWindowPrivate::MainWindowPrivate() :
-  headerFrame{nullptr}, fileListModel{new QStandardItemModel{}},
+  headerFrame{nullptr}, fileListModel{make_unique<QStandardItemModel>()},
   fileListView{nullptr},
   messageTextEdit{new QPlainTextEdit{tr("To add files, click the add files"
                                         " button or drag and drop files.")}},
@@ -551,7 +552,7 @@ MainWindow::MainWindowPrivate::MainWindowPrivate() :
 QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
 {
   // Try to load user theme, if it exists
-  const QString styleSheetPath{"themes/" + styleFile};
+  const auto styleSheetPath = QString{"themes/" + styleFile};
   QFile userTheme{styleSheetPath};
 
   QString styleSheet;
@@ -580,19 +581,19 @@ void MainWindow::MainWindowPrivate::addFilePathToModel(const QString& filePath)
 
   if (file.exists() && file.isFile())
   { // If the file exists, add it to the model
-    QStandardItem* pathItem = new QStandardItem{filePath};
+    auto pathItem = new QStandardItem{filePath};
     pathItem->setDragEnabled(false);
     pathItem->setDropEnabled(false);
     pathItem->setEditable(false);
     pathItem->setSelectable(false);
 
-    QStandardItem* progressItem = new QStandardItem{};
+    auto progressItem = new QStandardItem{};
     progressItem->setDragEnabled(false);
     progressItem->setDropEnabled(false);
     progressItem->setEditable(false);
     progressItem->setSelectable(false);
 
-    QStandardItem* closeFileItem = new QStandardItem{};
+    auto closeFileItem = new QStandardItem{};
     closeFileItem->setDragEnabled(false);
     closeFileItem->setDropEnabled(false);
     closeFileItem->setEditable(false);
@@ -613,10 +614,10 @@ void MainWindow::MainWindowPrivate::addFilePathToModel(const QString& filePath)
     { // Search to see if this item is already in the model
       bool addNewItem = true;
 
-      const int rowCount = fileListModel->rowCount();
+      const auto rowCount = fileListModel->rowCount();
       for (int row = 0; row < rowCount; ++row)
       {
-        QStandardItem* testItem = fileListModel->item(row, 0);
+        auto testItem = fileListModel->item(row, 0);
 
         if (testItem->text() == pathItem->text())
         {

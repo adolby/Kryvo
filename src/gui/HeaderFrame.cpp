@@ -19,6 +19,7 @@
  */
 
 #include "gui/HeaderFrame.hpp"
+#include "utility/make_unique.h"
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QHBoxLayout>
@@ -32,28 +33,28 @@ class HeaderFrame::HeaderFramePrivate {
 };
 
 HeaderFrame::HeaderFrame(QWidget* parent) :
-  QFrame{parent}, pimpl{new HeaderFramePrivate{}}
+  QFrame{parent}, pimpl{make_unique<HeaderFramePrivate>()}
 {
-  QLabel* headerLabel = new QLabel{tr("Kryvos"), this};
+  auto headerLabel = new QLabel{tr("Kryvos"), this};
   headerLabel->setObjectName("headerText");
 
-  const QIcon pauseIcon(":/images/pauseIcon.png");
+  const auto pauseIcon = QIcon{":/images/pauseIcon.png"};
   pimpl->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), this};
   pimpl->pauseButton->setObjectName("pauseButton");
   pimpl->pauseButton->setCheckable(true);
   pimpl->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const QIcon addFilesIcon(":/images/addFilesIcon.png");
-  QPushButton* addFilesButton = new QPushButton{addFilesIcon,
-                                                tr(" Add files"),
-                                                this};
+  const auto addFilesIcon = QIcon{":/images/addFilesIcon.png"};
+  auto addFilesButton = new QPushButton{addFilesIcon,
+                                        tr(" Add files"),
+                                        this};
   addFilesButton->setObjectName("addButton");
   addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const QIcon clearFilesIcon(":/images/clearFilesIcon.png");
-  QPushButton* clearFilesButton = new QPushButton{clearFilesIcon,
-                                                  tr(" Remove all files"),
-                                                  this};
+  const auto clearFilesIcon = QIcon{":/images/clearFilesIcon.png"};
+  auto clearFilesButton = new QPushButton{clearFilesIcon,
+                                          tr(" Remove all files"),
+                                          this};
   clearFilesButton->setObjectName("clearButton");
   clearFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
@@ -79,13 +80,13 @@ void HeaderFrame::togglePauseIcon(bool toggle)
 {
   if (toggle)
   {
-    const QIcon resumeIcon{":/images/resumeIcon.png"};
+    const auto resumeIcon = QIcon{":/images/resumeIcon.png"};
     pimpl->pauseButton->setIcon(resumeIcon);
     pimpl->pauseButton->setText(" Resume");
   }
   else
   {
-    const QIcon pauseIcon(":/images/pauseIcon.png");
+    const auto pauseIcon = QIcon{":/images/pauseIcon.png"};
     pimpl->pauseButton->setIcon(pauseIcon);
     pimpl->pauseButton->setText(" Pause");
   }

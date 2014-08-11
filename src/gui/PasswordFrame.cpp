@@ -19,7 +19,7 @@
  */
 
 #include "gui/PasswordFrame.hpp"
-#include "utility/make_unique.hpp"
+#include "utility/make_unique.h"
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QHBoxLayout>
 

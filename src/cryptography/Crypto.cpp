@@ -23,6 +23,7 @@
 #include "botan/hmac.h"
 #include "botan/keccak.h"
 #include "botan/base64.h"
+#include "utility/make_unique.h"
 #include <QtCore/QHash>
 #include <QtCore/QStringRef>
 #include <QtCore/QStringBuilder>
@@ -146,7 +147,7 @@ class Crypto::CryptoPrivate
 };
 
 Crypto::Crypto(QObject* parent) :
-  QObject{parent}, pimpl{new CryptoPrivate}
+  QObject{parent}, pimpl{make_unique<CryptoPrivate>()}
 {
   // Initialize Botan
   LibraryInitializer init{"thread_safe=true"};
@@ -177,10 +178,10 @@ void Crypto::encrypt(const QString& passphrase,
     algorithmName = algorithm;
   }
 
-  const int inputFileNamesSize = inputFileNames.size();
+  const auto inputFileNamesSize = inputFileNames.size();
   for (int i = 0; i < inputFileNamesSize; ++i)
   {
-    const QString inputFileName = inputFileNames[i];
+    const auto inputFileName = inputFileNames[i];
 
     try
     {
@@ -204,7 +205,7 @@ void Crypto::encrypt(const QString& passphrase,
     }
     catch (const std::exception& e)
     {
-      const QString error{e.what()};
+      const auto error = QString{e.what()};
       emit errorMessage(inputFileName, error);
     }
   } // End file loop
@@ -227,10 +228,10 @@ void Crypto::decrypt(const QString& passphrase,
   // Reset status flags
   pimpl->resetFlags();
 
-  const int inputFileNamesSize = inputFileNames.size();
+  const auto inputFileNamesSize = inputFileNames.size();
   for (int i = 0; i < inputFileNamesSize; ++i)
   {
-    const QString inputFileName = inputFileNames[i];
+    const auto inputFileName = inputFileNames[i];
 
     try
     {
@@ -265,7 +266,7 @@ void Crypto::decrypt(const QString& passphrase,
     }
     catch (const std::exception& e)
     {
-      const QString error{e.what()};
+      const auto error = QString{e.what()};
       emit errorMessage(inputFileName, error);
     }
   } // End file loop
@@ -316,7 +317,7 @@ void Crypto::encryptFile(const QString& passphrase,
     AutoSeeded_RNG rng;
 
     // Define a size for the master salt vector
-    const std::size_t masterSaltSize = 256;
+    const auto masterSaltSize = 256;
     secure_vector<byte> masterSalt;
     masterSalt.resize(masterSaltSize);
 
@@ -324,12 +325,12 @@ void Crypto::encryptFile(const QString& passphrase,
     rng.randomize(&masterSalt[0], masterSalt.size());
 
     // Setup the key derive functions
-    const std::size_t macSize = 512;
+    const auto macSize = 512;
     PKCS5_PBKDF2 pbkdf2{new HMAC{new Keccak_1600{macSize}}};
-    const std::size_t PBKDF2_ITERATIONS = 15000;
+    const auto PBKDF2_ITERATIONS = 15000;
 
     // Create the master key
-    const std::size_t masterKeySize = 256;
+    const auto masterKeySize = 256;
     secure_vector<byte> masterKey =
       pbkdf2.derive_key(masterKeySize, passphrase.toStdString(), &masterSalt[0],
                         masterSalt.size(), PBKDF2_ITERATIONS).bits_of();
@@ -338,12 +339,12 @@ void Crypto::encryptFile(const QString& passphrase,
     std::unique_ptr<KDF> kdf{get_kdf("KDF2(Keccak-1600)")};
 
     // Set up key salt size
-    const std::size_t keySaltSize = 64;
+    const auto keySaltSize = 64;
     secure_vector<byte> keySalt;
     keySalt.resize(keySaltSize);
     rng.randomize(&keySalt[0], keySalt.size());
 
-    std::size_t keySize = 0;
+    auto keySize = 0;
     if (algorithmName.contains("128"))
     {
       keySize = 16;
@@ -356,20 +357,20 @@ void Crypto::encryptFile(const QString& passphrase,
     SymmetricKey key{kdf->derive_key(keySize, masterKey, keySalt)};
 
     // Set up IV salt size
-    const std::size_t ivSaltSize = 64;
+    const auto ivSaltSize = 64;
     secure_vector<byte> ivSalt;
     ivSalt.resize(ivSaltSize);
     rng.randomize(&ivSalt[0], ivSalt.size());
 
-    const std::size_t ivSize = 256;
+    const auto ivSize = 256;
     InitializationVector iv{kdf->derive_key(ivSize, masterKey, ivSalt)};
 
     std::ifstream in{inputFileName.toStdString(), std::ios::binary};
 
-    const QString outputFileName{inputFileName % ".enc"};
+    const auto outputFileName = QString{inputFileName % ".enc"};
     std::ofstream out{outputFileName.toStdString(), std::ios::binary};
 
-    const std::string algorithmNameStd = algorithmName.toStdString();
+    const auto algorithmNameStd = algorithmName.toStdString();
 
     out << "-------- ENCRYPTED FILE --------" << std::endl;
     out << algorithmNameStd << std::endl;
@@ -416,14 +417,14 @@ void Crypto::decryptFile(const QString& passphrase,
       emit statusMessage(pimpl->messages[6].arg(inputFileName));
     }
 
-    // Setup the key derive functions
-    const std::size_t macSize = 512;
+    // Set up the key derive functions
+    const auto macSize = 512;
     PKCS5_PBKDF2 pbkdf2{new HMAC{new Keccak_1600{macSize}}};
-    const std::size_t PBKDF2_ITERATIONS = 15000;
+    const auto PBKDF2_ITERATIONS = 15000;
 
     // Create the master key
     secure_vector<byte> masterSalt = base64_decode(masterSaltString);
-    const std::size_t masterKeySize = 256;
+    const auto masterKeySize = 256;
     secure_vector<byte> masterKey =
       pbkdf2.derive_key(masterKeySize, passphrase.toStdString(), &masterSalt[0],
                         masterSalt.size(), PBKDF2_ITERATIONS).bits_of();
@@ -432,18 +433,18 @@ void Crypto::decryptFile(const QString& passphrase,
     std::unique_ptr<KDF> kdf{get_kdf("KDF2(Keccak-1600)")};
 
     secure_vector<byte> keySalt = base64_decode(keySaltString);
-    const std::size_t keySize = 16;
+    const auto keySize = 16;
     SymmetricKey key{kdf->derive_key(keySize, masterKey, keySalt)};
 
     secure_vector<byte> ivSalt = base64_decode(ivSaltString);
-    const std::size_t ivSize = 256;
+    const auto ivSize = 256;
     InitializationVector iv{kdf->derive_key(ivSize, masterKey, ivSalt)};
 
     // Remove the .enc extension if it's in the file name
-    const QString outputFileName = pimpl->removeExtension(inputFileName, "enc");
+    const auto outputFileName = pimpl->removeExtension(inputFileName, "enc");
 
     // Create a unique file name for the file in this directory
-    QString uniqueOutputFileName = pimpl->uniqueFileName(outputFileName);
+    auto uniqueOutputFileName = pimpl->uniqueFileName(outputFileName);
 
     std::ofstream out{uniqueOutputFileName.toStdString(), std::ios::binary};
 
@@ -473,15 +474,15 @@ void Crypto::executeCipher(const QString& inputFileName,
             new DataSink_Stream{out}};
 
   // Define a size for the buffer vector
-  const std::size_t bufferSize = 4096;
+  const auto bufferSize = 4096;
   secure_vector<byte> buffer;
   buffer.resize(bufferSize);
 
   // Get file size for progress in percent calculation
   QFileInfo file{inputFileName};
-  const qint64 size = file.size();
-  std::size_t sizeIndex = 0;
-  qint64 percent = -1;
+  const auto size = file.size();
+  auto sizeIndex = 0;
+  auto percent = -1;
 
   pipe.start_msg();
 
@@ -490,12 +491,12 @@ void Crypto::executeCipher(const QString& inputFileName,
     if (!pimpl->isPaused())
     {
       in.read((char*)&buffer[0], buffer.size());
-      const std::size_t fileSize = in.gcount();
+      const auto fileSize = in.gcount();
       pipe.write(&buffer[0], fileSize);
 
       // Calculate progress in percent
       sizeIndex += fileSize;
-      qint64 nextPercent = ((100 * sizeIndex) / size);
+      const auto nextPercent = ((100 * sizeIndex) / size);
       if (percent != nextPercent && 100 != nextPercent)
       {
         percent = nextPercent;
@@ -509,7 +510,7 @@ void Crypto::executeCipher(const QString& inputFileName,
 
       while (0 < pipe.remaining())
       {
-        const std::size_t buffered = pipe.read(&buffer[0], buffer.size());
+        const auto buffered = pipe.read(&buffer[0], buffer.size());
         out.write((const char*)&buffer[0], buffered);
       }
     }
@@ -548,7 +549,7 @@ QString Crypto::CryptoPrivate::removeExtension(const QString& fileName,
                                                const QString& extension)
 {
   QFileInfo file{fileName};
-  QString newFileName{fileName};
+  auto newFileName = fileName;
 
   if (file.suffix() == extension)
   {
@@ -561,7 +562,7 @@ QString Crypto::CryptoPrivate::removeExtension(const QString& fileName,
 QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
 {
   QFileInfo originalFile{fileName};
-  QString uniqueFileName{fileName};
+  auto uniqueFileName = fileName;
 
   bool foundUniqueFileName = false;
   int i = 0;
