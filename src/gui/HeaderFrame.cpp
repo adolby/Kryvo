@@ -18,7 +18,7 @@
  * Contact : andrewdolby@gmail.com
  */
 
-#include "HeaderFrame.hpp"
+#include "gui/HeaderFrame.hpp"
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QHBoxLayout>
@@ -57,7 +57,7 @@ HeaderFrame::HeaderFrame(QWidget* parent) :
   clearFilesButton->setObjectName("clearButton");
   clearFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  QHBoxLayout* headerLayout = new QHBoxLayout{this};
+  auto headerLayout = new QHBoxLayout{this};
   headerLayout->addWidget(headerLabel);
   headerLayout->addWidget(pimpl->pauseButton);
   headerLayout->addWidget(addFilesButton);

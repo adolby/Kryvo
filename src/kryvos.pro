@@ -30,15 +30,16 @@ SOURCES += main.cpp \
            gui/MainWindow.cpp \
            gui/Delegate.cpp \
            cryptography/Crypto.cpp \
-    gui/PasswordFrame.cpp \
-    gui/HeaderFrame.cpp
+           gui/PasswordFrame.cpp \
+           gui/HeaderFrame.cpp
 
 HEADERS += Kryvos.hpp \
            gui/MainWindow.hpp \
            gui/Delegate.hpp \
            cryptography/Crypto.hpp \
-    gui/PasswordFrame.hpp \
-    gui/HeaderFrame.hpp
+           gui/PasswordFrame.hpp \
+           gui/HeaderFrame.hpp \
+           utility/make_unique.h
 
 RESOURCES += resources/kryvos.qrc
 

@@ -18,7 +18,8 @@
  * Contact : andrewdolby@gmail.com
  */
 
-#include "PasswordFrame.hpp"
+#include "gui/PasswordFrame.hpp"
+#include "utility/make_unique.hpp"
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QHBoxLayout>
 
@@ -30,9 +31,9 @@ class PasswordFrame::PasswordFramePrivate {
 };
 
 PasswordFrame::PasswordFrame(QWidget* parent) :
-  QFrame{parent}, pimpl{new PasswordFramePrivate{}}
+  QFrame{parent}, pimpl{make_unique<PasswordFramePrivate>()}
 {
-  QLabel* passwordLabel = new QLabel{tr("Password "), this};
+  auto passwordLabel = new QLabel{tr("Password "), this};
   passwordLabel->setObjectName("text");
 
   pimpl->passwordLineEdit = new QLineEdit{this};
@@ -40,7 +41,7 @@ PasswordFrame::PasswordFrame(QWidget* parent) :
   pimpl->passwordLineEdit->setObjectName("passwordLineEdit");
   pimpl->passwordLineEdit->setEchoMode(QLineEdit::PasswordEchoOnEdit);
 
-  QHBoxLayout* passwordLayout = new QHBoxLayout{this};
+  auto passwordLayout = new QHBoxLayout{this};
   passwordLayout->addWidget(passwordLabel);
   passwordLayout->addWidget(pimpl->passwordLineEdit);
 }
