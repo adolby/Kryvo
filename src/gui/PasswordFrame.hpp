@@ -30,15 +30,20 @@ class PasswordFrame : public QFrame {
 
  public:
   /*!
-   * \brief PasswordFrame
+   * \brief PasswordFrame Constructs a password frame, which allows a user to
+   * enter a password for encrypting a file.
    * \param parent
    */
   explicit PasswordFrame(QWidget* parent = nullptr);
+  /*!
+   * \brief ~PasswordFrame Destroys a password frame instance.
+   */
   virtual ~PasswordFrame();
 
  public:
   /*!
-   * \brief passwordLineEdit
+   * \brief passwordLineEdit Returns a pointer to the line edit that contains
+   * a user's password for use in encryption.
    * \return Line edit.
    */
   QLineEdit* passwordLineEdit();
