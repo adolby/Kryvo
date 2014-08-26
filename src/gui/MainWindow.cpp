@@ -37,6 +37,8 @@
 #include <QtGui/QIcon>
 #include <QtGui/QStandardItemModel>
 #include <QtGui/QStandardItem>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
 #include <QtCore/QModelIndexList>
 #include <QtCore/QModelIndex>
 #include <QtCore/QMimeData>
@@ -368,7 +370,7 @@ void MainWindow::decryptFiles()
       const int rowCount = pimpl->fileListModel->rowCount();
       if (0 < rowCount)
       {
-        QStringList fileList;
+        QStringList fileList{};
 
         for (int row = 0; row < rowCount; ++row)
         {
@@ -483,58 +485,94 @@ void MainWindow::importSettings()
 {
   Q_ASSERT(pimpl);
 
-  QSettings settings{"settings.ini", QSettings::IniFormat};
+  QFile settingsFile{"settings.json"};
 
-  settings.beginGroup("MainWindow");
+  auto fileOpen = settingsFile.open(QIODevice::ReadOnly);
 
-  if (settings.value("maximized").toBool())
-  { // Move first to ensure maximize occurs on correct screen
-    this->move(settings.value("maximizedPos", QPoint(200, 200)).toPoint());
+  if (fileOpen)
+  {
+    QByteArray settingsData = settingsFile.readAll();
 
-    this->setWindowState(this->windowState() | Qt::WindowMaximized);
+    QJsonDocument settingsDoc{QJsonDocument::fromJson(settingsData)};
+    QJsonObject settings = settingsDoc.object();
+
+    auto positionObject = settings["position"].toObject();
+    auto x = static_cast<QJsonValue>(positionObject["x"]);
+    auto y = static_cast<QJsonValue>(positionObject["y"]);
+    auto position = QPoint(x.toInt(200), y.toInt(200));
+    this->move(position);
+
+    auto maximized = settings["maximized"].toBool();
+    if (maximized)
+    { // Move window, then maximize to ensure maximize occurs on correct screen
+      this->setWindowState(this->windowState() | Qt::WindowMaximized);
+    }
+    else
+    {
+      auto sizeObject = settings["size"].toObject();
+      auto width = static_cast<QJsonValue>(sizeObject["width"]);
+      auto height = static_cast<QJsonValue>(sizeObject["height"]);
+      auto size = QSize{width.toInt(800), height.toInt(600)};
+      this->resize(size);
+    }
+
+    pimpl->lastDirectory = settings["lastDirectory"].toString();
+
+    auto algorithm = static_cast<QJsonValue>(settings["lastAlgorithmName"]);
+    pimpl->lastAlgorithmName = algorithm.toString("AES-128/GCM");
+
+    auto style = static_cast<QJsonValue>(settings["styleSheetPath"]);
+    pimpl->styleSheetPath = style.toString("default/kryvos.qss");
   }
   else
   {
-    this->move(settings.value("pos", QPoint(200, 200)).toPoint());
-    this->resize(settings.value("size", QSize(800, 600)).toSize());
+    this->move(QPoint{200, 200});
+    this->resize(QSize{800, 600});
+
+    pimpl->styleSheetPath = "default/kryvos.qss";
+    pimpl->lastAlgorithmName = "AES-128/GCM";
   }
-
-  pimpl->lastDirectory = settings.value("lastDirectory", "").toString();
-  pimpl->lastAlgorithmName = settings.value("lastAlgorithmName",
-                                            "AES-128/GCM").toString();
-  pimpl->styleSheetPath = settings.value("styleSheetPath",
-                                         "default/kryvos.qss").toString();
-
-  settings.endGroup();
 }
 
 void MainWindow::exportSettings() const
 {
   Q_ASSERT(pimpl);
 
-  QSettings settings{"settings.ini", QSettings::IniFormat};
+  QFile settingsFile{"settings.json"};
 
-  settings.beginGroup("MainWindow");
+  auto fileOpen = settingsFile.open(QIODevice::WriteOnly);
 
-  settings.setValue("maximized", this->isMaximized());
-
-  if (!this->isMaximized())
+  if (fileOpen)
   {
-    settings.setValue("pos", this->pos());
-    settings.setValue("size", this->size());
+    QJsonObject settings{};
+
+    auto position = this->pos();
+
+    QJsonObject positionObject{};
+    positionObject["x"] = position.x();
+    positionObject["y"] = position.y();
+
+    settings["position"] = positionObject;
+
+    auto maximized = this->isMaximized();
+    settings["maximized"] = maximized;
+
+    if (!maximized)
+    {
+      auto size = this->size();
+      QJsonObject sizeObject{};
+      sizeObject["width"] = size.width();
+      sizeObject["height"] = size.height();
+      settings["size"] = sizeObject;
+    }
+
+    settings["lastDirectory"] = pimpl->lastDirectory;
+    settings["lastAlgorithmName"] = pimpl->lastAlgorithmName;
+    settings["styleSheetPath"] = pimpl->styleSheetPath;
+
+    QJsonDocument settingsDoc(settings);
+    settingsFile.write(settingsDoc.toJson());
   }
-  else
-  { // Save position so maximize will occur on correct screen
-    settings.setValue("maximizedPos", this->pos());
-  }
-
-  settings.setValue("lastDirectory", pimpl->lastDirectory);
-  settings.setValue("lastAlgorithmName", pimpl->lastAlgorithmName);
-  settings.setValue("styleSheetPath", pimpl->styleSheetPath);
-
-  settings.endGroup();
-
-  settings.sync();
 }
 
 MainWindow::MainWindowPrivate::MainWindowPrivate() :
@@ -555,21 +593,29 @@ QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
   const auto styleSheetPath = QString{"themes/" + styleFile};
   QFile userTheme{styleSheetPath};
 
-  QString styleSheet;
+  QString styleSheet{};
 
   if (userTheme.exists())
   {
-    userTheme.open(QFile::ReadOnly);
-    styleSheet = QLatin1String(userTheme.readAll());
-    userTheme.close();
+    auto themeOpen = userTheme.open(QFile::ReadOnly);
+
+    if (themeOpen)
+    {
+      styleSheet = QLatin1String(userTheme.readAll());
+      userTheme.close();
+    }
   }
   else
   { // Otherwise, load default theme
     QFile defaultTheme{":/stylesheets/kryvos.qss"};
 
-    defaultTheme.open(QFile::ReadOnly);
-    styleSheet = QLatin1String(defaultTheme.readAll());
-    defaultTheme.close();
+    auto defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
+
+    if (defaultThemeOpen)
+    {
+      styleSheet = QLatin1String(defaultTheme.readAll());
+      defaultTheme.close();
+    }
   }
 
   return styleSheet;
