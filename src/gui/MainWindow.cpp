@@ -318,22 +318,22 @@ void MainWindow::removeFileFromModel(const QModelIndex& index)
 void MainWindow::encryptFiles()
 {
   Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->passwordFrame->passwordLineEdit());
+  Q_ASSERT(pimpl->passwordFrame);
   Q_ASSERT(pimpl->fileListModel);
 
   if (!pimpl->isBusy())
   {
     // Get passphrase from line edit
-    const QString passphrase{pimpl->passwordFrame->passwordLineEdit()->text()};
+    const auto passphrase = pimpl->passwordFrame->password();
 
     if (!passphrase.isEmpty())
     {
       const auto rowCount = pimpl->fileListModel->rowCount();
       if (0 < rowCount)
       {
-        QStringList fileList;
+        QStringList fileList{};
 
-        for (int row = 0; row < rowCount; ++row)
+        for (auto row = 0; row < rowCount; ++row)
         {
           auto item = pimpl->fileListModel->item(row, 0);
           fileList.append(item->text());
@@ -357,13 +357,13 @@ void MainWindow::encryptFiles()
 void MainWindow::decryptFiles()
 {
   Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->passwordFrame->passwordLineEdit());
+  Q_ASSERT(pimpl->passwordFrame);
   Q_ASSERT(pimpl->fileListModel);
 
   if (!pimpl->isBusy())
   {
     // Get passphrase from line edit
-    const QString passphrase{pimpl->passwordFrame->passwordLineEdit()->text()};
+    const auto passphrase = pimpl->passwordFrame->password();
 
     if (!passphrase.isEmpty())
     {

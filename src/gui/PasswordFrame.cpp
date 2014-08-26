@@ -48,12 +48,14 @@ PasswordFrame::PasswordFrame(QWidget* parent) :
 
 PasswordFrame::~PasswordFrame() {}
 
-QLineEdit* PasswordFrame::passwordLineEdit()
+QString PasswordFrame::password()
 {
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->passwordLineEdit);
 
-  return pimpl->passwordLineEdit;
+  auto password = pimpl->passwordLineEdit->text();
+
+  return password;
 }
 
 PasswordFrame::PasswordFramePrivate::PasswordFramePrivate() :

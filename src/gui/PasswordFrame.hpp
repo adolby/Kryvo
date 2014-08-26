@@ -46,7 +46,7 @@ class PasswordFrame : public QFrame {
    * a user's password for use in encryption.
    * \return Line edit.
    */
-  QLineEdit* passwordLineEdit();
+  QString password();
 
  private:
   class PasswordFramePrivate;
