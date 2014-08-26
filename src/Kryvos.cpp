@@ -21,13 +21,13 @@
 #include "Kryvos.hpp"
 #include "cryptography/Crypto.hpp"
 #include "gui/MainWindow.hpp"
+#include "utility/make_unique.h"
 #include <QtCore/QThread>
 
 /*!
  * \brief KryvosPrivate class
  */
-class Kryvos::KryvosPrivate
-{
+class Kryvos::KryvosPrivate {
  public:
   /*!
    * \brief KryvosPrivate Constructs the Kryvos private implementation which
@@ -46,12 +46,13 @@ class Kryvos::KryvosPrivate
 };
 
 Kryvos::KryvosPrivate::KryvosPrivate() :
-  gui{new MainWindow}, cryptography{new Crypto}, cipherThread{new QThread} {}
+  gui{new MainWindow}, cryptography{make_unique<Crypto>()},
+  cipherThread{make_unique<QThread>()} {}
 
 Kryvos::KryvosPrivate::~KryvosPrivate() {}
 
 Kryvos::Kryvos(QObject* parent) :
-  QObject{parent}, pimpl{new KryvosPrivate}
+  QObject{parent}, pimpl{make_unique<KryvosPrivate>()}
 {
   // Move cryptography object to another thread to prevent GUI from blocking
   pimpl->cryptography->moveToThread(pimpl->cipherThread.get());
