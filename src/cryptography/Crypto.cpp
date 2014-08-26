@@ -124,6 +124,10 @@ class Crypto::CryptoPrivate
    */
   bool isBusy() const;
 
+  // The list of status messages that can be displayed to the user
+  const QStringList messages;
+
+ private:
   // The abort status, when set to true, will stop an executing cryptopgraphic
   // operation and prevent new cipher operations from starting until it is reset
   // to false.
@@ -141,9 +145,6 @@ class Crypto::CryptoPrivate
   // The busy status, when set to true, indicates that this class is currently
   // executing a cipher operation.
   bool busyStatus;
-
-  // The list of status messages that can be displayed to the user
-  const QStringList messages;
 };
 
 Crypto::Crypto(QObject* parent) :
@@ -167,8 +168,7 @@ void Crypto::encrypt(const QString& passphrase,
   // Reset status flags
   pimpl->resetFlags();
 
-  QString algorithmName;
-
+  QString algorithmName{};
   if (algorithm.isEmpty())
   {
     algorithmName = "AES-128/GCM";
@@ -179,7 +179,7 @@ void Crypto::encrypt(const QString& passphrase,
   }
 
   const auto inputFileNamesSize = inputFileNames.size();
-  for (int i = 0; i < inputFileNamesSize; ++i)
+  for (auto i = 0; i < inputFileNamesSize; ++i)
   {
     const auto inputFileName = inputFileNames[i];
 
@@ -229,7 +229,7 @@ void Crypto::decrypt(const QString& passphrase,
   pimpl->resetFlags();
 
   const auto inputFileNamesSize = inputFileNames.size();
-  for (int i = 0; i < inputFileNamesSize; ++i)
+  for (auto i = 0; i < inputFileNamesSize; ++i)
   {
     const auto inputFileName = inputFileNames[i];
 
@@ -525,7 +525,6 @@ void Crypto::executeCipher(const QString& inputFileName,
 }
 
 Crypto::CryptoPrivate::CryptoPrivate() :
-  aborted{false}, paused{false}, busyStatus{false},
   messages{tr("File %1 encrypted."),
            tr("File %1 decrypted."),
            tr("Encryption stopped. File %1 is incomplete."),
@@ -539,7 +538,8 @@ Crypto::CryptoPrivate::CryptoPrivate() :
            tr("Error: Decryption failed. File %1's header couldn't be read."),
            tr("Error: Encryption failed. Can't encrypt file %1. Check that this"
               " file exists and that you have permission to"
-              " access it and try again.")}
+              " access it and try again.")},
+  aborted{false}, paused{false}, busyStatus{false}
 {
   // Reserve a number of elements to improve dictionary performance
   stopped.reserve(100);
@@ -564,8 +564,8 @@ QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
   QFileInfo originalFile{fileName};
   auto uniqueFileName = fileName;
 
-  bool foundUniqueFileName = false;
-  int i = 0;
+  auto foundUniqueFileName = false;
+  auto i = 0;
 
   while (!foundUniqueFileName)
   {
