@@ -25,20 +25,25 @@
 #include <QtCore/QSize>
 
 /*!
- * \brief Delegate class
+ * \brief The Delegate class augments the view to display a progress bar and to
+ * remove the focus border.
  */
 class Delegate : public QStyledItemDelegate {
   Q_OBJECT
 
  public:
   /*!
-   * \brief Delegate Delegate displays a progress bar in a
-   * model view.
-   * \param parent
+   * \brief Delegate Constructs a delegate that augments a view.
+   * \param parent The QObject parent of this delegate.
    */
   explicit Delegate(QObject* parent = nullptr);
 
  signals:
+  /*!
+   * \brief removeRow Emitted when the delegate needs to remove a row from its
+   * model.
+   * \param index Index of the row to remove.
+   */
   void removeRow(const QModelIndex& index);
 
  public:
@@ -46,7 +51,7 @@ class Delegate : public QStyledItemDelegate {
    * \brief setFocusBorderEnabled Enables/disables the focus dotted line border
    * that appears on click.
    * \param enabled Boolean representing whether to enable or disable the
-   * focus border.
+   * focus border. True represents the enabled state.
    */
   void setFocusBorderEnabled(bool enabled);
 
@@ -54,7 +59,7 @@ class Delegate : public QStyledItemDelegate {
   /*!
    * \brief initStyleOption Initializes the style option for this delegate. Used
    * to remove the focus.
-   * \param option Style view options object.
+   * \param option Style view options.
    * \param index Index of the current cell in the model.
    */
   virtual void initStyleOption(QStyleOptionViewItem* option,

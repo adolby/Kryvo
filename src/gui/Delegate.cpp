@@ -33,9 +33,10 @@ void Delegate::setFocusBorderEnabled(bool enabled)
 }
 
 void Delegate::initStyleOption(QStyleOptionViewItem* option,
-                               const QModelIndex &index) const
+                               const QModelIndex& index) const
 {
   QStyledItemDelegate::initStyleOption(option, index);
+
   if (!focusBorderEnabled && option->state & QStyle::State_HasFocus)
   {
     option->state = option->state & ~QStyle::State_HasFocus;
@@ -46,7 +47,7 @@ void Delegate::paint(QPainter* painter,
                      const QStyleOptionViewItem& option,
                      const QModelIndex& index) const
 {
-  const int column = index.column();
+  const auto column = index.column();
 
   switch (column)
   {
@@ -55,18 +56,17 @@ void Delegate::paint(QPainter* painter,
       QStyledItemDelegate::paint(painter, option, index);
       break;
     }
-
     case 1:
     {
       // Set up a QStyleOptionProgressBar to mimic the environment of a progress
       // bar.
-      QStyleOptionProgressBar progressBarOption;
+      auto progressBarOption = QStyleOptionProgressBar{};
       progressBarOption.state = QStyle::State_Enabled;
       progressBarOption.direction = QApplication::layoutDirection();
-      progressBarOption.rect = QRect(option.rect.x(),
+      progressBarOption.rect = QRect{option.rect.x(),
                                      option.rect.y() + 1,
                                      option.rect.width(),
-                                     option.rect.height() - 1);
+                                     option.rect.height() - 1};
       progressBarOption.fontMetrics = QApplication::fontMetrics();
       progressBarOption.minimum = 0;
       progressBarOption.maximum = 100;
@@ -74,10 +74,9 @@ void Delegate::paint(QPainter* painter,
       progressBarOption.textVisible = true;
 
       // Set the progress and text values of the style option.
-      const int progress = index.model()->data(index, Qt::DisplayRole).toInt();
+      const auto progress = index.model()->data(index, Qt::DisplayRole).toInt();
       progressBarOption.progress = progress < 0 ? 0 : progress;
-      progressBarOption.text = QString().sprintf("%d%%",
-                                                 progressBarOption.progress);
+      progressBarOption.text = QString{"%1%"}.arg(progressBarOption.progress);
 
       // Draw the progress bar onto the view.
       QApplication::style()->drawControl(QStyle::CE_ProgressBar,
@@ -85,22 +84,22 @@ void Delegate::paint(QPainter* painter,
                                          painter);
       break;
     }
-
     case 2:
     {
-      QStyleOptionButton buttonOption;
+      auto buttonOption = QStyleOptionButton{};
       buttonOption.state = QStyle::State_Enabled;
       buttonOption.direction = QApplication::layoutDirection();
-      buttonOption.rect = QRect(option.rect.x(),
+      buttonOption.rect = QRect{option.rect.x(),
                                 option.rect.y(),
                                 option.rect.width(),
-                                option.rect.height());
+                                option.rect.height()};
       buttonOption.fontMetrics = QApplication::fontMetrics();
       buttonOption.features = QStyleOptionButton::Flat;
-      const QIcon closeIcon(":/images/closeFileIcon.png");
+      const auto closeIcon = QIcon{":/images/closeFileIcon.png"};
       buttonOption.icon = closeIcon;
-      buttonOption.iconSize = QSize((int)option.rect.width() * 0.4,
-                                    (int)option.rect.height() * 0.4);
+      const auto iconSize = QSize{static_cast<int>(option.rect.width() * 0.4),
+                                  static_cast<int>(option.rect.height() * 0.4)};
+      buttonOption.iconSize = iconSize;
 
       QApplication::style()->drawControl(QStyle::CE_PushButton,
                                          &buttonOption,
@@ -117,12 +116,12 @@ bool Delegate::editorEvent(QEvent* event,
 {
   if (2 == index.column())
   {
-    if ((QEvent::MouseButtonRelease == event->type()) ||
-        (QEvent::MouseButtonDblClick == event->type()))
+    if (QEvent::MouseButtonRelease == event->type() ||
+        QEvent::MouseButtonDblClick == event->type())
     {
-      QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+      auto mouseEvent = static_cast<QMouseEvent*>(event);
 
-      if ((Qt::LeftButton == mouseEvent->button()) &&
+      if (Qt::LeftButton == mouseEvent->button() &&
           option.rect.contains(mouseEvent->pos()))
       {
         emit removeRow(index);
@@ -136,7 +135,9 @@ bool Delegate::editorEvent(QEvent* event,
 QSize Delegate::sizeHint(const QStyleOptionViewItem& option,
                          const QModelIndex& index) const
 {
-  QSize s = QStyledItemDelegate::sizeHint(option, index);
-  s.setHeight(0);
-  return s;
+  auto size = QStyledItemDelegate::sizeHint(option, index);
+
+  size.setHeight(0);
+
+  return size;
 }
