@@ -27,6 +27,10 @@
 
 class HeaderFrame::HeaderFramePrivate {
  public:
+  /*!
+   * \brief HeaderFramePrivate Constructs the HeaderFrame private
+   * implementation.
+   */
   explicit HeaderFramePrivate();
 
   QPushButton* pauseButton;
@@ -78,6 +82,8 @@ HeaderFrame::~HeaderFrame() {}
 
 void HeaderFrame::togglePauseIcon(bool toggle)
 {
+  Q_ASSERT(pimpl);
+
   if (toggle)
   {
     const auto resumeIcon = QIcon{":/images/resumeIcon.png"};

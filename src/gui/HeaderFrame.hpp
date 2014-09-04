@@ -24,11 +24,23 @@
 #include <QtWidgets/QFrame>
 #include <memory>
 
+/*!
+ * \brief The HeaderFrame class contains the header frame which contains the
+ * header text, pause button, add files button, and remove all files button.
+ */
 class HeaderFrame : public QFrame {
   Q_OBJECT
 
  public:
+  /*!
+   * \brief HeaderFrame Constructs a header frame.
+   * \param parent The QWidget parent of this HeaderFrame.
+   */
   explicit HeaderFrame(QWidget* parent = nullptr);
+
+  /*!
+   * \brief ~HeaderFrame Destroys a header frame.
+   */
   virtual ~HeaderFrame();
 
  signals:
@@ -36,10 +48,12 @@ class HeaderFrame : public QFrame {
    * \brief addFiles Emitted when the add files button is clicked.
    */
   void addFiles();
+
   /*!
    * \brief removeFiles Emitted when the remove files button is clicked.
    */
   void removeFiles();
+
   /*!
    * \brief pause Emitted when the pause/resume button is checked/unchecked.
    * \param pause The boolean represenitng the pause/resume state of the
