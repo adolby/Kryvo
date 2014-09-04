@@ -321,6 +321,9 @@ void Crypto::encryptFile(const QString& passphrase,
 
     // Setup the key derive functions
     const auto macSize = static_cast<std::size_t>(512);
+
+    // PKCS5_PBKDF2 takes ownership of the new HMAC and the HMAC takes ownership
+    // of the Keccak_1600 hash function object
     Botan::PKCS5_PBKDF2 pbkdf{new Botan::HMAC{new Botan::Keccak_1600{macSize}}};
     const auto PBKDF2_ITERATIONS = 15000;
 
