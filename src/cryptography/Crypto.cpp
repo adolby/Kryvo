@@ -30,9 +30,6 @@
 
 using namespace Botan;
 
-/*!
- * \brief CryptoPrivate class
- */
 class Crypto::CryptoPrivate
 {
  public:
@@ -168,7 +165,7 @@ void Crypto::encrypt(const QString& passphrase,
   // Reset status flags
   pimpl->resetFlags();
 
-  QString algorithmName{};
+  auto algorithmName = QString{};
   if (algorithm.isEmpty())
   {
     algorithmName = "AES-128/GCM";
@@ -314,10 +311,10 @@ void Crypto::encryptFile(const QString& passphrase,
   if (!pimpl->isAborted() && file.exists() &&
       file.isFile() && file.isReadable())
   {
-    AutoSeeded_RNG rng;
+    AutoSeeded_RNG rng{};
 
     // Define a size for the master salt vector
-    const auto masterSaltSize = 256;
+    const auto masterSaltSize = static_cast<std::size_t>(256);
     secure_vector<byte> masterSalt;
     masterSalt.resize(masterSaltSize);
 
@@ -325,12 +322,12 @@ void Crypto::encryptFile(const QString& passphrase,
     rng.randomize(&masterSalt[0], masterSalt.size());
 
     // Setup the key derive functions
-    const auto macSize = 512;
+    const auto macSize = static_cast<std::size_t>(512);
     PKCS5_PBKDF2 pbkdf2{new HMAC{new Keccak_1600{macSize}}};
     const auto PBKDF2_ITERATIONS = 15000;
 
     // Create the master key
-    const auto masterKeySize = 256;
+    const auto masterKeySize = static_cast<std::size_t>(256);
     secure_vector<byte> masterKey =
       pbkdf2.derive_key(masterKeySize, passphrase.toStdString(), &masterSalt[0],
                         masterSalt.size(), PBKDF2_ITERATIONS).bits_of();
@@ -339,30 +336,30 @@ void Crypto::encryptFile(const QString& passphrase,
     std::unique_ptr<KDF> kdf{get_kdf("KDF2(Keccak-1600)")};
 
     // Set up key salt size
-    const auto keySaltSize = 64;
+    const auto keySaltSize = static_cast<std::size_t>(64);
     secure_vector<byte> keySalt;
     keySalt.resize(keySaltSize);
     rng.randomize(&keySalt[0], keySalt.size());
 
-    auto keySize = 0;
+    auto keySize = static_cast<std::size_t>(0);
     if (algorithmName.contains("128"))
     {
-      keySize = 16;
+      keySize = static_cast<std::size_t>(16);
     }
     else
     {
-      keySize = 32;
+      keySize = static_cast<std::size_t>(32);
     }
 
     SymmetricKey key{kdf->derive_key(keySize, masterKey, keySalt)};
 
     // Set up IV salt size
-    const auto ivSaltSize = 64;
+    const auto ivSaltSize = static_cast<std::size_t>(64);
     secure_vector<byte> ivSalt;
     ivSalt.resize(ivSaltSize);
     rng.randomize(&ivSalt[0], ivSalt.size());
 
-    const auto ivSize = 256;
+    const auto ivSize = static_cast<std::size_t>(256);
     InitializationVector iv{kdf->derive_key(ivSize, masterKey, ivSalt)};
 
     std::ifstream in{inputFileName.toStdString(), std::ios::binary};
@@ -412,19 +409,19 @@ void Crypto::decryptFile(const QString& passphrase,
     std::getline(in, keySaltString);
     std::getline(in, ivSaltString);
 
-    if ("-------- ENCRYPTED FILE --------" != headerString)
+    if (headerString != "-------- ENCRYPTED FILE --------")
     {
       emit statusMessage(pimpl->messages[6].arg(inputFileName));
     }
 
     // Set up the key derive functions
-    const auto macSize = 512;
+    const auto macSize = static_cast<std::size_t>(512);
     PKCS5_PBKDF2 pbkdf2{new HMAC{new Keccak_1600{macSize}}};
-    const auto PBKDF2_ITERATIONS = 15000;
+    const auto PBKDF2_ITERATIONS = static_cast<std::size_t>(15000);
 
     // Create the master key
     secure_vector<byte> masterSalt = base64_decode(masterSaltString);
-    const auto masterKeySize = 256;
+    const auto masterKeySize = static_cast<std::size_t>(256);
     secure_vector<byte> masterKey =
       pbkdf2.derive_key(masterKeySize, passphrase.toStdString(), &masterSalt[0],
                         masterSalt.size(), PBKDF2_ITERATIONS).bits_of();
@@ -433,11 +430,11 @@ void Crypto::decryptFile(const QString& passphrase,
     std::unique_ptr<KDF> kdf{get_kdf("KDF2(Keccak-1600)")};
 
     secure_vector<byte> keySalt = base64_decode(keySaltString);
-    const auto keySize = 16;
+    const auto keySize = static_cast<std::size_t>(16);
     SymmetricKey key{kdf->derive_key(keySize, masterKey, keySalt)};
 
     secure_vector<byte> ivSalt = base64_decode(ivSaltString);
-    const auto ivSize = 256;
+    const auto ivSize = static_cast<std::size_t>(256);
     InitializationVector iv{kdf->derive_key(ivSize, masterKey, ivSalt)};
 
     // Remove the .enc extension if it's in the file name
@@ -470,11 +467,11 @@ void Crypto::executeCipher(const QString& inputFileName,
                            std::ifstream& in,
                            std::ofstream& out)
 {
-  Pipe pipe{get_cipher(algorithmName, key, iv, cipherDirection),
-            new DataSink_Stream{out}};
+  Botan::Pipe pipe{get_cipher(algorithmName, key, iv, cipherDirection),
+            new Botan::DataSink_Stream{out}};
 
   // Define a size for the buffer vector
-  const auto bufferSize = 4096;
+  const auto bufferSize = static_cast<std::size_t>(4096);
   secure_vector<byte> buffer;
   buffer.resize(bufferSize);
 
@@ -496,8 +493,8 @@ void Crypto::executeCipher(const QString& inputFileName,
 
       // Calculate progress in percent
       sizeIndex += fileSize;
-      const auto nextPercent = ((100 * sizeIndex) / size);
-      if (percent != nextPercent && 100 != nextPercent)
+      const auto nextPercent = (sizeIndex * 100) / size;
+      if (nextPercent > percent && nextPercent < 100)
       {
         percent = nextPercent;
         emit progress(inputFileName, percent);
@@ -508,7 +505,7 @@ void Crypto::executeCipher(const QString& inputFileName,
         pipe.end_msg();
       }
 
-      while (0 < pipe.remaining())
+      while (pipe.remaining() > 0)
       {
         const auto buffered = pipe.read(&buffer[0], buffer.size());
         out.write((const char*)&buffer[0], buffered);

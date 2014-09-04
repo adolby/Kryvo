@@ -31,7 +31,8 @@
 #include <memory>
 
 /*!
- * \brief Crypto class
+ * \brief The Crypto class performs encryption and decryption using the Botan
+ * library.
  */
 class Crypto : public QObject
 {
