@@ -25,7 +25,7 @@
 #include <memory>
 
 /*!
- * \brief MainWindow class
+ * \brief The MainWindow class is the main window for the application.
  */
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -33,7 +33,7 @@ class MainWindow : public QMainWindow {
  public:
   /*!
    * \brief MainWindow Constructs the application's main window.
-   * \param parent
+   * \param parent The QWidget parent of this main window.
    */
   explicit MainWindow(QWidget* parent = nullptr);
 
@@ -91,13 +91,6 @@ class MainWindow : public QMainWindow {
    * button is clicked.
    */
   void removeFiles();
-
-  /*!
-   * \brief removeFileFromModel Removes the file name at the input index in the
-   * model.
-   * \param index The index of the file name to remove from the model.
-   */
-  void removeFileFromModel(const QModelIndex& index);
 
   /*!
    * \brief encryptFiles Executed when the encrypt push button is clicked.

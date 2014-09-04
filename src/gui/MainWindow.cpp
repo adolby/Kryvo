@@ -19,24 +19,22 @@
  */
 
 #include "gui/MainWindow.hpp"
-#include "gui/PasswordFrame.hpp"
 #include "gui/HeaderFrame.hpp"
-#include "gui/Delegate.hpp"
+#include "gui/FileListFrame.hpp"
+#include "gui/MessageFrame.hpp"
+#include "gui/PasswordFrame.hpp"
+#include "gui/ControlButtonFrame.hpp"
 #include "utility/make_unique.h"
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QFileDialog>
-#include <QtWidgets/QTableView>
-#include <QtWidgets/QHeaderView>
+#include <QtGui/QDropEvent>
 #include <QtGui/QIcon>
-#include <QtGui/QStandardItemModel>
-#include <QtGui/QStandardItem>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
 #include <QtCore/QModelIndexList>
@@ -45,15 +43,11 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QFile>
 #include <QtCore/QUrl>
-#include <QtCore/QSettings>
 #include <QtCore/QSize>
 #include <QtCore/QStringList>
 #include <QtCore/QList>
 #include <QtCore/QString>
 
-/*!
- * \brief MainWindowPrivate class
- */
 class MainWindow::MainWindowPrivate {
  public:
   /*!
@@ -74,18 +68,6 @@ class MainWindow::MainWindowPrivate {
   QString loadStyleSheet(const QString& styleFile);
 
   /*!
-   * \brief addFilePathToModel Adds a file to the model that represents the list
-   * to be encrypted/decrypted.
-   * \param filePath String representing the path to a file.
-   */
-  void addFilePathToModel(const QString& filePath);
-
-  /*!
-   * \brief clearModel Clears the model.
-   */
-  void clearModel();
-
-  /*!
    * \brief busy Sets the busy status received from the cipher operation.
    * \param busy Boolean representing the busy status.
    */
@@ -98,10 +80,10 @@ class MainWindow::MainWindowPrivate {
   bool isBusy() const;
 
   HeaderFrame* headerFrame;
-  std::unique_ptr<QStandardItemModel> fileListModel;
-  QTableView* fileListView;
-  QPlainTextEdit* messageTextEdit;
+  FileListFrame* fileListFrame;
+  MessageFrame* messageFrame;
   PasswordFrame* passwordFrame;
+  ControlButtonFrame* controlButtonFrame;
 
   // Messages to display to user
   const QStringList messages;
@@ -123,7 +105,6 @@ MainWindow::MainWindow(QWidget* parent) :
 {
   auto mainFrame = new QFrame{this};
   mainFrame->setObjectName("mainFrame");
-
   auto mainLayout = new QVBoxLayout{mainFrame};
 
   auto contentFrame = new QFrame{mainFrame};
@@ -134,76 +115,27 @@ MainWindow::MainWindow(QWidget* parent) :
   pimpl->headerFrame->setObjectName("headerFrame");
   contentLayout->addWidget(pimpl->headerFrame);
 
-  // File list
-  pimpl->fileListModel->setHeaderData(0, Qt::Horizontal, tr("Files"));
-  pimpl->fileListModel->setHeaderData(1, Qt::Horizontal, tr("Progress"));
-  pimpl->fileListModel->setHeaderData(2, Qt::Horizontal, tr("Remove file"));
-
-  pimpl->fileListView = new QTableView{contentFrame};
-  pimpl->fileListView->setModel(pimpl->fileListModel.get());
-
-  QHeaderView* header = pimpl->fileListView->horizontalHeader();
-  header->setStretchLastSection(false);
-
-  header->hide();
-  pimpl->fileListView->verticalHeader()->hide();
-  pimpl->fileListView->setShowGrid(false);
-
-  // Custom delegate paints progress bar and file close button for each file
-  auto delegate = new Delegate{this};
-  pimpl->fileListView->setItemDelegate(delegate);
-
-  contentLayout->addWidget(pimpl->fileListView, 20);
+  pimpl->fileListFrame = new FileListFrame{contentFrame};
+  pimpl->fileListFrame->setObjectName("fileListFrame");
+  pimpl->fileListFrame->setSizePolicy(QSizePolicy::Expanding,
+                                      QSizePolicy::Expanding);
+  contentLayout->addWidget(pimpl->fileListFrame, 20);
 
   // Message text edit display
-  auto messageFrame = new QFrame{contentFrame};
-  messageFrame->setObjectName("message");
-  messageFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-  messageFrame->setContentsMargins(0, 0, 0, 0);
-
-  pimpl->messageTextEdit->setParent(messageFrame);
-  pimpl->messageTextEdit->setObjectName("message");
-  pimpl->messageTextEdit->setReadOnly(true);
-  pimpl->messageTextEdit->setTextInteractionFlags(Qt::NoTextInteraction);
-  pimpl->messageTextEdit->viewport()->setCursor(Qt::ArrowCursor);
-  pimpl->messageTextEdit->setSizePolicy(QSizePolicy::Expanding,
-                                        QSizePolicy::Preferred);
-
-  auto messageLayout = new QHBoxLayout{messageFrame};
-  messageLayout->addWidget(pimpl->messageTextEdit);
-  messageLayout->setContentsMargins(0, 0, 0, 0);
-  messageLayout->setSpacing(0);
-
-  contentLayout->addWidget(messageFrame, 1);
+  pimpl->messageFrame = new MessageFrame{contentFrame};
+  pimpl->messageFrame->setObjectName("message");
+  pimpl->messageFrame->setSizePolicy(QSizePolicy::Expanding,
+                                     QSizePolicy::Preferred);
+  pimpl->messageFrame->setContentsMargins(0, 0, 0, 0);
+  contentLayout->addWidget(pimpl->messageFrame, 1);
 
   // Password entry frame
   pimpl->passwordFrame = new PasswordFrame{contentFrame};
   contentLayout->addWidget(pimpl->passwordFrame);
 
   // Encrypt and decrypt control button frame
-  auto buttonFrame = new QFrame{contentFrame};
-
-  const auto lockIcon = QIcon{":/images/lockIcon.png"};
-  auto encryptButton = new QPushButton{lockIcon,
-                                       tr(" Encrypt"),
-                                       buttonFrame};
-  encryptButton->setIconSize(QSize{19, 19});
-  encryptButton->setObjectName("cryptButton");
-  encryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-
-  const auto unlockedIcon = QIcon{":/images/unlockIcon.png"};
-  auto decryptButton = new QPushButton{unlockedIcon,
-                                       tr(" Decrypt"),
-                                       buttonFrame};
-  decryptButton->setIconSize(QSize{19, 19});
-  decryptButton->setObjectName("cryptButton");
-  decryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-
-  auto buttonLayout = new QHBoxLayout{buttonFrame};
-  buttonLayout->addWidget(encryptButton);
-  buttonLayout->addWidget(decryptButton);
-
-  contentLayout->addWidget(buttonFrame);
+  pimpl->controlButtonFrame = new ControlButtonFrame{contentFrame};
+  contentLayout->addWidget(pimpl->controlButtonFrame);
 
   mainLayout->addWidget(contentFrame);
 
@@ -235,14 +167,13 @@ MainWindow::MainWindow(QWidget* parent) :
   connect(pimpl->headerFrame, &HeaderFrame::removeFiles,
           this, &MainWindow::removeFiles);
 
-  // Encryption connections
-  connect(encryptButton, &QPushButton::clicked,
+  // Forwarded connections
+  connect(pimpl->fileListFrame, &FileListFrame::stopFile,
+          this, &MainWindow::stopFile, Qt::DirectConnection);
+  connect(pimpl->controlButtonFrame, &ControlButtonFrame::encryptFiles,
           this, &MainWindow::encryptFiles);
-  connect(decryptButton, &QPushButton::clicked,
+  connect(pimpl->controlButtonFrame, &ControlButtonFrame::decryptFiles,
           this, &MainWindow::decryptFiles);
-
-  connect(delegate, &Delegate::removeRow,
-          this, &MainWindow::removeFileFromModel);
 
   // Set object name
   this->setObjectName("MainWindow");
@@ -250,7 +181,7 @@ MainWindow::MainWindow(QWidget* parent) :
   // Title
   this->setWindowTitle(tr("Kryvos"));
 
-  // Read last window size and position from file
+  // Read settings from JSON file
   this->importSettings();
 
   // Load stylesheet
@@ -281,10 +212,10 @@ void MainWindow::addFiles()
   { // If files were selected, add them to the model
     for (const auto& file : files)
     {
-      pimpl->addFilePathToModel(file);
+      pimpl->fileListFrame->addFileToModel(file);
     }
 
-    // Save this directory to return to later
+    // Save this directory for returning to later
     const auto fileName = files[0];
     QFileInfo file{fileName};
     pimpl->lastDirectory = file.absolutePath();
@@ -298,21 +229,7 @@ void MainWindow::removeFiles()
   // Signal to abort current cipher operation if it's in progress
   emit abortCipher();
 
-  pimpl->clearModel();
-}
-
-void MainWindow::removeFileFromModel(const QModelIndex& index)
-{
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->fileListModel);
-
-  auto testItem = pimpl->fileListModel->item(index.row(), 0);
-
-  // Signal that this file shouldn't be encrypted or decrypted
-  emit stopFile(testItem->text());
-
-  // Remove row from model
-  pimpl->fileListModel->removeRow(index.row());
+  pimpl->fileListFrame->clear();
 }
 
 void MainWindow::encryptFiles()
@@ -328,14 +245,14 @@ void MainWindow::encryptFiles()
 
     if (!passphrase.isEmpty())
     {
-      const auto rowCount = pimpl->fileListModel->rowCount();
-      if (0 < rowCount)
+      const auto rowCount = pimpl->fileListFrame->rowCount();
+      if (rowCount > 0)
       {
-        QStringList fileList{};
+        auto fileList = QStringList{};
 
         for (auto row = 0; row < rowCount; ++row)
         {
-          auto item = pimpl->fileListModel->item(row, 0);
+          auto item = pimpl->fileListFrame->item(row);
           fileList.append(item->text());
         }
 
@@ -367,14 +284,14 @@ void MainWindow::decryptFiles()
 
     if (!passphrase.isEmpty())
     {
-      const int rowCount = pimpl->fileListModel->rowCount();
-      if (0 < rowCount)
+      const auto rowCount = pimpl->fileListFrame->rowCount();
+      if (rowCount > 0)
       {
-        QStringList fileList{};
+        auto fileList = QStringList{};
 
-        for (int row = 0; row < rowCount; ++row)
+        for (auto row = 0; row < rowCount; ++row)
         {
-          auto item = pimpl->fileListModel->item(row, 0);
+          auto item = pimpl->fileListFrame->item(row);
           fileList.append(item->text());
         }
 
@@ -396,34 +313,17 @@ void MainWindow::decryptFiles()
 void MainWindow::updateProgress(const QString& path, qint64 percent)
 {
   Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->fileListModel);
+  Q_ASSERT(pimpl->fileListFrame);
 
-  QList<QStandardItem*> items = pimpl->fileListModel->findItems(path);
-
-  if (0 < items.size())
-  {
-    auto item = items[0];
-
-    if (nullptr != item)
-    {
-      const int index = item->row();
-
-      auto progressItem = pimpl->fileListModel->item(index, 1);
-
-      if (nullptr != progressItem)
-      {
-        progressItem->setData(percent, Qt::DisplayRole);
-      }
-    }
-  }
+  pimpl->fileListFrame->updateProgress(path, percent);
 }
 
 void MainWindow::updateStatusMessage(const QString& message)
 {
   Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->messageTextEdit);
+  Q_ASSERT(pimpl->messageFrame);
 
-  pimpl->messageTextEdit->appendPlainText(message);
+  pimpl->messageFrame->appendPlainText(message);
 }
 
 void MainWindow::updateError(const QString& path, const QString& message)
@@ -466,7 +366,7 @@ void MainWindow::dropEvent(QDropEvent* event)
   { // Extract the local path from the file(s)
     for (const auto& url : event->mimeData()->urls())
     {
-      pimpl->addFilePathToModel(url.toLocalFile());
+      pimpl->fileListFrame->addFileToModel(url.toLocalFile());
     }
   }
 }
@@ -486,20 +386,19 @@ void MainWindow::importSettings()
   Q_ASSERT(pimpl);
 
   QFile settingsFile{"settings.json"};
-
   auto fileOpen = settingsFile.open(QIODevice::ReadOnly);
 
   if (fileOpen)
   {
-    QByteArray settingsData = settingsFile.readAll();
+    auto settingsData = settingsFile.readAll();
 
-    QJsonDocument settingsDoc{QJsonDocument::fromJson(settingsData)};
-    QJsonObject settings = settingsDoc.object();
+    auto settingsDoc = QJsonDocument::fromJson(settingsData);
+    auto settings = settingsDoc.object();
 
     auto positionObject = settings["position"].toObject();
     auto x = static_cast<QJsonValue>(positionObject["x"]);
     auto y = static_cast<QJsonValue>(positionObject["y"]);
-    auto position = QPoint(x.toInt(200), y.toInt(200));
+    auto position = QPoint{x.toInt(200), y.toInt(200)};
     this->move(position);
 
     auto maximized = settings["maximized"].toBool();
@@ -525,7 +424,7 @@ void MainWindow::importSettings()
     pimpl->styleSheetPath = style.toString("default/kryvos.qss");
   }
   else
-  {
+  { // Settings file couldn't be opened, so use defaults
     this->move(QPoint{200, 200});
     this->resize(QSize{800, 600});
 
@@ -539,16 +438,15 @@ void MainWindow::exportSettings() const
   Q_ASSERT(pimpl);
 
   QFile settingsFile{"settings.json"};
-
   auto fileOpen = settingsFile.open(QIODevice::WriteOnly);
 
   if (fileOpen)
   {
-    QJsonObject settings{};
+    auto settings = QJsonObject{};
 
     auto position = this->pos();
 
-    QJsonObject positionObject{};
+    auto positionObject = QJsonObject{};
     positionObject["x"] = position.x();
     positionObject["y"] = position.y();
 
@@ -560,7 +458,7 @@ void MainWindow::exportSettings() const
     if (!maximized)
     {
       auto size = this->size();
-      QJsonObject sizeObject{};
+      auto sizeObject = QJsonObject{};
       sizeObject["width"] = size.width();
       sizeObject["height"] = size.height();
       settings["size"] = sizeObject;
@@ -570,16 +468,15 @@ void MainWindow::exportSettings() const
     settings["lastAlgorithmName"] = pimpl->lastAlgorithmName;
     settings["styleSheetPath"] = pimpl->styleSheetPath;
 
-    QJsonDocument settingsDoc(settings);
+    auto settingsDoc = QJsonDocument{settings};
     settingsFile.write(settingsDoc.toJson());
   }
 }
 
 MainWindow::MainWindowPrivate::MainWindowPrivate() :
-  headerFrame{nullptr}, fileListModel{make_unique<QStandardItemModel>()},
-  fileListView{nullptr},
-  messageTextEdit{new QPlainTextEdit{tr("To add files, click the add files"
-                                        " button or drag and drop files.")}},
+  headerFrame{nullptr},
+  fileListFrame{nullptr},
+  messageFrame{nullptr},
   passwordFrame{nullptr},
   messages{tr("A password is required to encrypt or decrypt files. Please enter"
               " one to continue."),
@@ -593,7 +490,7 @@ QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
   const auto styleSheetPath = QString{"themes/" + styleFile};
   QFile userTheme{styleSheetPath};
 
-  QString styleSheet{};
+  auto styleSheet = QString{};
 
   if (userTheme.exists())
   {
@@ -619,71 +516,6 @@ QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
   }
 
   return styleSheet;
-}
-
-void MainWindow::MainWindowPrivate::addFilePathToModel(const QString& filePath)
-{
-  QFileInfo file{filePath};
-
-  if (file.exists() && file.isFile())
-  { // If the file exists, add it to the model
-    auto pathItem = new QStandardItem{filePath};
-    pathItem->setDragEnabled(false);
-    pathItem->setDropEnabled(false);
-    pathItem->setEditable(false);
-    pathItem->setSelectable(false);
-
-    auto progressItem = new QStandardItem{};
-    progressItem->setDragEnabled(false);
-    progressItem->setDropEnabled(false);
-    progressItem->setEditable(false);
-    progressItem->setSelectable(false);
-
-    auto closeFileItem = new QStandardItem{};
-    closeFileItem->setDragEnabled(false);
-    closeFileItem->setDropEnabled(false);
-    closeFileItem->setEditable(false);
-    closeFileItem->setSelectable(false);
-
-    QList<QStandardItem*> items;
-    items.append(pathItem);
-    items.append(progressItem);
-    items.append(closeFileItem);
-
-    if (0 == fileListModel->rowCount())
-    { // Add right away if there are no items in the model
-      fileListModel->appendRow(items);
-      QHeaderView* header = fileListView->horizontalHeader();
-      header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    }
-    else
-    { // Search to see if this item is already in the model
-      bool addNewItem = true;
-
-      const auto rowCount = fileListModel->rowCount();
-      for (int row = 0; row < rowCount; ++row)
-      {
-        auto testItem = fileListModel->item(row, 0);
-
-        if (testItem->text() == pathItem->text())
-        {
-          addNewItem = false;
-        }
-      }
-
-      if (addNewItem)
-      { // Add the item to the model if it's a new item
-        fileListModel->appendRow(items);
-        QHeaderView* header = fileListView->horizontalHeader();
-        header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-      }
-    } // End else
-  } // End if file exists and is a file
-}
-
-void MainWindow::MainWindowPrivate::clearModel()
-{
-  fileListModel->clear();
 }
 
 void MainWindow::MainWindowPrivate::busy(bool busy)
