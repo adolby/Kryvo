@@ -35,6 +35,7 @@ class Kryvos::KryvosPrivate {
    * Initializes the cryptography work thread.
    */
   explicit KryvosPrivate();
+
   /*!
    * \brief ~KryvosPrivate Destroys the Kryvos private implementation.
    */
@@ -46,7 +47,7 @@ class Kryvos::KryvosPrivate {
 };
 
 Kryvos::KryvosPrivate::KryvosPrivate() :
-  gui{new MainWindow}, cryptography{make_unique<Crypto>()},
+  gui{make_unique<MainWindow>()}, cryptography{make_unique<Crypto>()},
   cipherThread{make_unique<QThread>()} {}
 
 Kryvos::KryvosPrivate::~KryvosPrivate() {}
@@ -105,7 +106,7 @@ Kryvos::~Kryvos()
   // Quit the currently running thread
   pimpl->cipherThread->quit();
 
-  bool timedOut = !pimpl->cipherThread->wait(1000);
+  auto timedOut = !pimpl->cipherThread->wait(1000);
 
   // If the thread couldn't quit in one second, then terminate it
   if (timedOut)

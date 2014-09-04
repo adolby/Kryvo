@@ -25,10 +25,9 @@
 #include <memory>
 
 /*!
- * \brief Kryvos class
+ * \brief The Kryvos class
  */
-class Kryvos : public QObject
-{
+class Kryvos : public QObject {
   Q_OBJECT
 
  public:
