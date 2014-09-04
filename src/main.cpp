@@ -23,8 +23,8 @@
 
 /*!
  * \brief main Main function.
- * \param argc
- * \param argv
+ * \param argc Number of command line parameters.
+ * \param argv Array of command line parameters.
  * \return Integer exit code.
  */
 int main(int argc, char* argv[])
@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
   Kryvos kryvos{};
 
-  int retval = a.exec();
+  auto retval = a.exec();
 
   return retval;
 }
