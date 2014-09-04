@@ -28,8 +28,6 @@
 #include <QtCore/QStringRef>
 #include <QtCore/QStringBuilder>
 
-using namespace Botan;
-
 class Crypto::CryptoPrivate
 {
  public:
@@ -148,7 +146,7 @@ Crypto::Crypto(QObject* parent) :
   QObject{parent}, pimpl{make_unique<CryptoPrivate>()}
 {
   // Initialize Botan
-  LibraryInitializer init{"thread_safe=true"};
+  Botan::LibraryInitializer init{"thread_safe=true"};
 }
 
 Crypto::~Crypto() {}
@@ -196,7 +194,7 @@ void Crypto::encrypt(const QString& passphrase,
         emit errorMessage(inputFileName, pimpl->messages[2].arg(inputFileName));
       }
     }
-    catch (const Stream_IO_Error&)
+    catch (const Botan::Stream_IO_Error&)
     {
       emit errorMessage(inputFileName, pimpl->messages[8].arg(inputFileName));
     }
@@ -245,11 +243,11 @@ void Crypto::decrypt(const QString& passphrase,
         emit errorMessage(inputFileName, pimpl->messages[3].arg(inputFileName));
       }
     }
-    catch (const Decoding_Error&)
+    catch (const Botan::Decoding_Error&)
     {
       emit errorMessage(inputFileName, pimpl->messages[5].arg(inputFileName));
     }
-    catch (const Integrity_Failure&)
+    catch (const Botan::Integrity_Failure&)
     {
       emit errorMessage(inputFileName, pimpl->messages[5].arg(inputFileName));
     }
@@ -311,35 +309,35 @@ void Crypto::encryptFile(const QString& passphrase,
   if (!pimpl->isAborted() && file.exists() &&
       file.isFile() && file.isReadable())
   {
-    AutoSeeded_RNG rng{};
+    Botan::AutoSeeded_RNG range{};
 
     // Define a size for the master salt vector
     const auto masterSaltSize = static_cast<std::size_t>(256);
-    secure_vector<byte> masterSalt;
+    Botan::secure_vector<Botan::byte> masterSalt;
     masterSalt.resize(masterSaltSize);
 
     // Create random master salt
-    rng.randomize(&masterSalt[0], masterSalt.size());
+    range.randomize(&masterSalt[0], masterSalt.size());
 
     // Setup the key derive functions
     const auto macSize = static_cast<std::size_t>(512);
-    PKCS5_PBKDF2 pbkdf2{new HMAC{new Keccak_1600{macSize}}};
+    Botan::PKCS5_PBKDF2 pbkdf{new Botan::HMAC{new Botan::Keccak_1600{macSize}}};
     const auto PBKDF2_ITERATIONS = 15000;
 
     // Create the master key
     const auto masterKeySize = static_cast<std::size_t>(256);
-    secure_vector<byte> masterKey =
-      pbkdf2.derive_key(masterKeySize, passphrase.toStdString(), &masterSalt[0],
-                        masterSalt.size(), PBKDF2_ITERATIONS).bits_of();
+    Botan::secure_vector<Botan::byte> masterKey =
+      pbkdf.derive_key(masterKeySize, passphrase.toStdString(), &masterSalt[0],
+        masterSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
-    std::unique_ptr<KDF> kdf{get_kdf("KDF2(Keccak-1600)")};
+    std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf("KDF2(Keccak-1600)")};
 
     // Set up key salt size
     const auto keySaltSize = static_cast<std::size_t>(64);
-    secure_vector<byte> keySalt;
+    Botan::secure_vector<Botan::byte> keySalt;
     keySalt.resize(keySaltSize);
-    rng.randomize(&keySalt[0], keySalt.size());
+    range.randomize(&keySalt[0], keySalt.size());
 
     auto keySize = static_cast<std::size_t>(0);
     if (algorithmName.contains("128"))
@@ -351,16 +349,16 @@ void Crypto::encryptFile(const QString& passphrase,
       keySize = static_cast<std::size_t>(32);
     }
 
-    SymmetricKey key{kdf->derive_key(keySize, masterKey, keySalt)};
+    Botan::SymmetricKey key{kdf->derive_key(keySize, masterKey, keySalt)};
 
     // Set up IV salt size
     const auto ivSaltSize = static_cast<std::size_t>(64);
-    secure_vector<byte> ivSalt;
+    Botan::secure_vector<Botan::byte> ivSalt;
     ivSalt.resize(ivSaltSize);
-    rng.randomize(&ivSalt[0], ivSalt.size());
+    range.randomize(&ivSalt[0], ivSalt.size());
 
     const auto ivSize = static_cast<std::size_t>(256);
-    InitializationVector iv{kdf->derive_key(ivSize, masterKey, ivSalt)};
+    Botan::InitializationVector iv{kdf->derive_key(ivSize, masterKey, ivSalt)};
 
     std::ifstream in{inputFileName.toStdString(), std::ios::binary};
 
@@ -371,12 +369,12 @@ void Crypto::encryptFile(const QString& passphrase,
 
     out << "-------- ENCRYPTED FILE --------" << std::endl;
     out << algorithmNameStd << std::endl;
-    out << base64_encode(&masterSalt[0], masterSalt.size()) << std::endl;
-    out << base64_encode(&keySalt[0], keySalt.size()) << std::endl;
-    out << base64_encode(&ivSalt[0], ivSalt.size()) << std::endl;
+    out << Botan::base64_encode(&masterSalt[0], masterSalt.size()) << std::endl;
+    out << Botan::base64_encode(&keySalt[0], keySalt.size()) << std::endl;
+    out << Botan::base64_encode(&ivSalt[0], ivSalt.size()) << std::endl;
 
-    this->executeCipher(inputFileName, algorithmNameStd, key, iv, ENCRYPTION,
-                        in, out);
+    this->executeCipher(inputFileName, algorithmNameStd, key, iv,
+                        Botan::ENCRYPTION, in, out);
 
     if (!pimpl->isAborted() && !pimpl->isStopped(inputFileName))
     {
@@ -416,26 +414,30 @@ void Crypto::decryptFile(const QString& passphrase,
 
     // Set up the key derive functions
     const auto macSize = static_cast<std::size_t>(512);
-    PKCS5_PBKDF2 pbkdf2{new HMAC{new Keccak_1600{macSize}}};
+    Botan::PKCS5_PBKDF2 pbkdf{new Botan::HMAC{new Botan::Keccak_1600{macSize}}};
     const auto PBKDF2_ITERATIONS = static_cast<std::size_t>(15000);
 
     // Create the master key
-    secure_vector<byte> masterSalt = base64_decode(masterSaltString);
+    Botan::secure_vector<Botan::byte> masterSalt =
+        Botan::base64_decode(masterSaltString);
     const auto masterKeySize = static_cast<std::size_t>(256);
-    secure_vector<byte> masterKey =
-      pbkdf2.derive_key(masterKeySize, passphrase.toStdString(), &masterSalt[0],
-                        masterSalt.size(), PBKDF2_ITERATIONS).bits_of();
+    Botan::secure_vector<Botan::byte> masterKey =
+      pbkdf.derive_key(masterKeySize, passphrase.toStdString(), &masterSalt[0],
+        masterSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
-    std::unique_ptr<KDF> kdf{get_kdf("KDF2(Keccak-1600)")};
+    std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf("KDF2(Keccak-1600)")};
 
-    secure_vector<byte> keySalt = base64_decode(keySaltString);
+    Botan::secure_vector<Botan::byte> keySalt =
+        Botan::base64_decode(keySaltString);
+
     const auto keySize = static_cast<std::size_t>(16);
-    SymmetricKey key{kdf->derive_key(keySize, masterKey, keySalt)};
+    Botan::SymmetricKey key{kdf->derive_key(keySize, masterKey, keySalt)};
 
-    secure_vector<byte> ivSalt = base64_decode(ivSaltString);
+    Botan::secure_vector<Botan::byte> ivSalt =
+        Botan::base64_decode(ivSaltString);
     const auto ivSize = static_cast<std::size_t>(256);
-    InitializationVector iv{kdf->derive_key(ivSize, masterKey, ivSalt)};
+    Botan::InitializationVector iv{kdf->derive_key(ivSize, masterKey, ivSalt)};
 
     // Remove the .enc extension if it's in the file name
     const auto outputFileName = pimpl->removeExtension(inputFileName, "enc");
@@ -445,8 +447,8 @@ void Crypto::decryptFile(const QString& passphrase,
 
     std::ofstream out{uniqueOutputFileName.toStdString(), std::ios::binary};
 
-    this->executeCipher(inputFileName, algorithmNameStd, key, iv, DECRYPTION,
-                        in, out);
+    this->executeCipher(inputFileName, algorithmNameStd, key, iv,
+                        Botan::DECRYPTION, in, out);
 
     if (!pimpl->isAborted() && !pimpl->isStopped(inputFileName))
     {
@@ -472,7 +474,7 @@ void Crypto::executeCipher(const QString& inputFileName,
 
   // Define a size for the buffer vector
   const auto bufferSize = static_cast<std::size_t>(4096);
-  secure_vector<byte> buffer;
+  Botan::secure_vector<Botan::byte> buffer;
   buffer.resize(bufferSize);
 
   // Get file size for progress in percent calculation
