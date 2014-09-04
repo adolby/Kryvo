@@ -25,6 +25,10 @@
 
 class PasswordFrame::PasswordFramePrivate {
  public:
+  /*!
+   * \brief PasswordFramePrivate Constructs the password frame private
+   * implementation.
+   */
   explicit PasswordFramePrivate();
 
   QLineEdit* passwordLineEdit;

@@ -25,26 +25,30 @@
 #include <QtWidgets/QLineEdit>
 #include <memory>
 
+/*!
+ * \brief The PasswordFrame class contains a line edit that allows the user to
+ * enter a password for file encryption/decryption.
+ */
 class PasswordFrame : public QFrame {
   Q_OBJECT
 
  public:
   /*!
    * \brief PasswordFrame Constructs a password frame, which allows a user to
-   * enter a password for encrypting a file.
-   * \param parent
+   * enter a password for encrypting/decrypting a file.
+   * \param parent The QWidget parent of this password frame.
    */
   explicit PasswordFrame(QWidget* parent = nullptr);
+
   /*!
-   * \brief ~PasswordFrame Destroys a password frame instance.
+   * \brief ~PasswordFrame Destroys a password frame.
    */
   virtual ~PasswordFrame();
 
- public:
   /*!
-   * \brief passwordLineEdit Returns a pointer to the line edit that contains
-   * a user's password for use in encryption.
-   * \return Line edit.
+   * \brief passwordLineEdit Returns the password string from the password line
+   * edit.
+   * \return String of .
    */
   QString password();
 
