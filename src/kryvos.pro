@@ -27,18 +27,24 @@ LIBS += -lbotan-1.11
 
 SOURCES += main.cpp \
            Kryvos.cpp \
-           gui/MainWindow.cpp \
-           gui/Delegate.cpp \
            cryptography/Crypto.cpp \
+           gui/MainWindow.cpp \
+           gui/HeaderFrame.cpp \
+           gui/FileListFrame.cpp \
+           gui/Delegate.cpp \
+           gui/MessageFrame.cpp \
            gui/PasswordFrame.cpp \
-           gui/HeaderFrame.cpp
+           gui/ControlButtonFrame.cpp
 
 HEADERS += Kryvos.hpp \
-           gui/MainWindow.hpp \
-           gui/Delegate.hpp \
            cryptography/Crypto.hpp \
-           gui/PasswordFrame.hpp \
+           gui/MainWindow.hpp \
            gui/HeaderFrame.hpp \
+           gui/FileListFrame.hpp \
+           gui/Delegate.hpp \
+           gui/MessageFrame.hpp \
+           gui/PasswordFrame.hpp \
+           gui/ControlButtonFrame.hpp \
            utility/make_unique.h
 
 RESOURCES += resources/kryvos.qrc
