@@ -139,8 +139,8 @@ class MainWindow : public QMainWindow {
 
  protected:
   /*!
-   * \brief closeEvent Executed when a close event occurs on the main window.
-   * \param event Close event.
+   * \brief closeEvent
+   * \param event
    */
   virtual void closeEvent(QCloseEvent* event);
 
@@ -168,22 +168,6 @@ class MainWindow : public QMainWindow {
    * \return Maximum size.
    */
   virtual QSize minimumSizeHint() const;
-
- private:
-  /*!
-   * \brief importSettings Imports settings from the local kryvos.ini file:
-   * the last application size and position, the last directory opened by the
-   * file open dialog, the last algorithm set, and the stylesheet path for
-   * theming.
-   */
-  void importSettings();
-
-  /*!
-   * \brief exportSettings Exports settings to the local kryvos.ini file: the
-   * application size and position, the last directory opened by the open
-   * dialog, and the stylesheet path for theming.
-   */
-  void exportSettings() const;
 
  private:
   class MainWindowPrivate;

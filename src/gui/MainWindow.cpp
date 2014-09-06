@@ -24,6 +24,7 @@
 #include "gui/MessageFrame.hpp"
 #include "gui/PasswordFrame.hpp"
 #include "gui/ControlButtonFrame.hpp"
+#include "settings/Settings.hpp"
 #include "utility/make_unique.h"
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
@@ -35,8 +36,6 @@
 #include <QtWidgets/QFileDialog>
 #include <QtGui/QDropEvent>
 #include <QtGui/QIcon>
-#include <QtCore/QJsonDocument>
-#include <QtCore/QJsonObject>
 #include <QtCore/QModelIndexList>
 #include <QtCore/QModelIndex>
 #include <QtCore/QMimeData>
@@ -85,13 +84,11 @@ class MainWindow::MainWindowPrivate {
   PasswordFrame* passwordFrame;
   ControlButtonFrame* controlButtonFrame;
 
+  // Settings
+  Settings settings;
+
   // Messages to display to user
   const QStringList messages;
-
-  // Settings strings
-  QString lastDirectory;
-  QString lastAlgorithmName;
-  QString styleSheetPath;
 
  private:
   // The busy status, when set to true, indicates that this object is currently
@@ -181,15 +178,24 @@ MainWindow::MainWindow(QWidget* parent) :
   // Title
   this->setWindowTitle(tr("Kryvos"));
 
-  // Read settings from JSON file
-  this->importSettings();
-
   // Load stylesheet
-  const auto styleSheet = pimpl->loadStyleSheet(pimpl->styleSheetPath);
+  const auto styleSheet = pimpl->loadStyleSheet(pimpl->settings.
+                                                  styleSheetPath());
 
   if (!styleSheet.isEmpty())
   {
     this->setStyleSheet(styleSheet);
+  }
+
+  this->move(pimpl->settings.position());
+
+  if (pimpl->settings.maximized())
+  { // Move window, then maximize to ensure maximize occurs on correct screen
+    this->setWindowState(this->windowState() | Qt::WindowMaximized);
+  }
+  else
+  {
+    this->resize(pimpl->settings.size());
   }
 
   // Enable drag and drop
@@ -205,7 +211,8 @@ void MainWindow::addFiles()
   // Open a file dialog to get files
   const auto files = QFileDialog::getOpenFileNames(this,
                                                    tr("Add Files"),
-                                                   pimpl->lastDirectory,
+                                                   pimpl->settings.
+                                                     lastDirectory(),
                                                    tr("Any files (*)"));
 
   if (!files.isEmpty())
@@ -218,7 +225,7 @@ void MainWindow::addFiles()
     // Save this directory for returning to later
     const auto fileName = files[0];
     QFileInfo file{fileName};
-    pimpl->lastDirectory = file.absolutePath();
+    pimpl->settings.lastDirectory(file.absolutePath());
   }
 }
 
@@ -257,7 +264,7 @@ void MainWindow::encryptFiles()
         }
 
         // Start encrypting the file list
-        emit encrypt(passphrase, fileList, pimpl->lastAlgorithmName);
+        emit encrypt(passphrase, fileList, pimpl->settings.lastAlgorithm());
       }
     }
     else
@@ -341,7 +348,17 @@ void MainWindow::updateBusyStatus(bool busy)
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-  this->exportSettings();
+  pimpl->settings.position(this->pos());
+
+  if (this->isMaximized())
+  {
+    pimpl->settings.maximized(true);
+  }
+  else
+  {
+    pimpl->settings.maximized(false);
+    pimpl->settings.size(this->size());
+  }
 
   QMainWindow::closeEvent(event);
 }
@@ -379,98 +396,6 @@ QSize MainWindow::sizeHint() const
 QSize MainWindow::minimumSizeHint() const
 {
   return QSize(600, 350);
-}
-
-void MainWindow::importSettings()
-{
-  Q_ASSERT(pimpl);
-
-  QFile settingsFile{"settings.json"};
-  auto fileOpen = settingsFile.open(QIODevice::ReadOnly);
-
-  if (fileOpen)
-  {
-    auto settingsData = settingsFile.readAll();
-
-    auto settingsDoc = QJsonDocument::fromJson(settingsData);
-    auto settings = settingsDoc.object();
-
-    auto positionObject = settings["position"].toObject();
-    auto x = static_cast<QJsonValue>(positionObject["x"]);
-    auto y = static_cast<QJsonValue>(positionObject["y"]);
-    auto position = QPoint{x.toInt(200), y.toInt(200)};
-    this->move(position);
-
-    auto maximized = settings["maximized"].toBool();
-    if (maximized)
-    { // Move window, then maximize to ensure maximize occurs on correct screen
-      this->setWindowState(this->windowState() | Qt::WindowMaximized);
-    }
-    else
-    {
-      auto sizeObject = settings["size"].toObject();
-      auto width = static_cast<QJsonValue>(sizeObject["width"]);
-      auto height = static_cast<QJsonValue>(sizeObject["height"]);
-      auto size = QSize{width.toInt(800), height.toInt(600)};
-      this->resize(size);
-    }
-
-    pimpl->lastDirectory = settings["lastDirectory"].toString();
-
-    auto algorithm = static_cast<QJsonValue>(settings["lastAlgorithmName"]);
-    pimpl->lastAlgorithmName = algorithm.toString("AES-128/GCM");
-
-    auto style = static_cast<QJsonValue>(settings["styleSheetPath"]);
-    pimpl->styleSheetPath = style.toString("default/kryvos.qss");
-  }
-  else
-  { // Settings file couldn't be opened, so use defaults
-    this->move(QPoint{200, 200});
-    this->resize(QSize{800, 600});
-
-    pimpl->styleSheetPath = "default/kryvos.qss";
-    pimpl->lastAlgorithmName = "AES-128/GCM";
-  }
-}
-
-void MainWindow::exportSettings() const
-{
-  Q_ASSERT(pimpl);
-
-  QFile settingsFile{"settings.json"};
-  auto fileOpen = settingsFile.open(QIODevice::WriteOnly);
-
-  if (fileOpen)
-  {
-    auto settings = QJsonObject{};
-
-    auto position = this->pos();
-
-    auto positionObject = QJsonObject{};
-    positionObject["x"] = position.x();
-    positionObject["y"] = position.y();
-
-    settings["position"] = positionObject;
-
-    auto maximized = this->isMaximized();
-    settings["maximized"] = maximized;
-
-    if (!maximized)
-    {
-      auto size = this->size();
-      auto sizeObject = QJsonObject{};
-      sizeObject["width"] = size.width();
-      sizeObject["height"] = size.height();
-      settings["size"] = sizeObject;
-    }
-
-    settings["lastDirectory"] = pimpl->lastDirectory;
-    settings["lastAlgorithmName"] = pimpl->lastAlgorithmName;
-    settings["styleSheetPath"] = pimpl->styleSheetPath;
-
-    auto settingsDoc = QJsonDocument{settings};
-    settingsFile.write(settingsDoc.toJson());
-  }
 }
 
 MainWindow::MainWindowPrivate::MainWindowPrivate() :

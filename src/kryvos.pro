@@ -34,7 +34,8 @@ SOURCES += main.cpp \
            gui/Delegate.cpp \
            gui/MessageFrame.cpp \
            gui/PasswordFrame.cpp \
-           gui/ControlButtonFrame.cpp
+           gui/ControlButtonFrame.cpp \
+           settings/Settings.cpp
 
 HEADERS += Kryvos.hpp \
            cryptography/Crypto.hpp \
@@ -45,6 +46,7 @@ HEADERS += Kryvos.hpp \
            gui/MessageFrame.hpp \
            gui/PasswordFrame.hpp \
            gui/ControlButtonFrame.hpp \
+           settings/Settings.hpp \
            utility/make_unique.h
 
 RESOURCES += resources/kryvos.qrc
