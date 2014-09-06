@@ -48,7 +48,7 @@ class PasswordFrame : public QFrame {
   /*!
    * \brief passwordLineEdit Returns the password string from the password line
    * edit.
-   * \return String of .
+   * \return Password string.
    */
   QString password();
 
