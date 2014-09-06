@@ -20,14 +20,14 @@ class Settings
   virtual ~Settings();
 
   /*!
-   * \brief position Sets the position.
-   * \param lastPosition
+   * \brief position Sets the main window position.
+   * \param position Point at position of the main window.
    */
   void position(const QPoint& position);
 
   /*!
-   * \brief position Returns the main window's last top corner point.
-   * \return Point at main window top corner.
+   * \brief position Returns the main window's position.
+   * \return Point at position of the main window.
    */
   QPoint position();
 
@@ -44,8 +44,8 @@ class Settings
   bool maximized();
 
   /*!
-   * \brief size
-   * \param lastSize
+   * \brief size Sets the main window size.
+   * \param size Size of the main window.
    */
   void size(const QSize& size);
 
