@@ -57,7 +57,7 @@ class MainWindow::MainWindowPrivate {
 
   /*!
    * \brief loadStyleSheet Attempts to load a Qt stylesheet from the local
-   * themes folder with the name specified in the local kryvos.ini file. If the
+   * themes folder with the name specified in the local settings file. If the
    * load fails, the method will load the default stylesheet from the
    * application resources.
    * \param styleFile String representing the name of the stylesheet without
