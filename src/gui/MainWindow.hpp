@@ -139,8 +139,8 @@ class MainWindow : public QMainWindow {
 
  protected:
   /*!
-   * \brief closeEvent
-   * \param event
+   * \brief closeEvent Executed when the main window is closed.
+   * \param event Close event.
    */
   virtual void closeEvent(QCloseEvent* event);
 
