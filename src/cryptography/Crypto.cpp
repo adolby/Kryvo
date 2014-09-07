@@ -486,9 +486,9 @@ void Crypto::executeCipher(const QString& inputFileName,
 
   // Get file size for progress in percent calculation
   QFileInfo file{inputFileName};
-  const auto size = file.size();
-  auto sizeIndex = 0;
-  auto percent = -1;
+  const qint64 size = file.size();
+  std::size_t fileIndex = 0;
+  qint64 percent = -1;
 
   pipe.start_msg();
 
@@ -497,12 +497,13 @@ void Crypto::executeCipher(const QString& inputFileName,
     if (!pimpl->isPaused())
     {
       in.read((char*)&buffer[0], buffer.size());
-      const auto fileSize = in.gcount();
-      pipe.write(&buffer[0], fileSize);
+      const auto remainingSize = in.gcount();
+      pipe.write(&buffer[0], remainingSize);
 
       // Calculate progress in percent
-      sizeIndex += fileSize;
-      const auto nextPercent = (sizeIndex * 100) / size;
+      fileIndex += remainingSize;
+      const qint64 nextPercent = (fileIndex * 100) / size;
+
       if (nextPercent > percent && nextPercent < 100)
       {
         percent = nextPercent;
