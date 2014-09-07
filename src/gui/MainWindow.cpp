@@ -415,7 +415,7 @@ MainWindow::MainWindowPrivate::MainWindowPrivate() :
 QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
 {
   // Try to load user theme, if it exists
-  const auto styleSheetPath = QString{"themes"} % QDir::separator() % styleFile;
+  const auto styleSheetPath = QString{"themes" % QDir::separator() % styleFile};
   QFile userTheme{styleSheetPath};
 
   auto styleSheet = QString{};
