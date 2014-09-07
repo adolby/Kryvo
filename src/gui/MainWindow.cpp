@@ -41,10 +41,13 @@
 #include <QtCore/QMimeData>
 #include <QtCore/QFileInfo>
 #include <QtCore/QFile>
+#include <QtCore/QDir>
 #include <QtCore/QUrl>
 #include <QtCore/QSize>
 #include <QtCore/QStringList>
 #include <QtCore/QList>
+#include <QtCore/QStringRef>
+#include <QtCore/QStringBuilder>
 #include <QtCore/QString>
 
 class MainWindow::MainWindowPrivate {
@@ -412,7 +415,7 @@ MainWindow::MainWindowPrivate::MainWindowPrivate() :
 QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
 {
   // Try to load user theme, if it exists
-  const auto styleSheetPath = QString{"themes/" + styleFile};
+  const auto styleSheetPath = QString{"themes"} % QDir::separator() % styleFile;
   QFile userTheme{styleSheetPath};
 
   auto styleSheet = QString{};

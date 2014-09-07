@@ -24,6 +24,7 @@
 #include "botan/keccak.h"
 #include "botan/base64.h"
 #include "utility/make_unique.h"
+#include <QtCore/QDir>
 #include <QtCore/QHash>
 #include <QtCore/QStringRef>
 #include <QtCore/QStringBuilder>
@@ -558,7 +559,8 @@ QString Crypto::CryptoPrivate::removeExtension(const QString& fileName,
 
   if (file.suffix() == extension)
   {
-    newFileName = file.absolutePath() % QString{"/"} % file.completeBaseName();
+    newFileName = file.absolutePath() % QDir::separator() %
+                  file.completeBaseName();
   }
 
   return newFileName;
@@ -578,9 +580,9 @@ QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
 
     if (uniqueFile.exists() && uniqueFile.isFile())
     { // If there is a file extension, write number of copies before extension
-      uniqueFileName = originalFile.absolutePath() % QString{"/"} %
-          originalFile.baseName() % QString{" (%1)"}.arg(i + 2) % "." %
-          originalFile.completeSuffix();
+      uniqueFileName = originalFile.absolutePath() % QDir::separator() %
+                       originalFile.baseName() % QString{" (%1)"}.arg(i + 2) %
+                       "." % originalFile.completeSuffix();
 
       ++i;
     }
