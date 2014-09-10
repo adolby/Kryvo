@@ -144,17 +144,15 @@ MainWindow::MainWindow(QWidget* parent) :
   // Actions
 
   // Add files action
-  auto addFilesAction = new QAction(this);
+  auto addFilesAction = new QAction{this};
   addFilesAction->setShortcut(Qt::Key_O | Qt::CTRL);
-
   connect(addFilesAction, &QAction::triggered,
           this, &MainWindow::addFiles);
   this->addAction(addFilesAction);
 
   // Quit action
-  auto quitAction = new QAction(this);
+  auto quitAction = new QAction{this};
   quitAction->setShortcut(Qt::Key_Q | Qt::CTRL);
-
   connect(quitAction, &QAction::triggered,
           this, &QMainWindow::close);
   this->addAction(quitAction);
@@ -246,7 +244,7 @@ void MainWindow::encryptFiles()
 {
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->passwordFrame);
-  Q_ASSERT(pimpl->fileListModel);
+  Q_ASSERT(pimpl->fileListFrame);
 
   if (!pimpl->isBusy())
   {
@@ -285,7 +283,7 @@ void MainWindow::decryptFiles()
 {
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->passwordFrame);
-  Q_ASSERT(pimpl->fileListModel);
+  Q_ASSERT(pimpl->fileListFrame);
 
   if (!pimpl->isBusy())
   {
