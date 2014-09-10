@@ -19,11 +19,11 @@
  */
 
 #include "cryptography/Crypto.hpp"
+#include "utility/make_unique.h"
 #include "botan/pbkdf2.h"
 #include "botan/hmac.h"
 #include "botan/keccak.h"
 #include "botan/base64.h"
-#include "utility/make_unique.h"
 #include <QtCore/QDir>
 #include <QtCore/QHash>
 #include <QtCore/QStringRef>
@@ -484,7 +484,7 @@ void Crypto::executeCipher(const QString& inputFileName,
   Botan::secure_vector<Botan::byte> buffer;
   buffer.resize(bufferSize);
 
-  // Get file size for progress in percent calculation
+  // Get file size for percent progress calculation
   QFileInfo file{inputFileName};
   const qint64 size = file.size();
   std::size_t fileIndex = 0;
