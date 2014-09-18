@@ -21,7 +21,14 @@
 #ifndef KRYVOS_GUI_MAINWINDOW_HPP_
 #define KRYVOS_GUI_MAINWINDOW_HPP_
 
+#include "settings/Settings.hpp"
+#include "gui/HeaderFrame.hpp"
+#include "gui/FileListFrame.hpp"
+#include "gui/MessageFrame.hpp"
+#include "gui/PasswordFrame.hpp"
+#include "gui/ControlButtonFrame.hpp"
 #include <QtWidgets/QMainWindow>
+#include <QtWidgets/QVBoxLayout>
 #include <memory>
 
 /*!
@@ -35,7 +42,7 @@ class MainWindow : public QMainWindow {
    * \brief MainWindow Constructs the application's main window.
    * \param parent The QWidget parent of this main window.
    */
-  explicit MainWindow(QWidget* parent = nullptr);
+  explicit MainWindow(Settings* settings = nullptr, QWidget* parent = nullptr);
 
   /*!
    * \brief ~MainWindow Destroys the application's main window.
@@ -139,35 +146,25 @@ class MainWindow : public QMainWindow {
 
  protected:
   /*!
-   * \brief closeEvent Executed when the main window is closed.
-   * \param event Close event.
+   * \brief loadStyleSheet Attempts to load a Qt stylesheet from the local
+   * themes folder with the name specified in the local settings file. If the
+   * load fails, the method will load the default stylesheet from the
+   * application resources.
+   * \param styleFile String representing the name of the stylesheet without
+   * a file extension.
+   * \param defaultFile String containing the name of the default stylesheet,
+   * which will be used if the selected stylesheet file doesn't exist.
+   * \return String containing the stylesheet file contents.
    */
-  virtual void closeEvent(QCloseEvent* event);
+  QString loadStyleSheet(const QString& styleFile, const QString& defaultFile);
 
-  /*!
-   * \brief dragEnterEvent Executed when a drag enter event occurs on the main
-   * window.
-   * \param event Drag enter event.
-   */
-  virtual void dragEnterEvent(QDragEnterEvent* event);
-
-  /*!
-   * \brief dropEvent Executed when a drop event occurs on the main window.
-   * \param event Drop event.
-   */
-  virtual void dropEvent(QDropEvent* event);
-
-  /*!
-   * \brief sizeHint Returns the preferred size of the main window.
-   * \return Preferred size.
-   */
-  virtual QSize sizeHint() const;
-
-  /*!
-   * \brief minimumSizeHint Returns the minimum size of the main window.
-   * \return Maximum size.
-   */
-  virtual QSize minimumSizeHint() const;
+ protected:
+  HeaderFrame* headerFrame;
+  FileListFrame* fileListFrame;
+  MessageFrame* messageFrame;
+  PasswordFrame* passwordFrame;
+  ControlButtonFrame* controlButtonFrame;
+  QVBoxLayout* contentLayout;
 
  private:
   class MainWindowPrivate;

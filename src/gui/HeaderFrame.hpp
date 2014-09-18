@@ -22,6 +22,7 @@
 #define KRYVOS_GUI_HEADERFRAME_HPP_
 
 #include <QtWidgets/QFrame>
+#include <QtGui/QResizeEvent>
 #include <memory>
 
 /*!
@@ -60,6 +61,9 @@ class HeaderFrame : public QFrame {
    * pause/resume button.
    */
   void pause(bool pause);
+
+ public:
+  void setIconSize(const QSize& iconSize);
 
  private slots:
   /*!

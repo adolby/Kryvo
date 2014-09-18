@@ -20,6 +20,7 @@
 
 #include "gui/MessageFrame.hpp"
 #include "utility/make_unique.h"
+#include <QtWidgets/QScroller>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QHBoxLayout>
 
@@ -41,11 +42,32 @@ MessageFrame::MessageFrame(QWidget* parent) :
                                                  " files button or drag and"
                                                  " drop files."), this};
   pimpl->messageTextEdit->setObjectName("message");
+  pimpl->messageTextEdit->setMaximumBlockCount(10);
   pimpl->messageTextEdit->setReadOnly(true);
   pimpl->messageTextEdit->setTextInteractionFlags(Qt::NoTextInteraction);
   pimpl->messageTextEdit->viewport()->setCursor(Qt::ArrowCursor);
   pimpl->messageTextEdit->setSizePolicy(QSizePolicy::Expanding,
                                         QSizePolicy::Preferred);
+
+  // Attach a scroller to the message text edit
+  QScroller::grabGesture(pimpl->messageTextEdit,
+                         QScroller::TouchGesture);
+
+  // Disable overshoot; it makes interacting with small widgets harder
+  QScroller* scroller = QScroller::scroller(pimpl->messageTextEdit);
+
+  QScrollerProperties properties = scroller->scrollerProperties();
+
+  QVariant overshootPolicy = QVariant::fromValue
+                              <QScrollerProperties::OvershootPolicy>
+                              (QScrollerProperties::OvershootAlwaysOff);
+
+  properties.setScrollMetric(QScrollerProperties::HorizontalOvershootPolicy,
+                             overshootPolicy);
+  properties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy,
+                             overshootPolicy);
+
+  scroller->setScrollerProperties(properties);
 
   auto messageLayout = new QHBoxLayout{this};
   messageLayout->addWidget(pimpl->messageTextEdit);
@@ -60,7 +82,15 @@ void MessageFrame::appendPlainText(const QString& message)
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->messageTextEdit);
 
-  pimpl->messageTextEdit->appendPlainText(message);
+  pimpl->messageTextEdit->setPlainText(message);
+}
+
+void MessageFrame::setText(const QString& startText)
+{
+  Q_ASSERT(pimpl);
+  Q_ASSERT(pimpl->messageTextEdit);
+
+  pimpl->messageTextEdit->setPlainText(startText);
 }
 
 MessageFrame::MessageFramePrivate::MessageFramePrivate() :

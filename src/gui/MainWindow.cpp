@@ -19,22 +19,14 @@
  */
 
 #include "gui/MainWindow.hpp"
-#include "gui/HeaderFrame.hpp"
-#include "gui/FileListFrame.hpp"
-#include "gui/MessageFrame.hpp"
-#include "gui/PasswordFrame.hpp"
-#include "gui/ControlButtonFrame.hpp"
-#include "settings/Settings.hpp"
 #include "utility/make_unique.h"
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QFileDialog>
-#include <QtGui/QDropEvent>
 #include <QtGui/QIcon>
 #include <QtCore/QModelIndexList>
 #include <QtCore/QModelIndex>
@@ -59,17 +51,6 @@ class MainWindow::MainWindowPrivate {
   explicit MainWindowPrivate();
 
   /*!
-   * \brief loadStyleSheet Attempts to load a Qt stylesheet from the local
-   * themes folder with the name specified in the local settings file. If the
-   * load fails, the method will load the default stylesheet from the
-   * application resources.
-   * \param styleFile String representing the name of the stylesheet without
-   * a file extension.
-   * \return String containing the stylesheet file contents.
-   */
-  QString loadStyleSheet(const QString& styleFile);
-
-  /*!
    * \brief busy Sets the busy status received from the cipher operation.
    * \param busy Boolean representing the busy status.
    */
@@ -81,14 +62,7 @@ class MainWindow::MainWindowPrivate {
    */
   bool isBusy() const;
 
-  HeaderFrame* headerFrame;
-  FileListFrame* fileListFrame;
-  MessageFrame* messageFrame;
-  PasswordFrame* passwordFrame;
-  ControlButtonFrame* controlButtonFrame;
-
-  // Settings
-  Settings settings;
+  Settings* settings;
 
   // Messages to display to user
   const QStringList messages;
@@ -100,77 +74,67 @@ class MainWindow::MainWindowPrivate {
   bool busyStatus;
 };
 
-MainWindow::MainWindow(QWidget* parent) :
-  QMainWindow{parent}, pimpl{make_unique<MainWindowPrivate>()}
+MainWindow::MainWindow(Settings* settings, QWidget* parent) :
+  QMainWindow{parent}, headerFrame{nullptr}, fileListFrame{nullptr},
+  messageFrame{nullptr}, passwordFrame{nullptr}, controlButtonFrame{nullptr},
+  contentLayout{nullptr}, pimpl{make_unique<MainWindowPrivate>()}
 {
+  // Store settings object
+  pimpl->settings = settings;
+
   auto mainFrame = new QFrame{this};
   mainFrame->setObjectName("mainFrame");
   auto mainLayout = new QVBoxLayout{mainFrame};
 
   auto contentFrame = new QFrame{mainFrame};
   contentFrame->setObjectName("contentFrame");
-  auto contentLayout = new QVBoxLayout{contentFrame};
 
-  pimpl->headerFrame = new HeaderFrame{contentFrame};
-  pimpl->headerFrame->setObjectName("headerFrame");
-  contentLayout->addWidget(pimpl->headerFrame);
+  headerFrame = new HeaderFrame{contentFrame};
+  headerFrame->setObjectName("headerFrame");
 
-  pimpl->fileListFrame = new FileListFrame{contentFrame};
-  pimpl->fileListFrame->setObjectName("fileListFrame");
-  pimpl->fileListFrame->setSizePolicy(QSizePolicy::Expanding,
+  fileListFrame = new FileListFrame{contentFrame};
+  fileListFrame->setObjectName("fileListFrame");
+  fileListFrame->setSizePolicy(QSizePolicy::Expanding,
                                       QSizePolicy::Expanding);
-  contentLayout->addWidget(pimpl->fileListFrame, 20);
 
   // Message text edit display
-  pimpl->messageFrame = new MessageFrame{contentFrame};
-  pimpl->messageFrame->setObjectName("message");
-  pimpl->messageFrame->setSizePolicy(QSizePolicy::Expanding,
-                                     QSizePolicy::Preferred);
-  pimpl->messageFrame->setContentsMargins(0, 0, 0, 0);
-  contentLayout->addWidget(pimpl->messageFrame, 1);
+  messageFrame = new MessageFrame{contentFrame};
+  messageFrame->setObjectName("message");
+  messageFrame->setSizePolicy(QSizePolicy::Expanding,
+                              QSizePolicy::Preferred);
+  messageFrame->setContentsMargins(0, 0, 0, 0);
 
   // Password entry frame
-  pimpl->passwordFrame = new PasswordFrame{contentFrame};
-  contentLayout->addWidget(pimpl->passwordFrame);
+  passwordFrame = new PasswordFrame{contentFrame};
 
   // Encrypt and decrypt control button frame
-  pimpl->controlButtonFrame = new ControlButtonFrame{contentFrame};
-  contentLayout->addWidget(pimpl->controlButtonFrame);
+  controlButtonFrame = new ControlButtonFrame{contentFrame};
+
+  contentLayout = new QVBoxLayout{contentFrame};
+  contentLayout->addWidget(headerFrame);
+  contentLayout->addWidget(fileListFrame);
+  contentLayout->addWidget(messageFrame);
+  contentLayout->addWidget(passwordFrame);
+  contentLayout->addWidget(controlButtonFrame);
 
   mainLayout->addWidget(contentFrame);
 
   this->setCentralWidget(mainFrame);
 
-  // Actions
-
-  // Add files action
-  auto addFilesAction = new QAction{this};
-  addFilesAction->setShortcut(Qt::Key_O | Qt::CTRL);
-  connect(addFilesAction, &QAction::triggered,
-          this, &MainWindow::addFiles);
-  this->addAction(addFilesAction);
-
-  // Quit action
-  auto quitAction = new QAction{this};
-  quitAction->setShortcut(Qt::Key_Q | Qt::CTRL);
-  connect(quitAction, &QAction::triggered,
-          this, &QMainWindow::close);
-  this->addAction(quitAction);
-
-  // Header tool connections
-  connect(pimpl->headerFrame, &HeaderFrame::pause,
+  // Header button connections
+  connect(headerFrame, &HeaderFrame::pause,
           this, &MainWindow::pauseCipher);
-  connect(pimpl->headerFrame, &HeaderFrame::addFiles,
+  connect(headerFrame, &HeaderFrame::addFiles,
           this, &MainWindow::addFiles);
-  connect(pimpl->headerFrame, &HeaderFrame::removeFiles,
+  connect(headerFrame, &HeaderFrame::removeFiles,
           this, &MainWindow::removeFiles);
 
   // Forwarded connections
-  connect(pimpl->fileListFrame, &FileListFrame::stopFile,
+  connect(fileListFrame, &FileListFrame::stopFile,
           this, &MainWindow::stopFile, Qt::DirectConnection);
-  connect(pimpl->controlButtonFrame, &ControlButtonFrame::encryptFiles,
+  connect(controlButtonFrame, &ControlButtonFrame::encryptFiles,
           this, &MainWindow::encryptFiles);
-  connect(pimpl->controlButtonFrame, &ControlButtonFrame::decryptFiles,
+  connect(controlButtonFrame, &ControlButtonFrame::decryptFiles,
           this, &MainWindow::decryptFiles);
 
   // Set object name
@@ -178,29 +142,6 @@ MainWindow::MainWindow(QWidget* parent) :
 
   // Title
   this->setWindowTitle(tr("Kryvos"));
-
-  // Load stylesheet
-  const auto styleSheet = pimpl->loadStyleSheet(pimpl->settings.
-                                                  styleSheetPath());
-
-  if (!styleSheet.isEmpty())
-  {
-    this->setStyleSheet(styleSheet);
-  }
-
-  this->move(pimpl->settings.position());
-
-  if (pimpl->settings.maximized())
-  { // Move window, then maximize to ensure maximize occurs on correct screen
-    this->setWindowState(this->windowState() | Qt::WindowMaximized);
-  }
-  else
-  {
-    this->resize(pimpl->settings.size());
-  }
-
-  // Enable drag and drop
-  this->setAcceptDrops(true);
 }
 
 MainWindow::~MainWindow() {}
@@ -212,7 +153,7 @@ void MainWindow::addFiles()
   // Open a file dialog to get files
   const auto files = QFileDialog::getOpenFileNames(this,
                                                    tr("Add Files"),
-                                                   pimpl->settings.
+                                                   pimpl->settings->
                                                      lastDirectory(),
                                                    tr("Any files (*)"));
 
@@ -220,13 +161,13 @@ void MainWindow::addFiles()
   { // If files were selected, add them to the model
     for (const auto& file : files)
     {
-      pimpl->fileListFrame->addFileToModel(file);
+      fileListFrame->addFileToModel(file);
     }
 
     // Save this directory for returning to later
     const auto fileName = files[0];
     QFileInfo file{fileName};
-    pimpl->settings.lastDirectory(file.absolutePath());
+    pimpl->settings->lastDirectory(file.absolutePath());
   }
 }
 
@@ -237,35 +178,35 @@ void MainWindow::removeFiles()
   // Signal to abort current cipher operation if it's in progress
   emit abortCipher();
 
-  pimpl->fileListFrame->clear();
+  fileListFrame->clear();
 }
 
 void MainWindow::encryptFiles()
 {
   Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->passwordFrame);
-  Q_ASSERT(pimpl->fileListFrame);
+  Q_ASSERT(passwordFrame);
+  Q_ASSERT(fileListFrame);
 
   if (!pimpl->isBusy())
   {
     // Get passphrase from line edit
-    const auto passphrase = pimpl->passwordFrame->password();
+    const auto passphrase = passwordFrame->password();
 
     if (!passphrase.isEmpty())
     {
-      const auto rowCount = pimpl->fileListFrame->rowCount();
+      const auto rowCount = fileListFrame->rowCount();
       if (rowCount > 0)
       {
         auto fileList = QStringList{};
 
         for (auto row = 0; row < rowCount; ++row)
         {
-          auto item = pimpl->fileListFrame->item(row);
-          fileList.append(item->text());
+          auto item = fileListFrame->item(row);
+          fileList.append(item->data().toString());
         }
 
         // Start encrypting the file list
-        emit encrypt(passphrase, fileList, pimpl->settings.lastAlgorithm());
+        emit encrypt(passphrase, fileList, pimpl->settings->lastAlgorithm());
       }
     }
     else
@@ -282,25 +223,25 @@ void MainWindow::encryptFiles()
 void MainWindow::decryptFiles()
 {
   Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->passwordFrame);
-  Q_ASSERT(pimpl->fileListFrame);
+  Q_ASSERT(passwordFrame);
+  Q_ASSERT(fileListFrame);
 
   if (!pimpl->isBusy())
   {
     // Get passphrase from line edit
-    const auto passphrase = pimpl->passwordFrame->password();
+    const auto passphrase = passwordFrame->password();
 
     if (!passphrase.isEmpty())
     {
-      const auto rowCount = pimpl->fileListFrame->rowCount();
+      const auto rowCount = fileListFrame->rowCount();
       if (rowCount > 0)
       {
         auto fileList = QStringList{};
 
         for (auto row = 0; row < rowCount; ++row)
         {
-          auto item = pimpl->fileListFrame->item(row);
-          fileList.append(item->text());
+          auto item = fileListFrame->item(row);
+          fileList.append(item->data().toString());
         }
 
         // Start decrypting the file list
@@ -321,9 +262,9 @@ void MainWindow::decryptFiles()
 void MainWindow::updateProgress(const QString& path, qint64 percent)
 {
   Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->fileListFrame);
+  Q_ASSERT(fileListFrame);
 
-  pimpl->fileListFrame->updateProgress(path, percent);
+  fileListFrame->updateProgress(path, percent);
 }
 
 void MainWindow::updateStatusMessage(const QString& message)
@@ -331,7 +272,7 @@ void MainWindow::updateStatusMessage(const QString& message)
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->messageFrame);
 
-  pimpl->messageFrame->appendPlainText(message);
+  messageFrame->appendPlainText(message);
 }
 
 void MainWindow::updateError(const QString& path, const QString& message)
@@ -347,70 +288,8 @@ void MainWindow::updateBusyStatus(bool busy)
   pimpl->busy(busy);
 }
 
-void MainWindow::closeEvent(QCloseEvent* event)
-{
-  pimpl->settings.position(this->pos());
-
-  if (this->isMaximized())
-  {
-    pimpl->settings.maximized(true);
-  }
-  else
-  {
-    pimpl->settings.maximized(false);
-    pimpl->settings.size(this->size());
-  }
-
-  QMainWindow::closeEvent(event);
-}
-
-void MainWindow::dragEnterEvent(QDragEnterEvent* event)
-{
-  // Show drag and drop as a move action
-  event->setDropAction(Qt::MoveAction);
-
-  if (event->mimeData()->hasUrls())
-  { // Accept drag and drops with files only
-    event->accept();
-  }
-}
-
-void MainWindow::dropEvent(QDropEvent* event)
-{
-  Q_ASSERT(pimpl);
-
-  // Check for the URL MIME type, which is a list of files
-  if (event->mimeData()->hasUrls())
-  { // Extract the local path from the file(s)
-    for (const auto& url : event->mimeData()->urls())
-    {
-      pimpl->fileListFrame->addFileToModel(url.toLocalFile());
-    }
-  }
-}
-
-QSize MainWindow::sizeHint() const
-{
-  return QSize(800, 600);
-}
-
-QSize MainWindow::minimumSizeHint() const
-{
-  return QSize(600, 350);
-}
-
-MainWindow::MainWindowPrivate::MainWindowPrivate() :
-  headerFrame{nullptr},
-  fileListFrame{nullptr},
-  messageFrame{nullptr},
-  passwordFrame{nullptr},
-  messages{tr("A password is required to encrypt or decrypt files. Please enter"
-              " one to continue."),
-           tr("Encryption/decryption is already in progress. Please wait until"
-              " the current operation finishes.")},
-  busyStatus{false} {}
-
-QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
+QString MainWindow::loadStyleSheet(const QString& styleFile,
+                                   const QString& defaultFile)
 {
   // Try to load user theme, if it exists
   const auto styleSheetPath = QString{"themes" % QDir::separator() % styleFile};
@@ -430,7 +309,7 @@ QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
   }
   else
   { // Otherwise, load default theme
-    QFile defaultTheme{":/stylesheets/kryvos.qss"};
+    QFile defaultTheme{QString{":/stylesheets/" % defaultFile}};
 
     auto defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
 
@@ -443,6 +322,14 @@ QString MainWindow::MainWindowPrivate::loadStyleSheet(const QString& styleFile)
 
   return styleSheet;
 }
+
+MainWindow::MainWindowPrivate::MainWindowPrivate() :
+  settings{nullptr},
+  messages{tr("A password is required to encrypt or decrypt files. Please enter"
+              " one to continue."),
+           tr("Encryption/decryption is already in progress. Please wait until"
+              " the current operation finishes.")},
+  busyStatus{false} {}
 
 void MainWindow::MainWindowPrivate::busy(bool busy)
 {

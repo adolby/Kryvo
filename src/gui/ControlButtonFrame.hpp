@@ -54,6 +54,9 @@ class ControlButtonFrame : public QFrame {
    */
   void decryptFiles();
 
+ public:
+  void setIconSize(const QSize& iconSize);
+
  private:
   class ControlButtonFramePrivate;
   std::unique_ptr<ControlButtonFramePrivate> pimpl;

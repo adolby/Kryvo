@@ -19,8 +19,16 @@
  */
 
 #include "Kryvos.hpp"
-#include "cryptography/Crypto.hpp"
 #include "gui/MainWindow.hpp"
+#include "cryptography/Crypto.hpp"
+
+#if defined(Q_OS_ANDROID)
+#include "gui/android/AndroidMainWindow.hpp"
+#else
+#include "gui/DesktopMainWindow.hpp"
+#endif
+
+#include "settings/Settings.hpp"
 #include "utility/make_unique.h"
 #include <QtCore/QThread>
 
@@ -41,56 +49,57 @@ class Kryvos::KryvosPrivate {
    */
   virtual ~KryvosPrivate();
 
-  std::unique_ptr<MainWindow> gui;
+  std::unique_ptr<Settings> settings;
   std::unique_ptr<Crypto> cryptography;
   std::unique_ptr<QThread> cipherThread;
+  MainWindow* gui;
 };
-
-Kryvos::KryvosPrivate::KryvosPrivate() :
-  gui{make_unique<MainWindow>()}, cryptography{make_unique<Crypto>()},
-  cipherThread{make_unique<QThread>()} {}
-
-Kryvos::KryvosPrivate::~KryvosPrivate() {}
 
 Kryvos::Kryvos(QObject* parent) :
   QObject{parent}, pimpl{make_unique<KryvosPrivate>()}
 {
+#if defined(Q_OS_ANDROID)
+  pimpl->gui = new AndroidMainWindow(pimpl->settings.get());
+#else
+  pimpl->gui = new DesktopMainWindow(pimpl->settings.get());
+#endif
+
   // Move cryptography object to another thread to prevent GUI from blocking
   pimpl->cryptography->moveToThread(pimpl->cipherThread.get());
 
   // Connect GUI to cryptography object
-  connect(pimpl->gui.get(), &MainWindow::encrypt,
+  connect(pimpl->gui, &MainWindow::encrypt,
           pimpl->cryptography.get(), &Crypto::encrypt);
 
-  connect(pimpl->gui.get(), &MainWindow::decrypt,
+  connect(pimpl->gui, &MainWindow::decrypt,
           pimpl->cryptography.get(), &Crypto::decrypt);
 
-  // Pause connection is direct so the cryptography object can be set to pause
-  // while it is running a cipher operation on another thread
-  connect(pimpl->gui.get(), &MainWindow::pauseCipher,
+  // Pause connection is direct so the cryptography object can be paused while
+  // it is running a cipher operation on another thread
+  connect(pimpl->gui, &MainWindow::pauseCipher,
           pimpl->cryptography.get(), &Crypto::pause, Qt::DirectConnection);
 
-  connect(pimpl->gui.get(), &MainWindow::abortCipher,
+  connect(pimpl->gui, &MainWindow::abortCipher,
           pimpl->cryptography.get(), &Crypto::abort, Qt::DirectConnection);
 
-  connect(pimpl->gui.get(), &MainWindow::stopFile,
+  connect(pimpl->gui, &MainWindow::stopFile,
           pimpl->cryptography.get(), &Crypto::stop, Qt::DirectConnection);
 
   // Update progress bars
   connect(pimpl->cryptography.get(), &Crypto::progress,
-          pimpl->gui.get(), &MainWindow::updateProgress);
+          pimpl->gui, &MainWindow::updateProgress);
 
   // Update status message
   connect(pimpl->cryptography.get(), &Crypto::statusMessage,
-          pimpl->gui.get(), &MainWindow::updateStatusMessage);
+          pimpl->gui, &MainWindow::updateStatusMessage);
 
   // Update error message
   connect(pimpl->cryptography.get(), &Crypto::errorMessage,
-          pimpl->gui.get(), &MainWindow::updateError);
+          pimpl->gui, &MainWindow::updateError);
 
   // Update cipher operation in progress status
   connect(pimpl->cryptography.get(), &Crypto::busyStatus,
-          pimpl->gui.get(), &MainWindow::updateBusyStatus);
+          pimpl->gui, &MainWindow::updateBusyStatus);
 
   pimpl->cipherThread->start();
 
@@ -103,14 +112,23 @@ Kryvos::~Kryvos()
   // Abort current threaded cipher operation
   pimpl->cryptography->abort();
 
-  // Quit the currently running thread
+  // Quit the cipher thread
   pimpl->cipherThread->quit();
 
   auto timedOut = !pimpl->cipherThread->wait(1000);
 
-  // If the thread couldn't quit in one second, then terminate it
+  // If the thread couldn't quit in one second, terminate it
   if (timedOut)
   {
     pimpl->cipherThread->terminate();
   }
+
+  delete pimpl->gui;
 }
+
+Kryvos::KryvosPrivate::KryvosPrivate() :
+  settings{make_unique<Settings>()},
+  cryptography{make_unique<Crypto>()},
+  cipherThread{make_unique<QThread>()} {}
+
+Kryvos::KryvosPrivate::~KryvosPrivate() {}

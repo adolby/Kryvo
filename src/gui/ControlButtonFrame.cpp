@@ -39,11 +39,13 @@ class ControlButtonFrame::ControlButtonFramePrivate {
 ControlButtonFrame::ControlButtonFrame(QWidget* parent) :
   QFrame{parent}, pimpl{make_unique<ControlButtonFramePrivate>()}
 {
+  const QSize iconSize{19, 19};
+
   const auto lockIcon = QIcon{":/images/lockIcon.png"};
   pimpl->encryptButton = new QPushButton{lockIcon,
                                        tr(" Encrypt"),
                                        this};
-  pimpl->encryptButton->setIconSize(QSize{19, 19});
+  pimpl->encryptButton->setIconSize(iconSize);
   pimpl->encryptButton->setObjectName("cryptButton");
   pimpl->encryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
@@ -51,7 +53,7 @@ ControlButtonFrame::ControlButtonFrame(QWidget* parent) :
   pimpl->decryptButton = new QPushButton{unlockedIcon,
                                        tr(" Decrypt"),
                                        this};
-  pimpl->decryptButton->setIconSize(QSize{19, 19});
+  pimpl->decryptButton->setIconSize(iconSize);
   pimpl->decryptButton->setObjectName("cryptButton");
   pimpl->decryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
@@ -63,6 +65,15 @@ ControlButtonFrame::ControlButtonFrame(QWidget* parent) :
           this, &ControlButtonFrame::encryptFiles);
   connect(pimpl->decryptButton, &QPushButton::clicked,
           this, &ControlButtonFrame::decryptFiles);
+}
+
+void ControlButtonFrame::setIconSize(const QSize& iconSize)
+{
+  Q_ASSERT(pimpl->encryptButton);
+  Q_ASSERT(pimpl->decryptButton);
+
+  pimpl->encryptButton->setIconSize(iconSize);
+  pimpl->decryptButton->setIconSize(iconSize);
 }
 
 ControlButtonFrame::~ControlButtonFrame() {}

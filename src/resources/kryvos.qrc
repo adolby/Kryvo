@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>stylesheets/kryvos.qss</file>
+        <file>stylesheets/kryvosTouch.qss</file>
         <file>images/addFilesIcon.png</file>
         <file>images/clearFilesIcon.png</file>
         <file>images/closeFileIcon.png</file>

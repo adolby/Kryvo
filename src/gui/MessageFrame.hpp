@@ -46,9 +46,16 @@ class MessageFrame : public QFrame {
 
   /*!
    * \brief appendPlainText Appends text to the message frame's text edit.
-   * \param message
+   * \param message Message string.
    */
   void appendPlainText(const QString& message);
+
+  /*!
+   * \brief setText Clears the text edit and sets a start up text to the message
+   * frame's text edit.
+   * \param startText Start up text string.
+   */
+  void setText(const QString& startText);
 
  private:
   class MessageFramePrivate;

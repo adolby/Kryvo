@@ -21,11 +21,16 @@
 #include "gui/FileListFrame.hpp"
 #include "gui/Delegate.hpp"
 #include "utility/make_unique.h"
+#include <QtWidgets/QScroller>
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QVBoxLayout>
 #include <QtGui/QStandardItemModel>
 #include <QtCore/QFileInfo>
+#include <QtCore/QDir>
+#include <QtCore/QStringRef>
+#include <QtCore/QStringBuilder>
+#include <QtCore/QString>
 
 class FileListFrame::FileListFramePrivate {
  public:
@@ -67,6 +72,29 @@ FileListFrame::FileListFrame(QWidget* parent) :
   auto delegate = new Delegate{this};
   pimpl->fileListView->setItemDelegate(delegate);
 
+  pimpl->fileListView->setHorizontalScrollMode(QAbstractItemView::
+                                                ScrollPerPixel);
+
+  // Attach a scroller to the file list
+  QScroller::grabGesture(pimpl->fileListView,
+                         QScroller::TouchGesture);
+
+  // Disable overshoot; it makes interacting with small widgets harder
+  QScroller* scroller = QScroller::scroller(pimpl->fileListView);
+
+  QScrollerProperties properties = scroller->scrollerProperties();
+
+  QVariant overshootPolicy = QVariant::fromValue
+                              <QScrollerProperties::OvershootPolicy>
+                              (QScrollerProperties::OvershootAlwaysOff);
+
+  properties.setScrollMetric(QScrollerProperties::HorizontalOvershootPolicy,
+                             overshootPolicy);
+  properties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy,
+                             overshootPolicy);
+
+  scroller->setScrollerProperties(properties);
+
   auto fileListLayout = new QVBoxLayout{this};
   fileListLayout->addWidget(pimpl->fileListView);
   fileListLayout->setContentsMargins(0, 0, 0, 0);
@@ -105,14 +133,20 @@ void FileListFrame::clear()
 void FileListFrame::addFileToModel(const QString& path)
 {
   QFileInfo file{path};
+  QDir directory{file.dir()};
 
   if (file.exists() && file.isFile())
   { // If the file exists, add it to the model
-    auto pathItem = new QStandardItem{path};
+    auto fileName = QString{".." % QDir::separator() % directory.dirName() %
+                            QDir::separator() % file.fileName()};
+    auto pathItem = new QStandardItem{fileName};
     pathItem->setDragEnabled(false);
     pathItem->setDropEnabled(false);
     pathItem->setEditable(false);
     pathItem->setSelectable(false);
+    pathItem->setToolTip(path);
+    QVariant pathVariant = QVariant::fromValue(path);
+    pathItem->setData(pathVariant);
 
     auto progressItem = new QStandardItem{};
     progressItem->setDragEnabled(false);
@@ -136,6 +170,7 @@ void FileListFrame::addFileToModel(const QString& path)
       pimpl->fileListModel->appendRow(items);
       QHeaderView* header = pimpl->fileListView->horizontalHeader();
       header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+      header->resizeSection(1, 130);
     }
     else
     { // Search to see if this item is already in the model
@@ -146,7 +181,7 @@ void FileListFrame::addFileToModel(const QString& path)
       {
         auto testItem = pimpl->fileListModel->item(row, 0);
 
-        if (testItem->text() == pathItem->text())
+        if (testItem->data().toString() == pathItem->data().toString())
         {
           addNewItem = false;
         }
@@ -157,6 +192,7 @@ void FileListFrame::addFileToModel(const QString& path)
         pimpl->fileListModel->appendRow(items);
         QHeaderView* header = pimpl->fileListView->horizontalHeader();
         header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+        header->resizeSection(1, 130);
       }
     } // End else
   } // End if file exists and is a file
@@ -170,7 +206,7 @@ void FileListFrame::removeFileFromModel(const QModelIndex& index)
   auto testItem = pimpl->fileListModel->item(index.row(), 0);
 
   // Signal that this file shouldn't be encrypted or decrypted
-  emit stopFile(testItem->text());
+  emit stopFile(testItem->data().toString());
 
   // Remove row from model
   pimpl->fileListModel->removeRow(index.row());
@@ -181,7 +217,12 @@ void FileListFrame::updateProgress(const QString& path, qint64 percent)
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->fileListModel);
 
-  QList<QStandardItem*> items = pimpl->fileListModel->findItems(path);
+  QFileInfo file{path};
+  QDir directory{file.dir()};
+  auto fileName = QString{".." % QDir::separator() % directory.dirName() %
+                          QDir::separator() % file.fileName()};
+
+  QList<QStandardItem*> items = pimpl->fileListModel->findItems(fileName);
 
   if (items.size() > 0)
   {
