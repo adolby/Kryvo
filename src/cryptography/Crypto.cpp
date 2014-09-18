@@ -20,17 +20,13 @@
 
 #include "cryptography/Crypto.hpp"
 #include "utility/make_unique.h"
-#include "botan/pbkdf2.h"
-#include "botan/hmac.h"
-#include "botan/keccak.h"
-#include "botan/base64.h"
+#include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 #include <QtCore/QHash>
 #include <QtCore/QStringRef>
 #include <QtCore/QStringBuilder>
 
-class Crypto::CryptoPrivate
-{
+class Crypto::CryptoPrivate {
  public:
   /*!
    * \brief CryptoPrivate Constructs the Crypto private implementation.
@@ -54,7 +50,8 @@ class Crypto::CryptoPrivate
    * by appending numbers, if necessary.
    * \param fileName String representing the file name that will be tested
    * for uniqueness.
-   * \return String representing a unique file name from input file name.
+   * \return String representing a unique file name created from the input file
+   * name.
    */
   QString uniqueFileName(const QString& fileName);
 
@@ -130,7 +127,7 @@ class Crypto::CryptoPrivate
   bool aborted;
 
   // The pause status, when set to false, will pause an executing cipher
-  // operation. When the pause status is reset to false, the cipher operation
+  // operation. When the pause status is set to true, the cipher operation
   // that was in progress when the pause status was set will resume execution.
   bool paused;
 
@@ -164,12 +161,8 @@ void Crypto::encrypt(const QString& passphrase,
   // Reset status flags
   pimpl->resetFlags();
 
-  auto algorithmName = QString{};
-  if (algorithm.isEmpty())
-  {
-    algorithmName = "AES-128/GCM";
-  }
-  else
+  auto algorithmName = QString{"AES-128/GCM"};
+  if (!algorithm.isEmpty())
   {
     algorithmName = algorithm;
   }
@@ -335,7 +328,8 @@ void Crypto::encryptFile(const QString& passphrase,
         masterSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
-    std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf("KDF2(Keccak-1600)")};
+    auto kdfHash = std::string{"KDF2(Keccak-1600)"};
+    std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf(kdfHash)};
 
     // Set up key salt size
     const auto keySaltSize = static_cast<std::size_t>(64);
@@ -348,7 +342,7 @@ void Crypto::encryptFile(const QString& passphrase,
     {
       keySize = static_cast<std::size_t>(16);
     }
-    else
+    else if (algorithmName.contains("256"))
     {
       keySize = static_cast<std::size_t>(32);
     }
@@ -433,7 +427,8 @@ void Crypto::decryptFile(const QString& passphrase,
         masterSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
-    std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf("KDF2(Keccak-1600)")};
+    auto kdfHash = static_cast<std::string>("KDF2(Keccak-1600)");
+    std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf(kdfHash)};
 
     Botan::secure_vector<Botan::byte> keySalt =
         Botan::base64_decode(keySaltString);
@@ -476,8 +471,8 @@ void Crypto::executeCipher(const QString& inputFileName,
                            std::ifstream& in,
                            std::ofstream& out)
 {
-  Botan::Pipe pipe{get_cipher(algorithmName, key, iv, cipherDirection),
-            new Botan::DataSink_Stream{out}};
+  Botan::Pipe pipe{Botan::get_cipher(algorithmName, key, iv, cipherDirection),
+                   new Botan::DataSink_Stream{out}};
 
   // Define a size for the buffer vector
   const auto bufferSize = static_cast<std::size_t>(4096);
@@ -548,7 +543,7 @@ Crypto::CryptoPrivate::CryptoPrivate() :
               " access it and try again.")},
   aborted{false}, paused{false}, busyStatus{false}
 {
-  // Reserve a number of elements to improve dictionary performance
+  // Reserve elements to improve dictionary performance
   stopped.reserve(100);
 }
 
@@ -575,15 +570,19 @@ QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
   auto foundUniqueFileName = false;
   auto i = 0;
 
-  while (!foundUniqueFileName)
+  while (!foundUniqueFileName && i < 100000)
   {
     QFileInfo uniqueFile{uniqueFileName};
 
     if (uniqueFile.exists() && uniqueFile.isFile())
-    { // If there is a file extension, write number of copies before extension
+    { // Write number of copies before file extension
       uniqueFileName = originalFile.absolutePath() % QDir::separator() %
-                       originalFile.baseName() % QString{" (%1)"}.arg(i + 2) %
-                       "." % originalFile.completeSuffix();
+                       originalFile.baseName() % QString{" (%1)"}.arg(i + 2);
+
+      if (!originalFile.completeSuffix().isEmpty())
+      { // Add the file extension if there is one
+        uniqueFileName += "." % originalFile.completeSuffix();
+      }
 
       ++i;
     }

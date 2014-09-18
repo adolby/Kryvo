@@ -21,9 +21,25 @@
 #ifndef KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_
 #define KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_
 
-#include "botan/botan.h"
+#include <QtCore/QtGlobal>
+
+#if defined(Q_OS_LINUX)
+  #if defined(Q_OS_ANDROID)
+    #if defined(Q_PROCESSOR_ARM)
+#include "cryptography/botan/android/botan_all.h"
+    #endif
+  #elif !defined(Q_OS_ANDROID)
+#include "cryptography/botan/linux/x86_64/botan_all.h"
+  #endif
+#elif defined(Q_OS_WIN)
+  #if defined(Q_OS_WIN64)
+#include "cryptography/botan/windows/x64/botan_all.h"
+  #else
+#include "cryptography/botan/windows/x86/botan_all.h"
+  #endif
+#endif
+
 #include <QtCore/QObject>
-#include <QtCore/QFileInfo>
 #include <QtCore/QStringList>
 #include <QtCore/QString>
 #include <fstream>
@@ -34,8 +50,7 @@
  * \brief The Crypto class performs encryption and decryption using the Botan
  * library.
  */
-class Crypto : public QObject
-{
+class Crypto : public QObject {
   Q_OBJECT
 
  public:
