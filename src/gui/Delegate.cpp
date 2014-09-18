@@ -20,8 +20,8 @@
 
 #include "gui/Delegate.hpp"
 #include <QtWidgets/QApplication>
-#include <QtCore/QEvent>
 #include <QtGui/QMouseEvent>
+#include <QtCore/QEvent>
 
 Delegate::Delegate(QObject* parent) :
   QStyledItemDelegate{parent}, focusBorderEnabled{false}
@@ -130,14 +130,4 @@ bool Delegate::editorEvent(QEvent* event,
   }
 
   return QStyledItemDelegate::editorEvent(event, model, option, index);
-}
-
-QSize Delegate::sizeHint(const QStyleOptionViewItem& option,
-                         const QModelIndex& index) const
-{
-  auto size = QStyledItemDelegate::sizeHint(option, index);
-
-  size.setHeight(0);
-
-  return size;
 }
