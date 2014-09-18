@@ -87,15 +87,6 @@ class Delegate : public QStyledItemDelegate {
                            const QStyleOptionViewItem& option,
                            const QModelIndex& index);
 
-  /*!
-   * \brief sizeHint Returns the size of this delegate.
-   * \param option The style view options object.
-   * \param index Index of the current cell in the model.
-   * \return Size of this delegate.
-   */
-  virtual QSize sizeHint(const QStyleOptionViewItem& option,
-                         const QModelIndex& index) const;
-
  protected:
   bool focusBorderEnabled;
 };
