@@ -18,7 +18,7 @@ SOURCES += \
   gui/PasswordFrame.cpp \
   gui/ControlButtonFrame.cpp \
   settings/Settings.cpp \
-    utility/flowlayout.cpp
+  utility/flowlayout.cpp
 
 HEADERS += \
   Kryvos.hpp \
@@ -32,7 +32,7 @@ HEADERS += \
   gui/ControlButtonFrame.hpp \
   settings/Settings.hpp \
   utility/make_unique.h \
-    utility/flowlayout.h
+  utility/flowlayout.h
 
 # Platform-specific configuration
 android-g++ {
@@ -67,16 +67,18 @@ android-g++ {
     message(OSX)
   }
 
-  win64-g++ {
-    message(Windows x64 G++)
-    SOURCES += cryptography/botan/windows/x64/botan_all.cpp
-    HEADERS += cryptography/botan/windows/x64/botan_all.h
-  }
-
-  win32-g++ {
-    message(Windows x86 G++)
-    SOURCES += cryptography/botan/windows/x86/botan_all.cpp
-    HEADERS += cryptography/botan/windows/x86/botan_all.h
+  win32 {
+    win32-g++ {
+      contains(QT_ARCH, x86_64) {
+        message(Windows x64 G++)
+        SOURCES += cryptography/botan/windows/x64/botan_all.cpp
+        HEADERS += cryptography/botan/windows/x64/botan_all.h
+      } else {
+        message(Windows x86 G++)
+        SOURCES += cryptography/botan/windows/x86/botan_all.cpp
+        HEADERS += cryptography/botan/windows/x86/botan_all.h
+      }
+    }
   }
 }
 
