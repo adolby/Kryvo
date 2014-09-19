@@ -18,7 +18,7 @@ Licenses
 Kryvos is licensed under the GNU GPL License. Read LICENSE.GPL for more information about the license.
 Kryvos source code and binaries are available on GitHub at https://github.com/adolby/Kryvos
 
-Botan is licensed under the BSD-2 License. Read the Botan License file for more information about the license. It can also be found at http://botan.randombit.net/license.html 
+Botan is licensed under the BSD-2 License. Read the Botan License file for more information about the license. It can also be found at http://botan.randombit.net/license.html
 Botan source code is available at http://botan.randombit.net/download.html
 
 Qt is licensed under the GNU GPL License. Read LICENSE.GPL for more information about the license.
@@ -26,15 +26,21 @@ Qt source code is available at http://qt-project.org/downloads
 
 Developers
 ----------
-If you'd like to contribute to Kryvos, check the project out on GitHub. To build Kryvos, you'll need Qt 5 and Botan 1.11. Development is performed primarily in Qt Creator with gcc. (gcc from MinGW-w64 on Windows)
+If you'd like to contribute to Kryvos, check the project out on GitHub. To build Kryvos, you'll need Qt 5.2 (or later) and Botan 1.11. Development is performed primarily in Qt Creator with gcc 4.8.2.
 
-Windows
-A build of Botan performed with gcc from MinGW-w64 for x64 and x86 is located in the include and lib folders in the Kryvos Github repository. You can use that build or configure and build your own.
-To build Kryvos for x64 or x86, comment and uncomment the lines for x64 or x86, respectively, in the kryvos.pro file.
+Amalgamation configurations of Botan are included in the source tree to make getting started with development easier. The configuration commands used to generate a minimal Botan amalgamation follows for each platform:
 
-Linux
-A build of Botan performed with gcc for x86_64 and x86 is located in the include and lib folders in the Kryvos Github repository. You can use that build or configure and build your own.
-To build Kryvos for x86_64 or x86, comment and uncomment the lines for x86_64 or x86, respectively, in the kryvos.pro file.
+// Android ARM
+python configure.py --cpu=armv5te --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
+
+// Linux GCC x86_64
+python configure.py --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
+
+// Windows MinGW-w64 GCC x64
+python configure.py --cpu=x64 --cc=gcc --os=mingw --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,win32_stats,kdf2,aead_filt
+
+// Windows MinGW GCC x86
+python configure.py --cpu=x86 --cc=gcc --os=mingw --via-amalgamation --no-autoload --enable-modules=aes,serpent,gcm,eax,keccak,pbkdf2,win32_stats,kdf2,aead_filt
 
 Contact
 -------
