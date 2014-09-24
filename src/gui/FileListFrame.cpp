@@ -137,8 +137,8 @@ void FileListFrame::addFileToModel(const QString& path)
 
   if (file.exists() && file.isFile())
   { // If the file exists, add it to the model
-    auto fileName = QString{".." % QDir::separator() % directory.dirName() %
-                            QDir::separator() % file.fileName()};
+    const QString fileName = QLatin1String{".."} % QDir::separator() %
+                    directory.dirName() % QDir::separator() % file.fileName();
     auto pathItem = new QStandardItem{fileName};
     pathItem->setDragEnabled(false);
     pathItem->setDropEnabled(false);
@@ -219,8 +219,8 @@ void FileListFrame::updateProgress(const QString& path, qint64 percent)
 
   QFileInfo file{path};
   QDir directory{file.dir()};
-  auto fileName = QString{".." % QDir::separator() % directory.dirName() %
-                          QDir::separator() % file.fileName()};
+  const QString fileName = QLatin1String{".."} % QDir::separator() %
+          directory.dirName() % QDir::separator() % file.fileName();
 
   QList<QStandardItem*> items = pimpl->fileListModel->findItems(fileName);
 

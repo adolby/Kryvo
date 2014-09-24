@@ -6,8 +6,7 @@
 #include <QtCore/QString>
 #include <memory>
 
-class Settings
-{
+class Settings {
  public:
   /*!
    * \brief Settings Constructs an instance of the settings management class.

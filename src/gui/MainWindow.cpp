@@ -149,6 +149,7 @@ MainWindow::~MainWindow() {}
 void MainWindow::addFiles()
 {
   Q_ASSERT(pimpl);
+  Q_ASSERT(fileListFrame);
 
   // Open a file dialog to get files
   const auto files = QFileDialog::getOpenFileNames(this,
@@ -270,7 +271,7 @@ void MainWindow::updateProgress(const QString& path, qint64 percent)
 void MainWindow::updateStatusMessage(const QString& message)
 {
   Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->messageFrame);
+  Q_ASSERT(messageFrame);
 
   messageFrame->appendPlainText(message);
 }
@@ -292,7 +293,8 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
                                    const QString& defaultFile)
 {
   // Try to load user theme, if it exists
-  const auto styleSheetPath = QString{"themes" % QDir::separator() % styleFile};
+  const QString styleSheetPath = QLatin1String{"themes"} % QDir::separator() %
+          styleFile;
   QFile userTheme{styleSheetPath};
 
   auto styleSheet = QString{};
@@ -309,7 +311,7 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
   }
   else
   { // Otherwise, load default theme
-    QFile defaultTheme{QString{":/stylesheets/" % defaultFile}};
+    QFile defaultTheme{QLatin1String{":/stylesheets/"} % defaultFile};
 
     auto defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
 

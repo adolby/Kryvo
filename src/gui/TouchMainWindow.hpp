@@ -18,16 +18,16 @@
  * Contact : andrewdolby@gmail.com
  */
 
-#ifndef KRYVOS_GUI_ANDROIDMAINWINDOW_HPP_
-#define KRYVOS_GUI_ANDROIDMAINWINDOW_HPP_
+#ifndef KRYVOS_GUI_TOUCHMAINWINDOW_HPP_
+#define KRYVOS_GUI_TOUCHMAINWINDOW_HPP_
 
 #include "gui/MainWindow.hpp"
 #include "settings/Settings.hpp"
 
-class AndroidMainWindow : public MainWindow
+class TouchMainWindow : public MainWindow
 {
  public:
-  AndroidMainWindow(Settings* settings, QWidget* parent = nullptr);
+  TouchMainWindow(Settings* settings, QWidget* parent = nullptr);
 };
 
-#endif // KRYVOS_GUI_ANDROIDMAINWINDOW_HPP_
+#endif // KRYVOS_GUI_TOUCHMAINWINDOW_HPP_
