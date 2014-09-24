@@ -360,7 +360,7 @@ void Crypto::encryptFile(const QString& passphrase,
 
     std::ifstream in{inputFileName.toStdString(), std::ios::binary};
 
-    const auto outputFileName = QString{inputFileName % ".enc"};
+    const QString outputFileName = inputFileName % QLatin1String{".enc"};
     std::ofstream out{outputFileName.toStdString(), std::ios::binary};
 
     const auto algorithmNameStd = algorithmName.toStdString();
@@ -471,6 +471,8 @@ void Crypto::executeCipher(const QString& inputFileName,
                            std::ifstream& in,
                            std::ofstream& out)
 {
+  Q_ASSERT(pimpl);
+
   Botan::Pipe pipe{Botan::get_cipher(algorithmName, key, iv, cipherDirection),
                    new Botan::DataSink_Stream{out}};
 
@@ -551,7 +553,7 @@ QString Crypto::CryptoPrivate::removeExtension(const QString& fileName,
                                                const QString& extension)
 {
   QFileInfo file{fileName};
-  auto newFileName = fileName;
+  QString newFileName = fileName;
 
   if (file.suffix() == extension)
   {
@@ -565,7 +567,7 @@ QString Crypto::CryptoPrivate::removeExtension(const QString& fileName,
 QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
 {
   QFileInfo originalFile{fileName};
-  auto uniqueFileName = fileName;
+  QString uniqueFileName = fileName;
 
   auto foundUniqueFileName = false;
   auto i = 0;
@@ -581,7 +583,7 @@ QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
 
       if (!originalFile.completeSuffix().isEmpty())
       { // Add the file extension if there is one
-        uniqueFileName += "." % originalFile.completeSuffix();
+        uniqueFileName += QLatin1String{"."} % originalFile.completeSuffix();
       }
 
       ++i;
