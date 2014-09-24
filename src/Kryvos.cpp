@@ -23,7 +23,9 @@
 #include "cryptography/Crypto.hpp"
 
 #if defined(Q_OS_ANDROID)
-#include "gui/android/AndroidMainWindow.hpp"
+#include "gui/TouchMainWindow.hpp"
+#elif defined(Q_OS_IOS)
+#include "gui/TouchMainWindow.hpp"
 #else
 #include "gui/DesktopMainWindow.hpp"
 #endif
@@ -59,7 +61,9 @@ Kryvos::Kryvos(QObject* parent) :
   QObject{parent}, pimpl{make_unique<KryvosPrivate>()}
 {
 #if defined(Q_OS_ANDROID)
-  pimpl->gui = new AndroidMainWindow(pimpl->settings.get());
+  pimpl->gui = new TouchMainWindow(pimpl->settings.get());
+#elif defined(Q_OS_IOS)
+  pimpl->gui = new TouchMainWindow(pimpl->settings.get());
 #else
   pimpl->gui = new DesktopMainWindow(pimpl->settings.get());
 #endif

@@ -37,34 +37,46 @@ HEADERS += \
 # Platform-specific configuration
 android-g++ {
   message(Android G++)
-  SOURCES += gui/android/AndroidMainWindow.cpp \
-             cryptography/botan/android/botan_all.cpp
-  HEADERS += gui/android/AndroidMainWindow.hpp \
-             cryptography/botan/android/botan_all.h
+  SOURCES += cryptography/botan/android/botan_all.cpp \
+             gui/TouchMainWindow.cpp
+  HEADERS += cryptography/botan/android/botan_all.h \
+             gui/TouchMainWindow.hpp
+
+  ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
+
+  OTHER_FILES += android/AndroidManifest.xml
+
 } else:ios {
   message(iOS)
-  SOURCES += gui/ios/MainWindow.hpp \
-             cryptography/botan/ios/botan_all.cpp
-  HEADERS += gui/ios/MainWindow.hpp \
-             cryptography/botan/android/botan_all.h
+  SOURCES += cryptography/botan/ios/botan_all.cpp \
+             gui/TouchMainWindow.cpp
+  HEADERS += cryptography/botan/ios/botan_all.h \
+             gui/TouchMainWindow.hpp
 } else { # Desktop OS
   SOURCES += gui/DesktopMainWindow.cpp
   HEADERS += gui/DesktopMainWindow.hpp
 
-  linux-g++-64 {
-    message(Linux G++ 64)
-    SOURCES += cryptography/botan/linux/x86_64/botan_all.cpp
-    HEADERS += cryptography/botan/linux/x86_64/botan_all.h
-  }
+  linux {
+    linux-g++-64 {
+      message(Linux G++ 64)
+      SOURCES += cryptography/botan/linux/x86_64/botan_all.cpp
+      HEADERS += cryptography/botan/linux/x86_64/botan_all.h
+    }
 
-  linux-g++-32 {
-    message(Linux G++ 32)
-    SOURCES += cryptography/botan/linux/x86/botan_all.cpp
-    HEADERS += cryptography/botan/linux/x86/botan_all.h
+    linux-g++-32 {
+      message(Linux G++ 32)
+      SOURCES += cryptography/botan/linux/x86/botan_all.cpp
+      HEADERS += cryptography/botan/linux/x86/botan_all.h
+    }
   }
 
   macx {
     message(OSX)
+    CONFIG += x86
+    SOURCES += cryptography/botan/mac/x86_64/botan_all.cpp
+    HEADERS += cryptography/botan/mac/x86_64/botan_all.h
+    QMAKE_MAC_SDK = macosx10.9
+    ICON = resources/mac/icon/Kryvos.icns
   }
 
   win32 {
@@ -79,6 +91,8 @@ android-g++ {
         HEADERS += cryptography/botan/windows/x86/botan_all.h
       }
     }
+
+    RC_FILE = resources/windows/rc/kryvos.rc
   }
 }
 
@@ -86,10 +100,3 @@ RESOURCES += resources/kryvos.qrc
 
 QMAKE_CXXFLAGS += -fstack-protector
 QMAKE_LFLAGS += -fstack-protector
-
-RC_FILE = resources/rc/kryvos.rc
-
-ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
-
-OTHER_FILES += \
-  android/AndroidManifest.xml

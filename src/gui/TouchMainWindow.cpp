@@ -18,10 +18,10 @@
  * Contact : andrewdolby@gmail.com
  */
 
-#include "gui/android/AndroidMainWindow.hpp"
+#include "gui/TouchMainWindow.hpp"
 #include <QtWidgets/QApplication>
 
-AndroidMainWindow::AndroidMainWindow(Settings* settings, QWidget* parent) :
+TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent) :
   MainWindow{settings, parent}
 {
   messageFrame->setText(tr("To begin, tap the Add Files button. Then enter a"

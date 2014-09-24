@@ -23,14 +23,15 @@
 
 #include <QtCore/QtGlobal>
 
-#if defined(Q_OS_LINUX)
-  #if defined(Q_OS_ANDROID)
-    #if defined(Q_PROCESSOR_ARM)
+
+#if defined(Q_OS_ANDROID)
 #include "cryptography/botan/android/botan_all.h"
-    #endif
-  #elif !defined(Q_OS_ANDROID)
+#elif defined(Q_OS_IOS)
+#include "cryptography/botan/ios/botan_all.h"
+#elif defined(Q_OS_MACX)
+#include "cryptography/botan/mac/x86_64/botan_all.h"
+#elif defined(Q_OS_LINUX)
 #include "cryptography/botan/linux/x86_64/botan_all.h"
-  #endif
 #elif defined(Q_OS_WIN)
   #if defined(Q_OS_WIN64)
 #include "cryptography/botan/windows/x64/botan_all.h"
