@@ -23,9 +23,7 @@
 
 #include <QtCore/QObject>
 
-class TestCrypto :
-  public QObject
-{
+class TestCrypto : public QObject {
   Q_OBJECT
 
  private slots:
