@@ -36,10 +36,10 @@ python configure.py --cpu=armv5te --via-amalgamation --no-autoload --enable-modu
 // Linux GCC x86_64
 python configure.py --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
 
-// Mac OSX
+// Mac OSX clang
 python configure.py --cc=clang --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
 
-// iOS
+// iOS clang
 python configure.py --cpu=armv7 --cc=clang --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
 
 // Windows MinGW-w64 GCC x64
