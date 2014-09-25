@@ -1,10 +1,6 @@
  language: cpp
 
  compiler: gcc
- 
- matrix:
-   include:
-     env: QTTYPE=5
 
  before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
@@ -15,10 +11,10 @@
   - sudo apt-get install -qq qt5-qmake qtbase5-dev
 
 before_script:
-  - cd src 
- 
+  - cd src
+
  script: qmake && make
- 
+
  after_script:
   - cd tests
   - qmake
