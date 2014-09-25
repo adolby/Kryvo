@@ -1,0 +1,28 @@
+ language: cpp
+
+ compiler: gcc
+
+ before_install:
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -ya
+  - sudo apt-get update -qq
+  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - sudo apt-get install -qq qtbase5-dev qtbase5-dev-tools
+
+before_script:
+  - cd src 
+ 
+ script: qmake && make
+ 
+ after_script:
+  - cd tests
+  - qmake
+  - make
+  - ./tests
+
+ notifications:
+   email:
+     recipients:
+       - andrewdolby@gmail.com
+     on_success: change
+     on_failure: always
