@@ -20,11 +20,7 @@
 
 #include "test_Crypto.hpp"
 #include "cryptography/Crypto.hpp"
-#include "botan/botan.h"
-#include "botan/pbkdf2.h"
-#include "botan/hmac.h"
-#include "botan/keccak.h"
-#include "botan/base64.h"
+#include "utility/make_unique.h"
 #include <QtTest/QtTest>
 #include <QtCore/QThread>
 #include <QtCore/QString>
@@ -155,7 +151,7 @@ void TestCrypto::testEncryptDecryptAll()
                                           "test (2).exe",
                                           "test (2).zip"};
 
-  std::unique_ptr<Crypto> cryptography{new Crypto};
+  std::unique_ptr<Crypto> cryptography = make_unique<Crypto>();
 
   // Test encryption and decryption
   cryptography->encrypt(passphrase, inputFileNames, algorithmName);
