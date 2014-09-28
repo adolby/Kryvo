@@ -1,0 +1,8 @@
+image: jemc/qt5
+script:
+  - cd src
+  - qmake && make
+notify:
+  email:
+    recipients:
+      - andrewdolby@gmail.com
