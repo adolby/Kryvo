@@ -85,8 +85,6 @@ void DesktopMainWindow::dragEnterEvent(QDragEnterEvent* event)
 
 void DesktopMainWindow::dropEvent(QDropEvent* event)
 {
-  Q_ASSERT(pimpl);
-
   // Check for the URL MIME type, which is a list of files
   if (event->mimeData()->hasUrls())
   { // Extract the local path from the file(s)
