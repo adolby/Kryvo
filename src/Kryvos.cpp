@@ -20,8 +20,6 @@
 
 #include "Kryvos.hpp"
 #include "gui/MainWindow.hpp"
-#include "cryptography/Crypto.hpp"
-
 #if defined(Q_OS_ANDROID)
 #include "gui/TouchMainWindow.hpp"
 #elif defined(Q_OS_IOS)
@@ -29,7 +27,7 @@
 #else
 #include "gui/DesktopMainWindow.hpp"
 #endif
-
+#include "cryptography/Crypto.hpp"
 #include "settings/Settings.hpp"
 #include "utility/make_unique.h"
 #include <QtCore/QThread>
