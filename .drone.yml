@@ -2,7 +2,7 @@ image: jemc/qt5
 script:
   - cd src
   - qmake -v
-  - qmake
+  - qmake -spec linux-g++-64
   - make
 notify:
   email:
