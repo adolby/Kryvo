@@ -55,6 +55,8 @@ DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent) :
   }
 }
 
+DesktopMainWindow::~DesktopMainWindow() {}
+
 void DesktopMainWindow::closeEvent(QCloseEvent* event)
 {
   this->settings->position(this->pos());

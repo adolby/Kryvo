@@ -53,3 +53,5 @@ TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent) :
   connect(passwordFrame, &PasswordFrame::editingFinished,
           QGuiApplication::inputMethod(), &QInputMethod::hide);
 }
+
+TouchMainWindow::~TouchMainWindow() {}

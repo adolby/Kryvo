@@ -57,6 +57,8 @@ android-g++ {
   HEADERS += gui/DesktopMainWindow.hpp
 
   linux {
+    message(Linux)
+
     linux-g++-64 {
       message(Linux G++ 64)
       SOURCES += cryptography/botan/linux/x86_64/botan_all.cpp
