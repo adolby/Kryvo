@@ -12,6 +12,7 @@ class DesktopMainWindow : public MainWindow
 {
  public:
   DesktopMainWindow(Settings* settings, QWidget* parent = nullptr);
+  ~DesktopMainWindow();
 
  protected:
   /*!

@@ -28,6 +28,7 @@ class TouchMainWindow : public MainWindow
 {
  public:
   TouchMainWindow(Settings* settings, QWidget* parent = nullptr);
+  ~TouchMainWindow();
 };
 
 #endif // KRYVOS_GUI_TOUCHMAINWINDOW_HPP_
