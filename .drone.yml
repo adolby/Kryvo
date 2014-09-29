@@ -1,7 +1,9 @@
 image: jemc/qt5
 script:
   - cd src
-  - qmake && make
+  - qmake -v
+  - qmake
+  - make
 notify:
   email:
     recipients:
