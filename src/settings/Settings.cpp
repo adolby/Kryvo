@@ -1,3 +1,23 @@
+/**
+ * Kryvos File Encryptor - Encrypts and decrypts files.
+ * Copyright (C) 2014 Andrew Dolby
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Contact : andrewdolby@gmail.com
+ */
+
 #include "settings/Settings.hpp"
 #include "utility/make_unique.h"
 #include <QtCore/QJsonDocument>
@@ -49,7 +69,7 @@ void Settings::position(const QPoint& position)
   pimpl->position = position;
 }
 
-QPoint Settings::position()
+QPoint Settings::position() const
 {
   Q_ASSERT(pimpl);
 
@@ -63,7 +83,7 @@ void Settings::maximized(bool maximized)
   pimpl->maximized = maximized;
 }
 
-bool Settings::maximized()
+bool Settings::maximized() const
 {
   Q_ASSERT(pimpl);
 
@@ -77,7 +97,7 @@ void Settings::size(const QSize& size)
   pimpl->size = size;
 }
 
-QSize Settings::size()
+QSize Settings::size() const
 {
   Q_ASSERT(pimpl);
 
@@ -91,7 +111,7 @@ void Settings::lastAlgorithm(const QString& algorithmName)
   pimpl->lastAlgorithmName = algorithmName;
 }
 
-QString Settings::lastAlgorithm()
+QString Settings::lastAlgorithm() const
 {
   Q_ASSERT(pimpl);
 
@@ -105,14 +125,14 @@ void Settings::lastDirectory(const QString& directory)
   pimpl->lastDirectory = directory;
 }
 
-QString Settings::lastDirectory()
+QString Settings::lastDirectory() const
 {
   Q_ASSERT(pimpl);
 
   return pimpl->lastDirectory;
 }
 
-QString Settings::styleSheetPath()
+QString Settings::styleSheetPath() const
 {
   Q_ASSERT(pimpl);
 

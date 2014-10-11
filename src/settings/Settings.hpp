@@ -28,7 +28,7 @@ class Settings {
    * \brief position Returns the main window's position.
    * \return Point at position of the main window.
    */
-  QPoint position();
+  QPoint position() const;
 
   /*!
    * \brief maximized Sets the maximized state.
@@ -40,7 +40,7 @@ class Settings {
    * \brief maximized Returns the main window's maximized state.
    * \return Boolean representing maximized state.
    */
-  bool maximized();
+  bool maximized() const;
 
   /*!
    * \brief size Sets the main window size.
@@ -52,7 +52,7 @@ class Settings {
    * \brief size Returns the main window's last size.
    * \return Size of main window.
    */
-  QSize size();
+  QSize size() const;
 
   /*!
    * \brief lastAlgorithm Sets the last used algorithm for later storage.
@@ -64,7 +64,7 @@ class Settings {
    * \brief lastAlgorithm Returns the name of the last used algorithm.
    * \return String containing the algorithm name.
    */
-  QString lastAlgorithm();
+  QString lastAlgorithm() const;
 
   /*!
    * \brief lastDirectory Sets the last opened directory for later storage.
@@ -76,13 +76,13 @@ class Settings {
    * \brief lastDirectory Returns the name of the last opened directory.
    * \return String containing the directory path.
    */
-  QString lastDirectory();
+  QString lastDirectory() const;
 
   /*!
    * \brief styleSheetPath Returns the path to the application stylesheet.
    * \return String containing the stylesheet path.
    */
-  QString styleSheetPath();
+  QString styleSheetPath() const;
 
  private:
   class SettingsPrivate;
