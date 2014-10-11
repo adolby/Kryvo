@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+    Kryvos File Encryptor - Encrypts and decrypts files.
+    Copyright (C) 2014 Andrew Dolby
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contact : andrewdolby@gmail.com
+-->
+
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   sodipodi:docname="gearIcon.svg"
+   inkscape:version="0.48.4 r9939"
+   version="1.1"
+   id="svg3949"
+   height="50"
+   width="50">
+  <defs
+     id="defs3951" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="10.889444"
+     inkscape:cx="19.326703"
+     inkscape:cy="25"
+     inkscape:document-units="px"
+     inkscape:current-layer="svg3949"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="1680"
+     inkscape:window-height="987"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     showguides="true"
+     inkscape:guide-bbox="true" />
+  <metadata
+     id="metadata3954">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-314.1057,-427.61997)" />
+  <path
+     style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1.38549531000000000"
+     d="m 25.000001,0.69274795 c -1.404303,0 -2.772855,0.1876284 -4.111935,0.41639835 l -1.040995,4.3721832 c -1.776947,0.4677217 -3.446302,1.126585 -4.99678,2.0299417 L 10.998606,5.1690296 C 8.7365207,6.7686162 6.7686157,8.7365211 5.1690297,10.998606 l 2.342241,3.851685 c -0.903356,1.550478 -1.562219,3.219834 -2.029941,4.996779 l -4.372184,1.040995 c -0.22876905,1.339081 -0.41639805,2.70763 -0.41639805,4.111934 0,1.404303 0.187629,2.772855 0.41639805,4.111935 l 4.372184,1.040995 c 0.467722,1.776947 1.126585,3.446302 2.029941,4.99678 l -2.342241,3.851685 c 1.599586,2.262085 3.567491,4.22999 5.8295763,5.829576 l 3.851685,-2.342241 c 1.550478,0.903356 3.219833,1.562219 4.99678,2.029941 l 1.040995,4.372184 c 1.33908,0.228769 2.707632,0.416398 4.111935,0.416398 1.404304,0 2.772853,-0.187629 4.111934,-0.416398 L 30.15293,44.51867 c 1.776946,-0.467722 3.446301,-1.126585 4.996779,-2.029941 l 3.851685,2.342241 c 2.262085,-1.599586 4.22999,-3.567491 5.829576,-5.829576 l -2.342241,-3.851685 c 0.903356,-1.550478 1.56222,-3.219833 2.029942,-4.99678 l 4.372183,-1.040995 c 0.228771,-1.33908 0.416399,-2.707632 0.416399,-4.111935 0,-1.404304 -0.187628,-2.772853 -0.416399,-4.111934 L 44.518671,19.84707 C 44.050949,18.070125 43.392085,16.400769 42.488729,14.850291 L 44.83097,10.998606 C 43.231384,8.7365211 41.263479,6.7686162 39.001394,5.1690296 L 35.149709,7.5112712 C 33.599231,6.6079145 31.929876,5.9490512 30.15293,5.4813295 L 29.111935,1.1091463 C 27.772854,0.88037635 26.404305,0.69274795 25.000001,0.69274795 z m 0,12.17965105 c 6.707815,0 12.1276,5.419786 12.1276,12.1276 0,6.707817 -5.419785,12.127602 -12.1276,12.127602 -6.707817,0 -12.127602,-5.419785 -12.127602,-12.127602 0,-6.707814 5.419785,-12.1276 12.127602,-12.1276 z"
+     id="path5506"
+     inkscape:connector-curvature="0" />
+</svg>
