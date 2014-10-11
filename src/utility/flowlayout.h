@@ -66,12 +66,15 @@ public:
     QLayoutItem *takeAt(int index);
 
 private:
-    int doLayout(const QRect &rect, bool testOnly) const;
+    void doLayout(const QRect &rect);
+    int checkLayout(const QRect &rect) const;
     int smartSpacing(QStyle::PixelMetric pm) const;
 
     QList<QLayoutItem *> itemList;
     int m_hSpace;
     int m_vSpace;
+
+    int lineCount;
 };
 //! [0]
 
