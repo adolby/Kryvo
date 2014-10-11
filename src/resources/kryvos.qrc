@@ -5,9 +5,13 @@
         <file>images/addFilesIcon.png</file>
         <file>images/clearFilesIcon.png</file>
         <file>images/closeFileIcon.png</file>
+        <file>images/gearIcon.png</file>
         <file>images/lockIcon.png</file>
         <file>images/pauseIcon.png</file>
         <file>images/resumeIcon.png</file>
         <file>images/unlockIcon.png</file>
+        <file>images/sliderBackground.png</file>
+        <file>images/sliderKnobDisable.png</file>
+        <file>images/sliderKnobEnable.png</file>
     </qresource>
 </RCC>
