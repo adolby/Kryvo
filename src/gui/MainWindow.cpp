@@ -27,7 +27,10 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QStackedLayout>
 #include <QtGui/QIcon>
+#include <QtCore/QStateMachine>
+#include <QtCore/QState>
 #include <QtCore/QModelIndexList>
 #include <QtCore/QModelIndex>
 #include <QtCore/QMimeData>
@@ -67,6 +70,9 @@ class MainWindow::MainWindowPrivate {
   // Messages to display to user
   const QStringList messages;
 
+  // GUI state machine
+  std::unique_ptr<QStateMachine> stateMachine;
+
  private:
   // The busy status, when set to true, indicates that this object is currently
   // executing a cipher operation. The status allows the GUI to decide whether
@@ -79,12 +85,22 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent) :
   messageFrame{nullptr}, passwordFrame{nullptr}, controlButtonFrame{nullptr},
   contentLayout{nullptr}, pimpl{make_unique<MainWindowPrivate>()}
 {
+  // Set object name
+  this->setObjectName("MainWindow");
+
+  // Title
+  this->setWindowTitle(tr("Kryvos"));
+
   // Store settings object
   pimpl->settings = settings;
 
   auto mainFrame = new QFrame{this};
   mainFrame->setObjectName("mainFrame");
   auto mainLayout = new QVBoxLayout{mainFrame};
+
+  settingsFrame = new SettingsFrame{mainFrame};
+  settingsFrame->setObjectName("settingsFrame");
+  mainLayout->addWidget(settingsFrame);
 
   auto contentFrame = new QFrame{mainFrame};
   contentFrame->setObjectName("contentFrame");
@@ -95,7 +111,7 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent) :
   fileListFrame = new FileListFrame{contentFrame};
   fileListFrame->setObjectName("fileListFrame");
   fileListFrame->setSizePolicy(QSizePolicy::Expanding,
-                                      QSizePolicy::Expanding);
+                               QSizePolicy::Expanding);
 
   // Message text edit display
   messageFrame = new MessageFrame{contentFrame};
@@ -106,9 +122,11 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent) :
 
   // Password entry frame
   passwordFrame = new PasswordFrame{contentFrame};
+  passwordFrame->setObjectName("passwordFrame");
 
   // Encrypt and decrypt control button frame
   controlButtonFrame = new ControlButtonFrame{contentFrame};
+  controlButtonFrame->setObjectName("controlButtonFrame");
 
   contentLayout = new QVBoxLayout{contentFrame};
   contentLayout->addWidget(headerFrame);
@@ -132,16 +150,30 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent) :
   // Forwarded connections
   connect(fileListFrame, &FileListFrame::stopFile,
           this, &MainWindow::stopFile, Qt::DirectConnection);
-  connect(controlButtonFrame, &ControlButtonFrame::encryptFiles,
-          this, &MainWindow::encryptFiles);
-  connect(controlButtonFrame, &ControlButtonFrame::decryptFiles,
-          this, &MainWindow::decryptFiles);
+  connect(controlButtonFrame, &ControlButtonFrame::processFiles,
+          this, &MainWindow::processFiles);
 
-  // Set object name
-  this->setObjectName("MainWindow");
+  // GUI states
+  QState* mainState = new QState{};
+  mainState->assignProperty(contentFrame, "visible", true);
+  mainState->assignProperty(settingsFrame, "visible", false);
 
-  // Title
-  this->setWindowTitle(tr("Kryvos"));
+  QState* settingsState = new QState{};
+  settingsState->assignProperty(contentFrame, "visible", false);
+  settingsState->assignProperty(settingsFrame, "visible", true);
+
+  mainState->addTransition(headerFrame,
+                           SIGNAL(switchFrame()),
+                           settingsState);
+  settingsState->addTransition(settingsFrame,
+                               SIGNAL(switchFrame()),
+                               mainState);
+
+  pimpl->stateMachine->addState(mainState);
+  pimpl->stateMachine->addState(settingsState);
+  pimpl->stateMachine->setInitialState(mainState);
+
+  pimpl->stateMachine->start();
 }
 
 MainWindow::~MainWindow() {}
@@ -149,6 +181,7 @@ MainWindow::~MainWindow() {}
 void MainWindow::addFiles()
 {
   Q_ASSERT(pimpl);
+  Q_ASSERT(pimpl->settings);
   Q_ASSERT(fileListFrame);
 
   // Open a file dialog to get files
@@ -174,7 +207,7 @@ void MainWindow::addFiles()
 
 void MainWindow::removeFiles()
 {
-  Q_ASSERT(pimpl);
+  Q_ASSERT(fileListFrame);
 
   // Signal to abort current cipher operation if it's in progress
   emit abortCipher();
@@ -182,9 +215,10 @@ void MainWindow::removeFiles()
   fileListFrame->clear();
 }
 
-void MainWindow::encryptFiles()
+void MainWindow::processFiles(bool cryptFlag)
 {
   Q_ASSERT(pimpl);
+  Q_ASSERT(pimpl->settings);
   Q_ASSERT(passwordFrame);
   Q_ASSERT(fileListFrame);
 
@@ -206,47 +240,16 @@ void MainWindow::encryptFiles()
           fileList.append(item->data().toString());
         }
 
-        // Start encrypting the file list
-        emit encrypt(passphrase, fileList, pimpl->settings->lastAlgorithm());
-      }
-    }
-    else
-    { // Inform user that a password is required to encrypt or decrypt
-      this->updateStatusMessage(pimpl->messages[0]);
-    }
-  }
-  else
-  {
-    this->updateStatusMessage(pimpl->messages[1]);
-  }
-}
-
-void MainWindow::decryptFiles()
-{
-  Q_ASSERT(pimpl);
-  Q_ASSERT(passwordFrame);
-  Q_ASSERT(fileListFrame);
-
-  if (!pimpl->isBusy())
-  {
-    // Get passphrase from line edit
-    const auto passphrase = passwordFrame->password();
-
-    if (!passphrase.isEmpty())
-    {
-      const auto rowCount = fileListFrame->rowCount();
-      if (rowCount > 0)
-      {
-        auto fileList = QStringList{};
-
-        for (auto row = 0; row < rowCount; ++row)
+        if (cryptFlag)
         {
-          auto item = fileListFrame->item(row);
-          fileList.append(item->data().toString());
+          // Start encrypting the file list
+          emit encrypt(passphrase, fileList, pimpl->settings->lastAlgorithm());
         }
-
-        // Start decrypting the file list
-        emit decrypt(passphrase, fileList);
+        else
+        {
+          // Start decrypting the file list
+          emit decrypt(passphrase, fileList);
+        }
       }
     }
     else
@@ -262,7 +265,6 @@ void MainWindow::decryptFiles()
 
 void MainWindow::updateProgress(const QString& path, qint64 percent)
 {
-  Q_ASSERT(pimpl);
   Q_ASSERT(fileListFrame);
 
   fileListFrame->updateProgress(path, percent);
@@ -270,7 +272,6 @@ void MainWindow::updateProgress(const QString& path, qint64 percent)
 
 void MainWindow::updateStatusMessage(const QString& message)
 {
-  Q_ASSERT(pimpl);
   Q_ASSERT(messageFrame);
 
   messageFrame->appendPlainText(message);
@@ -331,6 +332,7 @@ MainWindow::MainWindowPrivate::MainWindowPrivate() :
               " one to continue."),
            tr("Encryption/decryption is already in progress. Please wait until"
               " the current operation finishes.")},
+  stateMachine{make_unique<QStateMachine>()},
   busyStatus{false} {}
 
 void MainWindow::MainWindowPrivate::busy(bool busy)

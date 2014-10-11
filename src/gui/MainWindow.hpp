@@ -22,6 +22,7 @@
 #define KRYVOS_GUI_MAINWINDOW_HPP_
 
 #include "settings/Settings.hpp"
+#include "gui/SettingsFrame.hpp"
 #include "gui/HeaderFrame.hpp"
 #include "gui/FileListFrame.hpp"
 #include "gui/MessageFrame.hpp"
@@ -100,19 +101,13 @@ class MainWindow : public QMainWindow {
   void removeFiles();
 
   /*!
-   * \brief encryptFiles Executed when the encrypt push button is clicked.
-   * Starts the encryption operation using the passphrase from the password line
-   * edit, the file list from the file list model, and the algorithm name from
-   * the settings panel.
+   * \brief processFiles Executed when the encrypt or decrypt push button is
+   * clicked. Starts the encryption or decryption operation using the passphrase
+   * from the password line edit, the file list from the file list model, and
+   * the algorithm name from the settings panel.
+   * \param cryptFlag Boolean representing encrypt (true) or decrypt (false).
    */
-  void encryptFiles();
-
-  /*!
-   * \brief decryptFiles Executed when the decrypt push button is clicked.
-   * Starts the decryption operation using the passphrase from the password line
-   * edit and the file list from the file list model.
-   */
-  void decryptFiles();
+  void processFiles(bool cryptFlag);
 
   /*!
    * \brief updateProgress Executed when the cipher operation progress is
@@ -159,6 +154,7 @@ class MainWindow : public QMainWindow {
   QString loadStyleSheet(const QString& styleFile, const QString& defaultFile);
 
  protected:
+  SettingsFrame* settingsFrame;
   HeaderFrame* headerFrame;
   FileListFrame* fileListFrame;
   MessageFrame* messageFrame;
