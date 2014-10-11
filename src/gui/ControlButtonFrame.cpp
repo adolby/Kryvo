@@ -32,6 +32,7 @@ class ControlButtonFrame::ControlButtonFramePrivate {
    */
   explicit ControlButtonFramePrivate();
 
+ public:
   QPushButton* encryptButton;
   QPushButton* decryptButton;
 };
@@ -67,6 +68,18 @@ ControlButtonFrame::ControlButtonFrame(QWidget* parent) :
           this, &ControlButtonFrame::decryptFiles);
 }
 
+ControlButtonFrame::~ControlButtonFrame() {}
+
+void ControlButtonFrame::encryptFiles()
+{
+  emit processFiles(true);
+}
+
+void ControlButtonFrame::decryptFiles()
+{
+  emit processFiles(false);
+}
+
 void ControlButtonFrame::setIconSize(const QSize& iconSize)
 {
   Q_ASSERT(pimpl->encryptButton);
@@ -75,8 +88,6 @@ void ControlButtonFrame::setIconSize(const QSize& iconSize)
   pimpl->encryptButton->setIconSize(iconSize);
   pimpl->decryptButton->setIconSize(iconSize);
 }
-
-ControlButtonFrame::~ControlButtonFrame() {}
 
 ControlButtonFrame::ControlButtonFramePrivate::ControlButtonFramePrivate() :
   encryptButton{nullptr}, decryptButton{nullptr}

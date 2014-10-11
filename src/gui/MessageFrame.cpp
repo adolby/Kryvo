@@ -82,7 +82,7 @@ void MessageFrame::appendPlainText(const QString& message)
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->messageTextEdit);
 
-  pimpl->messageTextEdit->setPlainText(message);
+  pimpl->messageTextEdit->appendPlainText(message);
 }
 
 void MessageFrame::setText(const QString& startText)
