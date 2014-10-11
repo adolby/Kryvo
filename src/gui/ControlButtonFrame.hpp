@@ -45,12 +45,20 @@ class ControlButtonFrame : public QFrame {
 
  signals:
   /*!
-   * \brief encryptFiles Emitted when the encrypt push button is clicked.
+   * \brief processFiles Emitted when the encrypt or decrypt push buttons are
+   * clicked.
+   * \param cryptFlag Boolean representing encrypt (true) or decrypt (false).
+   */
+  void processFiles(bool cryptFlag);
+
+ private slots:
+  /*!
+   * \brief encryptFiles Executed when the encrypt push button is clicked.
    */
   void encryptFiles();
 
   /*!
-   * \brief decryptFiles Emitted when the decrypt push button is clicked.
+   * \brief decryptFiles Executed when the decrypt push button is clicked.
    */
   void decryptFiles();
 
