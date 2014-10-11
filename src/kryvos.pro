@@ -11,12 +11,14 @@ SOURCES += \
   Kryvos.cpp \
   cryptography/Crypto.cpp \
   gui/MainWindow.cpp \
+  gui/SettingsFrame.cpp \
   gui/HeaderFrame.cpp \
   gui/FileListFrame.cpp \
   gui/Delegate.cpp \
   gui/MessageFrame.cpp \
   gui/PasswordFrame.cpp \
   gui/ControlButtonFrame.cpp \
+  gui/SlideSwitch.cpp \
   settings/Settings.cpp \
   utility/flowlayout.cpp
 
@@ -24,12 +26,14 @@ HEADERS += \
   Kryvos.hpp \
   cryptography/Crypto.hpp \
   gui/MainWindow.hpp \
+  gui/SettingsFrame.hpp \
   gui/HeaderFrame.hpp \
   gui/FileListFrame.hpp \
   gui/Delegate.hpp \
   gui/MessageFrame.hpp \
   gui/PasswordFrame.hpp \
   gui/ControlButtonFrame.hpp \
+  gui/SlideSwitch.hpp \
   settings/Settings.hpp \
   utility/make_unique.h \
   utility/flowlayout.h
