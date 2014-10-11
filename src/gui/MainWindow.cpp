@@ -200,7 +200,7 @@ void MainWindow::addFiles()
 
     // Save this directory for returning to later
     const auto fileName = files[0];
-    QFileInfo file{fileName};
+    const QFileInfo file{fileName};
     pimpl->settings->lastDirectory(file.absolutePath());
   }
 }
@@ -295,7 +295,7 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
 {
   // Try to load user theme, if it exists
   const QString styleSheetPath = QLatin1String{"themes"} % QDir::separator() %
-          styleFile;
+                                 styleFile;
   QFile userTheme{styleSheetPath};
 
   auto styleSheet = QString{};
