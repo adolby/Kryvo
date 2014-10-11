@@ -58,6 +58,10 @@ FileListFrame::FileListFrame(QWidget* parent) :
   pimpl->fileListModel->setHeaderData(1, Qt::Horizontal, tr("Progress"));
   pimpl->fileListModel->setHeaderData(2, Qt::Horizontal, tr("Remove file"));
 
+  const QStringList headerList = {tr("Files"), tr("Progress"),
+                                  tr("Remove file")};
+  pimpl->fileListModel->setHorizontalHeaderLabels(headerList);
+
   pimpl->fileListView = new QTableView{this};
   pimpl->fileListView->setModel(pimpl->fileListModel.get());
 
@@ -137,8 +141,17 @@ void FileListFrame::addFileToModel(const QString& path)
 
   if (file.exists() && file.isFile())
   { // If the file exists, add it to the model
-    const QString fileName = QLatin1String{".."} % QDir::separator() %
-                    directory.dirName() % QDir::separator() % file.fileName();
+    QString fileName;
+    if (directory.isRoot())
+    {
+      fileName = file.absoluteFilePath();
+    }
+    else
+    {
+      fileName = directory.rootPath() % QLatin1String{"..."} %
+                 "/" % directory.dirName() % "/" % file.fileName();
+    }
+
     auto pathItem = new QStandardItem{fileName};
     pathItem->setDragEnabled(false);
     pathItem->setDropEnabled(false);
@@ -160,41 +173,30 @@ void FileListFrame::addFileToModel(const QString& path)
     closeFileItem->setEditable(false);
     closeFileItem->setSelectable(false);
 
-    QList<QStandardItem*> items;
-    items.append(pathItem);
-    items.append(progressItem);
-    items.append(closeFileItem);
+    const QList<QStandardItem*> items = {pathItem, progressItem, closeFileItem};
 
-    if (0 == pimpl->fileListModel->rowCount())
-    { // Add right away if there are no items in the model
+    // Search to see if this item is already in the model
+    auto addNewItem = true;
+
+    const auto rowCount = pimpl->fileListModel->rowCount();
+    for (auto row = 0; row < rowCount; ++row)
+    {
+      auto testItem = pimpl->fileListModel->item(row, 0);
+
+      if (testItem->data().toString() == pathItem->data().toString())
+      {
+        addNewItem = false;
+      }
+    }
+
+    if (addNewItem)
+    { // Add the item to the model if it's new
       pimpl->fileListModel->appendRow(items);
       QHeaderView* header = pimpl->fileListView->horizontalHeader();
       header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+      header->setResizeContentsPrecision(0);
       header->resizeSection(1, 130);
     }
-    else
-    { // Search to see if this item is already in the model
-      auto addNewItem = true;
-
-      const auto rowCount = pimpl->fileListModel->rowCount();
-      for (auto row = 0; row < rowCount; ++row)
-      {
-        auto testItem = pimpl->fileListModel->item(row, 0);
-
-        if (testItem->data().toString() == pathItem->data().toString())
-        {
-          addNewItem = false;
-        }
-      }
-
-      if (addNewItem)
-      { // Add the item to the model if it's a new item
-        pimpl->fileListModel->appendRow(items);
-        QHeaderView* header = pimpl->fileListView->horizontalHeader();
-        header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-        header->resizeSection(1, 130);
-      }
-    } // End else
   } // End if file exists and is a file
 }
 
@@ -219,10 +221,20 @@ void FileListFrame::updateProgress(const QString& path, qint64 percent)
 
   QFileInfo file{path};
   QDir directory{file.dir()};
-  const QString fileName = QLatin1String{".."} % QDir::separator() %
-          directory.dirName() % QDir::separator() % file.fileName();
 
-  QList<QStandardItem*> items = pimpl->fileListModel->findItems(fileName);
+  QString fileName;
+
+  if (directory.isRoot())
+  {
+    fileName = file.absoluteFilePath();
+  }
+  else
+  {
+    fileName = directory.rootPath() % QLatin1String{"..."} %
+               "/" % directory.dirName() % "/" % file.fileName();
+  }
+
+  const QList<QStandardItem*> items = pimpl->fileListModel->findItems(fileName);
 
   if (items.size() > 0)
   {
