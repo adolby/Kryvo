@@ -63,6 +63,10 @@ class ControlButtonFrame : public QFrame {
   void decryptFiles();
 
  public:
+  /*!
+   * \brief setIconSize Sets the icon size for buttons.
+   * \param iconSize Icon size.
+   */
   void setIconSize(const QSize& iconSize);
 
  private:

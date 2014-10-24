@@ -34,7 +34,7 @@ class Delegate : public QStyledItemDelegate {
  public:
   /*!
    * \brief Delegate Constructs a delegate that augments a view.
-   * \param parent The QObject parent of this delegate.
+   * \param parent QObject parent of this delegate.
    */
   explicit Delegate(QObject* parent = nullptr);
 
