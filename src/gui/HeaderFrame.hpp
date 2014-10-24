@@ -34,7 +34,7 @@ class HeaderFrame : public QFrame {
  public:
   /*!
    * \brief HeaderFrame Constructs a header frame.
-   * \param parent The QWidget parent of this HeaderFrame.
+   * \param parent QWidget parent
    */
   explicit HeaderFrame(QWidget* parent = nullptr);
 
@@ -67,6 +67,10 @@ class HeaderFrame : public QFrame {
   void switchFrame();
 
  public:
+  /*!
+   * \brief setIconSize Sets the icon size for buttons.
+   * \param iconSize Icon size
+   */
   void setIconSize(const QSize& iconSize);
 
  private slots:

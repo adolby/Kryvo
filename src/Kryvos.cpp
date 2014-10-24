@@ -76,7 +76,7 @@ Kryvos::Kryvos(QObject* parent) :
   connect(pimpl->gui, &MainWindow::decrypt,
           pimpl->cryptography.get(), &Crypto::decrypt);
 
-  // Pause connection is direct so the cryptography object can be paused while
+  // Connections are direct so the cryptography object can be paused while
   // it is running a cipher operation on another thread
   connect(pimpl->gui, &MainWindow::pauseCipher,
           pimpl->cryptography.get(), &Crypto::pause, Qt::DirectConnection);

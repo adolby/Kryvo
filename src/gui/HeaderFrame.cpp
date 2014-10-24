@@ -19,7 +19,7 @@
  */
 
 #include "gui/HeaderFrame.hpp"
-#include "utility/flowlayout.h"
+#include "gui/FluidLayout.hpp"
 #include "utility/make_unique.h"
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QLabel>
@@ -79,7 +79,7 @@ HeaderFrame::HeaderFrame(QWidget* parent) :
   pimpl->settingsButton->setSizePolicy(QSizePolicy::Fixed,
                                        QSizePolicy::Fixed);
 
-  auto buttonLayout = new FlowLayout{buttonFrame};
+  auto buttonLayout = new FluidLayout{buttonFrame};
   buttonLayout->addWidget(pimpl->pauseButton);
   buttonLayout->addWidget(pimpl->addFilesButton);
   buttonLayout->addWidget(pimpl->clearFilesButton);
