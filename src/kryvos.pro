@@ -19,8 +19,9 @@ SOURCES += \
   gui/PasswordFrame.cpp \
   gui/ControlButtonFrame.cpp \
   gui/SlideSwitch.cpp \
-  settings/Settings.cpp \
-  utility/flowlayout.cpp
+  gui/flowlayout.cpp \
+  gui/FluidLayout.cpp \
+  settings/Settings.cpp
 
 HEADERS += \
   Kryvos.hpp \
@@ -34,9 +35,10 @@ HEADERS += \
   gui/PasswordFrame.hpp \
   gui/ControlButtonFrame.hpp \
   gui/SlideSwitch.hpp \
+  gui/flowlayout.h \
+  gui/FluidLayout.hpp \
   settings/Settings.hpp \
-  utility/make_unique.h \
-  utility/flowlayout.h
+  utility/make_unique.h
 
 # Platform-specific configuration
 android-g++ {
