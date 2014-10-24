@@ -31,8 +31,8 @@
 class DesktopMainWindow : public MainWindow
 {
  public:
-  DesktopMainWindow(Settings* settings, QWidget* parent = nullptr);
-  ~DesktopMainWindow();
+  explicit DesktopMainWindow(Settings* settings, QWidget* parent = nullptr);
+  virtual ~DesktopMainWindow();
 
  protected:
   /*!
