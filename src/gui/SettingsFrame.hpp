@@ -24,14 +24,30 @@
 #include <QtWidgets/QFrame>
 #include <memory>
 
+/*!
+ * \brief The SettingsFrame class contains controls for customizing encryption
+ * settings.
+ */
 class SettingsFrame : public QFrame {
   Q_OBJECT
 
  public:
+  /*!
+   * \brief SettingsFrame Constructs a settings frame.
+   * \param parent QWidget parent
+   */
   explicit SettingsFrame(QWidget* parent = nullptr);
+
+  /*!
+   * \brief ~SettingsFrame Destroys a settings frame.
+   */
   virtual ~SettingsFrame();
 
  signals:
+  /*!
+   * \brief switchFrame Signals that the main frame will switch to the previous
+   * state.
+   */
   void switchFrame();
 
  private:
