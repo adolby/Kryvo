@@ -53,11 +53,7 @@ class FileListFrame::FileListFramePrivate {
 FileListFrame::FileListFrame(QWidget* parent) :
   QFrame{parent}, pimpl{make_unique<FileListFramePrivate>()}
 {
-  // File list
-  pimpl->fileListModel->setHeaderData(0, Qt::Horizontal, tr("Files"));
-  pimpl->fileListModel->setHeaderData(1, Qt::Horizontal, tr("Progress"));
-  pimpl->fileListModel->setHeaderData(2, Qt::Horizontal, tr("Remove file"));
-
+  // File list header
   const QStringList headerList = {tr("Files"), tr("Progress"),
                                   tr("Remove file")};
   pimpl->fileListModel->setHorizontalHeaderLabels(headerList);
@@ -84,7 +80,7 @@ FileListFrame::FileListFrame(QWidget* parent) :
                          QScroller::TouchGesture);
 
   // Disable overshoot; it makes interacting with small widgets harder
-  QScroller* scroller = QScroller::scroller(pimpl->fileListView);
+  auto scroller = QScroller::scroller(pimpl->fileListView);
 
   QScrollerProperties properties = scroller->scrollerProperties();
 
@@ -136,20 +132,22 @@ void FileListFrame::clear()
 
 void FileListFrame::addFileToModel(const QString& path)
 {
-  QFileInfo file{path};
-  QDir directory{file.dir()};
+  QFileInfo fileInfo{path};
+  QDir directory{fileInfo.dir()};
 
-  if (file.exists() && file.isFile())
+  if (fileInfo.exists() && fileInfo.isFile())
   { // If the file exists, add it to the model
     QString fileName;
+
     if (directory.isRoot())
     {
-      fileName = file.absoluteFilePath();
+      fileName = fileInfo.absoluteFilePath();
     }
     else
     {
       fileName = directory.rootPath() % QLatin1String{"..."} %
-                 "/" % directory.dirName() % "/" % file.fileName();
+                 QLatin1String{"/"} % directory.dirName() % QLatin1String{"/"} %
+                 fileInfo.fileName();
     }
 
     auto pathItem = new QStandardItem{fileName};
@@ -219,22 +217,23 @@ void FileListFrame::updateProgress(const QString& path, qint64 percent)
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->fileListModel);
 
-  QFileInfo file{path};
-  QDir directory{file.dir()};
+  QFileInfo fileInfo{path};
+  QDir directory{fileInfo.dir()};
 
   QString fileName;
 
   if (directory.isRoot())
   {
-    fileName = file.absoluteFilePath();
+    fileName = fileInfo.absoluteFilePath();
   }
   else
   {
     fileName = directory.rootPath() % QLatin1String{"..."} %
-               "/" % directory.dirName() % "/" % file.fileName();
+               QLatin1String{"/"} % directory.dirName() % QLatin1String{"/"} %
+               fileInfo.fileName();
   }
 
-  const QList<QStandardItem*> items = pimpl->fileListModel->findItems(fileName);
+  const auto items = pimpl->fileListModel->findItems(fileName);
 
   if (items.size() > 0)
   {
