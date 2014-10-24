@@ -23,7 +23,6 @@
 
 #include <QtCore/QtGlobal>
 
-
 #if defined(Q_OS_ANDROID)
 #include "cryptography/botan/android/botan_all.h"
 #elif defined(Q_OS_IOS)
