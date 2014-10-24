@@ -20,20 +20,29 @@
 
 #include "gui/SettingsFrame.hpp"
 #include "gui/SlideSwitch.hpp"
-#include "utility/flowlayout.h"
+#include "gui/flowlayout.h"
 #include "utility/make_unique.h"
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QAction>
 #include <QtGui/QIcon>
+#include <QtCore/QStateMachine>
+#include <QtCore/QState>
 
 class SettingsFrame::SettingsFramePrivate {
  public:
+  /*!
+   * \brief SettingsFramePrivate Constructs the settings frame private
+   * implementation.
+   */
   explicit SettingsFramePrivate();
 
   QComboBox* cipherComboBox;
-  QComboBox* keySizeComboBox;
+  QComboBox* blockSizeComboBox;
+  QComboBox* modeComboBox;
+
+  QStateMachine* stateMachine;
 };
 
 SettingsFrame::SettingsFrame(QWidget* parent) :
@@ -57,28 +66,42 @@ SettingsFrame::SettingsFrame(QWidget* parent) :
 
   auto cipherFrame = new QFrame{contentFrame};
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-  auto cipherLabel = new QLabel{"Cipher: ", cipherFrame};
+  auto cipherLabel = new QLabel{tr("Cipher: "), cipherFrame};
   cipherLabel->setObjectName("text");
   pimpl->cipherComboBox = new QComboBox{cipherFrame};
   pimpl->cipherComboBox->setObjectName("settingsComboBox");
-  pimpl->cipherComboBox->addItem("AES");
+  pimpl->cipherComboBox->addItem(tr("AES"));
+  pimpl->cipherComboBox->addItem(tr("Serpent"));
   auto cipherLayout = new QHBoxLayout{cipherFrame};
   cipherLayout->addWidget(cipherLabel);
   cipherLayout->addWidget(pimpl->cipherComboBox);
 
-//  auto keySizeFrame = new QFrame{contentFrame};
-//  keySizeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-//  auto keySizeLabel = new QLabel{"Key size: ", keySizeFrame};
-//  keySizeLabel->setObjectName("text");
-//  pimpl->keySizeComboBox = new QComboBox{keySizeFrame};
-//  pimpl->keySizeComboBox->setObjectName("settingsComboBox");
-//  auto keySizeLayout = new QHBoxLayout{keySizeFrame};
-//  keySizeLayout->addWidget(keySizeLabel);
-//  keySizeLayout->addWidget(pimpl->keySizeComboBox);
+  auto blockSizeFrame = new QFrame{contentFrame};
+  blockSizeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+  auto blockSizeLabel = new QLabel{tr("Block size: "), blockSizeFrame};
+  blockSizeLabel->setObjectName("text");
+  pimpl->blockSizeComboBox = new QComboBox{blockSizeFrame};
+  pimpl->blockSizeComboBox->setObjectName("settingsComboBox");
+  pimpl->cipherComboBox->addItem("128");
+  pimpl->cipherComboBox->addItem("256");
+  auto blockSizeLayout = new QHBoxLayout{blockSizeFrame};
+  blockSizeLayout->addWidget(blockSizeLabel);
+  blockSizeLayout->addWidget(pimpl->blockSizeComboBox);
+
+  auto modeFrame = new QFrame{contentFrame};
+  modeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+  auto modeLabel = new QLabel{tr("Mode of operation: "), modeFrame};
+  modeLabel->setObjectName("text");
+  pimpl->modeComboBox = new QComboBox{modeFrame};
+  pimpl->modeComboBox->setObjectName("settingsComboBox");
+  auto modeLayout = new QHBoxLayout{modeFrame};
+  modeLayout->addWidget(modeLabel);
+  modeLayout->addWidget(pimpl->modeComboBox);
 
   auto contentLayout = new QHBoxLayout{contentFrame};
   contentLayout->addWidget(cipherFrame);
-//  contentLayout->addWidget(keySizeFrame);
+  contentLayout->addWidget(blockSizeFrame);
+  contentLayout->addWidget(modeFrame);
 
   auto layout = new QVBoxLayout{this};
   layout->addWidget(headerFrame, 0);
@@ -90,6 +113,29 @@ SettingsFrame::SettingsFrame(QWidget* parent) :
   connect(returnAction, &QAction::triggered,
           this, &SettingsFrame::switchFrame);
   this->addAction(returnAction);
+
+  // Combo box states
+  pimpl->stateMachine = new QStateMachine{this};
+
+  QState* aesState = new QState{};
+  //aesState->assignProperty(contentFrame, "visible", true);
+  //aesState->assignProperty(settingsFrame, "visible", false);
+
+  QState* serpentState = new QState{};
+
+  /*aesState->addTransition(this,
+                          SIGNAL(switchFrame()),
+                          serpentState);
+
+  serpentState->addTransition(this,
+                              SIGNAL(switchFrame()),
+                              aesState);*/
+
+  pimpl->stateMachine->addState(aesState);
+  pimpl->stateMachine->addState(serpentState);
+  pimpl->stateMachine->setInitialState(aesState);
+
+  pimpl->stateMachine->start();
 }
 
 SettingsFrame::~SettingsFrame() {}
