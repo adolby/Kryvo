@@ -39,6 +39,7 @@
   #endif
 #endif
 
+#include "settings/Settings.hpp"
 #include <QtCore/QObject>
 #include <QtCore/QStringList>
 #include <QtCore/QString>
@@ -58,7 +59,7 @@ class Crypto : public QObject {
    * \brief Crypto Constructs the Crypto class. Initializes Botan.
    * \param parent
    */
-  explicit Crypto(QObject* parent = nullptr);
+  explicit Crypto(Settings* settings = nullptr, QObject* parent = nullptr);
 
   /*!
    * \brief ~Crypto Destroys the Crypto class.
@@ -107,7 +108,8 @@ class Crypto : public QObject {
    */
   void encrypt(const QString& passphrase,
                const QStringList& inputFileNames,
-               const QString& algorithm = "AES-128/GCM");
+               const QString& algorithm = "AES-128/GCM",
+               std::size_t keySize = 16);
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
@@ -157,10 +159,12 @@ class Crypto : public QObject {
    * encrypt.
    * \param algorithmName String representing the name of the algorithm to use
    * for encryption.
+   * \param keySize Size of the key.
    */
   void encryptFile(const QString& passphrase,
                    const QString& inputFileName,
-                   const QString& algorithmName);
+                   const QString& algorithmName,
+                   std::size_t keySize);
 
   /*!
    * \brief decryptFile Decrypts a single file with the input passphrase and

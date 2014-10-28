@@ -137,14 +137,15 @@ void FileListFrame::addFileToModel(const QString& path)
 
   if (fileInfo.exists() && fileInfo.isFile())
   { // If the file exists, add it to the model
-    QString fileName;
+    const QString filePath = fileInfo.absoluteFilePath();
 
-    if (directory.isRoot())
-    {
-      fileName = fileInfo.absoluteFilePath();
+    QString fileName;
+    if (filePath.contains("//"))
+    { // Windows network share
+      fileName = filePath;
     }
     else
-    {
+    { // Windows or Unix path
       fileName = directory.rootPath() % QLatin1String{"..."} %
                  QLatin1String{"/"} % directory.dirName() % QLatin1String{"/"} %
                  fileInfo.fileName();

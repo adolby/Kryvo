@@ -58,6 +58,8 @@ class Kryvos::KryvosPrivate {
 Kryvos::Kryvos(QObject* parent) :
   QObject{parent}, pimpl{make_unique<KryvosPrivate>()}
 {
+  qRegisterMetaType<std::size_t>("std::size_t");
+
 #if defined(Q_OS_ANDROID)
   pimpl->gui = new TouchMainWindow(pimpl->settings.get());
 #elif defined(Q_OS_IOS)

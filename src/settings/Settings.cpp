@@ -46,8 +46,10 @@ class Settings::SettingsPrivate {
   QPoint position;
   bool maximized;
   QSize size;
+  QString cipher;
+  std::size_t keySize;
+  QString mode;
   QString lastDirectory;
-  QString lastAlgorithmName;
   QString styleSheetPath;
 };
 
@@ -104,18 +106,46 @@ QSize Settings::size() const
   return pimpl->size;
 }
 
-void Settings::lastAlgorithm(const QString& algorithmName)
+void Settings::cipher(const QString& cipherName)
 {
   Q_ASSERT(pimpl);
 
-  pimpl->lastAlgorithmName = algorithmName;
+  pimpl->cipher = cipherName;
 }
 
-QString Settings::lastAlgorithm() const
+QString Settings::cipher() const
 {
   Q_ASSERT(pimpl);
 
-  return pimpl->lastAlgorithmName;
+  return pimpl->cipher;
+}
+
+void Settings::keySize(std::size_t keySize)
+{
+  Q_ASSERT(pimpl);
+
+  pimpl->keySize = keySize;
+}
+
+std::size_t Settings::keySize() const
+{
+  Q_ASSERT(pimpl);
+
+  return pimpl->keySize;
+}
+
+void Settings::modeOfOperation(const QString& modeOfOperation)
+{
+  Q_ASSERT(pimpl);
+
+  pimpl->mode = modeOfOperation;
+}
+
+QString Settings::modeOfOperation() const
+{
+  Q_ASSERT(pimpl);
+
+  return pimpl->mode;
 }
 
 void Settings::lastDirectory(const QString& directory)
@@ -140,7 +170,7 @@ QString Settings::styleSheetPath() const
 }
 
 Settings::SettingsPrivate::SettingsPrivate()
-  : maximized{false}
+  : maximized{false}, keySize{128}
 {}
 
 void Settings::SettingsPrivate::importSettings()
@@ -156,23 +186,30 @@ void Settings::SettingsPrivate::importSettings()
     auto settings = settingsDoc.object();
 
     auto positionObject = settings["position"].toObject();
-    auto x = static_cast<QJsonValue>(positionObject["x"]);
-    auto y = static_cast<QJsonValue>(positionObject["y"]);
-    position = QPoint{x.toInt(200), y.toInt(200)};
+    auto xObject = static_cast<QJsonValue>(positionObject["x"]);
+    auto yObject = static_cast<QJsonValue>(positionObject["y"]);
+    position = QPoint{xObject.toInt(200), yObject.toInt(200)};
 
-    maximized = settings["maximized"].toBool();
+    auto maximizedObject = static_cast<QJsonValue>(settings["maximized"]);
+    maximized = maximizedObject.toBool(false);
     if (!maximized)
     {
       auto sizeObject = settings["size"].toObject();
-      auto width = static_cast<QJsonValue>(sizeObject["width"]);
-      auto height = static_cast<QJsonValue>(sizeObject["height"]);
-      size = QSize{width.toInt(800), height.toInt(600)};
+      auto widthObject = static_cast<QJsonValue>(sizeObject["width"]);
+      auto heightObject = static_cast<QJsonValue>(sizeObject["height"]);
+      size = QSize{widthObject.toInt(800), heightObject.toInt(600)};
     }
 
     lastDirectory = settings["lastDirectory"].toString();
 
-    auto algorithm = static_cast<QJsonValue>(settings["lastAlgorithmName"]);
-    lastAlgorithmName = algorithm.toString("AES-128/GCM");
+    auto cipherObject = static_cast<QJsonValue>(settings["cipher"]);
+    cipher = cipherObject.toString("AES");
+
+    auto keySizeObject = static_cast<QJsonValue>(settings["keySize"]);
+    keySize = static_cast<std::size_t>(keySizeObject.toInt(128));
+
+    auto modeObject = static_cast<QJsonValue>(settings["modeOfOperation"]);
+    mode = modeObject.toString("GCM");
 
     auto style = static_cast<QJsonValue>(settings["styleSheetPath"]);
     styleSheetPath = style.toString("default/kryvos.qss");
@@ -181,8 +218,10 @@ void Settings::SettingsPrivate::importSettings()
   { // Settings file couldn't be opened, so use defaults
     position = QPoint{200, 200};
     size = QSize{800, 600};
+    cipher = "AES";
+    keySize = 128;
+    mode = "GCM";
     styleSheetPath = "default/kryvos.qss";
-    lastAlgorithmName = "AES-128/GCM";
   }
 }
 
@@ -211,7 +250,9 @@ void Settings::SettingsPrivate::exportSettings() const
     }
 
     settings["lastDirectory"] = lastDirectory;
-    settings["lastAlgorithmName"] = lastAlgorithmName;
+    settings["cipher"] = cipher;
+    settings["keySize"] = static_cast<int>(keySize);
+    settings["modeOfOperation"] = mode;
     settings["styleSheetPath"] = styleSheetPath;
 
     auto settingsDoc = QJsonDocument{settings};

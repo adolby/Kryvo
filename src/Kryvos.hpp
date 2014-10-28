@@ -22,7 +22,10 @@
 #define KRYVOS_KRYVOS_HPP_
 
 #include <QtCore/QObject>
+#include <QtCore/QMetaType>
 #include <memory>
+
+Q_DECLARE_METATYPE(std::size_t);
 
 /*!
  * \brief The Kryvos class

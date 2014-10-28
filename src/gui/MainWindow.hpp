@@ -59,10 +59,12 @@ class MainWindow : public QMainWindow {
    * \param algorithmName String representing the current algorithm.
    * Example: "AES-128/GCM" will encrypt files with AES 128-bit key size in
    * Gallois Counter Mode.
+   * \param keySize Key size.
    */
   void encrypt(const QString& passphrase,
                const QStringList& inputFileNames,
-               const QString& algorithmName);
+               const QString& algorithmName,
+               std::size_t keySize);
 
   /*!
    * \brief decrypt Emitted when the user provides all required data for
@@ -138,6 +140,27 @@ class MainWindow : public QMainWindow {
    * \param busy Boolean representing the busy status.
    */
   void updateBusyStatus(bool busy);
+
+  /*!
+   * \brief updateCipher Executed when the cipher is updated by the user in the
+   * settings frame.
+   * \param newCipher String representing the new cipher.
+   */
+  void updateCipher(const QString& newCipher);
+
+  /*!
+   * \brief updateKeySize Executed when the key size is updated by the user in
+   * the settings frame.
+   * \param keySize Key size in bits.
+   */
+  void updateKeySize(std::size_t keySize);
+
+  /*!
+   * \brief updateCipher Executed when the mode of operation is updated by the
+   * user in the settings frame.
+   * \param newCipher String representing the new mode of operation.
+   */
+  void updateModeOfOperation(const QString& newMode);
 
  protected:
   /*!
