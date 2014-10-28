@@ -40,67 +40,91 @@ class Settings {
 
   /*!
    * \brief position Sets the main window position.
-   * \param position Point at position of the main window.
+   * \param position Point at position of the main window
    */
   void position(const QPoint& position);
 
   /*!
    * \brief position Returns the main window's position.
-   * \return Point at position of the main window.
+   * \return Point at position of the main window
    */
   QPoint position() const;
 
   /*!
    * \brief maximized Sets the maximized state.
-   * \param maximized Boolean representing maximized state.
+   * \param maximized Boolean representing maximized state
    */
   void maximized(bool maximized);
 
   /*!
    * \brief maximized Returns the main window's maximized state.
-   * \return Boolean representing maximized state.
+   * \return Boolean representing maximized state
    */
   bool maximized() const;
 
   /*!
    * \brief size Sets the main window size.
-   * \param size Size of the main window.
+   * \param size Size of the main window
    */
   void size(const QSize& size);
 
   /*!
    * \brief size Returns the main window's last size.
-   * \return Size of main window.
+   * \return Size of main window
    */
   QSize size() const;
 
   /*!
-   * \brief lastAlgorithm Sets the last used algorithm for later storage.
-   * \param algorithm String containing the algorithm name.
+   * \brief cipher Sets the cipher for later storage.
+   * \param cipherName String containing the cipher name
    */
-  void lastAlgorithm(const QString& algorithmName);
+  void cipher(const QString& cipherName);
 
   /*!
-   * \brief lastAlgorithm Returns the name of the last used algorithm.
-   * \return String containing the algorithm name.
+   * \brief lastAlgorithm Returns the name of the last cipher.
+   * \return String containing the cipher name
    */
-  QString lastAlgorithm() const;
+  QString cipher() const;
+
+  /*!
+   * \brief keySize Sets the key size.
+   * \param keySize Key size in bits
+   */
+  void keySize(std::size_t keySize);
+
+  /*!
+   * \brief keySize Returns the key size.
+   * \return Key size in bits
+   */
+  std::size_t keySize() const;
+
+  /*!
+   * \brief modeOfOperation Sets the mode of operation.
+   * \param modeOfOperation String containing the mode of operation
+   */
+  void modeOfOperation(const QString& modeOfOperation);
+
+  /*!
+   * \brief modeOfOperation Returns the last mode of operation.
+   * \return String containing the mode of operation
+   */
+  QString modeOfOperation() const;
 
   /*!
    * \brief lastDirectory Sets the last opened directory for later storage.
-   * \param algorithm String containing the directory path.
+   * \param algorithm String containing the directory path
    */
   void lastDirectory(const QString& directory);
 
   /*!
    * \brief lastDirectory Returns the name of the last opened directory.
-   * \return String containing the directory path.
+   * \return String containing the directory path
    */
   QString lastDirectory() const;
 
   /*!
    * \brief styleSheetPath Returns the path to the application stylesheet.
-   * \return String containing the stylesheet path.
+   * \return String containing the stylesheet path
    */
   QString styleSheetPath() const;
 

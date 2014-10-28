@@ -98,7 +98,14 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent) :
   mainFrame->setObjectName("mainFrame");
   auto mainLayout = new QVBoxLayout{mainFrame};
 
-  settingsFrame = new SettingsFrame{mainFrame};
+//  auto cipher = algorithm.indexOf()
+//  auto slashIndex  = algorithm.indexOf(QString{"/"});
+//  auto modeIndex = algorithm.length() - slashIndex - 1;
+//  auto modeOfOperation = algorithm.right(modeIndex);
+  settingsFrame = new SettingsFrame{pimpl->settings->cipher(),
+                                    pimpl->settings->keySize(),
+                                    pimpl->settings->modeOfOperation(),
+                                    mainFrame};
   settingsFrame->setObjectName("settingsFrame");
   mainLayout->addWidget(settingsFrame);
 
@@ -146,6 +153,16 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent) :
           this, &MainWindow::addFiles);
   connect(headerFrame, &HeaderFrame::removeFiles,
           this, &MainWindow::removeFiles);
+
+  // Settings frame connections
+  connect(settingsFrame, &SettingsFrame::newCipher,
+          this, &MainWindow::updateCipher);
+
+  connect(settingsFrame, &SettingsFrame::newKeySize,
+          this, &MainWindow::updateKeySize);
+
+  connect(settingsFrame, &SettingsFrame::newModeOfOperation,
+          this, &MainWindow::updateModeOfOperation);
 
   // Forwarded connections
   connect(fileListFrame, &FileListFrame::stopFile,
@@ -242,8 +259,25 @@ void MainWindow::processFiles(bool cryptFlag)
 
         if (cryptFlag)
         {
+          QString cipherAlgorithm;
+          if ("AES" == pimpl->settings->cipher())
+          {
+            cipherAlgorithm = pimpl->settings->cipher() % QLatin1String{"-"} %
+                              QString::number(pimpl->settings->keySize()) %
+                              QLatin1String{"/"} %
+                              pimpl->settings->modeOfOperation();
+          }
+          else
+          {
+            cipherAlgorithm = pimpl->settings->cipher() % QLatin1String{"/"} %
+                              pimpl->settings->modeOfOperation();
+          }
+
           // Start encrypting the file list
-          emit encrypt(passphrase, fileList, pimpl->settings->lastAlgorithm());
+          emit encrypt(passphrase,
+                       fileList,
+                       cipherAlgorithm,
+                       pimpl->settings->keySize());
         }
         else
         {
@@ -288,6 +322,27 @@ void MainWindow::updateBusyStatus(bool busy)
   Q_ASSERT(pimpl);
 
   pimpl->busy(busy);
+}
+
+void MainWindow::updateCipher(const QString& newCipher)
+{
+  Q_ASSERT(pimpl);
+
+  pimpl->settings->cipher(newCipher);
+}
+
+void MainWindow::updateKeySize(std::size_t keySize)
+{
+  Q_ASSERT(pimpl);
+
+  pimpl->settings->keySize(keySize);
+}
+
+void MainWindow::updateModeOfOperation(const QString& newMode)
+{
+  Q_ASSERT(pimpl);
+
+  pimpl->settings->modeOfOperation(newMode);
 }
 
 QString MainWindow::loadStyleSheet(const QString& styleFile,
