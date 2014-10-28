@@ -22,6 +22,7 @@
 #define KRYVOS_GUI_SETTINGSFRAME_HPP_
 
 #include <QtWidgets/QFrame>
+#include <QtCore/QString>
 #include <memory>
 
 /*!
@@ -34,9 +35,15 @@ class SettingsFrame : public QFrame {
  public:
   /*!
    * \brief SettingsFrame Constructs a settings frame.
+   * \param cipher String representing the cipher name
+   * \param keySize String representing the key size
+   * \param mode String representing the mode of operation
    * \param parent QWidget parent
    */
-  explicit SettingsFrame(QWidget* parent = nullptr);
+  explicit SettingsFrame(const QString& cipher,
+                         std::size_t keySize,
+                         const QString& mode,
+                         QWidget* parent = nullptr);
 
   /*!
    * \brief ~SettingsFrame Destroys a settings frame.
@@ -45,10 +52,47 @@ class SettingsFrame : public QFrame {
 
  signals:
   /*!
-   * \brief switchFrame Signals that the main frame will switch to the previous
-   * state.
+   * \brief switchFrame Emitted when the user requests that the main frame
+   * should be displayed.
    */
   void switchFrame();
+
+  /*!
+   * \brief newCipher Emitted when the user has changed the cipher algorithm via
+   * the combo box representing it.
+   * \param newCipher String containing the new cipher name.
+   */
+  void newCipher(const QString& cipher);
+
+  /*!
+   * \brief newKeySize Emitted when the user has changed the key size via the
+   * combo box representing it.
+   * \param keySize Key size in bits
+   */
+  void newKeySize(std::size_t keySize);
+
+  /*!
+   * \brief newModeOfOperation Emitted when the user has changed the cipher
+   * mode of operation via the combo box representing it.
+   * \param modeOfOperation String containing the new mode of operation.
+   */
+  void newModeOfOperation(const QString& modeOfOperation);
+
+ public slots:
+  /*!
+   * \brief changeCipher Executed when the cipher changes.
+   */
+  void changeCipher();
+
+  /*!
+   * \brief changeKeySize Executed when the key size changes.
+   */
+  void changeKeySize();
+
+  /*!
+   * \brief changeModeOfOperation Executed when the mode of operation changes.
+   */
+  void changeModeOfOperation();
 
  private:
   class SettingsFramePrivate;

@@ -113,6 +113,19 @@ QFrame#contentFrame {
   background-color: #3498db;
 }
 
+#backButton {
+  color: white;
+  background-color: #8e44ad;
+  font-size: 21px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
+
+#backButton:pressed {
+  background-color: #9b59b6;
+}
+
 /*--------- Password Line Edit ---------*/
 QLineEdit#passwordLineEdit {
   font-size: 20px;
@@ -136,7 +149,7 @@ QLabel#headerText {
   border: none;
 }
 
-QComboBox#combo {
+QComboBox#settingsComboBox {
   font-size: 20px;
 }
 
