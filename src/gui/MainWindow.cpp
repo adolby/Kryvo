@@ -27,7 +27,7 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QFileDialog>
-#include <QtWidgets/QStackedLayout>
+#include <QtWidgets/QBoxLayout>
 #include <QtGui/QIcon>
 #include <QtCore/QStateMachine>
 #include <QtCore/QState>
@@ -98,10 +98,6 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent) :
   mainFrame->setObjectName("mainFrame");
   auto mainLayout = new QVBoxLayout{mainFrame};
 
-//  auto cipher = algorithm.indexOf()
-//  auto slashIndex  = algorithm.indexOf(QString{"/"});
-//  auto modeIndex = algorithm.length() - slashIndex - 1;
-//  auto modeOfOperation = algorithm.right(modeIndex);
   settingsFrame = new SettingsFrame{pimpl->settings->cipher(),
                                     pimpl->settings->keySize(),
                                     pimpl->settings->modeOfOperation(),
