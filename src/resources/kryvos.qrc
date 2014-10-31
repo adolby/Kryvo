@@ -13,5 +13,6 @@
         <file>images/sliderBackground.png</file>
         <file>images/sliderKnobDisable.png</file>
         <file>images/sliderKnobEnable.png</file>
+        <file>images/backIcon.png</file>
     </qresource>
 </RCC>
