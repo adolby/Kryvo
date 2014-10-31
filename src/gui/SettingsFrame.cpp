@@ -67,9 +67,8 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   auto headerLabel = new QLabel{tr("Settings"), headerFrame};
   headerLabel->setObjectName("headerText");
 
-  // TODO: Create icon for back button.
-  //const auto backIcon = QIcon{":/images/backIcon.png"};
-  auto backButton = new QPushButton{tr(" Back"), this};
+  const auto backIcon = QIcon{":/images/backIcon.png"};
+  auto backButton = new QPushButton{backIcon, tr(" Back"), this};
   backButton->setObjectName("backButton");
   backButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
@@ -78,8 +77,10 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   headerLayout->addStretch();
   headerLayout->addWidget(backButton);
 
-  auto contentFrame = new QFrame{this};
-  contentFrame->setObjectName("settingsSubFrame");
+  auto centerFrame = new QFrame{this};
+  centerFrame->setObjectName("settingsSubFrame");
+
+  auto contentFrame = new QFrame{centerFrame};
 
   auto cipherFrame = new QFrame{contentFrame};
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
@@ -154,14 +155,19 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   modeLayout->addWidget(modeLabel);
   modeLayout->addWidget(pimpl->modeComboBox);
 
-  auto contentLayout = new QHBoxLayout{contentFrame};
+  auto contentLayout = new QVBoxLayout{contentFrame};
   contentLayout->addWidget(cipherFrame);
   contentLayout->addWidget(keySizeFrame);
   contentLayout->addWidget(modeFrame);
 
+  auto centerLayout = new QHBoxLayout{centerFrame};
+  centerLayout->addStretch();
+  centerLayout->addWidget(contentFrame);
+  centerLayout->addStretch();
+
   auto layout = new QVBoxLayout{this};
   layout->addWidget(headerFrame, 0);
-  layout->addWidget(contentFrame, 1);
+  layout->addWidget(centerFrame, 1);
 
   // Capture function pointer to specific QComboBox signal overload
   void (QComboBox::*indexChangedSignal)(const QString&) =
