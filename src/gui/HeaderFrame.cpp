@@ -87,6 +87,7 @@ HeaderFrame::HeaderFrame(QWidget* parent) :
 
   auto headerLayout = new QHBoxLayout{this};
   headerLayout->addWidget(headerLabel, 0);
+  headerLayout->addSpacing(20);
   headerLayout->addWidget(buttonFrame, 1);
   headerLayout->setContentsMargins(10, 0, 0, 0);
 
