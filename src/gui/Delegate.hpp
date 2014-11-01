@@ -34,7 +34,7 @@ class Delegate : public QStyledItemDelegate {
  public:
   /*!
    * \brief Delegate Constructs a delegate that augments a view.
-   * \param parent QObject parent of this delegate.
+   * \param parent Object parent of this delegate
    */
   explicit Delegate(QObject* parent = nullptr);
 
@@ -42,7 +42,7 @@ class Delegate : public QStyledItemDelegate {
   /*!
    * \brief removeRow Emitted when the delegate needs to remove a row from its
    * model.
-   * \param index Index of the row to remove.
+   * \param index Index of the row to remove
    */
   void removeRow(const QModelIndex& index);
 
@@ -59,27 +59,27 @@ class Delegate : public QStyledItemDelegate {
   /*!
    * \brief initStyleOption Initializes the style option for this delegate. Used
    * to remove the focus.
-   * \param option Style view options.
-   * \param index Index of the current cell in the model.
+   * \param option Style view options
+   * \param index Index of the current cell in the model
    */
   virtual void initStyleOption(QStyleOptionViewItem* option,
                                const QModelIndex& index) const;
 
   /*!
    * \brief paint Paints the progress bar and the close button.
-   * \param painter Painter object.
-   * \param option Style view options object. Passed on to parent's paint.
-   * \param index Index of the current cell in the model to paint.
+   * \param painter Painter object
+   * \param option Style view options object. Passed on to parent's paint
+   * \param index Index of the current cell in the model to paint
    */
   virtual void paint(QPainter* painter, const QStyleOptionViewItem& option,
                      const QModelIndex& index) const;
 
   /*!
    * \brief editorEvent Event to handle mouse clicks on the remove button.
-   * \param event Editing event.
-   * \param model Model.
-   * \param option Style option view item.
-   * \param index Index of the current cell in the model.
+   * \param event Editing event
+   * \param model Model
+   * \param option Style option view item
+   * \param index Index of the current cell in the model
    * \return
    */
   virtual bool editorEvent(QEvent* event,

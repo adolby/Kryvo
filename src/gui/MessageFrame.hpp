@@ -35,7 +35,7 @@ class MessageFrame : public QFrame {
   /*!
    * \brief MessageFrame Constructs a message frame, which is used to inform a
    * user about the status of encryption and decryption operations.
-   * \param parent The QWidget parent of this message frame.
+   * \param parent Widget parent of this message frame
    */
   explicit MessageFrame(QWidget* parent = nullptr);
 
@@ -46,14 +46,14 @@ class MessageFrame : public QFrame {
 
   /*!
    * \brief appendPlainText Appends text to the message frame's text edit.
-   * \param message Message string.
+   * \param message Message string
    */
   void appendPlainText(const QString& message);
 
   /*!
    * \brief setText Clears the text edit and sets a start up text to the message
    * frame's text edit.
-   * \param startText Start up text string.
+   * \param startText Start up text string
    */
   void setText(const QString& startText);
 

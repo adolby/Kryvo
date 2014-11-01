@@ -28,10 +28,26 @@
 #include <QtGui/QDropEvent>
 #include <QtCore/QSize>
 
+/*!
+ * \brief The DesktopMainWindow class is used as the main window for the
+ * application when a desktop display is the primary display for the operating
+ * system.
+ */
 class DesktopMainWindow : public MainWindow
 {
  public:
+  /*!
+   * \brief DesktopMainWindow Constructs the application's main window for
+   * desktop displays.
+   * \param settings Settings object
+   * \param parent Parent widget
+   */
   explicit DesktopMainWindow(Settings* settings, QWidget* parent = nullptr);
+
+  /*!
+   * \brief ~DesktopMainWindow Destroys the application's main window for
+   * desktop displays.
+   */
   virtual ~DesktopMainWindow();
 
  protected:
