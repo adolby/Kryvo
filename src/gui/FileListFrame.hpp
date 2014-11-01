@@ -36,7 +36,7 @@ class FileListFrame : public QFrame {
   /*!
    * \brief FileListFrame Constructs a file list frame, which displays file
    * information and allows users to remove file entries.
-   * \param parent The QWidget parent of this file list frame.
+   * \param parent Widget parent of this file list frame.
    */
   explicit FileListFrame(QWidget* parent = nullptr);
 
@@ -55,14 +55,14 @@ class FileListFrame : public QFrame {
   /*!
    * \brief addFileToModel Adds a file to the model that represents the list
    * to be encrypted/decrypted.
-   * \param path String representing the path to a file.
+   * \param path String representing the path to a file
    */
   void addFileToModel(const QString& path);
 
   /*!
    * \brief removeFileFromModel Removes the file name at the input index in the
    * model.
-   * \param index The index of the file name to remove from the model.
+   * \param index The index of the file name to remove from the model
    */
   void removeFileFromModel(const QModelIndex& index);
 
@@ -70,14 +70,14 @@ class FileListFrame : public QFrame {
   /*!
    * \brief item Returns a standard item at the input index in the file list
    * model.
-   * \param row Integer representing the file list model row.
-   * \return Standard item taken from specified index in the file list model.
+   * \param row Integer representing the file list model row
+   * \return Standard item taken from specified index in the file list model
    */
   QStandardItem* item(int row) const;
 
   /*!
    * \brief rowCount Returns the number of rows in the file list model.
-   * \return Number of rows as an integer in the file list model.
+   * \return Number of rows as an integer in the file list model
    */
   int rowCount() const;
 
@@ -89,8 +89,8 @@ class FileListFrame : public QFrame {
   /*!
    * \brief updateProgress Executed when the cipher operation progress is
    * updated. Updates the progress bar for the item at the specified index.
-   * \param index Index as an integer in the file list toupdate.
-   * \param percent Current progress as an integer percentage.
+   * \param index Index as an integer in the file list toupdate
+   * \param percent Current progress as an integer percentage
    */
   void updateProgress(const QString& path, qint64 percent);
 

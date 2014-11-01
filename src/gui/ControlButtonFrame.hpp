@@ -34,7 +34,7 @@ class ControlButtonFrame : public QFrame {
  public:
   /*!
    * \brief ControlButtonFrame Constructs a control button frame.
-   * \param parent The QWidget parent of this control button frame.
+   * \param parent Widget parent of this control button frame
    */
   explicit ControlButtonFrame(QWidget* parent = nullptr);
 
@@ -47,7 +47,7 @@ class ControlButtonFrame : public QFrame {
   /*!
    * \brief processFiles Emitted when the encrypt or decrypt push buttons are
    * clicked.
-   * \param cryptFlag Boolean representing encrypt (true) or decrypt (false).
+   * \param cryptFlag Boolean representing encrypt (true) or decrypt (false)
    */
   void processFiles(bool cryptFlag);
 
@@ -65,7 +65,7 @@ class ControlButtonFrame : public QFrame {
  public:
   /*!
    * \brief setIconSize Sets the icon size for buttons.
-   * \param iconSize Icon size.
+   * \param iconSize Icon size
    */
   void setIconSize(const QSize& iconSize);
 
