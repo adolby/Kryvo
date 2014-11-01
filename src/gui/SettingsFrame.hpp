@@ -60,7 +60,7 @@ class SettingsFrame : public QFrame {
   /*!
    * \brief newCipher Emitted when the user has changed the cipher algorithm via
    * the combo box representing it.
-   * \param newCipher String containing the new cipher name.
+   * \param newCipher String containing the new cipher name
    */
   void newCipher(const QString& cipher);
 
@@ -74,7 +74,7 @@ class SettingsFrame : public QFrame {
   /*!
    * \brief newModeOfOperation Emitted when the user has changed the cipher
    * mode of operation via the combo box representing it.
-   * \param modeOfOperation String containing the new mode of operation.
+   * \param modeOfOperation String containing the new mode of operation
    */
   void newModeOfOperation(const QString& modeOfOperation);
 

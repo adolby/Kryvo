@@ -41,7 +41,7 @@ class MainWindow : public QMainWindow {
  public:
   /*!
    * \brief MainWindow Constructs the application's main window.
-   * \param parent The QWidget parent of this main window.
+   * \param parent Widget parent of this main window
    */
   explicit MainWindow(Settings* settings = nullptr, QWidget* parent = nullptr);
 
@@ -54,12 +54,12 @@ class MainWindow : public QMainWindow {
   /*!
    * \brief encrypt Emitted when the user provides all required data for
    * encryption and clicks the Encrypt push button.
-   * \param passphrase String representing the user supplied passphrase.
-   * \param inputFileNames List of input file strings.
+   * \param passphrase String representing the user supplied passphrase
+   * \param inputFileNames List of input file strings
    * \param algorithmName String representing the current algorithm.
    * Example: "AES-128/GCM" will encrypt files with AES 128-bit key size in
    * Gallois Counter Mode.
-   * \param keySize Key size.
+   * \param keySize Key size
    */
   void encrypt(const QString& passphrase,
                const QStringList& inputFileNames,
@@ -69,14 +69,14 @@ class MainWindow : public QMainWindow {
   /*!
    * \brief decrypt Emitted when the user provides all required data for
    * decryption and clicks the Decrypt push button.
-   * \param passphrase String representing the user supplied passphrase.
-   * \param inputFileNames The list of input file strings.
+   * \param passphrase String representing the user supplied passphrase
+   * \param inputFileNames List of input file strings
    */
   void decrypt(const QString& passphrase, const QStringList& inputFileNames);
 
   /*!
    * \brief pauseCipher Emitted when the user toggles the Pause push button.
-   * \param pause The boolean representing the pause status.
+   * \param pause Boolean representing the pause status
    */
   void pauseCipher(bool pause);
 
@@ -107,15 +107,15 @@ class MainWindow : public QMainWindow {
    * clicked. Starts the encryption or decryption operation using the passphrase
    * from the password line edit, the file list from the file list model, and
    * the algorithm name from the settings panel.
-   * \param cryptFlag Boolean representing encrypt (true) or decrypt (false).
+   * \param cryptFlag Boolean representing encrypt (true) or decrypt (false)
    */
   void processFiles(bool cryptFlag);
 
   /*!
    * \brief updateProgress Executed when the cipher operation progress is
    * updated. Updates the progress bar for the item at the specified index.
-   * \param index Integer representing the file list index to update.
-   * \param percent Integer representing the current progress in percent.
+   * \param index Integer representing the file list index to update
+   * \param percent Integer representing the current progress in percent
    */
   void updateProgress(const QString& path, qint64 percent);
 
@@ -128,8 +128,8 @@ class MainWindow : public QMainWindow {
 
   /*!
    * \brief updateError Executed when a cipher operation fails.
-   * \param index Integer representing the file list index to update.
-   * \param message String representing the error message.
+   * \param index Integer representing the file list index to update
+   * \param message String representing the error message
    */
   void updateError(const QString& path, const QString& message);
 
@@ -137,28 +137,28 @@ class MainWindow : public QMainWindow {
    * \brief updateBusyStatus Executed when the cipher operation updates its busy
    * status. Stores the status to allow the GUI to decide when the user can
    * request new encryption events.
-   * \param busy Boolean representing the busy status.
+   * \param busy Boolean representing the busy status
    */
   void updateBusyStatus(bool busy);
 
   /*!
    * \brief updateCipher Executed when the cipher is updated by the user in the
    * settings frame.
-   * \param newCipher String representing the new cipher.
+   * \param newCipher String representing the new cipher
    */
   void updateCipher(const QString& newCipher);
 
   /*!
    * \brief updateKeySize Executed when the key size is updated by the user in
    * the settings frame.
-   * \param keySize Key size in bits.
+   * \param keySize Key size in bits
    */
   void updateKeySize(std::size_t keySize);
 
   /*!
    * \brief updateCipher Executed when the mode of operation is updated by the
    * user in the settings frame.
-   * \param newCipher String representing the new mode of operation.
+   * \param newCipher String representing the new mode of operation
    */
   void updateModeOfOperation(const QString& newMode);
 
@@ -169,10 +169,10 @@ class MainWindow : public QMainWindow {
    * load fails, the method will load the default stylesheet from the
    * application resources.
    * \param styleFile String representing the name of the stylesheet without
-   * a file extension.
+   * a file extension
    * \param defaultFile String containing the name of the default stylesheet,
-   * which will be used if the selected stylesheet file doesn't exist.
-   * \return String containing the stylesheet file contents.
+   * which will be used if the selected stylesheet file doesn't exist
+   * \return String containing the stylesheet file contents
    */
   QString loadStyleSheet(const QString& styleFile, const QString& defaultFile);
 

@@ -34,7 +34,7 @@ class HeaderFrame : public QFrame {
  public:
   /*!
    * \brief HeaderFrame Constructs a header frame.
-   * \param parent QWidget parent
+   * \param parent Widget parent
    */
   explicit HeaderFrame(QWidget* parent = nullptr);
 
