@@ -1,4 +1,4 @@
-#Kryvos 0.9.6 [![Build Status](http://168.235.149.114/github.com/adolby/kryvos/status.svg?branch=master)](http://168.235.149.114/github.com/adolby/kryvos)
+#Kryvos 0.9.6 [![Build Status](http://168.235.145.226/api/badge/github.com/adolby/Kryvos/status.svg?branch=master)](http://168.235.145.226/github.com/adolby/Kryvos)
 
 Kryvos is an open-source file encryptor and decryptor. It encrypts files with AES and Serpent using the Botan cryptography library.
 
