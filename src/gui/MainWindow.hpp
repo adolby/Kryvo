@@ -64,7 +64,7 @@ class MainWindow : public QMainWindow {
   void encrypt(const QString& passphrase,
                const QStringList& inputFileNames,
                const QString& algorithmName,
-               std::size_t keySize);
+               const std::size_t& keySize);
 
   /*!
    * \brief decrypt Emitted when the user provides all required data for
@@ -78,7 +78,7 @@ class MainWindow : public QMainWindow {
    * \brief pauseCipher Emitted when the user toggles the Pause push button.
    * \param pause Boolean representing the pause status
    */
-  void pauseCipher(bool pause);
+  void pauseCipher(const bool pause);
 
   /*!
    * \brief stopCipher Emitted when the user clicks the Clear Files push button.
@@ -109,7 +109,7 @@ class MainWindow : public QMainWindow {
    * the algorithm name from the settings panel.
    * \param cryptFlag Boolean representing encrypt (true) or decrypt (false)
    */
-  void processFiles(bool cryptFlag);
+  void processFiles(const bool cryptFlag);
 
   /*!
    * \brief updateProgress Executed when the cipher operation progress is
@@ -117,7 +117,7 @@ class MainWindow : public QMainWindow {
    * \param index Integer representing the file list index to update
    * \param percent Integer representing the current progress in percent
    */
-  void updateProgress(const QString& path, qint64 percent);
+  void updateProgress(const QString& path, const qint64 percent);
 
   /*!
    * \brief updateStatusMessage Executed when a message should be displayed to
@@ -139,7 +139,7 @@ class MainWindow : public QMainWindow {
    * request new encryption events.
    * \param busy Boolean representing the busy status
    */
-  void updateBusyStatus(bool busy);
+  void updateBusyStatus(const bool busy);
 
   /*!
    * \brief updateCipher Executed when the cipher is updated by the user in the
@@ -153,7 +153,7 @@ class MainWindow : public QMainWindow {
    * the settings frame.
    * \param keySize Key size in bits
    */
-  void updateKeySize(std::size_t keySize);
+  void updateKeySize(const std::size_t& keySize);
 
   /*!
    * \brief updateCipher Executed when the mode of operation is updated by the

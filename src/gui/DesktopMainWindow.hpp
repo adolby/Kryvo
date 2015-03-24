@@ -42,7 +42,8 @@ class DesktopMainWindow : public MainWindow
    * \param settings Settings object
    * \param parent Parent widget
    */
-  explicit DesktopMainWindow(Settings* settings, QWidget* parent = nullptr);
+  explicit DesktopMainWindow(Settings* settings = nullptr,
+                             QWidget* parent = nullptr);
 
   /*!
    * \brief ~DesktopMainWindow Destroys the application's main window for

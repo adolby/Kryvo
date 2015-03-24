@@ -1,4 +1,4 @@
-Kryvos 0.9.6
+Kryvos 0.9.8
 ============
 
 Kryvos is an open-source file encryptor and decryptor. It encrypts files with AES and Serpent using the Botan cryptography library.
@@ -16,19 +16,19 @@ Example: You created a new theme and saved the stylesheet to myTheme.qss in the 
 Licenses
 --------
 Kryvos is licensed under the GNU GPL License. Read LICENSE.GPL for more information about the license.
-Kryvos source code and binaries are available on GitHub at https://github.com/adolby/Kryvos
+Kryvos source code and binaries are available on GitHub at https://github.com/adolby/Kryvos.
 
-Botan is licensed under the BSD-2 License. Read the Botan License file for more information about the license. It can also be found at http://botan.randombit.net/license.html
-Botan source code is available at http://botan.randombit.net/download.html
+Botan is licensed under the BSD-2 License. Read the Botan License file for more information about the license. The license file can also be found at http://botan.randombit.net/license.html.
+Botan source code is available at http://botan.randombit.net/download.html.
 
 Qt is licensed under the GNU GPL License. Read LICENSE.GPL for more information about the license.
-Qt source code is available at http://qt-project.org/downloads
+Qt source code is available at http://qt.gitorious.org/qt.
 
 Developers
 ----------
-If you'd like to contribute to Kryvos, check the project out on GitHub. To build Kryvos, you'll need Qt 5.2 (or later) and Botan 1.11. Development is performed primarily in Qt Creator with gcc 4.8.2 on Linux and Windows (with MinGW for x86 and MinGW-w64 for x64 builds) and clang (packaged with Xcode 5) on Mac OSX.
+If you'd like to contribute to Kryvos, check the project out on GitHub or submit a pull request. To build Kryvos, you'll need Qt 5.2 (or later) and Botan 1.11 (or later). Development is performed primarily in Qt Creator with gcc 4.9.2 on Linux and Windows (with MinGW for x86 and MinGW-w64 for x64 builds) and clang (packaged with Xcode 6) on Mac OS X.
 
-Amalgamation configurations of Botan are included in the source tree to make getting started with development easier. Android requires a small patch to implement two missing C++11 STL features. The patch, AndroidStl.hpp, is included by botan_all.h from src/android/ in the project tree. The configuration commands used to generate a minimal Botan amalgamation follows for each platform:
+Amalgamation configurations of Botan are included in the source tree to make getting started with development easier. Android requires a small patch to implement to_string, which is missing from the NDK STL. The patch, android_to_string.hpp, is included by botan_all.h from src/android/ in the project tree. The configuration commands used to generate a minimal Botan amalgamation follows for each platform:
 
 // Android (ARM)
 python configure.py --cpu=armv5te --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
@@ -36,7 +36,7 @@ python configure.py --cpu=armv5te --via-amalgamation --no-autoload --enable-modu
 // Linux GCC x86_64
 python configure.py --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
 
-// Mac OSX clang
+// Mac OS X clang
 python configure.py --cc=clang --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
 
 // iOS clang

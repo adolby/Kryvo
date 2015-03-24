@@ -28,7 +28,7 @@
 Q_DECLARE_METATYPE(std::size_t);
 
 /*!
- * \brief The Kryvos class
+ * \brief The Kryvos class controls the functionality of the Kryvos application.
  */
 class Kryvos : public QObject {
   Q_OBJECT

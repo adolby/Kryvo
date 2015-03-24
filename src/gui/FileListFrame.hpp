@@ -92,7 +92,7 @@ class FileListFrame : public QFrame {
    * \param index Index as an integer in the file list toupdate
    * \param percent Current progress as an integer percentage
    */
-  void updateProgress(const QString& path, qint64 percent);
+  void updateProgress(const QString& path, const qint64 percent);
 
  private:
   class FileListFramePrivate;

@@ -58,7 +58,7 @@ class PasswordFrame : public QFrame {
    * edit.
    * \return Password string.
    */
-  QString password();
+  QString password() const;
 
  private:
   class PasswordFramePrivate;

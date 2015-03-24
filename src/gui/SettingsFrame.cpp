@@ -20,7 +20,7 @@
 
 #include "gui/SettingsFrame.hpp"
 #include "gui/SlideSwitch.hpp"
-#include "gui/flowlayout.h"
+#include "gui/FluidLayout.hpp"
 #include "utility/make_unique.h"
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QPushButton>
@@ -41,7 +41,7 @@ class SettingsFrame::SettingsFramePrivate {
    */
   explicit SettingsFramePrivate();
 
-  QString splitToolTip(const QString& text, int width);
+  QString splitToolTip(const QString& text, const int width);
 
   QComboBox* cipherComboBox;
   QComboBox* keySizeComboBox;
@@ -51,7 +51,7 @@ class SettingsFrame::SettingsFramePrivate {
 };
 
 SettingsFrame::SettingsFrame(const QString& cipher,
-                             std::size_t keySize,
+                             const std::size_t& keySize,
                              const QString& mode,
                              QWidget* parent) :
   QFrame{parent}, pimpl{make_unique<SettingsFramePrivate>()}
@@ -77,10 +77,8 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   headerLayout->addStretch();
   headerLayout->addWidget(backButton);
 
-  auto centerFrame = new QFrame{this};
-  centerFrame->setObjectName("settingsSubFrame");
-
-  auto contentFrame = new QFrame{centerFrame};
+  auto contentFrame = new QFrame{this};
+  contentFrame->setObjectName("settingsSubFrame");
 
   auto cipherFrame = new QFrame{contentFrame};
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
@@ -155,19 +153,14 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   modeLayout->addWidget(modeLabel);
   modeLayout->addWidget(pimpl->modeComboBox);
 
-  auto contentLayout = new QVBoxLayout{contentFrame};
+  auto contentLayout = new FluidLayout{contentFrame};
   contentLayout->addWidget(cipherFrame);
   contentLayout->addWidget(keySizeFrame);
   contentLayout->addWidget(modeFrame);
 
-  auto centerLayout = new QHBoxLayout{centerFrame};
-  centerLayout->addStretch();
-  centerLayout->addWidget(contentFrame);
-  centerLayout->addStretch();
-
   auto layout = new QVBoxLayout{this};
   layout->addWidget(headerFrame, 0);
-  layout->addWidget(centerFrame, 1);
+  layout->addWidget(contentFrame, 1);
 
   // Capture function pointer to specific QComboBox signal overload
   void (QComboBox::*indexChangedSignal)(const QString&) =
@@ -234,7 +227,7 @@ SettingsFrame::SettingsFramePrivate::SettingsFramePrivate() :
 {}
 
 QString SettingsFrame::SettingsFramePrivate::splitToolTip(const QString& text,
-                                                          int width)
+                                                          const int width)
 {
   QFontMetrics fm{QToolTip::font()};
   QString result;
