@@ -28,8 +28,8 @@ TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent) :
                            " password. Finally, tap the Encrypt or Decrypt"
                            " button."));
 
-  QSize headerIconSize{45, 45};
-  QSize controlIconSize{50, 50};
+  const QSize headerIconSize{45, 45};
+  const QSize controlIconSize{50, 50};
   headerFrame->setIconSize(headerIconSize);
   controlButtonFrame->setIconSize(controlIconSize);
 

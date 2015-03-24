@@ -8,6 +8,7 @@
 #ifndef BOTAN_AMALGAMATION_H__
 #define BOTAN_AMALGAMATION_H__
 
+#include "cryptography/botan/android/android_to_string.h"
 #include <cstddef>
 #include <map>
 #include <exception>
@@ -204,19 +205,6 @@
 /*
 * Local configuration options (if any) follow
 */
-
-#include <sstream>
-namespace std {
-
-template <typename T>
-std::string to_string(T value)
-{
-    std::ostringstream os ;
-    os << value ;
-    return os.str() ;
-}
-
-}
 
 namespace Botan {
 

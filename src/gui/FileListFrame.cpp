@@ -213,7 +213,7 @@ void FileListFrame::removeFileFromModel(const QModelIndex& index)
   pimpl->fileListModel->removeRow(index.row());
 }
 
-void FileListFrame::updateProgress(const QString& path, qint64 percent)
+void FileListFrame::updateProgress(const QString& path, const qint64 percent)
 {
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->fileListModel);

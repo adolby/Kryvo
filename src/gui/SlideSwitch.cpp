@@ -114,9 +114,9 @@ QRectF SlideSwitch::buttonRect() const
 }
 
 /*!
-   \internal
-    Calculates the possible SlideSwitch knob in the widget.
-*/
+ * \brief SlideSwitch::knobRect Calculates the possible SlideSwitch knob in the widget.
+ * \return
+ */
 QRectF SlideSwitch::knobRect() const
 {
   Q_ASSERT(pimpl);
@@ -138,11 +138,9 @@ QRectF SlideSwitch::knobRect() const
 }
 
 /*!
-    \overload
-    \internal
-    Overloaded function \a mouseMoveEvent().
-    The knob will be dragged to the moved position.
-*/
+ * \brief SlideSwitch::mouseMoveEvent The knob will be dragged to the moved position.
+ * \param event
+ */
 void SlideSwitch::mouseMoveEvent(QMouseEvent* event)
 {
   Q_ASSERT(pimpl);
@@ -153,12 +151,14 @@ void SlideSwitch::mouseMoveEvent(QMouseEvent* event)
 
     if (isChecked())
     {
-      pimpl->position = 100 * (buttonRect().width() - knobRect().width() + pimpl->dragDistanceX) /
-                        (buttonRect().width() - knobRect().width());
+      pimpl->position = 100 * (buttonRect().width() - knobRect().width() +
+                               pimpl->dragDistanceX) / (buttonRect().width() -
+                                                        knobRect().width());
     }
     else
     {
-      pimpl->position = 100 * pimpl->dragDistanceX / (buttonRect().width() - knobRect().width());
+      pimpl->position = 100 * pimpl->dragDistanceX /
+                        (buttonRect().width() - knobRect().width());
     }
 
     qDebug() << pimpl->position;
@@ -180,9 +180,9 @@ void SlideSwitch::mouseMoveEvent(QMouseEvent* event)
 }
 
 /*!
-    \overload
-    \internal
-    Overloaded function \a mousePressEventEvent().
+  \overload
+  \internal
+  Overloaded function \a mousePressEventEvent().
 */
 void SlideSwitch::mousePressEvent(QMouseEvent* event)
 {
@@ -196,9 +196,9 @@ void SlideSwitch::mousePressEvent(QMouseEvent* event)
 }
 
 /*!
-    \overload
-    \internal
-    Overloaded function \a mouseReleaseEvent().
+  \overload
+  \internal
+  Overloaded function \a mouseReleaseEvent().
 */
 void SlideSwitch::mouseReleaseEvent(QMouseEvent* /*event*/)
 {
@@ -233,10 +233,9 @@ void SlideSwitch::mouseReleaseEvent(QMouseEvent* /*event*/)
 }
 
 /*!
-    \overload
-    \internal
-    Check if the widget has been clicked. Overloaded to
-    define own hit area.
+  \overload
+  \internal
+  Check if the widget has been clicked. Overloaded to define own hit area.
 */
 bool SlideSwitch::hitButton(const QPoint& pos) const
 {
@@ -244,11 +243,10 @@ bool SlideSwitch::hitButton(const QPoint& pos) const
 }
 
 /*!
-    \internal
-    Animation to change the state of the widget at the end of the
-    set position or the start position. \n
-    If one of the two possible states is reached the signal is
-    send.
+  \internal
+  Animation to change the state of the widget at the end of the
+  set position or the start position. \n
+  If one of the two possible states is reached the signal is sent.
 */
 void SlideSwitch::setSwitchPosition(int position)
 {

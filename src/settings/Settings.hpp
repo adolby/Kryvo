@@ -54,7 +54,7 @@ class Settings {
    * \brief maximized Sets the maximized state.
    * \param maximized Boolean representing maximized state
    */
-  void maximized(bool maximized);
+  void maximized(const bool maximized);
 
   /*!
    * \brief maximized Returns the main window's maximized state.
@@ -90,7 +90,7 @@ class Settings {
    * \brief keySize Sets the key size.
    * \param keySize Key size in bits
    */
-  void keySize(std::size_t keySize);
+  void keySize(const std::size_t& keySize);
 
   /*!
    * \brief keySize Returns the key size.

@@ -78,7 +78,7 @@ QPoint Settings::position() const
   return pimpl->position;
 }
 
-void Settings::maximized(bool maximized)
+void Settings::maximized(const bool maximized)
 {
   Q_ASSERT(pimpl);
 
@@ -120,7 +120,7 @@ QString Settings::cipher() const
   return pimpl->cipher;
 }
 
-void Settings::keySize(std::size_t keySize)
+void Settings::keySize(const std::size_t& keySize)
 {
   Q_ASSERT(pimpl);
 
@@ -169,8 +169,8 @@ QString Settings::styleSheetPath() const
   return pimpl->styleSheetPath;
 }
 
-Settings::SettingsPrivate::SettingsPrivate()
-  : maximized{false}, keySize{128}
+Settings::SettingsPrivate::SettingsPrivate() :
+  maximized{false}, keySize{128}
 {}
 
 void Settings::SettingsPrivate::importSettings()

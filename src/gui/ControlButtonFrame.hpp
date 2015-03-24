@@ -49,7 +49,7 @@ class ControlButtonFrame : public QFrame {
    * clicked.
    * \param cryptFlag Boolean representing encrypt (true) or decrypt (false)
    */
-  void processFiles(bool cryptFlag);
+  void processFiles(const bool cryptFlag);
 
  private slots:
   /*!

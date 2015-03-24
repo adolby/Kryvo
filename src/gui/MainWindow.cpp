@@ -57,7 +57,7 @@ class MainWindow::MainWindowPrivate {
    * \brief busy Sets the busy status received from the cipher operation.
    * \param busy Boolean representing the busy status.
    */
-  void busy(bool busy);
+  void busy(const bool busy);
 
   /*!
    * \brief isBusy Returns the busy status received from the cipher operation.
@@ -228,7 +228,7 @@ void MainWindow::removeFiles()
   fileListFrame->clear();
 }
 
-void MainWindow::processFiles(bool cryptFlag)
+void MainWindow::processFiles(const bool cryptFlag)
 {
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->settings);
@@ -258,14 +258,16 @@ void MainWindow::processFiles(bool cryptFlag)
           QString cipherAlgorithm;
           if ("AES" == pimpl->settings->cipher())
           {
-            cipherAlgorithm = pimpl->settings->cipher() % QLatin1String{"-"} %
+            cipherAlgorithm = pimpl->settings->cipher() %
+                              QString{QLatin1String{"-"}} %
                               QString::number(pimpl->settings->keySize()) %
-                              QLatin1String{"/"} %
+                              QString{QLatin1String{"/"}} %
                               pimpl->settings->modeOfOperation();
           }
           else
           {
-            cipherAlgorithm = pimpl->settings->cipher() % QLatin1String{"/"} %
+            cipherAlgorithm = pimpl->settings->cipher() %
+                              QString{QLatin1String{"/"}} %
                               pimpl->settings->modeOfOperation();
           }
 
@@ -293,7 +295,7 @@ void MainWindow::processFiles(bool cryptFlag)
   }
 }
 
-void MainWindow::updateProgress(const QString& path, qint64 percent)
+void MainWindow::updateProgress(const QString& path, const qint64 percent)
 {
   Q_ASSERT(fileListFrame);
 
@@ -313,7 +315,7 @@ void MainWindow::updateError(const QString& path, const QString& message)
   this->updateProgress(path, 0);
 }
 
-void MainWindow::updateBusyStatus(bool busy)
+void MainWindow::updateBusyStatus(const bool busy)
 {
   Q_ASSERT(pimpl);
 
@@ -327,7 +329,7 @@ void MainWindow::updateCipher(const QString& newCipher)
   pimpl->settings->cipher(newCipher);
 }
 
-void MainWindow::updateKeySize(std::size_t keySize)
+void MainWindow::updateKeySize(const std::size_t& keySize)
 {
   Q_ASSERT(pimpl);
 
@@ -345,8 +347,8 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
                                    const QString& defaultFile)
 {
   // Try to load user theme, if it exists
-  const QString styleSheetPath = QLatin1String{"themes"} % QDir::separator() %
-                                 styleFile;
+  const QString styleSheetPath = QString{QLatin1String{"themes"}} %
+                                 QDir::separator() % styleFile;
   QFile userTheme{styleSheetPath};
 
   auto styleSheet = QString{};
@@ -357,19 +359,19 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
 
     if (themeOpen)
     {
-      styleSheet = QLatin1String(userTheme.readAll());
+      styleSheet = QString{QLatin1String{userTheme.readAll()}};
       userTheme.close();
     }
   }
   else
   { // Otherwise, load default theme
-    QFile defaultTheme{QLatin1String{":/stylesheets/"} % defaultFile};
+    QFile defaultTheme{QString{QLatin1String{":/stylesheets/"} % defaultFile}};
 
     auto defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
 
     if (defaultThemeOpen)
     {
-      styleSheet = QLatin1String(defaultTheme.readAll());
+      styleSheet = QString{QLatin1String{defaultTheme.readAll()}};
       defaultTheme.close();
     }
   }
@@ -386,7 +388,7 @@ MainWindow::MainWindowPrivate::MainWindowPrivate() :
   stateMachine{make_unique<QStateMachine>()},
   busyStatus{false} {}
 
-void MainWindow::MainWindowPrivate::busy(bool busy)
+void MainWindow::MainWindowPrivate::busy(const bool busy)
 {
   busyStatus = busy;
 }

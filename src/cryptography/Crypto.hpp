@@ -108,8 +108,8 @@ class Crypto : public QObject {
    */
   void encrypt(const QString& passphrase,
                const QStringList& inputFileNames,
-               const QString& algorithm = "AES-128/GCM",
-               std::size_t keySize = 16);
+               const QString& algorithm = QString{"AES-128/GCM"},
+               const std::size_t& keySize = std::size_t{128});
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
@@ -164,7 +164,7 @@ class Crypto : public QObject {
   void encryptFile(const QString& passphrase,
                    const QString& inputFileName,
                    const QString& algorithmName,
-                   std::size_t keySize);
+                   const std::size_t& keySize);
 
   /*!
    * \brief decryptFile Decrypts a single file with the input passphrase and
@@ -194,7 +194,7 @@ class Crypto : public QObject {
                      const std::string& algorithmName,
                      const Botan::SymmetricKey& key,
                      const Botan::InitializationVector& iv,
-                     const Botan::Cipher_Dir cipherDirection,
+                     const Botan::Cipher_Dir& cipherDirection,
                      std::ifstream& in,
                      std::ofstream& out);
 
