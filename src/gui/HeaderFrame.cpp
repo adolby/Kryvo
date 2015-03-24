@@ -105,7 +105,7 @@ HeaderFrame::HeaderFrame(QWidget* parent) :
 
 HeaderFrame::~HeaderFrame() {}
 
-void HeaderFrame::togglePauseIcon(bool toggle)
+void HeaderFrame::togglePauseIcon(const bool toggle)
 {
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->pauseButton);

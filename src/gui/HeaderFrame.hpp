@@ -59,7 +59,7 @@ class HeaderFrame : public QFrame {
    * \param pause The boolean represenitng the pause/resume state of the
    * pause/resume button.
    */
-  void pause(bool pause);
+  void pause(const bool pause);
 
   /*!
    * \brief switchFrame Emitted when the settings button is clicked.
@@ -78,7 +78,7 @@ class HeaderFrame : public QFrame {
    * \brief togglePauseIcon Toggles the pause button icon and text when the
    * paused button is checked.
    */
-  void togglePauseIcon(bool toggle);
+  void togglePauseIcon(const bool toggle);
 
  private:
   class HeaderFramePrivate;

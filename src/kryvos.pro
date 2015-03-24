@@ -4,7 +4,7 @@ TARGET = Kryvos
 
 TEMPLATE = app
 
-CONFIG += c++11
+CONFIG += c++14
 
 SOURCES += \
   main.cpp \
@@ -38,7 +38,8 @@ HEADERS += \
   gui/flowlayout.h \
   gui/FluidLayout.hpp \
   settings/Settings.hpp \
-  utility/make_unique.h
+  utility/make_unique.h \
+    cryptography/botan/android/android_to_string.h
 
 # Platform-specific configuration
 android-g++ {

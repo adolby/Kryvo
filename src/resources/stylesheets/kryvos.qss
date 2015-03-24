@@ -139,7 +139,7 @@ QLabel#text {
 
 QLabel#headerText {
   color: #fab52a;
-  font-size: 36px;
+  font-size: 38px;
 }
 
 #message {

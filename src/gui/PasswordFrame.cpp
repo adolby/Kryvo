@@ -55,7 +55,7 @@ PasswordFrame::PasswordFrame(QWidget* parent) :
 
 PasswordFrame::~PasswordFrame() {}
 
-QString PasswordFrame::password()
+QString PasswordFrame::password() const
 {
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->passwordLineEdit);

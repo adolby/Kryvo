@@ -26,6 +26,15 @@
 #include <QtCore/QStringRef>
 #include <QtCore/QStringBuilder>
 
+#if defined(Q_OS_ANDROID)
+namespace std {
+long long stoll(const string& str)
+{
+  return strtoll(str.c_str(), nullptr, 10);
+}
+}
+#endif
+
 class Crypto::CryptoPrivate {
  public:
   /*!
@@ -64,7 +73,7 @@ class Crypto::CryptoPrivate {
    * \brief abort Updates the abort status.
    * \param abort Boolean representing the abort status.
    */
-  void abort(bool abort);
+  void abort(const bool abort);
 
   /*!
    * \brief isAborted Returns the current abort status.
@@ -76,7 +85,7 @@ class Crypto::CryptoPrivate {
    * \brief pause Updates the pause status.
    * \param pause Boolean representing the pause status.
    */
-  void pause(bool pause);
+  void pause(const bool pause);
 
   /*!
    * \brief isPaused Returns the current pause status.
@@ -92,7 +101,7 @@ class Crypto::CryptoPrivate {
    * \param stop Boolean representing the stop status for the file represented
    * by fileName.
    */
-  void stop(const QString& fileName, bool stop);
+  void stop(const QString& fileName, const bool stop);
 
   /*!
    * \brief isStopped Returns a stop status in the stop status container. A stop
@@ -109,7 +118,7 @@ class Crypto::CryptoPrivate {
    * \brief busy Updates the busy status.
    * \param busy Boolean representing the busy status.
    */
-  void busy(bool busy);
+  void busy(const bool busy);
 
   /*!
    * \brief isBusy Returns the busy status.
@@ -156,7 +165,7 @@ Crypto::~Crypto() {}
 void Crypto::encrypt(const QString& passphrase,
                      const QStringList& inputFileNames,
                      const QString& algorithm,
-                     std::size_t keySize)
+                     const std::size_t& inputKeySize)
 {
   Q_ASSERT(pimpl);
 
@@ -167,14 +176,16 @@ void Crypto::encrypt(const QString& passphrase,
   pimpl->resetFlags();
 
   auto algorithmName = QString{};
+  auto keySize = std::size_t{};
   if (!algorithm.isEmpty())
   {
     algorithmName = algorithm;
+    keySize = inputKeySize;
   }
   else
   {
     algorithmName = QString{"AES-128/GCM"};
-    keySize = 128;
+    keySize = static_cast<std::size_t>(128);
   }
 
   const auto inputFileNamesSize = inputFileNames.size();
@@ -307,7 +318,7 @@ void Crypto::stop(const QString& fileName)
 void Crypto::encryptFile(const QString& passphrase,
                          const QString& inputFileName,
                          const QString& algorithmName,
-                         std::size_t keySize)
+                         const std::size_t& keySize)
 {
   QFileInfo fileInfo{inputFileName};
 
@@ -339,7 +350,7 @@ void Crypto::encryptFile(const QString& passphrase,
         pbkdfSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
-    auto kdfHash = std::string{"KDF2(Keccak-1600)"};
+    const auto kdfHash = std::string{"KDF2(Keccak-1600)"};
     std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf(kdfHash)};
 
     // Set up key salt size
@@ -394,7 +405,7 @@ void Crypto::encryptFile(const QString& passphrase,
 void Crypto::decryptFile(const QString& passphrase,
                          const QString& inputFileName)
 {
-  QFileInfo fileInfo{inputFileName};
+  const QFileInfo fileInfo{inputFileName};
 
   if (!pimpl->isAborted() && fileInfo.exists() &&
       fileInfo.isFile() && fileInfo.isReadable())
@@ -434,7 +445,7 @@ void Crypto::decryptFile(const QString& passphrase,
         pbkdfSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
-    auto kdfHash = static_cast<std::string>("KDF2(Keccak-1600)");
+    const auto kdfHash = static_cast<std::string>("KDF2(Keccak-1600)");
     std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf(kdfHash)};
 
     // Key salt
@@ -477,7 +488,7 @@ void Crypto::executeCipher(const QString& inputFileName,
                            const std::string& algorithmName,
                            const Botan::SymmetricKey& key,
                            const Botan::InitializationVector& iv,
-                           const Botan::Cipher_Dir cipherDirection,
+                           const Botan::Cipher_Dir& cipherDirection,
                            std::ifstream& in,
                            std::ofstream& out)
 {
@@ -608,7 +619,7 @@ QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
   return uniqueFileName;
 }
 
-void Crypto::CryptoPrivate::abort(bool abort)
+void Crypto::CryptoPrivate::abort(const bool abort)
 {
   this->aborted = abort;
 }
@@ -618,7 +629,7 @@ bool Crypto::CryptoPrivate::isAborted() const
   return this->aborted;
 }
 
-void Crypto::CryptoPrivate::pause(bool pause)
+void Crypto::CryptoPrivate::pause(const bool pause)
 {
   this->paused = pause;
 }
@@ -628,7 +639,7 @@ bool Crypto::CryptoPrivate::isPaused() const
   return this->paused;
 }
 
-void Crypto::CryptoPrivate::stop(const QString& fileName, bool stop)
+void Crypto::CryptoPrivate::stop(const QString& fileName, const bool stop)
 {
   this->stopped.insert(fileName, stop);
 }
@@ -644,7 +655,7 @@ void Crypto::CryptoPrivate::resetFlags()
   this->stopped.clear();
 }
 
-void Crypto::CryptoPrivate::busy(bool busy)
+void Crypto::CryptoPrivate::busy(const bool busy)
 {
   this->busyStatus = busy;
 }
