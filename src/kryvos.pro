@@ -81,7 +81,9 @@ android-g++ {
 
   macx {
     message(OSX)
-    CONFIG += x86
+    #CONFIG += x86
+    CONFIG -= c++14
+    CONFIG += c++11
     SOURCES += cryptography/botan/mac/x86_64/botan_all.cpp
     HEADERS += cryptography/botan/mac/x86_64/botan_all.h
     QMAKE_MAC_SDK = macosx10.9
