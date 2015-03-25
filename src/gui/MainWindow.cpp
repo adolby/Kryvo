@@ -365,7 +365,8 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
   }
   else
   { // Otherwise, load default theme
-    QFile defaultTheme{QString{QLatin1String{":/stylesheets/"} % defaultFile}};
+    auto localPath = QLatin1String{":/stylesheets/"} % defaultFile;
+    QFile defaultTheme{localPath};
 
     auto defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
 
