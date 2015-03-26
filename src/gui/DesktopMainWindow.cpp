@@ -18,7 +18,7 @@
  * Contact : andrewdolby@gmail.com
  */
 
-#include "DesktopMainWindow.hpp"
+#include "gui/DesktopMainWindow.hpp"
 #include <QtWidgets/QAction>
 #include <QtGui/QDropEvent>
 #include <QtCore/QMimeData>
