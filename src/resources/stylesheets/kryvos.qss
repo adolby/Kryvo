@@ -38,8 +38,8 @@ QFrame#settingsFrame {
 }
 
 QFrame#settingsSubFrame {
-  background-color: #7f8c8d;
-  border-radius: 4px;
+  background-color: gray;
+  border-radius: 5px;
 }
 
 QFrame#contentFrame {

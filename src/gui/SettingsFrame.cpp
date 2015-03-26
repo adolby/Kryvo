@@ -23,6 +23,7 @@
 #include "gui/FluidLayout.hpp"
 #include "utility/make_unique.h"
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QHBoxLayout>
@@ -78,9 +79,17 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   headerLayout->addWidget(backButton);
 
   auto contentFrame = new QFrame{this};
-  contentFrame->setObjectName("settingsSubFrame");
 
-  auto cipherFrame = new QFrame{contentFrame};
+  auto cryptoFrame = new QFrame{contentFrame};
+
+  auto cryptoSettingsLabel = new QLabel{tr("Cryptography"),
+                                        cryptoFrame};
+  cryptoSettingsLabel->setObjectName("text");
+
+  auto cryptoSettingsFrame = new QFrame{cryptoFrame};
+  cryptoSettingsFrame->setObjectName("settingsSubFrame");
+
+  auto cipherFrame = new QFrame{cryptoSettingsFrame};
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   auto cipherLabel = new QLabel{tr("Cipher: "), cipherFrame};
@@ -96,7 +105,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   cipherLayout->addWidget(cipherLabel);
   cipherLayout->addWidget(pimpl->cipherComboBox);
 
-  auto keySizeFrame = new QFrame{contentFrame};
+  auto keySizeFrame = new QFrame{cryptoSettingsFrame};
   keySizeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   const auto keySizeToolTip = QString{tr("The cipher key size is the number of "
@@ -126,7 +135,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   keySizeLayout->addWidget(keySizeLabel);
   keySizeLayout->addWidget(pimpl->keySizeComboBox);
 
-  auto modeFrame = new QFrame{contentFrame};
+  auto modeFrame = new QFrame{cryptoSettingsFrame};
   modeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   const auto modeToolTip = QString{tr("The mode of operation is the algorithm "
@@ -153,14 +162,27 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   modeLayout->addWidget(modeLabel);
   modeLayout->addWidget(pimpl->modeComboBox);
 
-  auto contentLayout = new FluidLayout{contentFrame};
-  contentLayout->addWidget(cipherFrame);
-  contentLayout->addWidget(keySizeFrame);
-  contentLayout->addWidget(modeFrame);
+  auto cryptoSettingsLayout = new QVBoxLayout{cryptoSettingsFrame};
+  cryptoSettingsLayout->addWidget(cipherFrame);
+  cryptoSettingsLayout->addWidget(keySizeFrame);
+  cryptoSettingsLayout->addWidget(modeFrame);
+
+  auto cryptoLayout = new QVBoxLayout{cryptoFrame};
+  cryptoLayout->addWidget(cryptoSettingsLabel, 0, Qt::AlignHCenter);
+  cryptoLayout->addWidget(cryptoSettingsFrame);
+
+  auto contentLayout = new QVBoxLayout{contentFrame};
+  contentLayout->addWidget(cryptoFrame);
+  contentLayout->addStretch();
+
+  auto centerFrame = new QFrame{this};
+  auto centerLayout = new QHBoxLayout{centerFrame};
+  centerLayout->addWidget(contentFrame);
+  centerLayout->addStretch();
 
   auto layout = new QVBoxLayout{this};
   layout->addWidget(headerFrame, 0);
-  layout->addWidget(contentFrame, 1);
+  layout->addWidget(centerFrame, 1);
 
   // Capture function pointer to specific QComboBox signal overload
   void (QComboBox::*indexChangedSignal)(const QString&) =
