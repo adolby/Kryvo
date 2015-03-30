@@ -23,8 +23,8 @@
 #include <QtGui/QMouseEvent>
 #include <QtCore/QEvent>
 
-Delegate::Delegate(QObject* parent) :
-  QStyledItemDelegate{parent}, focusBorderEnabled{false}
+Delegate::Delegate(QObject* parent)
+  : QStyledItemDelegate{parent}, focusBorderEnabled{false}
 {}
 
 void Delegate::setFocusBorderEnabled(bool enabled)

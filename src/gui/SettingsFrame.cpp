@@ -31,6 +31,8 @@
 #include <QtWidgets/QToolTip>
 #include <QtGui/QIcon>
 #include <QtGui/QFontMetrics>
+#include <QtGui/QPainter>
+#include <QtCore/QPropertyAnimation>
 #include <QtCore/QStringRef>
 #include <QtCore/QStringBuilder>
 
@@ -54,8 +56,8 @@ class SettingsFrame::SettingsFramePrivate {
 SettingsFrame::SettingsFrame(const QString& cipher,
                              const std::size_t& keySize,
                              const QString& mode,
-                             QWidget* parent) :
-  QFrame{parent}, pimpl{make_unique<SettingsFramePrivate>()}
+                             QWidget* parent)
+  : QFrame{parent}, pimpl{make_unique<SettingsFramePrivate>()}
 {
   // TODO: Fix this slide switch or remove it.
   //auto slideSwitch = new SlideSwitch{this};
@@ -243,9 +245,9 @@ void SettingsFrame::changeModeOfOperation()
   emit newModeOfOperation(pimpl->modeComboBox->currentText());
 }
 
-SettingsFrame::SettingsFramePrivate::SettingsFramePrivate() :
-  cipherComboBox{nullptr}, keySizeComboBox{nullptr}, modeComboBox{nullptr},
-  toolTipWidth{250}
+SettingsFrame::SettingsFramePrivate::SettingsFramePrivate()
+  : cipherComboBox{nullptr}, keySizeComboBox{nullptr}, modeComboBox{nullptr},
+    toolTipWidth{250}
 {}
 
 QString SettingsFrame::SettingsFramePrivate::splitToolTip(const QString& text,

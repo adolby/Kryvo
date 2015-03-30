@@ -53,8 +53,8 @@ class Settings::SettingsPrivate {
   QString styleSheetPath;
 };
 
-Settings::Settings() :
-  pimpl{make_unique<SettingsPrivate>()}
+Settings::Settings()
+  : pimpl{make_unique<SettingsPrivate>()}
 {
   pimpl->importSettings();
 }
@@ -169,8 +169,8 @@ QString Settings::styleSheetPath() const
   return pimpl->styleSheetPath;
 }
 
-Settings::SettingsPrivate::SettingsPrivate() :
-  maximized{false}, keySize{128}
+Settings::SettingsPrivate::SettingsPrivate()
+  : maximized{false}, keySize{128}
 {}
 
 void Settings::SettingsPrivate::importSettings()

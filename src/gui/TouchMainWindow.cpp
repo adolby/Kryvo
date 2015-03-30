@@ -21,8 +21,8 @@
 #include "gui/TouchMainWindow.hpp"
 #include <QtWidgets/QApplication>
 
-TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent) :
-  MainWindow{settings, parent}
+TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)
+  : MainWindow{settings, parent}
 {
   messageFrame->setText(tr("To begin, tap the Add Files button. Enter a"
                            " password. Finally, tap the Encrypt or Decrypt"

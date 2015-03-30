@@ -50,8 +50,8 @@ class FileListFrame::FileListFramePrivate {
   QTableView* fileListView;
 };
 
-FileListFrame::FileListFrame(QWidget* parent) :
-  QFrame{parent}, pimpl{make_unique<FileListFramePrivate>()}
+FileListFrame::FileListFrame(QWidget* parent)
+  : QFrame{parent}, pimpl{make_unique<FileListFramePrivate>()}
 {
   // File list header
   const QStringList headerList = {tr("Files"), tr("Progress"),
@@ -254,6 +254,6 @@ void FileListFrame::updateProgress(const QString& path, const qint64 percent)
   }
 }
 
-FileListFrame::FileListFramePrivate::FileListFramePrivate() :
-  fileListModel{make_unique<QStandardItemModel>()}, fileListView{nullptr}
+FileListFrame::FileListFramePrivate::FileListFramePrivate()
+  : fileListModel{make_unique<QStandardItemModel>()}, fileListView{nullptr}
 {}

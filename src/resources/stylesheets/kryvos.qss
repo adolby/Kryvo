@@ -32,19 +32,23 @@ QFrame#mainFrame {
   padding: 0;
 }
 
-QFrame#settingsFrame {
-  background-color: #2c3e50;
-  border-radius: 10px;
-}
-
-QFrame#settingsSubFrame {
-  background-color: gray;
-  border-radius: 5px;
-}
-
 QFrame#contentFrame {
   background-color: #2c3e50;
   border-radius: 10px;
+  margin: 10px;
+}
+
+QFrame#settingsFrame {
+  background-color: #2c3e50;
+  border-radius: 10px;
+  margin: 10px;
+}
+
+QFrame#settingsSubFrame {
+  border-color: white;
+  border-style: solid;
+  border-width: 2px;
+  border-radius: 5px;
 }
 
 /*--------- Buttons ---------*/
