@@ -26,8 +26,8 @@ class SlidingStackedWidget::SlidingStackedWidgetPrivate {
   QParallelAnimationGroup* animationGroup;
 };
 
-SlidingStackedWidget::SlidingStackedWidget(QWidget* parent) :
-  QStackedWidget{parent}, pimpl{make_unique<SlidingStackedWidgetPrivate>()}
+SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
+  : QStackedWidget{parent}, pimpl{make_unique<SlidingStackedWidgetPrivate>()}
 {
   pimpl->animationGroup->setParent(this);
 
