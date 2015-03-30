@@ -35,8 +35,8 @@ class MessageFrame::MessageFramePrivate {
   QPlainTextEdit* messageTextEdit;
 };
 
-MessageFrame::MessageFrame(QWidget* parent) :
-  QFrame{parent}, pimpl{make_unique<MessageFramePrivate>()}
+MessageFrame::MessageFrame(QWidget* parent)
+  : QFrame{parent}, pimpl{make_unique<MessageFramePrivate>()}
 {
   pimpl->messageTextEdit = new QPlainTextEdit{tr("To add files, click the add"
                                                  " files button or drag and"
@@ -93,6 +93,6 @@ void MessageFrame::setText(const QString& startText)
   pimpl->messageTextEdit->setPlainText(startText);
 }
 
-MessageFrame::MessageFramePrivate::MessageFramePrivate() :
-  messageTextEdit{nullptr}
+MessageFrame::MessageFramePrivate::MessageFramePrivate()
+  : messageTextEdit{nullptr}
 {}

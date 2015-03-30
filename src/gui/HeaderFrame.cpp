@@ -42,8 +42,8 @@ class HeaderFrame::HeaderFramePrivate {
   QSize iconSize;
 };
 
-HeaderFrame::HeaderFrame(QWidget* parent) :
-  QFrame{parent}, pimpl{make_unique<HeaderFramePrivate>()}
+HeaderFrame::HeaderFrame(QWidget* parent)
+  : QFrame{parent}, pimpl{make_unique<HeaderFramePrivate>()}
 {
   auto headerLabel = new QLabel{tr("Kryvos"), this};
   headerLabel->setObjectName("headerText");
@@ -138,5 +138,6 @@ void HeaderFrame::setIconSize(const QSize& iconSize)
   pimpl->clearFilesButton->setIconSize(pimpl->iconSize);
 }
 
-HeaderFrame::HeaderFramePrivate::HeaderFramePrivate() :
-  pauseButton{nullptr}, addFilesButton{nullptr}, clearFilesButton{nullptr} {}
+HeaderFrame::HeaderFramePrivate::HeaderFramePrivate()
+  : pauseButton{nullptr}, addFilesButton{nullptr}, clearFilesButton{nullptr}
+{}

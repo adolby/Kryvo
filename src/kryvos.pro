@@ -21,10 +21,12 @@ SOURCES += \
   gui/SlideSwitch.cpp \
   gui/flowlayout.cpp \
   gui/FluidLayout.cpp \
+  gui/SlidingStackedWidget.cpp \
   settings/Settings.cpp
 
 HEADERS += \
   Kryvos.hpp \
+  cryptography/botan/android/android_to_string.h \
   cryptography/Crypto.hpp \
   gui/MainWindow.hpp \
   gui/SettingsFrame.hpp \
@@ -37,9 +39,9 @@ HEADERS += \
   gui/SlideSwitch.hpp \
   gui/flowlayout.h \
   gui/FluidLayout.hpp \
+  gui/SlidingStackedWidget.hpp \
   settings/Settings.hpp \
-  utility/make_unique.h \
-    cryptography/botan/android/android_to_string.h
+  utility/make_unique.h
 
 # Platform-specific configuration
 android-g++ {

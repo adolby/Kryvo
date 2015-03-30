@@ -23,8 +23,8 @@
 #include <QtGui/QDropEvent>
 #include <QtCore/QMimeData>
 
-DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent) :
-  MainWindow{settings, parent}
+DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent)
+  : MainWindow{settings, parent}
 {
   this->settings = settings;
 

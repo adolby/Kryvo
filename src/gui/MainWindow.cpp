@@ -19,6 +19,7 @@
  */
 
 #include "gui/MainWindow.hpp"
+#include "gui/SlidingStackedWidget.hpp"
 #include "utility/make_unique.h"
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
@@ -29,8 +30,6 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QBoxLayout>
 #include <QtGui/QIcon>
-#include <QtCore/QStateMachine>
-#include <QtCore/QState>
 #include <QtCore/QModelIndexList>
 #include <QtCore/QModelIndex>
 #include <QtCore/QMimeData>
@@ -70,9 +69,6 @@ class MainWindow::MainWindowPrivate {
   // Messages to display to user
   const QStringList messages;
 
-  // GUI state machine
-  std::unique_ptr<QStateMachine> stateMachine;
-
  private:
   // The busy status, when set to true, indicates that this object is currently
   // executing a cipher operation. The status allows the GUI to decide whether
@@ -80,10 +76,10 @@ class MainWindow::MainWindowPrivate {
   bool busyStatus;
 };
 
-MainWindow::MainWindow(Settings* settings, QWidget* parent) :
-  QMainWindow{parent}, headerFrame{nullptr}, fileListFrame{nullptr},
-  messageFrame{nullptr}, passwordFrame{nullptr}, controlButtonFrame{nullptr},
-  contentLayout{nullptr}, pimpl{make_unique<MainWindowPrivate>()}
+MainWindow::MainWindow(Settings* settings, QWidget* parent)
+  : QMainWindow{parent}, headerFrame{nullptr}, fileListFrame{nullptr},
+    messageFrame{nullptr}, passwordFrame{nullptr}, controlButtonFrame{nullptr},
+    contentLayout{nullptr}, pimpl{make_unique<MainWindowPrivate>()}
 {
   // Set object name
   this->setObjectName("MainWindow");
@@ -94,18 +90,13 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent) :
   // Store settings object
   pimpl->settings = settings;
 
-  auto mainFrame = new QFrame{this};
-  mainFrame->setObjectName("mainFrame");
-  auto mainLayout = new QVBoxLayout{mainFrame};
+//  auto mainFrame = new QFrame{this};
+//  mainFrame->setObjectName("mainFrame");
+//  auto mainLayout = new QVBoxLayout{mainFrame};
 
-  settingsFrame = new SettingsFrame{pimpl->settings->cipher(),
-                                    pimpl->settings->keySize(),
-                                    pimpl->settings->modeOfOperation(),
-                                    mainFrame};
-  settingsFrame->setObjectName("settingsFrame");
-  mainLayout->addWidget(settingsFrame);
+  auto slidingStackedWidget = new SlidingStackedWidget{this};
 
-  auto contentFrame = new QFrame{mainFrame};
+  auto contentFrame = new QFrame{slidingStackedWidget};
   contentFrame->setObjectName("contentFrame");
 
   headerFrame = new HeaderFrame{contentFrame};
@@ -138,9 +129,24 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent) :
   contentLayout->addWidget(passwordFrame);
   contentLayout->addWidget(controlButtonFrame);
 
-  mainLayout->addWidget(contentFrame);
+  slidingStackedWidget->addWidget(contentFrame);
 
-  this->setCentralWidget(mainFrame);
+  settingsFrame = new SettingsFrame{pimpl->settings->cipher(),
+                                    pimpl->settings->keySize(),
+                                    pimpl->settings->modeOfOperation(),
+                                    slidingStackedWidget};
+  settingsFrame->setObjectName("settingsFrame");
+
+  slidingStackedWidget->addWidget(settingsFrame);
+
+//  mainLayout->addWidget(slidingStackedWidget);
+  this->setCentralWidget(slidingStackedWidget);
+
+  // Sliding stacked widget connections
+  connect(headerFrame, &HeaderFrame::switchFrame,
+          slidingStackedWidget, &SlidingStackedWidget::slideInNext);
+  connect(settingsFrame, &SettingsFrame::switchFrame,
+          slidingStackedWidget, &SlidingStackedWidget::slideInPrev);
 
   // Header button connections
   connect(headerFrame, &HeaderFrame::pause,
@@ -165,28 +171,6 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent) :
           this, &MainWindow::stopFile, Qt::DirectConnection);
   connect(controlButtonFrame, &ControlButtonFrame::processFiles,
           this, &MainWindow::processFiles);
-
-  // GUI states
-  QState* mainState = new QState{};
-  mainState->assignProperty(contentFrame, "visible", true);
-  mainState->assignProperty(settingsFrame, "visible", false);
-
-  QState* settingsState = new QState{};
-  settingsState->assignProperty(contentFrame, "visible", false);
-  settingsState->assignProperty(settingsFrame, "visible", true);
-
-  mainState->addTransition(headerFrame,
-                           SIGNAL(switchFrame()),
-                           settingsState);
-  settingsState->addTransition(settingsFrame,
-                               SIGNAL(switchFrame()),
-                               mainState);
-
-  pimpl->stateMachine->addState(mainState);
-  pimpl->stateMachine->addState(settingsState);
-  pimpl->stateMachine->setInitialState(mainState);
-
-  pimpl->stateMachine->start();
 }
 
 MainWindow::~MainWindow() {}
@@ -286,12 +270,12 @@ void MainWindow::processFiles(const bool cryptFlag)
     }
     else
     { // Inform user that a password is required to encrypt or decrypt
-      this->updateStatusMessage(pimpl->messages[0]);
+      updateStatusMessage(pimpl->messages[0]);
     }
   }
   else
   {
-    this->updateStatusMessage(pimpl->messages[1]);
+    updateStatusMessage(pimpl->messages[1]);
   }
 }
 
@@ -311,8 +295,8 @@ void MainWindow::updateStatusMessage(const QString& message)
 
 void MainWindow::updateError(const QString& path, const QString& message)
 {
-  this->updateStatusMessage(message);
-  this->updateProgress(path, 0);
+  updateStatusMessage(message);
+  updateProgress(path, 0);
 }
 
 void MainWindow::updateBusyStatus(const bool busy)
@@ -380,14 +364,13 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
   return styleSheet;
 }
 
-MainWindow::MainWindowPrivate::MainWindowPrivate() :
-  settings{nullptr},
-  messages{tr("A password is required to encrypt or decrypt files. Please enter"
-              " one to continue."),
-           tr("Encryption/decryption is already in progress. Please wait until"
-              " the current operation finishes.")},
-  stateMachine{make_unique<QStateMachine>()},
-  busyStatus{false} {}
+MainWindow::MainWindowPrivate::MainWindowPrivate()
+  : settings{nullptr},
+    messages{tr("A password is required to encrypt or decrypt files. Please "
+                "enter one to continue."),
+             tr("Encryption/decryption is already in progress. Please wait "
+                "until the current operation finishes.")},
+    busyStatus{false} {}
 
 void MainWindow::MainWindowPrivate::busy(const bool busy)
 {
