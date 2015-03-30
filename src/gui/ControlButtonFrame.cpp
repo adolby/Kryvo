@@ -37,8 +37,8 @@ class ControlButtonFrame::ControlButtonFramePrivate {
   QPushButton* decryptButton;
 };
 
-ControlButtonFrame::ControlButtonFrame(QWidget* parent) :
-  QFrame{parent}, pimpl{make_unique<ControlButtonFramePrivate>()}
+ControlButtonFrame::ControlButtonFrame(QWidget* parent)
+  : QFrame{parent}, pimpl{make_unique<ControlButtonFramePrivate>()}
 {
   const QSize iconSize{19, 19};
 

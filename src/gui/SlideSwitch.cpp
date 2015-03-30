@@ -48,8 +48,8 @@ class SlideSwitch::SlideSwitchPrivate {
   int position;
 };
 
-SlideSwitch::SlideSwitch(QWidget* parent) :
-  QAbstractButton(parent), pimpl{make_unique<SlideSwitchPrivate>()}
+SlideSwitch::SlideSwitch(QWidget* parent)
+  : QAbstractButton(parent), pimpl{make_unique<SlideSwitchPrivate>()}
 { 
   setCheckable(true);
   setChecked(false);

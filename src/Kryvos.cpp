@@ -53,8 +53,8 @@ class Kryvos::KryvosPrivate {
   std::unique_ptr<QThread> cipherThread;
 };
 
-Kryvos::Kryvos(QObject* parent) :
-  QObject{parent}, pimpl{make_unique<KryvosPrivate>()}
+Kryvos::Kryvos(QObject* parent)
+  : QObject{parent}, pimpl{make_unique<KryvosPrivate>()}
 {
   qRegisterMetaType<std::size_t>("std::size_t");
 

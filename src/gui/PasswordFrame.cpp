@@ -34,8 +34,8 @@ class PasswordFrame::PasswordFramePrivate {
   QLineEdit* passwordLineEdit;
 };
 
-PasswordFrame::PasswordFrame(QWidget* parent) :
-  QFrame{parent}, pimpl{make_unique<PasswordFramePrivate>()}
+PasswordFrame::PasswordFrame(QWidget* parent)
+  : QFrame{parent}, pimpl{make_unique<PasswordFramePrivate>()}
 {
   auto passwordLabel = new QLabel{tr("Password "), this};
   passwordLabel->setObjectName("text");
@@ -65,5 +65,5 @@ QString PasswordFrame::password() const
   return password;
 }
 
-PasswordFrame::PasswordFramePrivate::PasswordFramePrivate() :
-  passwordLineEdit{nullptr} {}
+PasswordFrame::PasswordFramePrivate::PasswordFramePrivate()
+  : passwordLineEdit{nullptr} {}
