@@ -304,6 +304,6 @@ QSize SlideSwitch::sizeHint() const
   }
 }
 
-SlideSwitch::SlideSwitchPrivate::SlideSwitchPrivate() :
-  timeLine{nullptr}, dragDistanceX{0}, dragInProgress{false}, position{0}
+SlideSwitch::SlideSwitchPrivate::SlideSwitchPrivate()
+  : timeLine{nullptr}, dragDistanceX{0}, dragInProgress{false}, position{0}
 {}

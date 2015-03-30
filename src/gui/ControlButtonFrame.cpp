@@ -89,6 +89,6 @@ void ControlButtonFrame::setIconSize(const QSize& iconSize)
   pimpl->decryptButton->setIconSize(iconSize);
 }
 
-ControlButtonFrame::ControlButtonFramePrivate::ControlButtonFramePrivate() :
-  encryptButton{nullptr}, decryptButton{nullptr}
+ControlButtonFrame::ControlButtonFramePrivate::ControlButtonFramePrivate()
+  : encryptButton{nullptr}, decryptButton{nullptr}
 {}
