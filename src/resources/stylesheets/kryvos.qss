@@ -52,19 +52,6 @@ QFrame#settingsSubFrame {
 }
 
 /*--------- Buttons ---------*/
-#settingsButton {
-  color: white;
-  background-color: #7f8c8d;
-  font-size: 20px;
-  padding: 10px 20px 10px 20px;
-  border: none;
-  border-radius: 5px;
-}
-
-#settingsButton:pressed {
-  background-color: #95a5a6;
-}
-
 #pauseButton {
   color: white;
   background-color: #2980b9;
@@ -117,10 +104,23 @@ QFrame#settingsSubFrame {
   background-color: #3498db;
 }
 
+#settingsButton {
+  color: white;
+  background-color: #7f8c8d;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
+
+#settingsButton:pressed {
+  background-color: #95a5a6;
+}
+
 #backButton {
   color: white;
   background-color: #8e44ad;
-  font-size: 21px;
+  font-size: 20px;
   padding: 10px 20px 10px 20px;
   border: none;
   border-radius: 5px;
