@@ -27,49 +27,41 @@ QMainWindow {
 
 /*--------- Layout containers ---------*/
 QFrame#mainFrame {
-  background-color: black;
+  background-color: #ecf0f1;
+  margin: 0;
+  padding: 0;
+}
+
+QFrame#contentFrame {
+  background-color: #2c3e50;
   margin: 0;
   padding: 0;
 }
 
 QFrame#settingsFrame {
-  background-color: #34495e;
-  border-radius: 10px;
-}
-
-QFrame#contentFrame {
-  background-color: #34495e;
+  background-color: #2c3e50;
   margin: 0;
   padding: 0;
 }
 
-QFrame#headerFrame {
-  background-color: #34495e;
-}
-
-QFrame#passwordFrame {
-  background-color: #2980b9;
-  border-color: #2980b9;
+QFrame#settingsSubFrame {
+  border-color: white;
+  border-style: solid;
   border-width: 2px;
-}
-
-QFrame#buttonFrame {
-  background-color: #27ae60;
-  border-color: #2980b9;
-  border-width: 2px;
+  border-radius: 5px;
 }
 
 /*--------- Buttons ---------*/
-#cryptButton {
+#pauseButton {
   color: white;
   background-color: #2980b9;
-  font-size: 75px;
+  font-size: 70px;
   padding: 10px 20px 10px 20px;
   border: none;
   border-radius: 5px;
 }
 
-#cryptButton:pressed {
+#pauseButton:checked {
   background-color: #3498db;
 }
 
@@ -99,17 +91,43 @@ QFrame#buttonFrame {
   background-color: #e74c3c;
 }
 
-#pauseButton {
+#cryptButton {
   color: white;
   background-color: #2980b9;
+  font-size: 75px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
+
+#cryptButton:pressed {
+  background-color: #3498db;
+}
+
+#settingsButton {
+  color: white;
+  background-color: #7f8c8d;
   font-size: 70px;
   padding: 10px 20px 10px 20px;
   border: none;
   border-radius: 5px;
 }
 
-#pauseButton:checked {
-  background-color: #3498db;
+#settingsButton:pressed {
+  background-color: #95a5a6;
+}
+
+#backButton {
+  color: white;
+  background-color: #8e44ad;
+  font-size: 70px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
+
+#backButton:pressed {
+  background-color: #9b59b6;
 }
 
 /*--------- Password Line Edit ---------*/
@@ -123,11 +141,20 @@ QLabel#text {
   font-size: 70px;
 }
 
+QLabel#headerText {
+  color: #fab52a;
+  font-size: 75px;
+}
+
 #message {
   color: white;
   background-color: #4b77be;
   font-size: 50px;
   border: none;
+}
+
+QComboBox#settingsComboBox {
+  font-size: 70px;
 }
 
 /*--------- File list view ---------*/
