@@ -19,7 +19,7 @@
  */
 
 #include "gui/FileListFrame.hpp"
-#include "gui/Delegate.hpp"
+#include "gui/FileListDelegate.hpp"
 #include "utility/make_unique.h"
 #include <QtWidgets/QScroller>
 #include <QtWidgets/QTableView>
@@ -54,30 +54,31 @@ FileListFrame::FileListFrame(QWidget* parent)
   : QFrame{parent}, pimpl{make_unique<FileListFramePrivate>()}
 {
   // File list header
-  const QStringList headerList = {tr("Files"), tr("Progress"),
+  const QStringList headerList = {tr("File"), tr("Progress"),
                                   tr("Remove file")};
   pimpl->fileListModel->setHorizontalHeaderLabels(headerList);
 
   pimpl->fileListView = new QTableView{this};
   pimpl->fileListView->setModel(pimpl->fileListModel.get());
+  pimpl->fileListView->setShowGrid(false);
+  pimpl->fileListView->verticalHeader()->hide();
 
   QHeaderView* header = pimpl->fileListView->horizontalHeader();
   header->setStretchLastSection(false);
-  header->hide();
-
-  pimpl->fileListView->verticalHeader()->hide();
-  pimpl->fileListView->setShowGrid(false);
+  header->setDefaultSectionSize(130);
+  header->resizeSection(0, 600);
+  header->resizeSection(1, 130);
+  header->resizeSection(2, 80);
 
   // Custom delegate paints progress bar and file close button for each file
-  auto delegate = new Delegate{this};
+  auto delegate = new FileListDelegate{this};
   pimpl->fileListView->setItemDelegate(delegate);
 
   pimpl->fileListView->setHorizontalScrollMode(QAbstractItemView::
-                                                ScrollPerPixel);
+                                               ScrollPerPixel);
 
-  // Attach a scroller to the file list
-  QScroller::grabGesture(pimpl->fileListView,
-                         QScroller::TouchGesture);
+  // Attach a scroller to the file list for mobile devices
+  QScroller::grabGesture(pimpl->fileListView, QScroller::TouchGesture);
 
   // Disable overshoot; it makes interacting with small widgets harder
   auto scroller = QScroller::scroller(pimpl->fileListView);
@@ -100,7 +101,7 @@ FileListFrame::FileListFrame(QWidget* parent)
   fileListLayout->setContentsMargins(0, 0, 0, 0);
   fileListLayout->setSpacing(0);
 
-  connect(delegate, &Delegate::removeRow,
+  connect(delegate, &FileListDelegate::removeRow,
           this, &FileListFrame::removeFileFromModel);
 }
 
@@ -128,30 +129,22 @@ void FileListFrame::clear()
   Q_ASSERT(pimpl->fileListModel);
 
   pimpl->fileListModel->clear();
+
+  // File list header
+  const QStringList headerList = {tr("File"), tr("Progress"),
+                                  tr("Remove file")};
+  pimpl->fileListModel->setHorizontalHeaderLabels(headerList);
 }
 
 void FileListFrame::addFileToModel(const QString& path)
 {
   QFileInfo fileInfo{path};
-  QDir directory{fileInfo.dir()};
 
   if (fileInfo.exists() && fileInfo.isFile())
   { // If the file exists, add it to the model
-    const QString filePath = fileInfo.absoluteFilePath();
+    //const QString filePath = fileInfo.absoluteFilePath();
 
-    QString fileName;
-    if (filePath.contains("//"))
-    { // Windows network share
-      fileName = filePath;
-    }
-    else
-    { // Windows or Unix path
-      fileName = directory.rootPath() % QLatin1String{"..."} %
-                 QLatin1String{"/"} % directory.dirName() % QLatin1String{"/"} %
-                 fileInfo.fileName();
-    }
-
-    auto pathItem = new QStandardItem{fileName};
+    auto pathItem = new QStandardItem{path};
     pathItem->setDragEnabled(false);
     pathItem->setDropEnabled(false);
     pathItem->setEditable(false);
@@ -191,10 +184,6 @@ void FileListFrame::addFileToModel(const QString& path)
     if (addNewItem)
     { // Add the item to the model if it's new
       pimpl->fileListModel->appendRow(items);
-      QHeaderView* header = pimpl->fileListView->horizontalHeader();
-      header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-      header->setResizeContentsPrecision(0);
-      header->resizeSection(1, 130);
     }
   } // End if file exists and is a file
 }
@@ -218,23 +207,7 @@ void FileListFrame::updateProgress(const QString& path, const qint64 percent)
   Q_ASSERT(pimpl);
   Q_ASSERT(pimpl->fileListModel);
 
-  QFileInfo fileInfo{path};
-  QDir directory{fileInfo.dir()};
-
-  QString fileName;
-
-  if (directory.isRoot())
-  {
-    fileName = fileInfo.absoluteFilePath();
-  }
-  else
-  {
-    fileName = directory.rootPath() % QLatin1String{"..."} %
-               QLatin1String{"/"} % directory.dirName() % QLatin1String{"/"} %
-               fileInfo.fileName();
-  }
-
-  const auto items = pimpl->fileListModel->findItems(fileName);
+  const auto items = pimpl->fileListModel->findItems(path);
 
   if (items.size() > 0)
   {
