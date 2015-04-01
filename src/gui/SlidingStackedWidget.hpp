@@ -40,13 +40,13 @@ class SlidingStackedWidget : public QStackedWidget {
 
   void slideInNext();
   void slideInPrev();
-  void slideInIndex(int index, Direction direction = Automatic);
+  void slideInIndex(const int index, const Direction direction = Automatic);
 
  private slots:
   void animationDone();
 
  private:
-  void slideInWidget(QWidget* widget, Direction wrapDirection);
+  void slideInWidget(QWidget* widget, const Direction direction);
   void stopAnimation();
 
   class SlidingStackedWidgetPrivate;

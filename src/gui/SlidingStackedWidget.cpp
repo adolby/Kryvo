@@ -82,23 +82,25 @@ void SlidingStackedWidget::slideInPrev()
   }
 }
 
-void SlidingStackedWidget::slideInIndex(int index, Direction direction)
+void SlidingStackedWidget::slideInIndex(const int index,
+                                        const Direction direction)
 {
-  stopAnimation();
+  auto updatedIndex = index;
+  auto updatedDirection = direction;
 
   // Bound index and direction to stack
   if (index > count() - 1)
   {
-    direction = pimpl->vertical ? TopToBottom : RightToLeft;
-    index = index % count();
+    updatedDirection = pimpl->vertical ? TopToBottom : RightToLeft;
+    updatedIndex = index % count();
   }
   else if (index < 0)
   {
-    direction = pimpl->vertical ? BottomToTop : LeftToRight;
-    index = (index + count()) % count();
+    updatedDirection = pimpl->vertical ? BottomToTop : LeftToRight;
+    updatedIndex = (index + count()) % count();
   }
 
-  slideInWidget(widget(index), direction);
+  slideInWidget(widget(updatedIndex), updatedDirection);
 }
 
 void SlidingStackedWidget::animationDone()
@@ -112,27 +114,25 @@ void SlidingStackedWidget::animationDone()
 }
 
 void SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
-                                         Direction direction)
+                                         const Direction direction)
 {
   auto currentIdx = currentIndex();
   auto nextIdx = indexOf(nextWidget);
 
   if (currentIdx != nextIdx)
   {
-    Direction directionHint;
+    auto directionHint = direction;
 
-    if (currentIdx < nextIdx)
+    if (directionHint == Automatic)
     {
-      directionHint = pimpl->vertical ? TopToBottom : RightToLeft;
-    }
-    else
-    {
-      directionHint = pimpl->vertical ? BottomToTop : LeftToRight;
-    }
-
-    if (direction == Automatic)
-    {
-      direction = directionHint;
+      if (currentIdx < nextIdx)
+      {
+        directionHint = pimpl->vertical ? TopToBottom : RightToLeft;
+      }
+      else
+      {
+        directionHint = pimpl->vertical ? BottomToTop : LeftToRight;
+      }
     }
 
     auto offsetX = frameRect().width();
@@ -145,21 +145,21 @@ void SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
     // sliding in for the first time
     nextWidget->setGeometry(0, 0, offsetX, offsetY);
 
-    if (direction == TopToBottom)
+    if (directionHint == TopToBottom)
     {
       offsetX = 0;
       offsetY = -offsetY;
     }
-    else if (direction == TopToBottom)
+    else if (directionHint == TopToBottom)
     {
       offsetX = 0;
     }
-    else if (direction == RightToLeft)
+    else if (directionHint == RightToLeft)
     {
       offsetX = -offsetX;
       offsetY = 0;
     }
-    else if (direction == LeftToRight)
+    else if (directionHint == LeftToRight)
     {
       offsetY = 0;
     }
