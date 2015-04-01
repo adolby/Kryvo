@@ -18,25 +18,25 @@
  * Contact : andrewdolby@gmail.com
  */
 
-#ifndef KRYVOS_GUI_DELEGATE_HPP_
-#define KRYVOS_GUI_DELEGATE_HPP_
+#ifndef KRYVOS_GUI_FILELISTDELEGATE_HPP__
+#define KRYVOS_GUI_FILELISTDELEGATE_HPP__
 
 #include <QtWidgets/QStyledItemDelegate>
 #include <QtCore/QSize>
 
 /*!
- * \brief The Delegate class augments the view to display a progress bar and to
+ * \brief The FileListDelegate class augments the view to display a progress bar and to
  * remove the focus border.
  */
-class Delegate : public QStyledItemDelegate {
+class FileListDelegate : public QStyledItemDelegate {
   Q_OBJECT
 
  public:
   /*!
-   * \brief Delegate Constructs a delegate that augments a view.
+   * \brief FileListDelegate Constructs a delegate that augments a view.
    * \param parent Object parent of this delegate
    */
-  explicit Delegate(QObject* parent = nullptr);
+  explicit FileListDelegate(QObject* parent = nullptr);
 
  signals:
   /*!
@@ -91,4 +91,4 @@ class Delegate : public QStyledItemDelegate {
   bool focusBorderEnabled;
 };
 
-#endif // KRYVOS_GUI_DELEGATE_HPP_
+#endif // KRYVOS_GUI_FILELISTDELEGATE_HPP__

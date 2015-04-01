@@ -18,21 +18,21 @@
  * Contact : andrewdolby@gmail.com
  */
 
-#include "gui/Delegate.hpp"
+#include "gui/FileListDelegate.hpp"
 #include <QtWidgets/QApplication>
 #include <QtGui/QMouseEvent>
 #include <QtCore/QEvent>
 
-Delegate::Delegate(QObject* parent)
+FileListDelegate::FileListDelegate(QObject* parent)
   : QStyledItemDelegate{parent}, focusBorderEnabled{false}
 {}
 
-void Delegate::setFocusBorderEnabled(bool enabled)
+void FileListDelegate::setFocusBorderEnabled(bool enabled)
 {
   focusBorderEnabled = enabled;
 }
 
-void Delegate::initStyleOption(QStyleOptionViewItem* option,
+void FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
                                const QModelIndex& index) const
 {
   QStyledItemDelegate::initStyleOption(option, index);
@@ -43,7 +43,7 @@ void Delegate::initStyleOption(QStyleOptionViewItem* option,
   }
 }
 
-void Delegate::paint(QPainter* painter,
+void FileListDelegate::paint(QPainter* painter,
                      const QStyleOptionViewItem& option,
                      const QModelIndex& index) const
 {
@@ -53,7 +53,11 @@ void Delegate::paint(QPainter* painter,
   {
     case 0:
     {
-      QStyledItemDelegate::paint(painter, option, index);
+      auto elidedOption = option;
+      elidedOption.textElideMode = Qt::ElideMiddle;
+
+      QStyledItemDelegate::paint(painter, elidedOption, index);
+
       break;
     }
     case 1:
@@ -109,7 +113,7 @@ void Delegate::paint(QPainter* painter,
   }
 }
 
-bool Delegate::editorEvent(QEvent* event,
+bool FileListDelegate::editorEvent(QEvent* event,
                            QAbstractItemModel* model,
                            const QStyleOptionViewItem& option,
                            const QModelIndex& index)

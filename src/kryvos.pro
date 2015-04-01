@@ -14,7 +14,7 @@ SOURCES += \
   gui/SettingsFrame.cpp \
   gui/HeaderFrame.cpp \
   gui/FileListFrame.cpp \
-  gui/Delegate.cpp \
+  gui/FileListDelegate.cpp \
   gui/MessageFrame.cpp \
   gui/PasswordFrame.cpp \
   gui/ControlButtonFrame.cpp \
@@ -32,7 +32,7 @@ HEADERS += \
   gui/SettingsFrame.hpp \
   gui/HeaderFrame.hpp \
   gui/FileListFrame.hpp \
-  gui/Delegate.hpp \
+  gui/FileListDelegate.hpp \
   gui/MessageFrame.hpp \
   gui/PasswordFrame.hpp \
   gui/ControlButtonFrame.hpp \
@@ -54,7 +54,6 @@ android-g++ {
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
 
   OTHER_FILES += android/AndroidManifest.xml
-
 } else:ios {
   message(iOS)
   SOURCES += cryptography/botan/ios/botan_all.cpp \
