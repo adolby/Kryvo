@@ -134,6 +134,13 @@ void FileListFrame::clear()
   const QStringList headerList = {tr("File"), tr("Progress"),
                                   tr("Remove file")};
   pimpl->fileListModel->setHorizontalHeaderLabels(headerList);
+
+  QHeaderView* header = pimpl->fileListView->horizontalHeader();
+  header->setStretchLastSection(false);
+  header->setDefaultSectionSize(130);
+  header->resizeSection(0, 600);
+  header->resizeSection(1, 130);
+  header->resizeSection(2, 80);
 }
 
 void FileListFrame::addFileToModel(const QString& path)
