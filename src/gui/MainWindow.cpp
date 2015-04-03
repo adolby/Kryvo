@@ -90,10 +90,6 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   // Store settings object
   pimpl->settings = settings;
 
-//  auto mainFrame = new QFrame{this};
-//  mainFrame->setObjectName("mainFrame");
-//  auto mainLayout = new QVBoxLayout{mainFrame};
-
   auto slidingStackedWidget = new SlidingStackedWidget{this};
 
   auto contentFrame = new QFrame{slidingStackedWidget};
@@ -139,7 +135,6 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
 
   slidingStackedWidget->addWidget(settingsFrame);
 
-//  mainLayout->addWidget(slidingStackedWidget);
   this->setCentralWidget(slidingStackedWidget);
 
   // Sliding stacked widget connections

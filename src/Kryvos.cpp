@@ -118,14 +118,14 @@ Kryvos::~Kryvos()
   }
 }
 
-Kryvos::KryvosPrivate::KryvosPrivate() :
-  settings{make_unique<Settings>()},
-  #if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
-  gui{make_unique<TouchMainWindow>(settings.get())},
-  #else
-  gui{make_unique<DesktopMainWindow>(settings.get())},
-  #endif
-  cryptography{make_unique<Crypto>()},
-  cipherThread{make_unique<QThread>()} {}
+Kryvos::KryvosPrivate::KryvosPrivate()
+  : settings{make_unique<Settings>()},
+    #if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+    gui{make_unique<TouchMainWindow>(settings.get())},
+    #else
+    gui{make_unique<DesktopMainWindow>(settings.get())},
+    #endif
+    cryptography{make_unique<Crypto>()},
+    cipherThread{make_unique<QThread>()} {}
 
 Kryvos::KryvosPrivate::~KryvosPrivate() {}
