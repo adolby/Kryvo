@@ -18,8 +18,8 @@
  * Contact : andrewdolby@gmail.com
  */
 
-#ifndef KRYVOS_GUI_FILELISTDELEGATE_HPP__
-#define KRYVOS_GUI_FILELISTDELEGATE_HPP__
+#ifndef KRYVOS_GUI_FILELISTDELEGATE_HPP_
+#define KRYVOS_GUI_FILELISTDELEGATE_HPP_
 
 #include <QtWidgets/QStyledItemDelegate>
 #include <QtCore/QSize>
