@@ -46,6 +46,7 @@ HEADERS += \
 # Platform-specific configuration
 android-g++ {
   message(Android G++)
+
   SOURCES += cryptography/botan/android/botan_all.cpp \
              gui/TouchMainWindow.cpp
   HEADERS += cryptography/botan/android/botan_all.h \
@@ -54,12 +55,27 @@ android-g++ {
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
 
   OTHER_FILES += android/AndroidManifest.xml
+
+  debug {
+    DESTDIR = ../build/android/x64/debug/
+  }
+  release {
+    DESTDIR = ../build/android/x64/release/
+  }
 } else:ios {
   message(iOS)
+
   SOURCES += cryptography/botan/ios/botan_all.cpp \
              gui/TouchMainWindow.cpp
   HEADERS += cryptography/botan/ios/botan_all.h \
              gui/TouchMainWindow.hpp
+
+  debug {
+    DESTDIR = ../build/ios/debug/
+  }
+  release {
+    DESTDIR = ../build/ios/release/
+  }
 } else { # Desktop OS
   SOURCES += gui/DesktopMainWindow.cpp
   HEADERS += gui/DesktopMainWindow.hpp
@@ -71,42 +87,86 @@ android-g++ {
       message(Linux G++ 64)
       SOURCES += cryptography/botan/linux/x86_64/botan_all.cpp
       HEADERS += cryptography/botan/linux/x86_64/botan_all.h
+
+      debug {
+        DESTDIR = ../build/linux/x64/debug/
+      }
+      release {
+        DESTDIR = ../build/linux/x64/release/
+      }
     }
 
     linux-g++-32 {
       message(Linux G++ 32)
+
       SOURCES += cryptography/botan/linux/x86/botan_all.cpp
       HEADERS += cryptography/botan/linux/x86/botan_all.h
-    }
-  }
+
+      debug {
+        DESTDIR = ../build/linux/x86/debug/
+      }
+      release {
+        DESTDIR = ../build/linux/x86/release/
+      }
+    } # End linux-g++-32
+  } # End Linux
 
   macx {
     message(OSX)
+
     #CONFIG += x86
     CONFIG -= c++14
     CONFIG += c++11
+
     SOURCES += cryptography/botan/mac/x86_64/botan_all.cpp
     HEADERS += cryptography/botan/mac/x86_64/botan_all.h
+
     QMAKE_MAC_SDK = macosx10.9
     ICON = resources/mac/icon/Kryvos.icns
+
+    debug {
+      DESTDIR = ../build/macx/x86/debug/
+    }
+    release {
+      DESTDIR = ../build/macx/x86/release/
+    }
   }
 
   win32 {
     win32-g++ {
       contains(QT_ARCH, x86_64) {
         message(Windows x64 G++)
+
         SOURCES += cryptography/botan/windows/x64/botan_all.cpp
         HEADERS += cryptography/botan/windows/x64/botan_all.h
+
+        debug {
+          DESTDIR = ../build/win/x64/debug/
+        }
+        release {
+          DESTDIR = ../build/win/x64/release/
+        }
       } else {
         message(Windows x86 G++)
         SOURCES += cryptography/botan/windows/x86/botan_all.cpp
         HEADERS += cryptography/botan/windows/x86/botan_all.h
-      }
-    }
+
+        debug {
+          DESTDIR = ../build/macx/x86/debug/
+        }
+        release {
+          DESTDIR = ../build/macx/x86/release/
+        }
+      } # contains(QT_ARCH, x86_64)
+    } # win32-g++
 
     RC_FILE = resources/windows/rc/kryvos.rc
-  }
-}
+  } # End win32
+} # End desktop
+
+OBJECTS_DIR = $$DESTDIR/obj
+MOC_DIR = $$DESTDIR/moc
+RCC_DIR = $$DESTDIR/qrc
 
 RESOURCES += resources/kryvos.qrc
 
