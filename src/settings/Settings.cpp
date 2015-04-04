@@ -22,6 +22,7 @@
 #include "utility/make_unique.h"
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
+#include <QtCore/QSaveFile>
 #include <QtCore/QFile>
 
 class Settings::SettingsPrivate {
@@ -51,6 +52,8 @@ class Settings::SettingsPrivate {
   QString mode;
   QString lastDirectory;
   QString styleSheetPath;
+  int fileColumnWidth;
+  int progressColumnWidth;
 };
 
 Settings::Settings()
@@ -169,8 +172,37 @@ QString Settings::styleSheetPath() const
   return pimpl->styleSheetPath;
 }
 
+void Settings::fileColumnWidth(const int fileColumnWidth)
+{
+  Q_ASSERT(pimpl);
+
+  pimpl->fileColumnWidth = fileColumnWidth;
+}
+
+int Settings::fileColumnWidth() const
+{
+  Q_ASSERT(pimpl);
+
+  return pimpl->fileColumnWidth;
+}
+
+void Settings::progressColumnWidth(const int progressColumnWidth)
+{
+  Q_ASSERT(pimpl);
+
+  pimpl->progressColumnWidth = progressColumnWidth;
+}
+
+int Settings::progressColumnWidth() const
+{
+  Q_ASSERT(pimpl);
+
+  return pimpl->progressColumnWidth;
+}
+
 Settings::SettingsPrivate::SettingsPrivate()
-  : maximized{false}, keySize{128}
+  : maximized{false}, keySize{128}, fileColumnWidth{0},
+    progressColumnWidth{0}
 {}
 
 void Settings::SettingsPrivate::importSettings()
@@ -211,8 +243,16 @@ void Settings::SettingsPrivate::importSettings()
     auto modeObject = static_cast<QJsonValue>(settings["modeOfOperation"]);
     mode = modeObject.toString("GCM");
 
-    auto style = static_cast<QJsonValue>(settings["styleSheetPath"]);
-    styleSheetPath = style.toString("default/kryvos.qss");
+    auto styleObject = static_cast<QJsonValue>(settings["styleSheetPath"]);
+    styleSheetPath = styleObject.toString("default/kryvos.qss");
+
+    auto fileColumnObject = static_cast<QJsonValue>
+                            (settings["fileColumnWidth"]);
+    fileColumnWidth = fileColumnObject.toInt();
+
+    auto progressColumnObject = static_cast<QJsonValue>
+                          (settings["progressColumnWidth"]);
+    progressColumnWidth = progressColumnObject.toInt();
   }
   else
   { // Settings file couldn't be opened, so use defaults
@@ -222,12 +262,15 @@ void Settings::SettingsPrivate::importSettings()
     keySize = 128;
     mode = "GCM";
     styleSheetPath = "default/kryvos.qss";
+    fileColumnWidth = 0;
+    progressColumnWidth = 0;
   }
 }
 
 void Settings::SettingsPrivate::exportSettings() const
 {
-  QFile settingsFile{"settings.json"};
+  QSaveFile settingsFile{"settings.json"};
+  settingsFile.setDirectWriteFallback(true);
   auto fileOpen = settingsFile.open(QIODevice::WriteOnly);
 
   if (fileOpen)
@@ -254,8 +297,12 @@ void Settings::SettingsPrivate::exportSettings() const
     settings["keySize"] = static_cast<int>(keySize);
     settings["modeOfOperation"] = mode;
     settings["styleSheetPath"] = styleSheetPath;
+    settings["fileColumnWidth"] = fileColumnWidth;
+    settings["progressColumnWidth"] = progressColumnWidth;
 
     auto settingsDoc = QJsonDocument{settings};
     settingsFile.write(settingsDoc.toJson());
   }
+
+  settingsFile.commit();
 }

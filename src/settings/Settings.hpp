@@ -128,6 +128,14 @@ class Settings {
    */
   QString styleSheetPath() const;
 
+  void fileColumnWidth(const int fileColumnWidth);
+
+  int fileColumnWidth() const;
+
+  void progressColumnWidth(const int progressColumnWidth);
+
+  int progressColumnWidth() const;
+
  private:
   class SettingsPrivate;
   std::unique_ptr<SettingsPrivate> pimpl;
