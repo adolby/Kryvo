@@ -129,6 +129,8 @@ android-g++ {
         DESTDIR = ../build/linux/x86/release/
       }
     } # End linux-g++-32
+
+    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
   } # End Linux
 
   macx {
