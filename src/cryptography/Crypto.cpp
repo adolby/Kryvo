@@ -27,11 +27,12 @@
 #include <QtCore/QHash>
 #include <QtCore/QStringRef>
 #include <QtCore/QStringBuilder>
+#include <string>
 
 #if defined(Q_OS_ANDROID)
 namespace std {
 
-long long stoll(const string& str)
+int64_t stoll(const string& str)
 {
   return strtoll(str.c_str(), nullptr, 10);
 }
@@ -44,7 +45,7 @@ class Crypto::CryptoPrivate {
   /*!
    * \brief CryptoPrivate Constructs the Crypto private implementation.
    */
-  explicit CryptoPrivate();
+  CryptoPrivate();
 
   /*!
    * \brief removeExtension Attempts to return the file name string input

@@ -52,7 +52,7 @@ class MainWindow::MainWindowPrivate {
    * \brief MainWindowPrivate Constructs the MainWindow private implementation.
    * Initializes widgets, layouts, and settings.
    */
-  explicit MainWindowPrivate();
+  MainWindowPrivate();
 
   /*!
    * \brief busy Sets the busy status received from the cipher operation.

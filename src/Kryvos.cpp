@@ -42,7 +42,7 @@ class Kryvos::KryvosPrivate {
    * contains the GUI and the cryptography object that interfaces with Botan.
    * Initializes the cryptography work thread.
    */
-  explicit KryvosPrivate();
+  KryvosPrivate();
 
   /*!
    * \brief ~KryvosPrivate Destroys the Kryvos private implementation.

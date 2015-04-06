@@ -32,7 +32,7 @@ class MessageFrame::MessageFramePrivate {
    * \brief MessageFramePrivate Constructs the MessageFrame private
    * implementation.
    */
-  explicit MessageFramePrivate();
+  MessageFramePrivate();
 
   QPlainTextEdit* messageTextEdit;
 };

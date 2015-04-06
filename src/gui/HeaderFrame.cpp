@@ -34,7 +34,7 @@ class HeaderFrame::HeaderFramePrivate {
    * \brief HeaderFramePrivate Constructs the HeaderFrame private
    * implementation.
    */
-  explicit HeaderFramePrivate();
+  HeaderFramePrivate();
 
   QPushButton* pauseButton;
   QPushButton* addFilesButton;

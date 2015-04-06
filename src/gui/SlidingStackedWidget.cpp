@@ -32,7 +32,7 @@ class SlidingStackedWidget::SlidingStackedWidgetPrivate {
    * \brief SlidingStackedWidgetPrivate Constructs the SlidingStackedWidgetFrame
    * private implementation.
    */
-  explicit SlidingStackedWidgetPrivate();
+  SlidingStackedWidgetPrivate();
   virtual ~SlidingStackedWidgetPrivate();
 
   int speed;
