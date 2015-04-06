@@ -1,4 +1,4 @@
-#Kryvos 0.9.8 [![Build Status](http://162.244.31.87:8080/buildStatus/icon?job=Kryvos)](http://162.244.31.87:8080/)
+#Kryvos 0.9.8 [![Build Status](http://162.244.31.87:8080/buildStatus/icon?job=Kryvos)](http://162.244.31.87:8080/job/Kryvos/)
 
 Kryvos is an open-source file encryptor and decryptor. It encrypts files with AES and Serpent using the Botan cryptography library.
 
