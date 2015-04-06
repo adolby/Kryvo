@@ -40,7 +40,7 @@ class FileListFrame::FileListFramePrivate {
    * \brief FileListFramePrivate Constructs the FileListFrame private
    * implementation.
    */
-  explicit FileListFramePrivate();
+  FileListFramePrivate();
 
   /*!
    * \brief addFileToModel Adds a file to the file list model.
@@ -151,8 +151,6 @@ void FileListFrame::addFileToModel(const QString& path)
 
   if (fileInfo.exists() && fileInfo.isFile())
   { // If the file exists, add it to the model
-    //const QString filePath = fileInfo.absoluteFilePath();
-
     auto pathItem = new QStandardItem{path};
     pathItem->setDragEnabled(false);
     pathItem->setDropEnabled(false);

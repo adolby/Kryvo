@@ -35,8 +35,7 @@
  * application when a desktop display is the primary display for the operating
  * system.
  */
-class DesktopMainWindow : public MainWindow
-{
+class DesktopMainWindow : public MainWindow {
  public:
   /*!
    * \brief DesktopMainWindow Constructs the application's main window for

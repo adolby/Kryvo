@@ -29,7 +29,7 @@
 
 class SlideSwitch::SlideSwitchPrivate {
  public:
-  explicit SlideSwitchPrivate();
+  SlideSwitchPrivate();
 
   QPixmap background;
   QPixmap knobDisabled;
@@ -52,7 +52,7 @@ class SlideSwitch::SlideSwitchPrivate {
 
 SlideSwitch::SlideSwitch(QWidget* parent)
   : QAbstractButton(parent), pimpl{make_unique<SlideSwitchPrivate>()}
-{ 
+{
   setCheckable(true);
   setChecked(false);
 

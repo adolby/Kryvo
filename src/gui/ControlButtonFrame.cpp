@@ -32,9 +32,8 @@ class ControlButtonFrame::ControlButtonFramePrivate {
    * \brief ControlButtonFramePrivate Constructs the ControlButtonFrame private
    * implementation.
    */
-  explicit ControlButtonFramePrivate();
+  ControlButtonFramePrivate();
 
- public:
   QPushButton* encryptButton;
   QPushButton* decryptButton;
 };

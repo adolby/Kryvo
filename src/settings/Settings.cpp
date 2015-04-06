@@ -29,7 +29,7 @@
 
 class Settings::SettingsPrivate {
  public:
-  explicit SettingsPrivate();
+  SettingsPrivate();
 
   /*!
    * \brief importSettings Imports settings from the local settings file:
