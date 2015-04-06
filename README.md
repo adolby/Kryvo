@@ -27,7 +27,7 @@ Qt source code is available at http://qt.gitorious.org/qt.
 
 If you'd like to contribute to Kryvos, you can check the project out on GitHub and submit a pull request. To build Kryvos, you'll need Qt 5.2 (or later) and Botan 1.11 (or later). Development is performed primarily in Qt Creator with GCC 4.9.2 on Ubuntu and Windows (with MinGW for x86 and MinGW-w64 for x64 builds) and Clang (packaged with Xcode 6) on Mac OS X.
 
-Amalgamation configurations of Botan are included in the source tree to make the build setup easier. Android requires a small patch that implements std::string to_string(), which is missing from the NDK STL. The patch, android_to_string.hpp, is included by botan_all.h. Both files are located at src/cryptography/botan/android/. The configuration commands used to generate a minimal Botan amalgamation follows for each platform:
+Amalgamation configurations of Botan are included in the source tree to simplify the build setup. Android requires a small patch that implements std::string to_string(), which is missing from the NDK STL. The patch, android_to_string.hpp, is included by botan_all.h. Both files are located at src/cryptography/botan/android/. The configuration commands used to generate a minimal Botan amalgamation follows for each platform:
 
 ###Android (ARM)
 python configure.py --cpu=armv5te --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
