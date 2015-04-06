@@ -40,7 +40,8 @@ class TouchMainWindow : public MainWindow
    * \param settings Settings object
    * \param parent Widget parent
    */
-  TouchMainWindow(Settings* settings = nullptr, QWidget* parent = nullptr);
+  explicit TouchMainWindow(Settings* settings = nullptr,
+                           QWidget* parent = nullptr);
 
   /*!
    * \brief ~TouchMainWindow Destroys the application's main window for

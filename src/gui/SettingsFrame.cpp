@@ -44,7 +44,7 @@ class SettingsFrame::SettingsFramePrivate {
    * \brief SettingsFramePrivate Constructs the settings frame private
    * implementation.
    */
-  explicit SettingsFramePrivate();
+  SettingsFramePrivate();
 
   QString splitToolTip(const QString& text, const int width);
 

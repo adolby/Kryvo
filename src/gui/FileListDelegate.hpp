@@ -93,4 +93,4 @@ class FileListDelegate : public QStyledItemDelegate {
   bool focusBorderEnabled;
 };
 
-#endif // KRYVOS_GUI_FILELISTDELEGATE_HPP__
+#endif // KRYVOS_GUI_FILELISTDELEGATE_HPP_
