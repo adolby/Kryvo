@@ -155,6 +155,8 @@ android-g++ {
   }
 
   win32 {
+    RC_ICONS += resources/windows/icon/kryvos.ico
+
     win32-g++ {
       contains(QT_ARCH, x86_64) {
         message(Windows x64 G++)
@@ -174,15 +176,13 @@ android-g++ {
         HEADERS += cryptography/botan/windows/x86/botan_all.h
 
         debug {
-          DESTDIR = ../build/macx/x86/debug/
+          DESTDIR = ../build/win/x86/debug/
         }
         release {
-          DESTDIR = ../build/macx/x86/release/
+          DESTDIR = ../build/win/x86/release/
         }
-      } # contains(QT_ARCH, x86_64)
-    } # win32-g++
-
-    RC_FILE = resources/windows/rc/kryvos.rc
+      }
+    }
   } # End win32
 } # End desktop
 
