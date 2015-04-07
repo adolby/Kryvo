@@ -60,7 +60,7 @@ Component.prototype.createOperations = function()
     }
 
     if (installer.value("os") === "win") {
-        component.addOperation("CreateShortcut", "@TargetDir@/kryvos.exe", "@StartMenuDir@/Kryvos.lnk");
+        component.addOperation("CreateShortcut", "@TargetDir@/Kryvos.exe", "@StartMenuDir@/Kryvos.lnk");
         component.addOperation("CreateShortcut", "@TargetDir@/uninstall.exe", "@StartMenuDir@/Uninstall Kryvos.lnk");
     }
 }
