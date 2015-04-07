@@ -1,2 +1,5 @@
+v0.9.8
+- Improved the graphical user interface: added a settings page, added animation to settings page switch, improved the file list area.
+
 v0.9.6
-- Added support for Android and OSX. The file view previously showed full file paths, and they are now shortened to just the directory and filename.
+- Added support for Android and Mac OS X. The file view previously showed full file paths, and they are now shortened to just the directory and filename.
