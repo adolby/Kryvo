@@ -101,7 +101,7 @@ android-g++ {
   HEADERS += gui/DesktopMainWindow.hpp
 
   linux {
-    message(Linux)
+    #message(Linux)
 
     linux-g++-64 {
       message(Linux G++ 64)
@@ -134,9 +134,9 @@ android-g++ {
   } # End Linux
 
   macx {
-    message(OSX)
+    message(OS X)
 
-    #CONFIG += x86
+    CONFIG += x86
     CONFIG -= c++14
     CONFIG += c++11
 
@@ -155,8 +155,6 @@ android-g++ {
   }
 
   win32 {
-    RC_ICONS += resources/windows/icon/kryvos.ico
-
     win32-g++ {
       contains(QT_ARCH, x86_64) {
         message(Windows x64 G++)
@@ -183,6 +181,8 @@ android-g++ {
         }
       }
     }
+
+    RC_ICONS += resources/windows/icon/kryvos.ico
   } # End win32
 } # End desktop
 
