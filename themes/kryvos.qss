@@ -1,164 +1,186 @@
-/*
-    Kryvos File Encryptor - Encrypts and decrypts files.
-    Copyright (C) 2014 Andrew Dolby
+/**
+ * Kryvos - Encrypts and decrypts files.
+ * Copyright (C) 2014, 2015 Andrew Dolby
+ *
+ * This file is part of Kryvos.
+ *
+ * Kryvos is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Kryvos is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Kryvos.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Contact : andrewdolby@gmail.com
+ */
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+/*--------- Main window ---------*/
+QMainWindow {
+  background-color: black;
+  margin: 0;
+  padding: 0;
+}
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+/*--------- Layout containers ---------*/
+QFrame#mainFrame {
+  background-color: #ecf0f1;
+  margin: 0;
+  padding: 0;
+}
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+QFrame#contentFrame {
+  background-color: #2c3e50;
+  border-radius: 10px;
+  margin: 10px;
+}
 
-    Contact : andrewdolby@gmail.com
-*/
+QFrame#settingsFrame {
+  background-color: #2c3e50;
+  border-radius: 10px;
+  margin: 10px;
+}
 
-    /*--------- Main window ---------*/
-    QMainWindow {
-        background-color: black;
-        margin: 0;
-        padding: 0;
-    }
+QFrame#settingsSubFrame {
+  border-color: white;
+  border-style: solid;
+  border-width: 2px;
+  border-radius: 5px;
+}
 
-    /*--------- Layout containers ---------*/
-    QFrame#mainFrame {
-        background-color: #ecf0f1;
-        margin: 0;
-        padding: 0;
-    }
+/*--------- Buttons ---------*/
+#pauseButton {
+  color: white;
+  background-color: #2980b9;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
 
-    QFrame#headerFrame {
-        background-color: #34495e;
-    }
+#pauseButton:checked {
+  background-color: #3498db;
+}
 
-    QFrame#contentFrame {
-        background-color: #34495e;
-        border-radius: 10px;
-    }
+#addButton {
+  color: white;
+  background-color: #27ae60;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
 
-    QFrame#passwordFrame {
-        background-color: #2980b9;
-        border-color: #2980b9;
-        border-width: 2px;
-    }
+#addButton:pressed {
+  background-color: #2ecc71;
+}
 
-    QFrame#buttonFrame {
-        background-color: #27ae60;
-        border-color: #2980b9;
-        border-width: 2px;
-    }
+#clearButton {
+  color: white;
+  background-color: #c0392b;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
 
-    /*--------- Buttons ---------*/
-    #cryptButton {
-        color: white;
-        background-color: #2980b9;
-        font-size: 21px;
-        padding: 10px 20px 10px 20px;
-        border: none;
-        border-radius: 5px;
-    }
+#clearButton:pressed {
+  background-color: #e74c3c;
+}
 
-    #cryptButton:pressed {
-        background-color: #3498db;
-    }
+#cryptButton {
+  color: white;
+  background-color: #2980b9;
+  font-size: 21px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
 
-    #controlButton {
-        font-size: 20px;
-    }
+#cryptButton:pressed {
+  background-color: #3498db;
+}
 
-    #controlButton:checked {
-        background-color: #3498db;
-    }
+#settingsButton {
+  color: white;
+  background-color: #7f8c8d;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
 
-    #addButton {
-        color: white;
-        background-color: #27ae60;
-        font-size: 20px;
-        padding: 10px 20px 10px 20px;
-        border: none;
-        border-radius: 5px;
-    }
+#settingsButton:pressed {
+  background-color: #95a5a6;
+}
 
-    #addButton:pressed {
-        background-color: #2ecc71;
-    }
+#backButton {
+  color: white;
+  background-color: #8e44ad;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
 
-    #clearButton {
-        color: white;
-        background-color: #c0392b;
-        font-size: 20px;
-        padding: 10px 20px 10px 20px;
-        border: none;
-        border-radius: 5px;
-    }
+#backButton:pressed {
+  background-color: #9b59b6;
+}
 
-    #clearButton:pressed {
-        background-color: #e74c3c;
-    }
+/*--------- Password Line Edit ---------*/
+QLineEdit#passwordLineEdit {
+  font-size: 20px;
+}
 
-    #pauseButton {
-        color: white;
-        background-color: #2980b9;
-        font-size: 20px;
-        padding: 10px 20px 10px 20px;
-        border: none;
-        border-radius: 5px;
-    }
+/*--------- Text ---------*/
+QLabel#text {
+  color: white;
+  font-size: 20px;
+}
 
-    #pauseButton:checked {
-        background-color: #3498db;
-    }
+QLabel#headerText {
+  color: #fab52a;
+  font-size: 38px;
+}
 
-    /*--------- Password Line Edit ---------*/
-    QLineEdit#passwordLineEdit {
-        font-size: 20px;
-    }
+#message {
+  color: white;
+  background-color: #4b77be;
+  font-size: 18px;
+  border: none;
+}
 
-    /*--------- Text ---------*/
-    QLabel#text {
-        color: white;
-        font-size: 20px;
-    }
+QComboBox#settingsComboBox {
+  font-size: 20px;
+}
 
-    QLabel#headerText {
-        color: #fab52a;
-        font-size: 48px;
-    }
+/*--------- File list view ---------*/
+QTableView {
+  font-size: 20px;
+}
 
-    #message {
-        color: white;
-        background-color: #4b77be;
-        font-size: 18px;
-        border: none;
-    }
+QTableView::item {
+  border: 0px;
+  padding-left: 5px;
+  padding-right: 10px;
+}
 
-    /*--------- File list view ---------*/
-    QTableView {
-        font-size: 20px;
-    }
+QTableView::item:selected:!active {
+  color: black;
+  background-color: white;
+}
 
-    QTableView::item {
-        border: 0px;
-        padding-left: 5px;
-        padding-right: 10px;
-    }
+QTableView::item:selected:active {
+  color: black;
+  background-color: white;
+}
 
-    QTableView::item:selected:!active {
-        color: black;
-        background-color: white;
-    }
-
-    QTableView::item:selected:active {
-        color: black;
-        background-color: white;
-    }
-
-    QTableView::item:hover {
-        color: black;
-        background-color: white;
-    }
+QTableView::item:hover {
+  color: black;
+  background-color: white;
+}
