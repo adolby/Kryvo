@@ -48,36 +48,37 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   : QFrame{parent}, pimpl{make_unique<HeaderFramePrivate>()}
 {
   auto headerLabel = new QLabel{tr("Kryvos"), this};
-  headerLabel->setObjectName("headerText");
+  headerLabel->setObjectName(QStringLiteral("headerText"));
 
   auto buttonFrame = new QFrame{this};
 
-  const auto pauseIcon = QIcon{":/images/pauseIcon.png"};
+  const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
   pimpl->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), this};
-  pimpl->pauseButton->setObjectName("pauseButton");
+  pimpl->pauseButton->setObjectName(QStringLiteral("pauseButton"));
   pimpl->pauseButton->setCheckable(true);
   pimpl->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const auto addFilesIcon = QIcon{":/images/addFilesIcon.png"};
+  const auto addFilesIcon = QIcon{QStringLiteral(":/images/addFilesIcon.png")};
   pimpl->addFilesButton = new QPushButton{addFilesIcon,
                                           tr(" Add files"),
                                           this};
-  pimpl->addFilesButton->setObjectName("addButton");
+  pimpl->addFilesButton->setObjectName(QStringLiteral("addButton"));
   pimpl->addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const auto clearFilesIcon = QIcon{":/images/clearFilesIcon.png"};
+  const auto clearFilesIcon =
+      QIcon{QStringLiteral(":/images/clearFilesIcon.png")};
   pimpl->clearFilesButton = new QPushButton{clearFilesIcon,
                                             tr(" Remove all files"),
                                             this};
-  pimpl->clearFilesButton->setObjectName("clearButton");
+  pimpl->clearFilesButton->setObjectName(QStringLiteral("clearButton"));
   pimpl->clearFilesButton->setSizePolicy(QSizePolicy::Fixed,
                                          QSizePolicy::Fixed);
 
-  const auto settingsIcon = QIcon{":/images/gearIcon.png"};
+  const auto settingsIcon = QIcon{QStringLiteral(":/images/gearIcon.png")};
   pimpl->settingsButton = new QPushButton{settingsIcon,
                                           tr(" Settings"),
                                           this};
-  pimpl->settingsButton->setObjectName("settingsButton");
+  pimpl->settingsButton->setObjectName(QStringLiteral("settingsButton"));
   pimpl->settingsButton->setSizePolicy(QSizePolicy::Fixed,
                                        QSizePolicy::Fixed);
 
@@ -114,15 +115,15 @@ void HeaderFrame::togglePauseIcon(const bool toggle)
 
   if (toggle)
   {
-    const auto resumeIcon = QIcon{":/images/resumeIcon.png"};
+    const auto resumeIcon = QIcon{QStringLiteral(":/images/resumeIcon.png")};
     pimpl->pauseButton->setIcon(resumeIcon);
-    pimpl->pauseButton->setText(" Resume");
+    pimpl->pauseButton->setText(tr(" Resume"));
   }
   else
   {
-    const auto pauseIcon = QIcon{":/images/pauseIcon.png"};
+    const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
     pimpl->pauseButton->setIcon(pauseIcon);
-    pimpl->pauseButton->setText(" Pause");
+    pimpl->pauseButton->setText(tr(" Pause"));
   }
 }
 

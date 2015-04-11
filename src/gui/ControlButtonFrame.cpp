@@ -43,20 +43,20 @@ ControlButtonFrame::ControlButtonFrame(QWidget* parent)
 {
   const QSize iconSize{19, 19};
 
-  const auto lockIcon = QIcon{":/images/lockIcon.png"};
+  const auto lockIcon = QIcon{QStringLiteral(":/images/lockIcon.png")};
   pimpl->encryptButton = new QPushButton{lockIcon,
                                        tr(" Encrypt"),
                                        this};
   pimpl->encryptButton->setIconSize(iconSize);
-  pimpl->encryptButton->setObjectName("cryptButton");
+  pimpl->encryptButton->setObjectName(QStringLiteral("cryptButton"));
   pimpl->encryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const auto unlockedIcon = QIcon{":/images/unlockIcon.png"};
+  const auto unlockedIcon = QIcon{QStringLiteral(":/images/unlockIcon.png")};
   pimpl->decryptButton = new QPushButton{unlockedIcon,
                                        tr(" Decrypt"),
                                        this};
   pimpl->decryptButton->setIconSize(iconSize);
-  pimpl->decryptButton->setObjectName("cryptButton");
+  pimpl->decryptButton->setObjectName(QStringLiteral("cryptButton"));
   pimpl->decryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   auto buttonLayout = new QHBoxLayout{this};

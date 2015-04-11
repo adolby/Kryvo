@@ -162,7 +162,7 @@ Crypto::Crypto(Settings* settings, QObject* parent)
   pimpl->settings = settings;
 
   // Initialize Botan
-  Botan::LibraryInitializer init{"thread_safe=true"};
+  Botan::LibraryInitializer init{std::string{"thread_safe=true"}};
 }
 
 Crypto::~Crypto() {}
@@ -180,7 +180,7 @@ void Crypto::encrypt(const QString& passphrase,
   // Reset status flags
   pimpl->resetFlags();
 
-  auto algorithmName = QString{};
+  QString algorithmName;
   auto keySize = std::size_t{};
   if (!algorithm.isEmpty())
   {
@@ -189,7 +189,7 @@ void Crypto::encrypt(const QString& passphrase,
   }
   else
   {
-    algorithmName = QString{"AES-128/GCM"};
+    algorithmName = QStringLiteral("AES-128/GCM");
     keySize = static_cast<std::size_t>(128);
   }
 
@@ -381,12 +381,12 @@ void Crypto::encryptFile(const QString& passphrase,
 
     std::ifstream in{inputFileName.toStdString(), std::ios::binary};
 
-    const QString outputFileName = inputFileName % QLatin1String{".enc"};
+    const QString outputFileName = inputFileName % QStringLiteral(".enc");
     std::ofstream out{outputFileName.toStdString(), std::ios::binary};
 
     const auto algorithmNameStd = algorithmName.toStdString();
 
-    out << "-------- ENCRYPTED FILE --------" << std::endl;
+    out << std::string{"-------- ENCRYPTED FILE --------"} << std::endl;
     out << algorithmNameStd << std::endl;
     out << keySize << std::endl;
     out << Botan::base64_encode(&pbkdfSalt[0], pbkdfSalt.size()) << std::endl;
@@ -428,7 +428,7 @@ void Crypto::decryptFile(const QString& passphrase,
     std::getline(in, keySaltString);
     std::getline(in, ivSaltString);
 
-    if (headerString != "-------- ENCRYPTED FILE --------")
+    if (headerString != std::string{"-------- ENCRYPTED FILE --------"})
     {
       emit statusMessage(pimpl->messages[6].arg(inputFileName));
     }
@@ -450,7 +450,7 @@ void Crypto::decryptFile(const QString& passphrase,
         pbkdfSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
-    const auto kdfHash = static_cast<std::string>("KDF2(Keccak-1600)");
+    const auto kdfHash = std::string{"KDF2(Keccak-1600)"};
     std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf(kdfHash)};
 
     // Key salt
@@ -468,7 +468,8 @@ void Crypto::decryptFile(const QString& passphrase,
     Botan::InitializationVector iv{kdf->derive_key(ivSize, pbkdfKey, ivSalt)};
 
     // Remove the .enc extension if it's in the file name
-    const auto outputFileName = pimpl->removeExtension(inputFileName, "enc");
+    const auto outputFileName = pimpl->removeExtension(inputFileName,
+                                                       QStringLiteral("enc"));
 
     // Create a unique file name for the file in this directory
     auto uniqueOutputFileName = pimpl->uniqueFileName(outputFileName);
@@ -612,7 +613,7 @@ QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
 
       if (!originalFile.completeSuffix().isEmpty())
       { // Add the file extension if there is one
-        uniqueFileName += QLatin1String{"."} % originalFile.completeSuffix();
+        uniqueFileName += QStringLiteral(".") % originalFile.completeSuffix();
       }
 
       ++i;

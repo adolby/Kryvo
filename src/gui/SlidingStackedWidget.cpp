@@ -25,6 +25,7 @@
 #include <QtWidgets/QPushButton>
 #include <QtCore/QParallelAnimationGroup>
 #include <QtCore/QPropertyAnimation>
+#include <QtCore/QByteArray>
 
 class SlidingStackedWidget::SlidingStackedWidgetPrivate {
  public:
@@ -53,8 +54,8 @@ SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
 {
   pimpl->animationGroup->setParent(this);
 
-  QObject::connect(pimpl->animationGroup, &QParallelAnimationGroup::finished,
-                   this, &SlidingStackedWidget::animationDone);
+  connect(pimpl->animationGroup, &QParallelAnimationGroup::finished,
+          this, &SlidingStackedWidget::animationDone);
 }
 
 SlidingStackedWidget::~SlidingStackedWidget()
@@ -241,10 +242,10 @@ SlidingStackedWidget::SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate()
     currentIndex{0}, nextIndex{0}, wrap{false}
 {
   currentWidgetAnimation = new QPropertyAnimation{};
-  currentWidgetAnimation->setPropertyName("pos");
+  currentWidgetAnimation->setPropertyName(QByteArrayLiteral("pos"));
 
   nextWidgetAnimation = new QPropertyAnimation{};
-  nextWidgetAnimation->setPropertyName("pos");
+  nextWidgetAnimation->setPropertyName(QByteArrayLiteral("pos"));
 
   animationGroup = new QParallelAnimationGroup{};
 

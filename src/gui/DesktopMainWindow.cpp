@@ -69,7 +69,7 @@ DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent)
 
   // Load stylesheet
   const auto styleSheet = loadStyleSheet(this->settings->styleSheetPath(),
-                                         "kryvos.qss");
+                                         QStringLiteral("kryvos.qss"));
 
   if (!styleSheet.isEmpty())
   {

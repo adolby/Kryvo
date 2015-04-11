@@ -40,10 +40,10 @@ class MessageFrame::MessageFramePrivate {
 MessageFrame::MessageFrame(QWidget* parent)
   : QFrame{parent}, pimpl{make_unique<MessageFramePrivate>()}
 {
-  pimpl->messageTextEdit = new QPlainTextEdit{tr("To add files, click the add"
-                                                 " files button or drag and"
-                                                 " drop files."), this};
-  pimpl->messageTextEdit->setObjectName("message");
+  pimpl->messageTextEdit = new QPlainTextEdit{tr("To add files, click the add "
+                                                 "files button or drag and "
+                                                 "drop files."), this};
+  pimpl->messageTextEdit->setObjectName(QStringLiteral("message"));
   pimpl->messageTextEdit->setMaximumBlockCount(10);
   pimpl->messageTextEdit->setReadOnly(true);
   pimpl->messageTextEdit->setTextInteractionFlags(Qt::NoTextInteraction);

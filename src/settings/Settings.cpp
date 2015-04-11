@@ -209,7 +209,7 @@ Settings::SettingsPrivate::SettingsPrivate()
 
 void Settings::SettingsPrivate::importSettings()
 {
-  QFile settingsFile{"settings.json"};
+  QFile settingsFile{QStringLiteral("settings.json")};
   auto fileOpen = settingsFile.open(QIODevice::ReadOnly);
 
   if (fileOpen)
@@ -219,51 +219,58 @@ void Settings::SettingsPrivate::importSettings()
     auto settingsDoc = QJsonDocument::fromJson(settingsData);
     auto settings = settingsDoc.object();
 
-    auto positionObject = settings["position"].toObject();
-    auto xObject = static_cast<QJsonValue>(positionObject["x"]);
-    auto yObject = static_cast<QJsonValue>(positionObject["y"]);
+    auto positionObject = settings[QStringLiteral("position")].toObject();
+    auto xObject = static_cast<QJsonValue>(positionObject[QStringLiteral("x")]);
+    auto yObject = static_cast<QJsonValue>(positionObject[QStringLiteral("y")]);
     position = QPoint{xObject.toInt(200), yObject.toInt(200)};
 
-    auto maximizedObject = static_cast<QJsonValue>(settings["maximized"]);
+    auto maximizedObject =
+        static_cast<QJsonValue>(settings[QStringLiteral("maximized")]);
     maximized = maximizedObject.toBool(false);
     if (!maximized)
     {
       auto sizeObject = settings["size"].toObject();
-      auto widthObject = static_cast<QJsonValue>(sizeObject["width"]);
-      auto heightObject = static_cast<QJsonValue>(sizeObject["height"]);
+      auto widthObject =
+          static_cast<QJsonValue>(sizeObject[QStringLiteral("width")]);
+      auto heightObject =
+          static_cast<QJsonValue>(sizeObject[QStringLiteral("height")]);
       size = QSize{widthObject.toInt(800), heightObject.toInt(600)};
     }
 
-    lastDirectory = settings["lastDirectory"].toString();
+    lastDirectory = settings[QStringLiteral("lastDirectory")].toString();
 
-    auto cipherObject = static_cast<QJsonValue>(settings["cipher"]);
-    cipher = cipherObject.toString("AES");
+    auto cipherObject =
+        static_cast<QJsonValue>(settings[QStringLiteral("cipher")]);
+    cipher = cipherObject.toString(QStringLiteral("AES"));
 
-    auto keySizeObject = static_cast<QJsonValue>(settings["keySize"]);
+    auto keySizeObject =
+        static_cast<QJsonValue>(settings[QStringLiteral("keySize")]);
     keySize = static_cast<std::size_t>(keySizeObject.toInt(128));
 
-    auto modeObject = static_cast<QJsonValue>(settings["modeOfOperation"]);
-    mode = modeObject.toString("GCM");
+    auto modeObject =
+        static_cast<QJsonValue>(settings[QStringLiteral("modeOfOperation")]);
+    mode = modeObject.toString(QStringLiteral("GCM"));
 
-    auto styleObject = static_cast<QJsonValue>(settings["styleSheetPath"]);
-    styleSheetPath = styleObject.toString("default/kryvos.qss");
+    auto styleObject =
+        static_cast<QJsonValue>(settings[QStringLiteral("styleSheetPath")]);
+    styleSheetPath = styleObject.toString(QStringLiteral("default/kryvos.qss"));
 
     auto fileColumnObject = static_cast<QJsonValue>
-                            (settings["fileColumnWidth"]);
+                            (settings[QStringLiteral("fileColumnWidth")]);
     fileColumnWidth = fileColumnObject.toInt();
 
     auto progressColumnObject = static_cast<QJsonValue>
-                          (settings["progressColumnWidth"]);
+                          (settings[QStringLiteral("progressColumnWidth")]);
     progressColumnWidth = progressColumnObject.toInt();
   }
   else
   { // Settings file couldn't be opened, so use defaults
     position = QPoint{200, 200};
     size = QSize{800, 600};
-    cipher = "AES";
+    cipher = QStringLiteral("AES");
     keySize = 128;
-    mode = "GCM";
-    styleSheetPath = "default/kryvos.qss";
+    mode = QStringLiteral("GCM");
+    styleSheetPath = QStringLiteral("default/kryvos.qss");
     fileColumnWidth = 0;
     progressColumnWidth = 0;
   }
@@ -271,7 +278,7 @@ void Settings::SettingsPrivate::importSettings()
 
 void Settings::SettingsPrivate::exportSettings() const
 {
-  QSaveFile settingsFile{"settings.json"};
+  QSaveFile settingsFile{QStringLiteral("settings.json")};
   settingsFile.setDirectWriteFallback(true);
   auto fileOpen = settingsFile.open(QIODevice::WriteOnly);
 
@@ -280,27 +287,27 @@ void Settings::SettingsPrivate::exportSettings() const
     auto settings = QJsonObject{};
 
     auto positionObject = QJsonObject{};
-    positionObject["x"] = position.x();
-    positionObject["y"] = position.y();
+    positionObject[QStringLiteral("x")] = position.x();
+    positionObject[QStringLiteral("y")] = position.y();
 
-    settings["position"] = positionObject;
-    settings["maximized"] = maximized;
+    settings[QStringLiteral("position")] = positionObject;
+    settings[QStringLiteral("maximized")] = maximized;
 
     if (!maximized)
     {
       auto sizeObject = QJsonObject{};
-      sizeObject["width"] = size.width();
-      sizeObject["height"] = size.height();
-      settings["size"] = sizeObject;
+      sizeObject[QStringLiteral("width")] = size.width();
+      sizeObject[QStringLiteral("height")] = size.height();
+      settings[QStringLiteral("size")] = sizeObject;
     }
 
-    settings["lastDirectory"] = lastDirectory;
-    settings["cipher"] = cipher;
-    settings["keySize"] = static_cast<int>(keySize);
-    settings["modeOfOperation"] = mode;
-    settings["styleSheetPath"] = styleSheetPath;
-    settings["fileColumnWidth"] = fileColumnWidth;
-    settings["progressColumnWidth"] = progressColumnWidth;
+    settings[QStringLiteral("lastDirectory")] = lastDirectory;
+    settings[QStringLiteral("cipher")] = cipher;
+    settings[QStringLiteral("keySize")] = static_cast<int>(keySize);
+    settings[QStringLiteral("modeOfOperation")] = mode;
+    settings[QStringLiteral("styleSheetPath")] = styleSheetPath;
+    settings[QStringLiteral("fileColumnWidth")] = fileColumnWidth;
+    settings[QStringLiteral("progressColumnWidth")] = progressColumnWidth;
 
     auto settingsDoc = QJsonDocument{settings};
     settingsFile.write(settingsDoc.toJson());
