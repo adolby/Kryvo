@@ -40,11 +40,11 @@ PasswordFrame::PasswordFrame(QWidget* parent)
   : QFrame{parent}, pimpl{make_unique<PasswordFramePrivate>()}
 {
   auto passwordLabel = new QLabel{tr("Password "), this};
-  passwordLabel->setObjectName("text");
+  passwordLabel->setObjectName(QStringLiteral("text"));
 
   pimpl->passwordLineEdit = new QLineEdit{this};
   pimpl->passwordLineEdit->setParent(this);
-  pimpl->passwordLineEdit->setObjectName("passwordLineEdit");
+  pimpl->passwordLineEdit->setObjectName(QStringLiteral("passwordLineEdit"));
   pimpl->passwordLineEdit->setEchoMode(QLineEdit::PasswordEchoOnEdit);
 
   auto passwordLayout = new QHBoxLayout{this};

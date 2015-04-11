@@ -101,7 +101,8 @@ void FileListDelegate::paint(QPainter* painter,
                                 option.rect.height()};
       buttonOption.fontMetrics = QApplication::fontMetrics();
       buttonOption.features = QStyleOptionButton::Flat;
-      const auto closeIcon = QIcon{":/images/closeFileIcon.png"};
+      const auto closeIcon =
+          QIcon{QStringLiteral(":/images/closeFileIcon.png")};
       buttonOption.icon = closeIcon;
       const auto iconSize = QSize{static_cast<int>(option.rect.width() * 0.4),
                                   static_cast<int>(option.rect.height() * 0.4)};

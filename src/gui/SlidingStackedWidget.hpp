@@ -29,7 +29,7 @@
 #include <memory>
 
 /*!
- * SlidingStackedWidget is a class that is derived from QtStackedWidget
+ * SlidingStackedWidget is a class that is derived from QStackedWidget
  * and allows smooth side shifting of widgets, in addition
  * to the original hard switching from one to another as offered by
  * QStackedWidget.

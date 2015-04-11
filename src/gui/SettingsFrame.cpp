@@ -70,11 +70,11 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   auto headerFrame = new QFrame{this};
 
   auto headerLabel = new QLabel{tr("Settings"), headerFrame};
-  headerLabel->setObjectName("headerText");
+  headerLabel->setObjectName(QStringLiteral("headerText"));
 
-  const auto backIcon = QIcon{":/images/backIcon.png"};
+  const auto backIcon = QIcon{QStringLiteral(":/images/backIcon.png")};
   auto backButton = new QPushButton{backIcon, tr(" Back"), this};
-  backButton->setObjectName("backButton");
+  backButton->setObjectName(QStringLiteral("backButton"));
   backButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   auto headerLayout = new QHBoxLayout{headerFrame};
@@ -88,19 +88,19 @@ SettingsFrame::SettingsFrame(const QString& cipher,
 
   auto cryptoSettingsLabel = new QLabel{tr("Cryptography"),
                                         cryptoFrame};
-  cryptoSettingsLabel->setObjectName("text");
+  cryptoSettingsLabel->setObjectName(QStringLiteral("text"));
 
   auto cryptoSettingsFrame = new QFrame{cryptoFrame};
-  cryptoSettingsFrame->setObjectName("settingsSubFrame");
+  cryptoSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
 
   auto cipherFrame = new QFrame{cryptoSettingsFrame};
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   auto cipherLabel = new QLabel{tr("Cipher: "), cipherFrame};
-  cipherLabel->setObjectName("text");
+  cipherLabel->setObjectName(QStringLiteral("text"));
 
   pimpl->cipherComboBox = new QComboBox{cipherFrame};
-  pimpl->cipherComboBox->setObjectName("settingsComboBox");
+  pimpl->cipherComboBox->setObjectName(QStringLiteral("settingsComboBox"));
   pimpl->cipherComboBox->addItem(tr("AES"));
   pimpl->cipherComboBox->addItem(tr("Serpent"));
   pimpl->cipherComboBox->setCurrentText(cipher);
@@ -124,11 +124,11 @@ SettingsFrame::SettingsFrame(const QString& cipher,
                                                        pimpl->toolTipWidth);
 
   auto keySizeLabel = new QLabel{tr("Key size (bits): "), keySizeFrame};
-  keySizeLabel->setObjectName("text");
+  keySizeLabel->setObjectName(QStringLiteral("text"));
   keySizeLabel->setToolTip(keySizeSplitToolTip);
 
   pimpl->keySizeComboBox = new QComboBox{keySizeFrame};
-  pimpl->keySizeComboBox->setObjectName("settingsComboBox");
+  pimpl->keySizeComboBox->setObjectName(QStringLiteral("settingsComboBox"));
   pimpl->keySizeComboBox->addItem(tr("128"));
   pimpl->keySizeComboBox->addItem(tr("192"));
   pimpl->keySizeComboBox->addItem(tr("256"));
@@ -152,11 +152,11 @@ SettingsFrame::SettingsFrame(const QString& cipher,
                                                     pimpl->toolTipWidth);
 
   auto modeLabel = new QLabel{tr("Mode of operation: "), modeFrame};
-  modeLabel->setObjectName("text");
+  modeLabel->setObjectName(QStringLiteral("text"));
   modeLabel->setToolTip(modeSplitToolTip);
 
   pimpl->modeComboBox = new QComboBox{modeFrame};
-  pimpl->modeComboBox->setObjectName("settingsComboBox");
+  pimpl->modeComboBox->setObjectName(QStringLiteral("settingsComboBox"));
   pimpl->modeComboBox->addItem(tr("GCM"));
   pimpl->modeComboBox->addItem(tr("EAX"));
   pimpl->modeComboBox->setCurrentText(mode);
@@ -265,9 +265,12 @@ QString SettingsFrame::SettingsFramePrivate::splitToolTip(const QString& text,
     auto i = 0;
     while (i < temp.length())
     {
-      if (fm.width(temp.left(++i + 1)) > width)
+      i = i + 1;
+
+      if (fm.width(temp.left(i + 1)) > width)
       {
-        int j = temp.lastIndexOf(' ', i);
+        auto j = temp.lastIndexOf(' ', i);
+
         if (j > 0)
         {
           i = j;

@@ -84,7 +84,7 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
     contentLayout{nullptr}, pimpl{make_unique<MainWindowPrivate>()}
 {
   // Set object name
-  this->setObjectName("MainWindow");
+  this->setObjectName(QStringLiteral("MainWindow"));
 
   // Title
   this->setWindowTitle(tr("Kryvos"));
@@ -95,30 +95,30 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   auto slidingStackedWidget = new SlidingStackedWidget{this};
 
   auto contentFrame = new QFrame{slidingStackedWidget};
-  contentFrame->setObjectName("contentFrame");
+  contentFrame->setObjectName(QStringLiteral("contentFrame"));
 
   headerFrame = new HeaderFrame{contentFrame};
-  headerFrame->setObjectName("headerFrame");
+  headerFrame->setObjectName(QStringLiteral("headerFrame"));
 
   fileListFrame = new FileListFrame{contentFrame};
-  fileListFrame->setObjectName("fileListFrame");
+  fileListFrame->setObjectName(QStringLiteral("fileListFrame"));
   fileListFrame->setSizePolicy(QSizePolicy::Expanding,
                                QSizePolicy::Expanding);
 
   // Message text edit display
   messageFrame = new MessageFrame{contentFrame};
-  messageFrame->setObjectName("message");
+  messageFrame->setObjectName(QStringLiteral("message"));
   messageFrame->setSizePolicy(QSizePolicy::Expanding,
                               QSizePolicy::Preferred);
   messageFrame->setContentsMargins(0, 0, 0, 0);
 
   // Password entry frame
   passwordFrame = new PasswordFrame{contentFrame};
-  passwordFrame->setObjectName("passwordFrame");
+  passwordFrame->setObjectName(QStringLiteral("passwordFrame"));
 
   // Encrypt and decrypt control button frame
   controlButtonFrame = new ControlButtonFrame{contentFrame};
-  controlButtonFrame->setObjectName("controlButtonFrame");
+  controlButtonFrame->setObjectName(QStringLiteral("controlButtonFrame"));
 
   contentLayout = new QVBoxLayout{contentFrame};
   contentLayout->addWidget(headerFrame);
@@ -133,7 +133,7 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
                                     pimpl->settings->keySize(),
                                     pimpl->settings->modeOfOperation(),
                                     slidingStackedWidget};
-  settingsFrame->setObjectName("settingsFrame");
+  settingsFrame->setObjectName(QStringLiteral("settingsFrame"));
 
   slidingStackedWidget->addWidget(settingsFrame);
 
@@ -237,18 +237,17 @@ void MainWindow::processFiles(const bool cryptFlag)
         if (cryptFlag)
         {
           QString cipherAlgorithm;
-          if ("AES" == pimpl->settings->cipher())
+          if (QStringLiteral("AES") == pimpl->settings->cipher())
           {
-            cipherAlgorithm = pimpl->settings->cipher() %
-                              QString{QLatin1String{"-"}} %
+            cipherAlgorithm = pimpl->settings->cipher() % QStringLiteral("-") %
                               QString::number(pimpl->settings->keySize()) %
-                              QString{QLatin1String{"/"}} %
+                              QStringLiteral("/") %
                               pimpl->settings->modeOfOperation();
           }
           else
           {
             cipherAlgorithm = pimpl->settings->cipher() %
-                              QString{QLatin1String{"/"}} %
+                              QStringLiteral("/") %
                               pimpl->settings->modeOfOperation();
           }
 
@@ -328,7 +327,7 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
                                    const QString& defaultFile)
 {
   // Try to load user theme, if it exists
-  const QString styleSheetPath = QString{QLatin1String{"themes"}} %
+  const QString styleSheetPath = QStringLiteral("themes") %
                                  QDir::separator() % styleFile;
   QFile userTheme{styleSheetPath};
 
@@ -346,7 +345,7 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
   }
   else
   { // Otherwise, load default theme
-    auto localPath = QLatin1String{":/stylesheets/"} % defaultFile;
+    auto localPath = QStringLiteral(":/stylesheets/") % defaultFile;
     QFile defaultTheme{localPath};
 
     auto defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
