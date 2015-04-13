@@ -21,7 +21,7 @@ Botan is licensed under the BSD-2 License. Read the Botan License file for more 
 Botan source code is available at http://botan.randombit.net/download.html.
 
 Qt is licensed under the GNU GPL License. Read LICENSE.GPL for more information about the license.
-Qt source code is available at http://qt.gitorious.org/qt.
+Qt source code is available at http://code.qt.io.
 
 ##Developers
 
