@@ -562,17 +562,17 @@ Crypto::CryptoPrivate::CryptoPrivate()
              tr("Encryption stopped. File %1 is incomplete."),
              tr("Decryption stopped. File %1 is incomplete."),
              tr("Error: File %1 couldn't be read."),
-             tr("Error: Decryption failed. Wrong password entered or file %1"
-                " has changed since it was created. This could mean someone"
-                " has tampered with the file. It also could mean the file has"
-                " become corrupted. You'll need to encrypt the source file"
-                " again."),
+             tr("Error: Decryption failed. Wrong password entered or file %1 "
+                "has changed since it was created. This could mean someone "
+                "has tampered with the file. It also could mean the file has "
+                "become corrupted. You'll need to encrypt the source file "
+                "again."),
              tr("Error: File %1's header is not recognized."),
-             tr("Error: Decryption failed. File %1's header couldn't be"
-                " read."),
-             tr("Error: Encryption failed. Can't encrypt file %1. Check that"
-                " this file exists and that you have permission to access it"
-                " and try again.")},
+             tr("Error: Decryption failed. File %1's header couldn't be "
+                "read."),
+             tr("Error: Encryption failed. Can't encrypt file %1. Check that "
+                "this file exists and that you have permission to access it "
+                "and try again.")},
     aborted{false}, paused{false}, busyStatus{false}
 {
   // Reserve elements to improve dictionary performance
