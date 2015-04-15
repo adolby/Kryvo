@@ -49,7 +49,7 @@ bool equal(InputIterator1 first1, InputIterator1 last1,
 
 bool filesEqual(const QString& filePath1, const QString& filePath2)
 {
-  bool equivalent = false;
+  auto equivalent = false;
 
   QFile file1{filePath1};
   QFile file2{filePath2};
@@ -75,7 +75,26 @@ void TestCrypto::testComparatorSameFile()
   const QString fileName1 = QStringLiteral("file1.jpg");
   const QString fileName2 = QStringLiteral("file2.jpg");
 
-  // Compare initial file to decrypted file
+  QFile file1{fileName1};
+  QFile file2{fileName2};
+  if (!file1.exists() || !file2.exists())
+  {
+    QString message;
+    auto msg = QStringLiteral("Test file %1 is missing. ");
+
+    if (!file1.exists())
+    {
+      message += msg.arg(fileName1);
+    }
+
+    if (!file2.exists())
+    {
+      message += msg.arg(fileName2);
+    }
+
+    QSKIP(message.toStdString().c_str());
+  }
+
   auto equivalentTest = filesEqual(fileName1, fileName2);
 
   QVERIFY(equivalentTest);
@@ -85,10 +104,29 @@ void TestCrypto::testComparatorDifferentFile()
 {
   // Test data
   const QString fileName1 = QStringLiteral("file1.jpg");
-  const QString fileName3 = QStringLiteral("file3.jpg");
+  const QString fileName2 = QStringLiteral("file3.jpg");
 
-  // Compare initial file to decrypted file
-  auto equivalentTest = filesEqual(fileName1, fileName3);
+  QFile file1{fileName1};
+  QFile file2{fileName2};
+  if (!file1.exists() || !file2.exists())
+  {
+    QString message;
+    auto msg = QStringLiteral("Test file %1 is missing. ");
+
+    if (!file1.exists())
+    {
+      message += msg.arg(fileName1);
+    }
+
+    if (!file2.exists())
+    {
+      message += msg.arg(fileName2);
+    }
+
+    QSKIP(message.toStdString().c_str());
+  }
+
+  auto equivalentTest = filesEqual(fileName1, fileName2);
 
   QVERIFY(!equivalentTest);
 }
@@ -101,9 +139,9 @@ void TestCrypto::testEncryptDecrypt_data()
   QTest::addColumn<QString>("encryptedFileName");
   QTest::addColumn<QString>("decryptedFileName");
 
-  QTest::newRow("Small file") << "password" << "AES-128/GCM"
-                                            << "test.txt" << "test.txt.enc"
-                                            << "test (2).txt";
+  QTest::newRow("Small text file") << "password" << "AES-128/GCM"
+                                   << "test.txt" << "test.txt.enc"
+                                   << "test (2).txt";
 
   QTest::newRow("Medium exe file") << "password2" << "AES-128/GCM"
                                    << "test.exe" << "test.exe.enc"
@@ -121,6 +159,13 @@ void TestCrypto::testEncryptDecrypt()
   QFETCH(QString, inputFileName);
   QFETCH(QString, encryptedFileName);
   QFETCH(QString, decryptedFileName);
+
+  QFile inputFile{inputFileName};
+  if (!inputFile.exists())
+  {
+    auto msg = QStringLiteral("Test file %1 is missing.");
+    QSKIP(msg.arg(inputFileName).toStdString().c_str());
+  }
 
   QStringList inputFileNames = {inputFileName};
   QStringList encryptedFileNames = {encryptedFileName};
@@ -153,12 +198,31 @@ void TestCrypto::testEncryptDecrypt()
 void TestCrypto::testEncryptDecryptAll()
 {
   // Test data
-  const QString passphrase = QStringLiteral("password");
-  const QString algorithmName = QStringLiteral("AES-128/GCM");
+  const auto passphrase = QStringLiteral("password");
+  const auto algorithmName = QStringLiteral("AES-128/GCM");
 
   const QStringList inputFileNames = {"test.txt",
                                       "test.exe",
                                       "test.zip"};
+
+  auto skip = false;
+  QString message;
+  for (const auto& inputFileName : inputFileNames)
+  {
+    auto msg = QStringLiteral("Test file %1 is missing. ");
+
+    QFile inputFile{inputFileName};
+    if (!inputFile.exists())
+    {
+      message += msg.arg(inputFileName);
+      skip = true;
+    }
+  }
+
+  if (skip)
+  {
+    QSKIP(message.toStdString().c_str());
+  }
 
   const QStringList encryptedFileNames = {"test.txt.enc",
                                           "test.exe.enc",
@@ -214,4 +278,4 @@ void TestCrypto::testEncryptDecryptAll()
   QVERIFY(equivalentTest);
 }
 
-QTEST_MAIN(TestCrypto)
+QTEST_GUILESS_MAIN(TestCrypto)
