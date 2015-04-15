@@ -42,7 +42,7 @@ android-g++ {
   }
 
   macx {
-    message(OSX)
+    message(OS X)
     CONFIG += x86
     SOURCES += ../cryptography/botan/mac/x86_64/botan_all.cpp
     HEADERS += ../cryptography/botan/mac/x86_64/botan_all.h
