@@ -23,20 +23,76 @@
 #include "test_Crypto.hpp"
 #include "cryptography/Crypto.hpp"
 #include "utility/make_unique.h"
-#include <QtTest/QtTest>
+#include <QtTest/QTest>
+#include <QtCore/QFile>
 #include <QtCore/QThread>
 #include <QtCore/QString>
-#include <algorithm>
-#include <iterator>
-#include <string>
-#include <fstream>
 #include <memory>
 
-/*!
- * \brief TestCrypto::testEncryptDecrypt_data Sends a passphrase, algorithm
- * name, input file name, and expected encrypted and decrypted file names to the
- * testEncryptDecrypt method for testing.
- */
+template <class InputIterator1, class InputIterator2>
+bool equal(InputIterator1 first1, InputIterator1 last1,
+            InputIterator2 first2, InputIterator2 last2)
+{
+  while ((first1 != last1) && (first2 != last2))
+  {
+    if (*first1 != *first2)
+    {
+      return false;
+    }
+
+    ++first1;
+    ++first2;
+  }
+
+  return (first1 == last1) && (first2 == last2);
+}
+
+bool filesEqual(const QString& filePath1, const QString& filePath2)
+{
+  bool equivalent = false;
+
+  QFile file1{filePath1};
+  QFile file2{filePath2};
+
+  if (file1.exists() && file2.exists())
+  {
+    file1.open(QFile::ReadOnly);
+    uchar* fileMemory1 = file1.map(0, file1.size());
+
+    file2.open(QFile::ReadOnly);
+    uchar* fileMemory2 = file2.map(0, file2.size());
+
+    equivalent =  equal(fileMemory1, fileMemory1 + file1.size(),
+                        fileMemory2, fileMemory2 + file2.size());
+  }
+
+  return equivalent;
+}
+
+void TestCrypto::testComparatorSameFile()
+{
+  // Test data
+  const QString fileName1 = QStringLiteral("file1.jpg");
+  const QString fileName2 = QStringLiteral("file2.jpg");
+
+  // Compare initial file to decrypted file
+  auto equivalentTest = filesEqual(fileName1, fileName2);
+
+  QVERIFY(equivalentTest);
+}
+
+void TestCrypto::testComparatorDifferentFile()
+{
+  // Test data
+  const QString fileName1 = QStringLiteral("file1.jpg");
+  const QString fileName3 = QStringLiteral("file3.jpg");
+
+  // Compare initial file to decrypted file
+  auto equivalentTest = filesEqual(fileName1, fileName3);
+
+  QVERIFY(!equivalentTest);
+}
+
 void TestCrypto::testEncryptDecrypt_data()
 {
   QTest::addColumn<QString>("passphrase");
@@ -45,9 +101,9 @@ void TestCrypto::testEncryptDecrypt_data()
   QTest::addColumn<QString>("encryptedFileName");
   QTest::addColumn<QString>("decryptedFileName");
 
-  QTest::newRow("Small file, no extension") << "password" << "AES-128/GCM"
-                                            << "test" << "test.enc"
-                                            << "test (2)";
+  QTest::newRow("Small file") << "password" << "AES-128/GCM"
+                                            << "test.txt" << "test.txt.enc"
+                                            << "test (2).txt";
 
   QTest::newRow("Medium exe file") << "password2" << "AES-128/GCM"
                                    << "test.exe" << "test.exe.enc"
@@ -58,12 +114,6 @@ void TestCrypto::testEncryptDecrypt_data()
                                   << "test (2).zip";
 }
 
-/*!
- * \brief TestCrypto::testEncryptDecrypt Crypto's encryption operation randomly
- * salts the key and IV. This means that encryption and decryption will need to
- * be tested together. Tests the encryption/decryption process with single test
- * files as input.
- */
 void TestCrypto::testEncryptDecrypt()
 {
   QFETCH(QString, passphrase);
@@ -75,81 +125,46 @@ void TestCrypto::testEncryptDecrypt()
   QStringList inputFileNames = {inputFileName};
   QStringList encryptedFileNames = {encryptedFileName};
 
-  std::unique_ptr<Crypto> cryptography{new Crypto};
+  std::unique_ptr<Crypto> cryptography = make_unique<Crypto>();
 
   // Test encryption and decryption
   cryptography->encrypt(passphrase, inputFileNames, algorithmName);
   cryptography->decrypt(passphrase, encryptedFileNames);
 
-  bool equivalentTest = true;
-  bool completedTest = true;
-
   // Compare initial file to decrypted file
-  std::ifstream inFile{inputFileName.toStdString().c_str(), std::ios::binary};
-  std::ifstream outFile{decryptedFileName.toStdString().c_str(),
-                        std::ios::binary};
-
-  std::istreambuf_iterator<char> begin1(inFile);
-  std::istreambuf_iterator<char> begin2(outFile);
-  std::istreambuf_iterator<char> end;
-
-  while (begin1 != end && begin2 != end)
-  { // Check files are same char by char
-    if (*begin1 != *begin2)
-    {
-      equivalentTest = false;
-      break;
-    }
-
-    ++begin1;
-    ++begin2;
-  }
-
-  completedTest = (begin1 == end) && (begin2 == end);
-
-  // Close streams
-  inFile.close();
-  outFile.close();
+  auto equivalentTest = filesEqual(inputFileName, decryptedFileName);
 
   // Clean up test files
   QFile encryptedFile{encryptedFileName};
-
   if (encryptedFile.exists())
   {
     encryptedFile.remove();
   }
 
   QFile decryptedFile{decryptedFileName};
-
   if (decryptedFile.exists())
   {
     decryptedFile.remove();
   }
 
-  QVERIFY(equivalentTest && completedTest);
+  QVERIFY(equivalentTest);
 }
 
-/*!
- * \brief TestCrypto::testEncryptDecrypt Crypto's encryption operation randomly
- * salts the key and IV. This means that encryption and decryption will need to
- * be tested together. Tests the encryption and decryption process with multiple
- * test files as input.
- */
 void TestCrypto::testEncryptDecryptAll()
 {
   // Test data
-  const QString passphrase = "password";
-  const QString algorithmName = "AES-128/GCM";
+  const QString passphrase = QStringLiteral("password");
+  const QString algorithmName = QStringLiteral("AES-128/GCM");
 
-  const QStringList inputFileNames = {"test",
+  const QStringList inputFileNames = {"test.txt",
                                       "test.exe",
                                       "test.zip"};
 
-  const QStringList encryptedFileNames = {"test.enc",
+  const QStringList encryptedFileNames = {"test.txt.enc",
                                           "test.exe.enc",
                                           "test.zip.enc"};
 
-  const QStringList decryptedFileNames = {"test (2)",
+  const QStringList decryptedFileNames = {"test (2).txt",
                                           "test (2).exe",
                                           "test (2).zip"};
 
@@ -159,46 +174,25 @@ void TestCrypto::testEncryptDecryptAll()
   cryptography->encrypt(passphrase, inputFileNames, algorithmName);
   cryptography->decrypt(passphrase, encryptedFileNames);
 
-  bool equivalentTest = true;
-  bool completedTest = true;
+  auto equivalentTest = false;
 
   const int inputFilesSize = inputFileNames.size();
-
-  for (int i = 0; i < inputFilesSize; ++i)
-  { // Compare initial file to decrypted file
+  for (auto i = 0; i < inputFilesSize; ++i)
+  {
     const QString inputFileName = inputFileNames[i];
     const QString decryptedFileName = decryptedFileNames[i];
 
-    std::ifstream inFile{inputFileName.toStdString().c_str(), std::ios::binary};
-    std::ifstream outFile{decryptedFileName.toStdString().c_str(),
-                          std::ios::binary};
+    // Compare initial file to decrypted file
+    equivalentTest = filesEqual(inputFileName, decryptedFileName);
 
-    std::istreambuf_iterator<char> begin1(inFile);
-    std::istreambuf_iterator<char> begin2(outFile);
-    std::istreambuf_iterator<char> end;
-
-    while (begin1 != end && begin2 != end)
-    { // Check files are same char by char
-      if (*begin1 != *begin2)
-      {
-        equivalentTest = false;
-        break;
-      }
-
-      ++begin1;
-      ++begin2;
-    }
-
-    completedTest = (begin1 == end) && (begin2 == end);
-
-    if (!equivalentTest || !completedTest)
-    { // If these two files weren't equivalent or completed, test failed
+    if (!equivalentTest)
+    { // If these two files weren't equivalent, test failed
       break;
     }
   }
 
   // Clean up test files
-  for (int i = 0; i < inputFilesSize; ++i)
+  for (auto i = 0; i < inputFilesSize; ++i)
   {
     const QString encryptedFileName = encryptedFileNames[i];
     QFile encryptedFile{encryptedFileName};
@@ -217,7 +211,7 @@ void TestCrypto::testEncryptDecryptAll()
     }
   }
 
-  QVERIFY(equivalentTest && completedTest);
+  QVERIFY(equivalentTest);
 }
 
 QTEST_MAIN(TestCrypto)
