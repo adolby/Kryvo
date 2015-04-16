@@ -173,7 +173,7 @@ void SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
       offsetX = 0;
       offsetY = -offsetY;
     }
-    else if (directionHint == TopToBottom)
+    else if (directionHint == BottomToTop)
     {
       offsetX = 0;
     }
