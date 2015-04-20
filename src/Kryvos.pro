@@ -67,6 +67,9 @@ HEADERS += \
 android-g++ {
   message(Android G++)
 
+# You'll need to place your Boost path here.
+  INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
+
   SOURCES += cryptography/botan/android/botan_all.cpp \
              gui/TouchMainWindow.cpp
   HEADERS += cryptography/botan/android/botan_all.h \
@@ -77,10 +80,10 @@ android-g++ {
   OTHER_FILES += android/AndroidManifest.xml
 
   debug {
-    DESTDIR = ../build/android/x64/debug/
+    DESTDIR = ../build/android/debug/
   }
   release {
-    DESTDIR = ../build/android/x64/release/
+    DESTDIR = ../build/android/release/
   }
 } else:ios {
   message(iOS)

@@ -6,6 +6,7 @@
 */
 
 #include "botan_all.h"
+#include <boost/format.hpp>
 #include <map>
 #include <string>
 #include <deque>
@@ -13,6 +14,8 @@
 #include <mutex>
 #include <condition_variable>
 
+using boost::format;
+using boost::io::group;
 
 namespace Botan {
 
@@ -3870,8 +3873,9 @@ std::string X509_Time::readable_string() const
 
    std::string output(24, 0);
 
-   std::sprintf(&output[0], "%04d/%02d/%02d %02d:%02d:%02d UTC",
-                year, month, day, hour, minute, second);
+   boost::format dateFormat("%04d/%02d/%02d %02d:%02d:%02d UTC");
+
+   output = boost::str(dateFormat % year % month % day % hour % minute % second);
 
    output.resize(23); // remove trailing null
 
