@@ -26,17 +26,17 @@
 TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)
   : MainWindow{settings, parent}
 {
-  messageFrame->setText(tr("To begin, tap the Add Files button. Enter a"
-                           " password. Finally, tap the Encrypt or Decrypt"
-                           " button."));
+  messageFrame->setText(tr("To begin, tap the Add Files button. Enter a "
+                           "password. Finally, tap the Encrypt or Decrypt "
+                           "button."));
 
-  const QSize headerIconSize{45, 45};
+  const QSize headerIconSize{50, 50};
   const QSize controlIconSize{50, 50};
   headerFrame->setIconSize(headerIconSize);
   controlButtonFrame->setIconSize(controlIconSize);
 
   // Adjust stretch of file list view
-  contentLayout->setStretch(1, 4);
+  contentLayout->setStretch(1, 3);
   // Adjust stretch of message box
   contentLayout->setStretch(2, 1);
 
