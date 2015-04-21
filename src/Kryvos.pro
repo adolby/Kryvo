@@ -104,7 +104,7 @@ android-g++ {
   HEADERS += gui/DesktopMainWindow.hpp
 
   linux {
-    #message(Linux)
+    message(Linux)
 
     linux-g++-64 {
       message(Linux G++ 64)
