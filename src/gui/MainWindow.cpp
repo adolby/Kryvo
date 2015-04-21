@@ -345,7 +345,8 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
   }
   else
   { // Otherwise, load default theme
-    auto localPath = QStringLiteral(":/stylesheets/") % defaultFile;
+    const QString localPath = QStringLiteral(":/stylesheets/") %
+                              defaultFile;
     QFile defaultTheme{localPath};
 
     auto defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);

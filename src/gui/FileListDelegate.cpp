@@ -35,7 +35,7 @@ void FileListDelegate::setFocusBorderEnabled(bool enabled)
 }
 
 void FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
-                               const QModelIndex& index) const
+                                       const QModelIndex& index) const
 {
   QStyledItemDelegate::initStyleOption(option, index);
 
@@ -46,8 +46,8 @@ void FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
 }
 
 void FileListDelegate::paint(QPainter* painter,
-                     const QStyleOptionViewItem& option,
-                     const QModelIndex& index) const
+                             const QStyleOptionViewItem& option,
+                             const QModelIndex& index) const
 {
   const auto column = index.column();
 
@@ -117,9 +117,9 @@ void FileListDelegate::paint(QPainter* painter,
 }
 
 bool FileListDelegate::editorEvent(QEvent* event,
-                           QAbstractItemModel* model,
-                           const QStyleOptionViewItem& option,
-                           const QModelIndex& index)
+                                   QAbstractItemModel* model,
+                                   const QStyleOptionViewItem& option,
+                                   const QModelIndex& index)
 {
   if (2 == index.column())
   {
