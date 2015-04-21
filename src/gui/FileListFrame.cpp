@@ -24,8 +24,8 @@
 #include "gui/FileListDelegate.hpp"
 #include "utility/make_unique.h"
 #include <QtWidgets/QScroller>
-#include <QtWidgets/QTableView>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QTableView>
 #include <QtWidgets/QVBoxLayout>
 #include <QtGui/QStandardItemModel>
 #include <QtCore/QFileInfo>
@@ -57,20 +57,20 @@ FileListFrame::FileListFrame(QWidget* parent)
 {
   // File list header
   const QStringList headerList = {tr("File"), tr("Progress"),
-                                  tr("Remove file")};
+                                  tr("Remove")};
   pimpl->fileListModel->setHorizontalHeaderLabels(headerList);
 
   pimpl->fileListView = new QTableView{this};
   pimpl->fileListView->setModel(pimpl->fileListModel.get());
   pimpl->fileListView->setShowGrid(false);
   pimpl->fileListView->verticalHeader()->hide();
+  pimpl->fileListView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  pimpl->fileListView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
   QHeaderView* header = pimpl->fileListView->horizontalHeader();
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(130);
-  header->resizeSection(0, 600);
-  header->resizeSection(1, 130);
-  header->resizeSection(2, 80);
+  header->setSectionResizeMode(QHeaderView::Fixed);
 
   // Custom delegate paints progress bar and file close button for each file
   auto delegate = new FileListDelegate{this};
@@ -134,15 +134,15 @@ void FileListFrame::clear()
 
   // File list header
   const QStringList headerList = {tr("File"), tr("Progress"),
-                                  tr("Remove file")};
+                                  tr("Remove")};
   pimpl->fileListModel->setHorizontalHeaderLabels(headerList);
 
   QHeaderView* header = pimpl->fileListView->horizontalHeader();
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(130);
-  header->resizeSection(0, 600);
-  header->resizeSection(1, 130);
-  header->resizeSection(2, 80);
+  pimpl->fileListView->setColumnWidth(0, this->width() * 0.70);
+  pimpl->fileListView->setColumnWidth(1, this->width() * 0.2);
+  pimpl->fileListView->setColumnWidth(2, this->width() * 0.1 - 1);
 }
 
 void FileListFrame::addFileToModel(const QString& path)
@@ -232,6 +232,15 @@ void FileListFrame::updateProgress(const QString& path, const qint64 percent)
       }
     }
   }
+}
+
+void FileListFrame::resizeEvent(QResizeEvent* event)
+{
+  auto width = this->width();
+
+  pimpl->fileListView->setColumnWidth(0, width * 0.7);
+  pimpl->fileListView->setColumnWidth(1, width * 0.2);
+  pimpl->fileListView->setColumnWidth(2, width * 0.1 - 1);
 }
 
 FileListFrame::FileListFramePrivate::FileListFramePrivate()
