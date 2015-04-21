@@ -96,6 +96,9 @@ class FileListFrame : public QFrame {
    */
   void updateProgress(const QString& path, const qint64 percent);
 
+ protected:
+  void resizeEvent(QResizeEvent* event);
+
  private:
   class FileListFramePrivate;
   std::unique_ptr<FileListFramePrivate> pimpl;
