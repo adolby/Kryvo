@@ -102,14 +102,12 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
 
   fileListFrame = new FileListFrame{contentFrame};
   fileListFrame->setObjectName(QStringLiteral("fileListFrame"));
-  fileListFrame->setSizePolicy(QSizePolicy::Expanding,
-                               QSizePolicy::Expanding);
+  fileListFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
   // Message text edit display
   messageFrame = new MessageFrame{contentFrame};
-  messageFrame->setObjectName(QStringLiteral("message"));
-  messageFrame->setSizePolicy(QSizePolicy::Expanding,
-                              QSizePolicy::Preferred);
+  messageFrame->setObjectName(QStringLiteral("messageFrame"));
+  messageFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   messageFrame->setContentsMargins(0, 0, 0, 0);
 
   // Password entry frame
