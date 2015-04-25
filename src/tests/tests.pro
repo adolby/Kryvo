@@ -1,6 +1,6 @@
 QT += core testlib
 
-TARGET = tests
+TARGET = CryptoTests
 
 TEMPLATE = app
 
