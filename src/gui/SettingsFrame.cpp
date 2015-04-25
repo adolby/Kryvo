@@ -64,10 +64,11 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   // TODO: Fix this slide switch or remove it.
   //auto slideSwitch = new SlideSwitch{this};
   //slideSwitch->setBackgroundPixmap(":/images/sliderBackground.png");
-  //slideSwitch->setKnobPixmaps(":/images/sliderKnobEnable.png",
-  //                            ":/images/sliderKnobDisable.png");
+  //slideSwitch->setKnobPixmaps(QStringLiteral(":/images/sliderKnobEnable.png"),
+  //                            QStringLiteral(":/images/sliderKnobDisable.png"));
 
   auto headerFrame = new QFrame{this};
+  headerFrame->setObjectName(QStringLiteral("coloredFrame"));
 
   auto headerLabel = new QLabel{tr("Settings"), headerFrame};
   headerLabel->setObjectName(QStringLiteral("headerText"));
@@ -83,8 +84,10 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   headerLayout->addWidget(backButton);
 
   auto contentFrame = new QFrame{this};
+  contentFrame->setObjectName(QStringLiteral("coloredFrame"));
 
   auto cryptoFrame = new QFrame{contentFrame};
+  cryptoFrame->setObjectName(QStringLiteral("coloredFrame"));
 
   auto cryptoSettingsLabel = new QLabel{tr("Cryptography"),
                                         cryptoFrame};
@@ -94,6 +97,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   cryptoSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
 
   auto cipherFrame = new QFrame{cryptoSettingsFrame};
+  cipherFrame->setObjectName(QStringLiteral("coloredFrame"));
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   auto cipherLabel = new QLabel{tr("Cipher: "), cipherFrame};
@@ -110,6 +114,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   cipherLayout->addWidget(pimpl->cipherComboBox);
 
   auto keySizeFrame = new QFrame{cryptoSettingsFrame};
+  keySizeFrame->setObjectName(QStringLiteral("coloredFrame"));
   keySizeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   const auto keySizeToolTip = QString{tr("The cipher key size is the number of "
@@ -140,6 +145,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   keySizeLayout->addWidget(pimpl->keySizeComboBox);
 
   auto modeFrame = new QFrame{cryptoSettingsFrame};
+  modeFrame->setObjectName(QStringLiteral("coloredFrame"));
   modeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   const auto modeToolTip = QString{tr("The mode of operation is the algorithm "
@@ -180,6 +186,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   contentLayout->addStretch();
 
   auto centerFrame = new QFrame{this};
+  centerFrame->setObjectName("coloredFrame");
   auto centerLayout = new QHBoxLayout{centerFrame};
   centerLayout->addWidget(contentFrame);
   centerLayout->addStretch();

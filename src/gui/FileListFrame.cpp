@@ -56,8 +56,7 @@ FileListFrame::FileListFrame(QWidget* parent)
   : QFrame{parent}, pimpl{make_unique<FileListFramePrivate>()}
 {
   // File list header
-  const QStringList headerList = {tr("File"), tr("Progress"),
-                                  tr("Remove")};
+  const QStringList headerList = {tr("File"), tr("Progress"), tr("Remove")};
   pimpl->fileListModel->setHorizontalHeaderLabels(headerList);
 
   pimpl->fileListView = new QTableView{this};
@@ -65,7 +64,6 @@ FileListFrame::FileListFrame(QWidget* parent)
   pimpl->fileListView->setShowGrid(false);
   pimpl->fileListView->verticalHeader()->hide();
   pimpl->fileListView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  pimpl->fileListView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
   QHeaderView* header = pimpl->fileListView->horizontalHeader();
   header->setStretchLastSection(false);
@@ -236,6 +234,10 @@ void FileListFrame::updateProgress(const QString& path, const qint64 percent)
 
 void FileListFrame::resizeEvent(QResizeEvent* event)
 {
+  Q_UNUSED(event);
+  Q_ASSERT(pimpl);
+  Q_ASSERT(pimpl->fileListView);
+
   auto width = this->width();
 
   pimpl->fileListView->setColumnWidth(0, width * 0.7);

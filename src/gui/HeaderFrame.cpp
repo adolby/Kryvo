@@ -51,6 +51,7 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   headerLabel->setObjectName(QStringLiteral("headerText"));
 
   auto buttonFrame = new QFrame{this};
+  buttonFrame->setObjectName(QStringLiteral("coloredFrame"));
 
   const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
   pimpl->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), this};
