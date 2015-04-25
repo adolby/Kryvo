@@ -522,8 +522,9 @@ void Crypto::executeCipher(const QString& inputFileName,
 
       // Calculate progress in percent
       fileIndex += remainingSize;
-      const qint64 nextPercent =
-          static_cast<qint64>(static_cast<double>(fileIndex / size) * 100);
+      const auto nextFraction = static_cast<double>(fileIndex) /
+                                static_cast<double>(size);
+      const qint64 nextPercent = static_cast<qint64>(nextFraction * 100);
 
       if (nextPercent > percent && nextPercent < 100)
       {
