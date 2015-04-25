@@ -29,7 +29,7 @@ QMainWindow {
 
 /*--------- Layout containers ---------*/
 QFrame#mainFrame {
-  background-color: #ecf0f1;
+  background-color: #2c3e50;
   margin: 0;
   padding: 0;
 }
@@ -40,6 +40,32 @@ QFrame#contentFrame {
   padding: 0;
 }
 
+QFrame#headerFrame {
+  background-color: #2c3e50;
+}
+
+QFrame#fileListFrame {
+  background-color: #2c3e50;
+}
+
+QFrame#messageFrame {
+  background-color: #4b77be;
+  border: none;
+}
+
+QFrame#passwordFrame {
+  background-color: #2c3e50;
+  margin: 0;
+  padding: 0;
+}
+
+QFrame#controlButtonFrame {
+  background-color: #2c3e50;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
 QFrame#settingsFrame {
   background-color: #2c3e50;
   margin: 0;
@@ -47,10 +73,15 @@ QFrame#settingsFrame {
 }
 
 QFrame#settingsSubFrame {
+  background-color: #2c3e50;
   border-color: white;
   border-style: solid;
   border-width: 2px;
   border-radius: 5px;
+}
+
+QFrame#coloredFrame {
+  background-color: #2c3e50;
 }
 
 /*--------- Buttons ---------*/
@@ -96,7 +127,7 @@ QFrame#settingsSubFrame {
 #cryptButton {
   color: white;
   background-color: #2980b9;
-  font-size: 75px;
+  font-size: 70px;
   padding: 10px 20px 10px 20px;
   border: none;
   border-radius: 5px;
@@ -134,40 +165,40 @@ QFrame#settingsSubFrame {
 
 /*--------- Password Line Edit ---------*/
 QLineEdit#passwordLineEdit {
-  font-size: 70px;
+  font-size: 60px;
 }
 
 /*--------- Text ---------*/
 QLabel#text {
   color: white;
-  font-size: 70px;
+  background-color: #2c3e50;
+  font-size: 60px;
 }
 
 QLabel#headerText {
   color: #fab52a;
+  background-color: #2c3e50;
   font-size: 75px;
 }
 
 #message {
   color: white;
   background-color: #4b77be;
-  font-size: 50px;
+  font-size: 60px;
   border: none;
 }
 
 QComboBox#settingsComboBox {
-  font-size: 70px;
+  font-size: 65px;
 }
 
 /*--------- File list view ---------*/
 QTableView {
-  font-size: 50px;
+  font-size: 65px;
 }
 
 QTableView::item {
-  border: 0px;
-  padding-left: 5px;
-  padding-right: 50px;
+  border: 0;
 }
 
 QTableView::item:selected:!active {
