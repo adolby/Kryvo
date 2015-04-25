@@ -540,7 +540,7 @@ void Crypto::executeCipher(const QString& inputFileName,
       while (pipe.remaining() > 0)
       {
         const auto buffered = pipe.read(&buffer[0], buffer.size());
-        out.write((const char*)&buffer[0], buffered);
+        out.write(reinterpret_cast<const char*>(&buffer[0]), buffered);
       }
     }
   }
