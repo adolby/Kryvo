@@ -177,7 +177,6 @@ void Crypto::encrypt(const QString& passphrase,
   pimpl->busy(true);
   emit busyStatus(pimpl->isBusy());
 
-  // Reset status flags
   pimpl->resetFlags();
 
   QString algorithmName;
@@ -225,7 +224,6 @@ void Crypto::encrypt(const QString& passphrase,
     }
   } // End file loop
 
-  // Reset status flags
   pimpl->resetFlags();
 
   pimpl->busy(false);
@@ -240,7 +238,6 @@ void Crypto::decrypt(const QString& passphrase,
   pimpl->busy(true);
   emit busyStatus(pimpl->isBusy());
 
-  // Reset status flags
   pimpl->resetFlags();
 
   const auto inputFileNamesSize = inputFileNames.size();
@@ -286,7 +283,6 @@ void Crypto::decrypt(const QString& passphrase,
     }
   } // End file loop
 
-  // Reset status flags
   pimpl->resetFlags();
 
   pimpl->busy(false);
@@ -520,13 +516,14 @@ void Crypto::executeCipher(const QString& inputFileName,
   {
     if (!pimpl->isPaused())
     {
-      in.read((char*)&buffer[0], buffer.size());
+      in.read(reinterpret_cast<char*>(&buffer[0]), buffer.size());
       const auto remainingSize = in.gcount();
       pipe.write(&buffer[0], remainingSize);
 
       // Calculate progress in percent
       fileIndex += remainingSize;
-      const qint64 nextPercent = (fileIndex * 100) / size;
+      const qint64 nextPercent =
+          static_cast<qint64>(static_cast<double>(fileIndex / size) * 100);
 
       if (nextPercent > percent && nextPercent < 100)
       {
