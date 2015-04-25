@@ -26,6 +26,23 @@ TEMPLATE = app
 
 CONFIG += c++14
 
+# Qt Creator Debug/Release Differentiation
+# Ensure one "debug_and_release" in CONFIG, for clarity.
+debug_and_release {
+  CONFIG -= debug_and_release
+  CONFIG += debug_and_release
+}
+# Ensure one "debug" or "release" in CONFIG so they can be used as conditionals
+# instead of writing "CONFIG(debug, debug|release)"
+CONFIG(debug, debug|release) {
+  CONFIG -= debug release
+  CONFIG += debug
+}
+CONFIG(release, debug|release) {
+  CONFIG -= debug release
+  CONFIG += release
+}
+
 SOURCES += \
   main.cpp \
   Kryvos.cpp \
@@ -67,7 +84,7 @@ HEADERS += \
 android-g++ {
   message(Android G++)
 
-# You'll need to place your Boost path here.
+  # You'll need to place your Boost path here.
   INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
 
   SOURCES += cryptography/botan/android/botan_all.cpp \
@@ -80,9 +97,11 @@ android-g++ {
   OTHER_FILES += android/AndroidManifest.xml
 
   debug {
+    message(Debug)
     DESTDIR = ../build/android/debug/
   }
   release {
+    message(Release)
     DESTDIR = ../build/android/release/
   }
 } else:ios {
@@ -94,9 +113,11 @@ android-g++ {
              gui/TouchMainWindow.hpp
 
   debug {
+    message(Debug)
     DESTDIR = ../build/ios/debug/
   }
   release {
+    message(Release)
     DESTDIR = ../build/ios/release/
   }
 } else { # Desktop OS
@@ -112,9 +133,11 @@ android-g++ {
       HEADERS += cryptography/botan/linux/x86_64/botan_all.h
 
       debug {
+        message(Debug)
         DESTDIR = ../build/linux/x64/debug/
       }
       release {
+        message(Release)
         DESTDIR = ../build/linux/x64/release/
       }
     }
@@ -126,9 +149,11 @@ android-g++ {
       HEADERS += cryptography/botan/linux/x86/botan_all.h
 
       debug {
+        message(Debug)
         DESTDIR = ../build/linux/x86/debug/
       }
       release {
+        message(Release)
         DESTDIR = ../build/linux/x86/release/
       }
     } # End linux-g++-32
@@ -137,7 +162,7 @@ android-g++ {
   } # End Linux
 
   macx {
-    message(OS X)
+    message(Mac OS X)
 
     CONFIG += x86
     CONFIG -= c++14
@@ -150,9 +175,11 @@ android-g++ {
     ICON = resources/mac/icon/Kryvos.icns
 
     debug {
+      message(Debug)
       DESTDIR = ../build/macx/x86/debug/
     }
     release {
+      message(Release)
       DESTDIR = ../build/macx/x86/release/
     }
   }
@@ -166,9 +193,11 @@ android-g++ {
         HEADERS += cryptography/botan/windows/x64/botan_all.h
 
         debug {
+          message(Debug)
           DESTDIR = ../build/win/x64/debug/
         }
         release {
+          message(Release)
           DESTDIR = ../build/win/x64/release/
         }
       } else {
@@ -177,9 +206,11 @@ android-g++ {
         HEADERS += cryptography/botan/windows/x86/botan_all.h
 
         debug {
+          message(Debug)
           DESTDIR = ../build/win/x86/debug/
         }
         release {
+          message(Release)
           DESTDIR = ../build/win/x86/release/
         }
       }
