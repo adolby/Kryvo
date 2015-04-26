@@ -22,7 +22,7 @@
 
 #include "gui/MainWindow.hpp"
 #include "gui/SlidingStackedWidget.hpp"
-#include "utility/make_unique.h"
+#include "utility/pimpl_impl.h"
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
@@ -81,7 +81,7 @@ class MainWindow::MainWindowPrivate {
 MainWindow::MainWindow(Settings* settings, QWidget* parent)
   : QMainWindow{parent}, headerFrame{nullptr}, fileListFrame{nullptr},
     messageFrame{nullptr}, passwordFrame{nullptr}, controlButtonFrame{nullptr},
-    contentLayout{nullptr}, pimpl{make_unique<MainWindowPrivate>()}
+    contentLayout{nullptr}
 {
   // Set object name
   this->setObjectName(QStringLiteral("MainWindow"));
@@ -90,7 +90,7 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   this->setWindowTitle(tr("Kryvos"));
 
   // Store settings object
-  pimpl->settings = settings;
+  m->settings = settings;
 
   auto slidingStackedWidget = new SlidingStackedWidget{this};
 
@@ -127,9 +127,9 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
 
   slidingStackedWidget->addWidget(contentFrame);
 
-  settingsFrame = new SettingsFrame{pimpl->settings->cipher(),
-                                    pimpl->settings->keySize(),
-                                    pimpl->settings->modeOfOperation(),
+  settingsFrame = new SettingsFrame{m->settings->cipher(),
+                                    m->settings->keySize(),
+                                    m->settings->modeOfOperation(),
                                     slidingStackedWidget};
   settingsFrame->setObjectName(QStringLiteral("settingsFrame"));
 
@@ -172,14 +172,13 @@ MainWindow::~MainWindow() {}
 
 void MainWindow::addFiles()
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->settings);
+  Q_ASSERT(m->settings);
   Q_ASSERT(fileListFrame);
 
   // Open a file dialog to get files
   const auto files = QFileDialog::getOpenFileNames(this,
                                                    tr("Add Files"),
-                                                   pimpl->settings->
+                                                   m->settings->
                                                      lastDirectory(),
                                                    tr("Any files (*)"));
 
@@ -193,7 +192,7 @@ void MainWindow::addFiles()
     // Save this directory for returning to later
     const auto fileName = files[0];
     const QFileInfo file{fileName};
-    pimpl->settings->lastDirectory(file.absolutePath());
+    m->settings->lastDirectory(file.absolutePath());
   }
 }
 
@@ -209,12 +208,11 @@ void MainWindow::removeFiles()
 
 void MainWindow::processFiles(const bool cryptFlag)
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->settings);
+  Q_ASSERT(m->settings);
   Q_ASSERT(passwordFrame);
   Q_ASSERT(fileListFrame);
 
-  if (!pimpl->isBusy())
+  if (!m->isBusy())
   {
     // Get passphrase from line edit
     const auto passphrase = passwordFrame->password();
@@ -235,25 +233,24 @@ void MainWindow::processFiles(const bool cryptFlag)
         if (cryptFlag)
         {
           QString cipherAlgorithm;
-          if (QStringLiteral("AES") == pimpl->settings->cipher())
+          if (QStringLiteral("AES") == m->settings->cipher())
           {
-            cipherAlgorithm = pimpl->settings->cipher() % QStringLiteral("-") %
-                              QString::number(pimpl->settings->keySize()) %
+            cipherAlgorithm = m->settings->cipher() % QStringLiteral("-") %
+                              QString::number(m->settings->keySize()) %
                               QStringLiteral("/") %
-                              pimpl->settings->modeOfOperation();
+                              m->settings->modeOfOperation();
           }
           else
           {
-            cipherAlgorithm = pimpl->settings->cipher() %
-                              QStringLiteral("/") %
-                              pimpl->settings->modeOfOperation();
+            cipherAlgorithm = m->settings->cipher() % QStringLiteral("/") %
+                              m->settings->modeOfOperation();
           }
 
           // Start encrypting the file list
           emit encrypt(passphrase,
                        fileList,
                        cipherAlgorithm,
-                       pimpl->settings->keySize());
+                       m->settings->keySize());
         }
         else
         {
@@ -264,12 +261,12 @@ void MainWindow::processFiles(const bool cryptFlag)
     }
     else
     { // Inform user that a password is required to encrypt or decrypt
-      updateStatusMessage(pimpl->messages[0]);
+      updateStatusMessage(m->messages[0]);
     }
   }
   else
   {
-    updateStatusMessage(pimpl->messages[1]);
+    updateStatusMessage(m->messages[1]);
   }
 }
 
@@ -295,34 +292,26 @@ void MainWindow::updateError(const QString& path, const QString& message)
 
 void MainWindow::updateBusyStatus(const bool busy)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->busy(busy);
+  m->busy(busy);
 }
 
 void MainWindow::updateCipher(const QString& newCipher)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->settings->cipher(newCipher);
+  m->settings->cipher(newCipher);
 }
 
 void MainWindow::updateKeySize(const std::size_t& keySize)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->settings->keySize(keySize);
+  m->settings->keySize(keySize);
 }
 
 void MainWindow::updateModeOfOperation(const QString& newMode)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->settings->modeOfOperation(newMode);
+  m->settings->modeOfOperation(newMode);
 }
 
 QString MainWindow::loadStyleSheet(const QString& styleFile,
-                                   const QString& defaultFile)
+                                   const QString& defaultFile) const
 {
   // Try to load user theme, if it exists
   const QString styleSheetPath = QStringLiteral("themes") %

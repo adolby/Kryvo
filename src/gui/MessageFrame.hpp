@@ -23,8 +23,8 @@
 #ifndef KRYVOS_GUI_MESSAGEFRAME_HPP_
 #define KRYVOS_GUI_MESSAGEFRAME_HPP_
 
+#include "utility/pimpl.h"
 #include <QtWidgets/QFrame>
-#include <memory>
 
 /*!
  * \brief The MessageFrame class contains a text edit display used to inform the
@@ -61,7 +61,7 @@ class MessageFrame : public QFrame {
 
  private:
   class MessageFramePrivate;
-  std::unique_ptr<MessageFramePrivate> pimpl;
+  pimpl<MessageFramePrivate> m;
 };
 
 #endif // KRYVOS_GUI_MESSAGEFRAME_HPP_

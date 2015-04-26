@@ -23,9 +23,9 @@
 #ifndef KRYVOS_KRYVOS_HPP_
 #define KRYVOS_KRYVOS_HPP_
 
+#include "utility/pimpl.h"
 #include <QtCore/QObject>
 #include <QtCore/QMetaType>
-#include <memory>
 
 Q_DECLARE_METATYPE(std::size_t);
 
@@ -53,7 +53,7 @@ class Kryvos : public QObject {
 
  private:
   class KryvosPrivate;
-  std::unique_ptr<KryvosPrivate> pimpl;
+  pimpl<KryvosPrivate> m;
 };
 
 #endif // KRYVOS_KRYVOS_HPP_

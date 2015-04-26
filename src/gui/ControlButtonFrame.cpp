@@ -21,7 +21,7 @@
  */
 
 #include "gui/ControlButtonFrame.hpp"
-#include "utility/make_unique.h"
+#include "utility/pimpl_impl.h"
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QHBoxLayout>
 #include <QtGui/QIcon>
@@ -39,33 +39,33 @@ class ControlButtonFrame::ControlButtonFramePrivate {
 };
 
 ControlButtonFrame::ControlButtonFrame(QWidget* parent)
-  : QFrame{parent}, pimpl{make_unique<ControlButtonFramePrivate>()}
+  : QFrame{parent}
 {
   const QSize iconSize{19, 19};
 
   const auto lockIcon = QIcon{QStringLiteral(":/images/lockIcon.png")};
-  pimpl->encryptButton = new QPushButton{lockIcon,
+  m->encryptButton = new QPushButton{lockIcon,
                                          tr(" Encrypt"),
                                          this};
-  pimpl->encryptButton->setIconSize(iconSize);
-  pimpl->encryptButton->setObjectName(QStringLiteral("cryptButton"));
-  pimpl->encryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m->encryptButton->setIconSize(iconSize);
+  m->encryptButton->setObjectName(QStringLiteral("cryptButton"));
+  m->encryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const auto unlockedIcon = QIcon{QStringLiteral(":/images/unlockIcon.png")};
-  pimpl->decryptButton = new QPushButton{unlockedIcon,
-                                         tr(" Decrypt"),
-                                         this};
-  pimpl->decryptButton->setIconSize(iconSize);
-  pimpl->decryptButton->setObjectName(QStringLiteral("cryptButton"));
-  pimpl->decryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m->decryptButton = new QPushButton{unlockedIcon,
+                                     tr(" Decrypt"),
+                                     this};
+  m->decryptButton->setIconSize(iconSize);
+  m->decryptButton->setObjectName(QStringLiteral("cryptButton"));
+  m->decryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   auto buttonLayout = new QHBoxLayout{this};
-  buttonLayout->addWidget(pimpl->encryptButton);
-  buttonLayout->addWidget(pimpl->decryptButton);
+  buttonLayout->addWidget(m->encryptButton);
+  buttonLayout->addWidget(m->decryptButton);
 
-  connect(pimpl->encryptButton, &QPushButton::clicked,
+  connect(m->encryptButton, &QPushButton::clicked,
           this, &ControlButtonFrame::encryptFiles);
-  connect(pimpl->decryptButton, &QPushButton::clicked,
+  connect(m->decryptButton, &QPushButton::clicked,
           this, &ControlButtonFrame::decryptFiles);
 }
 
@@ -83,12 +83,11 @@ void ControlButtonFrame::decryptFiles()
 
 void ControlButtonFrame::setIconSize(const QSize& iconSize)
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->encryptButton);
-  Q_ASSERT(pimpl->decryptButton);
+  Q_ASSERT(m->encryptButton);
+  Q_ASSERT(m->decryptButton);
 
-  pimpl->encryptButton->setIconSize(iconSize);
-  pimpl->decryptButton->setIconSize(iconSize);
+  m->encryptButton->setIconSize(iconSize);
+  m->decryptButton->setIconSize(iconSize);
 }
 
 ControlButtonFrame::ControlButtonFramePrivate::ControlButtonFramePrivate()

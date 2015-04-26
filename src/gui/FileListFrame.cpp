@@ -22,6 +22,7 @@
 
 #include "gui/FileListFrame.hpp"
 #include "gui/FileListDelegate.hpp"
+#include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
 #include <QtWidgets/QScroller>
 #include <QtWidgets/QHeaderView>
@@ -53,35 +54,34 @@ class FileListFrame::FileListFramePrivate {
 };
 
 FileListFrame::FileListFrame(QWidget* parent)
-  : QFrame{parent}, pimpl{make_unique<FileListFramePrivate>()}
+  : QFrame{parent}
 {
   // File list header
   const QStringList headerList = {tr("File"), tr("Progress"), tr("Remove")};
-  pimpl->fileListModel->setHorizontalHeaderLabels(headerList);
+  m->fileListModel->setHorizontalHeaderLabels(headerList);
 
-  pimpl->fileListView = new QTableView{this};
-  pimpl->fileListView->setModel(pimpl->fileListModel.get());
-  pimpl->fileListView->setShowGrid(false);
-  pimpl->fileListView->verticalHeader()->hide();
-  pimpl->fileListView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m->fileListView = new QTableView{this};
+  m->fileListView->setModel(m->fileListModel.get());
+  m->fileListView->setShowGrid(false);
+  m->fileListView->verticalHeader()->hide();
+  m->fileListView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-  QHeaderView* header = pimpl->fileListView->horizontalHeader();
+  QHeaderView* header = m->fileListView->horizontalHeader();
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(130);
   header->setSectionResizeMode(QHeaderView::Fixed);
 
   // Custom delegate paints progress bar and file close button for each file
   auto delegate = new FileListDelegate{this};
-  pimpl->fileListView->setItemDelegate(delegate);
+  m->fileListView->setItemDelegate(delegate);
 
-  pimpl->fileListView->setHorizontalScrollMode(QAbstractItemView::
-                                               ScrollPerPixel);
+  m->fileListView->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 
   // Attach a scroller to the file list for mobile devices
-  QScroller::grabGesture(pimpl->fileListView, QScroller::TouchGesture);
+  QScroller::grabGesture(m->fileListView, QScroller::TouchGesture);
 
   // Disable overshoot; it makes interacting with small widgets harder
-  auto scroller = QScroller::scroller(pimpl->fileListView);
+  auto scroller = QScroller::scroller(m->fileListView);
 
   QScrollerProperties properties = scroller->scrollerProperties();
 
@@ -97,7 +97,7 @@ FileListFrame::FileListFrame(QWidget* parent)
   scroller->setScrollerProperties(properties);
 
   auto fileListLayout = new QVBoxLayout{this};
-  fileListLayout->addWidget(pimpl->fileListView);
+  fileListLayout->addWidget(m->fileListView);
   fileListLayout->setContentsMargins(0, 0, 0, 0);
   fileListLayout->setSpacing(0);
 
@@ -107,40 +107,36 @@ FileListFrame::FileListFrame(QWidget* parent)
 
 FileListFrame::~FileListFrame() {}
 
-QStandardItem* FileListFrame::item(int row) const
+QStandardItem* FileListFrame::item(const int row)
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->fileListModel);
+  Q_ASSERT(m->fileListModel);
 
-  return pimpl->fileListModel->item(row, 0);
+  return m->fileListModel->item(row, 0);
 }
 
 int FileListFrame::rowCount() const
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->fileListModel);
+  Q_ASSERT(m->fileListModel);
 
-  return pimpl->fileListModel->rowCount();
+  return m->fileListModel->rowCount();
 }
 
 void FileListFrame::clear()
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->fileListModel);
+  Q_ASSERT(m->fileListModel);
 
-  pimpl->fileListModel->clear();
+  m->fileListModel->clear();
 
   // File list header
-  const QStringList headerList = {tr("File"), tr("Progress"),
-                                  tr("Remove")};
-  pimpl->fileListModel->setHorizontalHeaderLabels(headerList);
+  const QStringList headerList = {tr("File"), tr("Progress"), tr("Remove")};
+  m->fileListModel->setHorizontalHeaderLabels(headerList);
 
-  QHeaderView* header = pimpl->fileListView->horizontalHeader();
+  QHeaderView* header = m->fileListView->horizontalHeader();
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(130);
-  pimpl->fileListView->setColumnWidth(0, this->width() * 0.70);
-  pimpl->fileListView->setColumnWidth(1, this->width() * 0.2);
-  pimpl->fileListView->setColumnWidth(2, this->width() * 0.1 - 1);
+  m->fileListView->setColumnWidth(0, this->width() * 0.70);
+  m->fileListView->setColumnWidth(1, this->width() * 0.2);
+  m->fileListView->setColumnWidth(2, this->width() * 0.1 - 1);
 }
 
 void FileListFrame::addFileToModel(const QString& path)
@@ -175,10 +171,10 @@ void FileListFrame::addFileToModel(const QString& path)
     // Search to see if this item is already in the model
     auto addNewItem = true;
 
-    const auto rowCount = pimpl->fileListModel->rowCount();
+    const auto rowCount = m->fileListModel->rowCount();
     for (auto row = 0; row < rowCount; ++row)
     {
-      auto testItem = pimpl->fileListModel->item(row, 0);
+      auto testItem = m->fileListModel->item(row, 0);
 
       if (testItem->data().toString() == pathItem->data().toString())
       {
@@ -188,31 +184,29 @@ void FileListFrame::addFileToModel(const QString& path)
 
     if (addNewItem)
     { // Add the item to the model if it's new
-      pimpl->fileListModel->appendRow(items);
+      m->fileListModel->appendRow(items);
     }
   } // End if file exists and is a file
 }
 
 void FileListFrame::removeFileFromModel(const QModelIndex& index)
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->fileListModel);
+  Q_ASSERT(m->fileListModel);
 
-  auto testItem = pimpl->fileListModel->item(index.row(), 0);
+  auto testItem = m->fileListModel->item(index.row(), 0);
 
   // Signal that this file shouldn't be encrypted or decrypted
   emit stopFile(testItem->data().toString());
 
   // Remove row from model
-  pimpl->fileListModel->removeRow(index.row());
+  m->fileListModel->removeRow(index.row());
 }
 
 void FileListFrame::updateProgress(const QString& path, const qint64 percent)
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->fileListModel);
+  Q_ASSERT(m->fileListModel);
 
-  const auto items = pimpl->fileListModel->findItems(path);
+  const auto items = m->fileListModel->findItems(path);
 
   if (items.size() > 0)
   {
@@ -222,7 +216,7 @@ void FileListFrame::updateProgress(const QString& path, const qint64 percent)
     {
       const auto index = item->row();
 
-      auto progressItem = pimpl->fileListModel->item(index, 1);
+      auto progressItem = m->fileListModel->item(index, 1);
 
       if (progressItem != nullptr)
       {
@@ -235,14 +229,13 @@ void FileListFrame::updateProgress(const QString& path, const qint64 percent)
 void FileListFrame::resizeEvent(QResizeEvent* event)
 {
   Q_UNUSED(event);
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->fileListView);
+  Q_ASSERT(m->fileListView);
 
   auto width = this->width();
 
-  pimpl->fileListView->setColumnWidth(0, width * 0.7);
-  pimpl->fileListView->setColumnWidth(1, width * 0.2);
-  pimpl->fileListView->setColumnWidth(2, width * 0.1 - 1);
+  m->fileListView->setColumnWidth(0, width * 0.7);
+  m->fileListView->setColumnWidth(1, width * 0.2);
+  m->fileListView->setColumnWidth(2, width * 0.1 - 1);
 }
 
 FileListFrame::FileListFramePrivate::FileListFramePrivate()

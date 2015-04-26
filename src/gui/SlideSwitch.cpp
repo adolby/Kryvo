@@ -21,6 +21,7 @@
  */
 
 #include "SlideSwitch.hpp"
+#include "utility/pimpl_impl.h"
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
 #include <QtCore/QTimeLine>
@@ -51,15 +52,15 @@ class SlideSwitch::SlideSwitchPrivate {
 };
 
 SlideSwitch::SlideSwitch(QWidget* parent)
-  : QAbstractButton(parent), pimpl{make_unique<SlideSwitchPrivate>()}
+  : QAbstractButton(parent)
 {
   setCheckable(true);
   setChecked(false);
 
-  pimpl->timeLine = new QTimeLine{150, this};
-  pimpl->timeLine->setCurveShape(QTimeLine::EaseInCurve);
+  m->timeLine = new QTimeLine{150, this};
+  m->timeLine->setCurveShape(QTimeLine::EaseInCurve);
 
-  connect(pimpl->timeLine, &QTimeLine::frameChanged,
+  connect(m->timeLine, &QTimeLine::frameChanged,
           this, &SlideSwitch::setSwitchPosition);
 
   connect(this, &SlideSwitch::toggled,
@@ -73,107 +74,73 @@ SlideSwitch::~SlideSwitch()
 
 void SlideSwitch::setBackgroundPixmap(const QString& backgroundPath)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->background = QPixmap(backgroundPath);
+  m->background = QPixmap(backgroundPath);
 }
 
 void SlideSwitch::setKnobPixmaps(const QString& knobEnabledPath,
                                  const QString& knobDisabledPath)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->knobEnabled = QPixmap(knobEnabledPath);
-  pimpl->knobDisabled = QPixmap(knobDisabledPath);
+  m->knobEnabled = QPixmap(knobEnabledPath);
+  m->knobDisabled = QPixmap(knobDisabledPath);
 }
 
 void SlideSwitch::paintEvent(QPaintEvent* /*event*/)
 {
-  Q_ASSERT(pimpl);
-
   QPainter painter(this);
 
-  painter.drawPixmap(buttonRect().toRect(), pimpl->background);
+  //painter.drawPixmap(buttonRect().toRect(), m->background);
 
   if (isChecked())
   {
-    painter.drawPixmap(knobRect().toRect(), pimpl->knobEnabled);
+    //painter.drawPixmap(knobRect().toRect(), m->knobEnabled);
   }
   else
   {
-    painter.drawPixmap(knobRect().toRect(), pimpl->knobDisabled);
+    //painter.drawPixmap(knobRect().toRect(), m->knobDisabled);
   }
 }
 
-QRectF SlideSwitch::buttonRect() const
+QSize SlideSwitch::sizeHint() const
 {
-  Q_ASSERT(pimpl);
-
-  QSizeF buttonSize = pimpl->background.size();
-  buttonSize.scale(size(), Qt::KeepAspectRatio);
-
-  return QRectF(QPointF(0, 0), buttonSize);
+  if (!m->background.isNull())
+  {
+    return m->background.size();
+  }
+  else
+  {
+    return QSize(80, 38);
+  }
 }
 
-/*!
- * \brief SlideSwitch::knobRect Calculates the possible SlideSwitch knob in the widget.
- * \return
- */
-QRectF SlideSwitch::knobRect() const
-{
-  Q_ASSERT(pimpl);
-
-  QRectF button = buttonRect();
-  QSizeF knobSize = pimpl->knobEnabled.size();
-  knobSize.scale(button.size(), Qt::KeepAspectRatio);
-  QRectF knobRect(button.topLeft(), knobSize);
-
-  // move the rect to the current position
-  qreal pos = button.left() + (button.width() - knobSize.width()) *
-              static_cast<qreal>(pimpl->position) / 100.0;
-
-  pos = qMax(button.left(), qMin(pos, button.right() - knobSize.width()));
-
-  knobRect.moveLeft(pos);
-
-  return knobRect;
-}
-
-/*!
- * \brief SlideSwitch::mouseMoveEvent The knob will be dragged to the moved position.
- * \param event
- */
 void SlideSwitch::mouseMoveEvent(QMouseEvent* event)
 {
-  Q_ASSERT(pimpl);
-
-  if(pimpl->dragInProgress)
+  if(m->dragInProgress)
   {
-    pimpl->dragDistanceX = event->x() - pimpl->dragStartPosition.x();
+    m->dragDistanceX = event->x() - m->dragStartPosition.x();
 
     if (isChecked())
     {
-      pimpl->position = 100 * (buttonRect().width() - knobRect().width() +
-                               pimpl->dragDistanceX) / (buttonRect().width() -
-                                                        knobRect().width());
+      m->position = 100 * (buttonRect().width() - knobRect().width() +
+                           m->dragDistanceX) / (buttonRect().width() -
+                                                knobRect().width());
     }
     else
     {
-      pimpl->position = 100 * pimpl->dragDistanceX /
+      m->position = 100 * m->dragDistanceX /
                         (buttonRect().width() - knobRect().width());
     }
 
-    qDebug() << pimpl->position;
+    qDebug() << m->position;
 
-    if (pimpl->position >= 100)
+    if (m->position >= 100)
     {
-      pimpl->position = 100;
+      m->position = 100;
       setChecked(true);
     }
 
-    if (pimpl->position <= 0)
+    if (m->position <= 0)
     {
-      pimpl->position = 0;
+      m->position = 0;
       setChecked(false);
     }
 
@@ -181,129 +148,102 @@ void SlideSwitch::mouseMoveEvent(QMouseEvent* event)
   }
 }
 
-/*!
-  \overload
-  \internal
-  Overloaded function \a mousePressEventEvent().
-*/
 void SlideSwitch::mousePressEvent(QMouseEvent* event)
 {
-  Q_ASSERT(pimpl);
-
   if (Qt::LeftButton == event->button() && knobRect().contains(event->pos()))
   {
-    pimpl->dragInProgress = true;
-    pimpl->dragStartPosition = event->pos();
+    m->dragInProgress = true;
+    m->dragStartPosition = event->pos();
   }
 }
 
-/*!
-  \overload
-  \internal
-  Overloaded function \a mouseReleaseEvent().
-*/
 void SlideSwitch::mouseReleaseEvent(QMouseEvent* /*event*/)
 {
-  Q_ASSERT(pimpl);
-
-  if (pimpl->dragDistanceX != 0)
+  if (m->dragDistanceX != 0)
   {
-    if (pimpl->position < 100)
+    if (m->position < 100)
     {
       if (isChecked())
       {
-        pimpl->timeLine->setFrameRange(100 - pimpl->position, 100);
+        m->timeLine->setFrameRange(100 - m->position, 100);
       }
       else
       {
-        pimpl->timeLine->setFrameRange(pimpl->position, 100);
+        m->timeLine->setFrameRange(m->position, 100);
       }
     }
     else
     {
-      pimpl->timeLine->setFrameRange(0, 100);
+      m->timeLine->setFrameRange(0, 100);
     }
 
-    if (0 == pimpl->position || 100 == pimpl->position)
+    if (0 == m->position || 100 == m->position)
     {
-      pimpl->timeLine->start();
+      m->timeLine->start();
     }
   }
 
-  pimpl->dragDistanceX = 0;
-  pimpl->dragInProgress = false;
+  m->dragDistanceX = 0;
+  m->dragInProgress = false;
 }
 
-/*!
-  \overload
-  \internal
-  Check if the widget has been clicked. Overloaded to define own hit area.
-*/
 bool SlideSwitch::hitButton(const QPoint& pos) const
 {
   return buttonRect().contains(pos);
 }
 
-/*!
-  \internal
-  Animation to change the state of the widget at the end of the
-  set position or the start position. \n
-  If one of the two possible states is reached the signal is sent.
-*/
-void SlideSwitch::setSwitchPosition(int position)
+void SlideSwitch::setSwitchPosition(const int position)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->position = isChecked() ? 100 - position : position;
+  m->position = isChecked() ? 100 - position : position;
 
   update();
 
-  if (100 == pimpl->position)
+  if (100 == m->position)
   {
     setChecked(true);
   }
-  else if (0 == pimpl->position)
+  else if (0 == m->position)
   {
     setChecked(false);
   }
 }
 
-/*!
-    \internal
-    Used to make sure the slider position is correct when the developer
-    uses setChecked()
-*/
-void SlideSwitch::updateSwitchPosition(bool checked)
+void SlideSwitch::updateSwitchPosition(const bool checked)
 {
-  Q_ASSERT(pimpl);
-
   if (checked)
   {
-    pimpl->position = 100;
+    m->position = 100;
   }
   else
   {
-    pimpl->position = 0;
+    m->position = 0;
   }
 }
 
-/*!
-    \overload
-    Return size hint provided by the SVG graphics.
-    Can be changed during runtime.
-*/
-QSize SlideSwitch::sizeHint() const
+QRectF SlideSwitch::buttonRect() const
 {
-  Q_ASSERT(pimpl);
+  QSizeF buttonSize = m->background.size();
+  buttonSize.scale(size(), Qt::KeepAspectRatio);
 
-  if (!pimpl->background.isNull())
-  {
-    return pimpl->background.size();
-  }
-  else
-  {
-    return QSize(80, 38);
-  }
+  return QRectF(QPointF(0, 0), buttonSize);
+}
+
+QRectF SlideSwitch::knobRect() const
+{
+  QRectF button = buttonRect();
+  QSizeF knobSize = m->knobEnabled.size();
+  knobSize.scale(button.size(), Qt::KeepAspectRatio);
+  QRectF knobRect(button.topLeft(), knobSize);
+
+  // move the rect to the current position
+  qreal pos = button.left() + (button.width() - knobSize.width()) *
+              static_cast<qreal>(m->position) / 100.0;
+
+  pos = qMax(button.left(), qMin(pos, button.right() - knobSize.width()));
+
+  knobRect.moveLeft(pos);
+
+  return knobRect;
 }
 
 SlideSwitch::SlideSwitchPrivate::SlideSwitchPrivate()

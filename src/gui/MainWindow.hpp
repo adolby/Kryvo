@@ -30,9 +30,9 @@
 #include "gui/MessageFrame.hpp"
 #include "gui/PasswordFrame.hpp"
 #include "gui/ControlButtonFrame.hpp"
+#include "utility/pimpl.h"
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QVBoxLayout>
-#include <memory>
 
 /*!
  * \brief The MainWindow class is the main window for the application.
@@ -176,7 +176,8 @@ class MainWindow : public QMainWindow {
    * which will be used if the selected stylesheet file doesn't exist
    * \return String containing the stylesheet file contents
    */
-  QString loadStyleSheet(const QString& styleFile, const QString& defaultFile);
+  QString loadStyleSheet(const QString& styleFile,
+                         const QString& defaultFile) const;
 
  protected:
   SettingsFrame* settingsFrame;
@@ -189,7 +190,7 @@ class MainWindow : public QMainWindow {
 
  private:
   class MainWindowPrivate;
-  std::unique_ptr<MainWindowPrivate> pimpl;
+  pimpl<MainWindowPrivate> m;
 };
 
 #endif // KRYVOS_GUI_MAINWINDOW_HPP_

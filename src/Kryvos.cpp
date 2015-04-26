@@ -29,6 +29,7 @@
 #endif
 #include "cryptography/Crypto.hpp"
 #include "settings/Settings.hpp"
+#include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
 #include <QtCore/QThread>
 
@@ -56,67 +57,67 @@ class Kryvos::KryvosPrivate {
 };
 
 Kryvos::Kryvos(QObject* parent)
-  : QObject{parent}, pimpl{make_unique<KryvosPrivate>()}
+  : QObject{parent}
 {
   qRegisterMetaType<std::size_t>("std::size_t");
 
   // Move cryptography object to another thread to prevent GUI from blocking
-  pimpl->cryptography->moveToThread(pimpl->cipherThread.get());
+  m->cryptography->moveToThread(m->cipherThread.get());
 
   // Connect GUI to cryptography object
-  connect(pimpl->gui.get(), &MainWindow::encrypt,
-          pimpl->cryptography.get(), &Crypto::encrypt);
+  connect(m->gui.get(), &MainWindow::encrypt,
+          m->cryptography.get(), &Crypto::encrypt);
 
-  connect(pimpl->gui.get(), &MainWindow::decrypt,
-          pimpl->cryptography.get(), &Crypto::decrypt);
+  connect(m->gui.get(), &MainWindow::decrypt,
+          m->cryptography.get(), &Crypto::decrypt);
 
   // Connections are direct so the cryptography object can be paused while
   // it is running a cipher operation on another thread
-  connect(pimpl->gui.get(), &MainWindow::pauseCipher,
-          pimpl->cryptography.get(), &Crypto::pause, Qt::DirectConnection);
+  connect(m->gui.get(), &MainWindow::pauseCipher,
+          m->cryptography.get(), &Crypto::pause, Qt::DirectConnection);
 
-  connect(pimpl->gui.get(), &MainWindow::abortCipher,
-          pimpl->cryptography.get(), &Crypto::abort, Qt::DirectConnection);
+  connect(m->gui.get(), &MainWindow::abortCipher,
+          m->cryptography.get(), &Crypto::abort, Qt::DirectConnection);
 
-  connect(pimpl->gui.get(), &MainWindow::stopFile,
-          pimpl->cryptography.get(), &Crypto::stop, Qt::DirectConnection);
+  connect(m->gui.get(), &MainWindow::stopFile,
+          m->cryptography.get(), &Crypto::stop, Qt::DirectConnection);
 
   // Update progress bars
-  connect(pimpl->cryptography.get(), &Crypto::progress,
-          pimpl->gui.get(), &MainWindow::updateProgress);
+  connect(m->cryptography.get(), &Crypto::progress,
+          m->gui.get(), &MainWindow::updateProgress);
 
   // Update status message
-  connect(pimpl->cryptography.get(), &Crypto::statusMessage,
-          pimpl->gui.get(), &MainWindow::updateStatusMessage);
+  connect(m->cryptography.get(), &Crypto::statusMessage,
+          m->gui.get(), &MainWindow::updateStatusMessage);
 
   // Update error message
-  connect(pimpl->cryptography.get(), &Crypto::errorMessage,
-          pimpl->gui.get(), &MainWindow::updateError);
+  connect(m->cryptography.get(), &Crypto::errorMessage,
+          m->gui.get(), &MainWindow::updateError);
 
   // Update cipher operation in progress status
-  connect(pimpl->cryptography.get(), &Crypto::busyStatus,
-          pimpl->gui.get(), &MainWindow::updateBusyStatus);
+  connect(m->cryptography.get(), &Crypto::busyStatus,
+          m->gui.get(), &MainWindow::updateBusyStatus);
 
-  pimpl->cipherThread->start();
+  m->cipherThread->start();
 
   // Show the main window
-  pimpl->gui->show();
+  m->gui->show();
 }
 
 Kryvos::~Kryvos()
 {
   // Abort current threaded cipher operation
-  pimpl->cryptography->abort();
+  m->cryptography->abort();
 
   // Quit the cipher thread
-  pimpl->cipherThread->quit();
+  m->cipherThread->quit();
 
-  auto timedOut = !pimpl->cipherThread->wait(1000);
+  auto timedOut = !m->cipherThread->wait(1000);
 
   // If the thread couldn't quit within one second, terminate it
   if (timedOut)
   {
-    pimpl->cipherThread->terminate();
+    m->cipherThread->terminate();
   }
 }
 

@@ -42,12 +42,12 @@
 #endif
 
 #include "settings/Settings.hpp"
+#include "utility/pimpl.h"
 #include <QtCore/QObject>
 #include <QtCore/QStringList>
 #include <QtCore/QString>
 #include <fstream>
 #include <string>
-#include <memory>
 
 /*!
  * \brief The Crypto class performs encryption and decryption using the Botan
@@ -202,7 +202,7 @@ class Crypto : public QObject {
 
  private:
   class CryptoPrivate;
-  std::unique_ptr<CryptoPrivate> pimpl;
+  pimpl<CryptoPrivate> m;
 };
 
 #endif // KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_

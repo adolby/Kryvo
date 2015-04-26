@@ -23,6 +23,7 @@
 #include "gui/SettingsFrame.hpp"
 #include "gui/SlideSwitch.hpp"
 #include "gui/FluidLayout.hpp"
+#include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QGroupBox>
@@ -46,7 +47,7 @@ class SettingsFrame::SettingsFramePrivate {
    */
   SettingsFramePrivate();
 
-  QString splitToolTip(const QString& text, const int width);
+  QString splitToolTip(const QString& text, const int width) const;
 
   QComboBox* cipherComboBox;
   QComboBox* keySizeComboBox;
@@ -59,7 +60,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
                              const std::size_t& keySize,
                              const QString& mode,
                              QWidget* parent)
-  : QFrame{parent}, pimpl{make_unique<SettingsFramePrivate>()}
+  : QFrame{parent}
 {
   // TODO: Fix this slide switch or remove it.
   //auto slideSwitch = new SlideSwitch{this};
@@ -103,15 +104,15 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   auto cipherLabel = new QLabel{tr("Cipher: "), cipherFrame};
   cipherLabel->setObjectName(QStringLiteral("text"));
 
-  pimpl->cipherComboBox = new QComboBox{cipherFrame};
-  pimpl->cipherComboBox->setObjectName(QStringLiteral("settingsComboBox"));
-  pimpl->cipherComboBox->addItem(tr("AES"));
-  pimpl->cipherComboBox->addItem(tr("Serpent"));
-  pimpl->cipherComboBox->setCurrentText(cipher);
+  m->cipherComboBox = new QComboBox{cipherFrame};
+  m->cipherComboBox->setObjectName(QStringLiteral("settingsComboBox"));
+  m->cipherComboBox->addItem(tr("AES"));
+  m->cipherComboBox->addItem(tr("Serpent"));
+  m->cipherComboBox->setCurrentText(cipher);
 
   auto cipherLayout = new QHBoxLayout{cipherFrame};
   cipherLayout->addWidget(cipherLabel);
-  cipherLayout->addWidget(pimpl->cipherComboBox);
+  cipherLayout->addWidget(m->cipherComboBox);
 
   auto keySizeFrame = new QFrame{cryptoSettingsFrame};
   keySizeFrame->setObjectName(QStringLiteral("coloredFrame"));
@@ -125,24 +126,24 @@ SettingsFrame::SettingsFrame(const QString& cipher,
                                          "encrypted output. Key sizes of 128, "
                                          "192, and 256 are all currently "
                                          "considered to be secure key sizes.")};
-  const auto keySizeSplitToolTip = pimpl->splitToolTip(keySizeToolTip,
-                                                       pimpl->toolTipWidth);
+  const auto keySizeSplitToolTip = m->splitToolTip(keySizeToolTip,
+                                                   m->toolTipWidth);
 
   auto keySizeLabel = new QLabel{tr("Key size (bits): "), keySizeFrame};
   keySizeLabel->setObjectName(QStringLiteral("text"));
   keySizeLabel->setToolTip(keySizeSplitToolTip);
 
-  pimpl->keySizeComboBox = new QComboBox{keySizeFrame};
-  pimpl->keySizeComboBox->setObjectName(QStringLiteral("settingsComboBox"));
-  pimpl->keySizeComboBox->addItem(tr("128"));
-  pimpl->keySizeComboBox->addItem(tr("192"));
-  pimpl->keySizeComboBox->addItem(tr("256"));
-  pimpl->keySizeComboBox->setCurrentText(QString::number(keySize));
-  pimpl->keySizeComboBox->setToolTip(keySizeSplitToolTip);
+  m->keySizeComboBox = new QComboBox{keySizeFrame};
+  m->keySizeComboBox->setObjectName(QStringLiteral("settingsComboBox"));
+  m->keySizeComboBox->addItem(tr("128"));
+  m->keySizeComboBox->addItem(tr("192"));
+  m->keySizeComboBox->addItem(tr("256"));
+  m->keySizeComboBox->setCurrentText(QString::number(keySize));
+  m->keySizeComboBox->setToolTip(keySizeSplitToolTip);
 
   auto keySizeLayout = new QHBoxLayout{keySizeFrame};
   keySizeLayout->addWidget(keySizeLabel);
-  keySizeLayout->addWidget(pimpl->keySizeComboBox);
+  keySizeLayout->addWidget(m->keySizeComboBox);
 
   auto modeFrame = new QFrame{cryptoSettingsFrame};
   modeFrame->setObjectName(QStringLiteral("coloredFrame"));
@@ -154,23 +155,23 @@ SettingsFrame::SettingsFrame(const QString& cipher,
                                       "transform data. GCM and EAX are both "
                                       "currently considered to be secure modes "
                                       "of operation.")};
-  const auto modeSplitToolTip = pimpl->splitToolTip(modeToolTip,
-                                                    pimpl->toolTipWidth);
+  const auto modeSplitToolTip = m->splitToolTip(modeToolTip,
+                                                m->toolTipWidth);
 
   auto modeLabel = new QLabel{tr("Mode of operation: "), modeFrame};
   modeLabel->setObjectName(QStringLiteral("text"));
   modeLabel->setToolTip(modeSplitToolTip);
 
-  pimpl->modeComboBox = new QComboBox{modeFrame};
-  pimpl->modeComboBox->setObjectName(QStringLiteral("settingsComboBox"));
-  pimpl->modeComboBox->addItem(tr("GCM"));
-  pimpl->modeComboBox->addItem(tr("EAX"));
-  pimpl->modeComboBox->setCurrentText(mode);
-  pimpl->modeComboBox->setToolTip(modeSplitToolTip);
+  m->modeComboBox = new QComboBox{modeFrame};
+  m->modeComboBox->setObjectName(QStringLiteral("settingsComboBox"));
+  m->modeComboBox->addItem(tr("GCM"));
+  m->modeComboBox->addItem(tr("EAX"));
+  m->modeComboBox->setCurrentText(mode);
+  m->modeComboBox->setToolTip(modeSplitToolTip);
 
   auto modeLayout = new QHBoxLayout{modeFrame};
   modeLayout->addWidget(modeLabel);
-  modeLayout->addWidget(pimpl->modeComboBox);
+  modeLayout->addWidget(m->modeComboBox);
 
   auto cryptoSettingsLayout = new QVBoxLayout{cryptoSettingsFrame};
   cryptoSettingsLayout->addWidget(cipherFrame);
@@ -200,15 +201,15 @@ SettingsFrame::SettingsFrame(const QString& cipher,
       &QComboBox::currentIndexChanged;
 
   // Connect cipher combo box change signal to change cipher slot
-  connect(pimpl->cipherComboBox, indexChangedSignal,
+  connect(m->cipherComboBox, indexChangedSignal,
           this, &SettingsFrame::changeCipher);
 
   // Connect key size combo box change signal to change key size slot
-  connect(pimpl->keySizeComboBox, indexChangedSignal,
+  connect(m->keySizeComboBox, indexChangedSignal,
           this, &SettingsFrame::changeKeySize);
 
   // Connect mode combo box change signal to change mode of operation slot
-  connect(pimpl->modeComboBox, indexChangedSignal,
+  connect(m->modeComboBox, indexChangedSignal,
           this, &SettingsFrame::changeModeOfOperation);
 
   // Return to previous GUI state
@@ -227,18 +228,16 @@ SettingsFrame::~SettingsFrame() {}
 
 void SettingsFrame::changeCipher()
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->cipherComboBox);
+  Q_ASSERT(m->cipherComboBox);
 
-  emit newCipher(pimpl->cipherComboBox->currentText());
+  emit newCipher(m->cipherComboBox->currentText());
 }
 
 void SettingsFrame::changeKeySize()
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->keySizeComboBox);
+  Q_ASSERT(m->keySizeComboBox);
 
-  const auto keySizeString = pimpl->keySizeComboBox->currentText();
+  const auto keySizeString = m->keySizeComboBox->currentText();
 
   const std::size_t keySize =
       static_cast<std::size_t>(keySizeString.toLongLong());
@@ -248,10 +247,9 @@ void SettingsFrame::changeKeySize()
 
 void SettingsFrame::changeModeOfOperation()
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->modeComboBox);
+  Q_ASSERT(m->modeComboBox);
 
-  emit newModeOfOperation(pimpl->modeComboBox->currentText());
+  emit newModeOfOperation(m->modeComboBox->currentText());
 }
 
 SettingsFrame::SettingsFramePrivate::SettingsFramePrivate()
@@ -260,7 +258,7 @@ SettingsFrame::SettingsFramePrivate::SettingsFramePrivate()
 {}
 
 QString SettingsFrame::SettingsFramePrivate::splitToolTip(const QString& text,
-                                                          const int width)
+                                                          const int width) const
 {
   QFontMetrics fm{QToolTip::font()};
   QString result;

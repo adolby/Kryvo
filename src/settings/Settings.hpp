@@ -23,10 +23,10 @@
 #ifndef KRYVOS_SETTINGS_SETTINGS_HPP_
 #define KRYVOS_SETTINGS_SETTINGS_HPP_
 
+#include "utility/pimpl.h"
 #include <QtCore/QPoint>
 #include <QtCore/QSize>
 #include <QtCore/QString>
-#include <memory>
 
 class Settings {
  public:
@@ -130,17 +130,9 @@ class Settings {
    */
   QString styleSheetPath() const;
 
-  void fileColumnWidth(const int fileColumnWidth);
-
-  int fileColumnWidth() const;
-
-  void progressColumnWidth(const int progressColumnWidth);
-
-  int progressColumnWidth() const;
-
  private:
   class SettingsPrivate;
-  std::unique_ptr<SettingsPrivate> pimpl;
+  pimpl<SettingsPrivate> m;
 };
 
 #endif // KRYVOS_SETTINGS_SETTINGS_HPP_
