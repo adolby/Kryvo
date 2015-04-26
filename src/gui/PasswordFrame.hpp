@@ -23,9 +23,9 @@
 #ifndef KRYVOS_GUI_PASSWORDFRAME_HPP_
 #define KRYVOS_GUI_PASSWORDFRAME_HPP_
 
+#include "utility/pimpl.h"
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLineEdit>
-#include <memory>
 
 /*!
  * \brief The PasswordFrame class contains a line edit that allows the user to
@@ -64,7 +64,7 @@ class PasswordFrame : public QFrame {
 
  private:
   class PasswordFramePrivate;
-  std::unique_ptr<PasswordFramePrivate> pimpl;
+  pimpl<PasswordFramePrivate> m;
 };
 
 #endif // KRYVOS_GUI_PASSWORDFRAME_HPP_

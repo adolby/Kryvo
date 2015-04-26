@@ -23,8 +23,8 @@
 #ifndef KRYVOS_GUI_HEADERFRAME_HPP_
 #define KRYVOS_GUI_HEADERFRAME_HPP_
 
+#include "utility/pimpl.h"
 #include <QtWidgets/QFrame>
-#include <memory>
 
 /*!
  * \brief The HeaderFrame class contains the header frame which contains the
@@ -84,7 +84,7 @@ class HeaderFrame : public QFrame {
 
  private:
   class HeaderFramePrivate;
-  std::unique_ptr<HeaderFramePrivate> pimpl;
+  pimpl<HeaderFramePrivate> m;
 };
 
 #endif // KRYVOS_GUI_HEADERFRAME_HPP_

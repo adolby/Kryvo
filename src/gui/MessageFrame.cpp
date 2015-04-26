@@ -21,7 +21,7 @@
  */
 
 #include "gui/MessageFrame.hpp"
-#include "utility/make_unique.h"
+#include "utility/pimpl_impl.h"
 #include <QtWidgets/QScroller>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QHBoxLayout>
@@ -38,25 +38,24 @@ class MessageFrame::MessageFramePrivate {
 };
 
 MessageFrame::MessageFrame(QWidget* parent)
-  : QFrame{parent}, pimpl{make_unique<MessageFramePrivate>()}
+  : QFrame{parent}
 {
-  pimpl->messageTextEdit = new QPlainTextEdit{tr("To add files, click the add "
-                                                 "files button or drag and "
-                                                 "drop files."), this};
-  pimpl->messageTextEdit->setObjectName(QStringLiteral("message"));
-  pimpl->messageTextEdit->setMaximumBlockCount(10);
-  pimpl->messageTextEdit->setReadOnly(true);
-  pimpl->messageTextEdit->setTextInteractionFlags(Qt::NoTextInteraction);
-  pimpl->messageTextEdit->viewport()->setCursor(Qt::ArrowCursor);
-  pimpl->messageTextEdit->setSizePolicy(QSizePolicy::Expanding,
+  m->messageTextEdit = new QPlainTextEdit{tr("To add files, click the add "
+                                             "files button or drag and "
+                                             "drop files."), this};
+  m->messageTextEdit->setObjectName(QStringLiteral("message"));
+  m->messageTextEdit->setMaximumBlockCount(10);
+  m->messageTextEdit->setReadOnly(true);
+  m->messageTextEdit->setTextInteractionFlags(Qt::NoTextInteraction);
+  m->messageTextEdit->viewport()->setCursor(Qt::ArrowCursor);
+  m->messageTextEdit->setSizePolicy(QSizePolicy::Expanding,
                                         QSizePolicy::Preferred);
 
   // Attach a scroller to the message text edit
-  QScroller::grabGesture(pimpl->messageTextEdit,
-                         QScroller::TouchGesture);
+  QScroller::grabGesture(m->messageTextEdit, QScroller::TouchGesture);
 
   // Disable overshoot; it makes interacting with small widgets harder
-  QScroller* scroller = QScroller::scroller(pimpl->messageTextEdit);
+  QScroller* scroller = QScroller::scroller(m->messageTextEdit);
 
   QScrollerProperties properties = scroller->scrollerProperties();
 
@@ -72,7 +71,7 @@ MessageFrame::MessageFrame(QWidget* parent)
   scroller->setScrollerProperties(properties);
 
   auto messageLayout = new QHBoxLayout{this};
-  messageLayout->addWidget(pimpl->messageTextEdit);
+  messageLayout->addWidget(m->messageTextEdit);
   messageLayout->setContentsMargins(2, 2, 2, 2);
   messageLayout->setSpacing(0);
 }
@@ -81,18 +80,16 @@ MessageFrame::~MessageFrame() {}
 
 void MessageFrame::appendPlainText(const QString& message)
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->messageTextEdit);
+  Q_ASSERT(m->messageTextEdit);
 
-  pimpl->messageTextEdit->appendPlainText(message);
+  m->messageTextEdit->appendPlainText(message);
 }
 
 void MessageFrame::setText(const QString& startText)
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->messageTextEdit);
+  Q_ASSERT(m->messageTextEdit);
 
-  pimpl->messageTextEdit->setPlainText(startText);
+  m->messageTextEdit->setPlainText(startText);
 }
 
 MessageFrame::MessageFramePrivate::MessageFramePrivate()

@@ -23,10 +23,10 @@
 #ifndef KRYVOS_GUI_SLIDINGSTACKEDWIDGET_HPP_
 #define KRYVOS_GUI_SLIDINGSTACKEDWIDGET_HPP_
 
+#include "utility/pimpl.h"
 #include <QtWidgets/QStackedWidget>
 #include <QtWidgets/QWidget>
 #include <QtCore/QEasingCurve>
-#include <memory>
 
 /*!
  * SlidingStackedWidget is a class that is derived from QStackedWidget
@@ -55,10 +55,10 @@ class SlidingStackedWidget : public QStackedWidget {
   void animationFinished();
 
  public slots:
-  void setSpeed(int speed);
-  void setAnimation(QEasingCurve::Type animationType);
-  void setVerticalMode(bool vertical);
-  void setWrap(bool wrap);
+  void setSpeed(const int speed);
+  void setAnimation(const QEasingCurve::Type animationType);
+  void setVerticalMode(const bool vertical);
+  void setWrap(const bool wrap);
 
   void slideInNext();
   void slideInPrev();
@@ -72,7 +72,7 @@ class SlidingStackedWidget : public QStackedWidget {
   void stopAnimation();
 
   class SlidingStackedWidgetPrivate;
-  std::unique_ptr<SlidingStackedWidgetPrivate> pimpl;
+  pimpl<SlidingStackedWidgetPrivate> m;
 };
 
 #endif // KRYVOS_GUI_SLIDINGSTACKEDWIDGET_HPP_

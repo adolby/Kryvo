@@ -21,7 +21,7 @@
  */
 
 #include "cryptography/Crypto.hpp"
-#include "utility/make_unique.h"
+#include "utility/pimpl_impl.h"
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 #include <QtCore/QHash>
@@ -57,7 +57,7 @@ class Crypto::CryptoPrivate {
    * \return String representing a file name without an extension.
    */
   QString removeExtension(const QString& fileName,
-                          const QString& extension);
+                          const QString& extension) const;
 
   /*!
    * \brief uniqueFileName Returns a unique file name from the input file name
@@ -67,7 +67,7 @@ class Crypto::CryptoPrivate {
    * \return String representing a unique file name created from the input file
    * name.
    */
-  QString uniqueFileName(const QString& fileName);
+  QString uniqueFileName(const QString& fileName) const;
 
   /*!
    * \brief resetFlags Resets the status flags, except pause, to default values.
@@ -157,9 +157,9 @@ class Crypto::CryptoPrivate {
 };
 
 Crypto::Crypto(Settings* settings, QObject* parent)
-  : QObject{parent}, pimpl{make_unique<CryptoPrivate>()}
+  : QObject{parent}
 {
-  pimpl->settings = settings;
+  m->settings = settings;
 
   // Initialize Botan
   Botan::LibraryInitializer init{std::string{"thread_safe=true"}};
@@ -172,12 +172,10 @@ void Crypto::encrypt(const QString& passphrase,
                      const QString& algorithm,
                      const std::size_t& inputKeySize)
 {
-  Q_ASSERT(pimpl);
+  m->busy(true);
+  emit busyStatus(m->isBusy());
 
-  pimpl->busy(true);
-  emit busyStatus(pimpl->isBusy());
-
-  pimpl->resetFlags();
+  m->resetFlags();
 
   QString algorithmName;
   auto keySize = std::size_t{};
@@ -201,21 +199,21 @@ void Crypto::encrypt(const QString& passphrase,
     {
       this->encryptFile(passphrase, inputFileName, algorithmName, keySize);
 
-      if (pimpl->isAborted())
+      if (m->isAborted())
       { // Reset abort flag
-        pimpl->abort(false);
-        emit errorMessage(inputFileName, pimpl->messages[2].arg(inputFileName));
+        m->abort(false);
+        emit errorMessage(inputFileName, m->messages[2].arg(inputFileName));
         break;
       }
 
-      if (pimpl->isStopped(inputFileName))
+      if (m->isStopped(inputFileName))
       {
-        emit errorMessage(inputFileName, pimpl->messages[2].arg(inputFileName));
+        emit errorMessage(inputFileName, m->messages[2].arg(inputFileName));
       }
     }
     catch (const Botan::Stream_IO_Error&)
     {
-      emit errorMessage(inputFileName, pimpl->messages[8].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[8].arg(inputFileName));
     }
     catch (const std::exception& e)
     {
@@ -224,21 +222,19 @@ void Crypto::encrypt(const QString& passphrase,
     }
   } // End file loop
 
-  pimpl->resetFlags();
+  m->resetFlags();
 
-  pimpl->busy(false);
-  emit busyStatus(pimpl->isBusy());
+  m->busy(false);
+  emit busyStatus(m->isBusy());
 }
 
 void Crypto::decrypt(const QString& passphrase,
                      const QStringList& inputFileNames)
 {
-  Q_ASSERT(pimpl);
+  m->busy(true);
+  emit busyStatus(m->isBusy());
 
-  pimpl->busy(true);
-  emit busyStatus(pimpl->isBusy());
-
-  pimpl->resetFlags();
+  m->resetFlags();
 
   const auto inputFileNamesSize = inputFileNames.size();
   for (auto i = 0; i < inputFileNamesSize; ++i)
@@ -249,32 +245,32 @@ void Crypto::decrypt(const QString& passphrase,
     {
       this->decryptFile(passphrase, inputFileName);
 
-      if (pimpl->isAborted())
+      if (m->isAborted())
       {
-        emit errorMessage(inputFileName, pimpl->messages[3].arg(inputFileName));
+        emit errorMessage(inputFileName, m->messages[3].arg(inputFileName));
         break;
       }
 
-      if (pimpl->isStopped(inputFileName))
+      if (m->isStopped(inputFileName))
       {
-        emit errorMessage(inputFileName, pimpl->messages[3].arg(inputFileName));
+        emit errorMessage(inputFileName, m->messages[3].arg(inputFileName));
       }
     }
     catch (const Botan::Decoding_Error&)
     {
-      emit errorMessage(inputFileName, pimpl->messages[5].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[5].arg(inputFileName));
     }
     catch (const Botan::Integrity_Failure&)
     {
-      emit errorMessage(inputFileName, pimpl->messages[5].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[5].arg(inputFileName));
     }
     catch (const std::invalid_argument&)
     {
-      emit errorMessage(inputFileName, pimpl->messages[7].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[7].arg(inputFileName));
     }
     catch (const std::runtime_error&)
     {
-      emit errorMessage(inputFileName, pimpl->messages[4].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[4].arg(inputFileName));
     }
     catch (const std::exception& e)
     {
@@ -283,36 +279,30 @@ void Crypto::decrypt(const QString& passphrase,
     }
   } // End file loop
 
-  pimpl->resetFlags();
+  m->resetFlags();
 
-  pimpl->busy(false);
-  emit busyStatus(pimpl->isBusy());
+  m->busy(false);
+  emit busyStatus(m->isBusy());
 }
 
 void Crypto::abort()
 {
-  Q_ASSERT(pimpl);
-
-  if (pimpl->isBusy())
+  if (m->isBusy())
   {
-    pimpl->abort(true);
+    m->abort(true);
   }
 }
 
 void Crypto::pause(bool pause)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->pause(pause);
+  m->pause(pause);
 }
 
 void Crypto::stop(const QString& fileName)
 {
-  Q_ASSERT(pimpl);
-
-  if (pimpl->isBusy())
+  if (m->isBusy())
   {
-    pimpl->stop(fileName, true);
+    m->stop(fileName, true);
   }
 }
 
@@ -323,7 +313,7 @@ void Crypto::encryptFile(const QString& passphrase,
 {
   QFileInfo fileInfo{inputFileName};
 
-  if (!pimpl->isAborted() && fileInfo.exists() &&
+  if (!m->isAborted() && fileInfo.exists() &&
       fileInfo.isFile() && fileInfo.isReadable())
   {
     Botan::AutoSeeded_RNG range{};
@@ -392,13 +382,13 @@ void Crypto::encryptFile(const QString& passphrase,
     this->executeCipher(inputFileName, algorithmNameStd, key, iv,
                         Botan::ENCRYPTION, in, out);
 
-    if (!pimpl->isAborted() && !pimpl->isStopped(inputFileName))
+    if (!m->isAborted() && !m->isStopped(inputFileName))
     {
       // Progress: finished
       emit progress(inputFileName, 100);
 
       // Encryption success message
-      emit statusMessage(pimpl->messages[0].arg(inputFileName));
+      emit statusMessage(m->messages[0].arg(inputFileName));
     }
   }
 }
@@ -408,7 +398,7 @@ void Crypto::decryptFile(const QString& passphrase,
 {
   const QFileInfo fileInfo{inputFileName};
 
-  if (!pimpl->isAborted() && fileInfo.exists() &&
+  if (!m->isAborted() && fileInfo.exists() &&
       fileInfo.isFile() && fileInfo.isReadable())
   {
     std::ifstream in{inputFileName.toStdString(), std::ios::binary};
@@ -426,7 +416,7 @@ void Crypto::decryptFile(const QString& passphrase,
 
     if (headerString != std::string{"-------- ENCRYPTED FILE --------"})
     {
-      emit statusMessage(pimpl->messages[6].arg(inputFileName));
+      emit statusMessage(m->messages[6].arg(inputFileName));
     }
 
     // Set up the key derive functions
@@ -464,24 +454,24 @@ void Crypto::decryptFile(const QString& passphrase,
     Botan::InitializationVector iv{kdf->derive_key(ivSize, pbkdfKey, ivSalt)};
 
     // Remove the .enc extension if it's in the file name
-    const auto outputFileName = pimpl->removeExtension(inputFileName,
-                                                       QStringLiteral("enc"));
+    const auto outputFileName = m->removeExtension(inputFileName,
+                                                   QStringLiteral("enc"));
 
     // Create a unique file name for the file in this directory
-    auto uniqueOutputFileName = pimpl->uniqueFileName(outputFileName);
+    auto uniqueOutputFileName = m->uniqueFileName(outputFileName);
 
     std::ofstream out{uniqueOutputFileName.toStdString(), std::ios::binary};
 
     this->executeCipher(inputFileName, algorithmNameStd, key, iv,
                         Botan::DECRYPTION, in, out);
 
-    if (!pimpl->isAborted() && !pimpl->isStopped(inputFileName))
+    if (!m->isAborted() && !m->isStopped(inputFileName))
     {
       // Progress: finished
       emit progress(inputFileName, 100);
 
       // Decryption success message
-      emit statusMessage(pimpl->messages[1].arg(inputFileName));
+      emit statusMessage(m->messages[1].arg(inputFileName));
     }
   }
 }
@@ -494,8 +484,6 @@ void Crypto::executeCipher(const QString& inputFileName,
                            std::ifstream& in,
                            std::ofstream& out)
 {
-  Q_ASSERT(pimpl);
-
   Botan::Pipe pipe{Botan::get_cipher(algorithmName, key, iv, cipherDirection),
                    new Botan::DataSink_Stream{out}};
 
@@ -512,9 +500,9 @@ void Crypto::executeCipher(const QString& inputFileName,
 
   pipe.start_msg();
 
-  while (in.good() && !pimpl->isAborted() && !pimpl->isStopped(inputFileName))
+  while (in.good() && !m->isAborted() && !m->isStopped(inputFileName))
   {
-    if (!pimpl->isPaused())
+    if (!m->isPaused())
     {
       in.read(reinterpret_cast<char*>(&buffer[0]), buffer.size());
       const auto remainingSize = in.gcount();
@@ -547,7 +535,7 @@ void Crypto::executeCipher(const QString& inputFileName,
 
   if (in.bad() || (in.fail() && !in.eof()))
   {
-    emit errorMessage(inputFileName, pimpl->messages[4].arg(inputFileName));
+    emit errorMessage(inputFileName, m->messages[4].arg(inputFileName));
   }
 
   out.flush();
@@ -578,7 +566,7 @@ Crypto::CryptoPrivate::CryptoPrivate()
 }
 
 QString Crypto::CryptoPrivate::removeExtension(const QString& fileName,
-                                               const QString& extension)
+                                               const QString& extension) const
 {
   QFileInfo file{fileName};
   QString newFileName = fileName;
@@ -592,7 +580,7 @@ QString Crypto::CryptoPrivate::removeExtension(const QString& fileName,
   return newFileName;
 }
 
-QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
+QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName) const
 {
   QFileInfo originalFile{fileName};
   QString uniqueFileName = fileName;
@@ -627,46 +615,46 @@ QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName)
 
 void Crypto::CryptoPrivate::abort(const bool abort)
 {
-  this->aborted = abort;
+  aborted = abort;
 }
 
 bool Crypto::CryptoPrivate::isAborted() const
 {
-  return this->aborted;
+  return aborted;
 }
 
 void Crypto::CryptoPrivate::pause(const bool pause)
 {
-  this->paused = pause;
+  paused = pause;
 }
 
 bool Crypto::CryptoPrivate::isPaused() const
 {
-  return this->paused;
+  return paused;
 }
 
 void Crypto::CryptoPrivate::stop(const QString& fileName, const bool stop)
 {
-  this->stopped.insert(fileName, stop);
+  stopped.insert(fileName, stop);
 }
 
 bool Crypto::CryptoPrivate::isStopped(const QString& fileName) const
 {
-  return this->stopped.value(fileName, false);
+  return stopped.value(fileName, false);
 }
 
 void Crypto::CryptoPrivate::resetFlags()
 {
   aborted = false;
-  this->stopped.clear();
+  stopped.clear();
 }
 
 void Crypto::CryptoPrivate::busy(const bool busy)
 {
-  this->busyStatus = busy;
+  busyStatus = busy;
 }
 
 bool Crypto::CryptoPrivate::isBusy() const
 {
-  return this->busyStatus;
+  return busyStatus;
 }

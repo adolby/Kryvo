@@ -21,7 +21,7 @@
  */
 
 #include "gui/PasswordFrame.hpp"
-#include "utility/make_unique.h"
+#include "utility/pimpl_impl.h"
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QHBoxLayout>
 
@@ -37,21 +37,21 @@ class PasswordFrame::PasswordFramePrivate {
 };
 
 PasswordFrame::PasswordFrame(QWidget* parent)
-  : QFrame{parent}, pimpl{make_unique<PasswordFramePrivate>()}
+  : QFrame{parent}
 {
   auto passwordLabel = new QLabel{tr("Password "), this};
   passwordLabel->setObjectName(QStringLiteral("text"));
 
-  pimpl->passwordLineEdit = new QLineEdit{this};
-  pimpl->passwordLineEdit->setParent(this);
-  pimpl->passwordLineEdit->setObjectName(QStringLiteral("passwordLineEdit"));
-  pimpl->passwordLineEdit->setEchoMode(QLineEdit::PasswordEchoOnEdit);
+  m->passwordLineEdit = new QLineEdit{this};
+  m->passwordLineEdit->setParent(this);
+  m->passwordLineEdit->setObjectName(QStringLiteral("passwordLineEdit"));
+  m->passwordLineEdit->setEchoMode(QLineEdit::PasswordEchoOnEdit);
 
   auto passwordLayout = new QHBoxLayout{this};
   passwordLayout->addWidget(passwordLabel);
-  passwordLayout->addWidget(pimpl->passwordLineEdit);
+  passwordLayout->addWidget(m->passwordLineEdit);
 
-  connect(pimpl->passwordLineEdit, &QLineEdit::editingFinished,
+  connect(m->passwordLineEdit, &QLineEdit::editingFinished,
           this, &PasswordFrame::editingFinished);
 }
 
@@ -59,10 +59,9 @@ PasswordFrame::~PasswordFrame() {}
 
 QString PasswordFrame::password() const
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->passwordLineEdit);
+  Q_ASSERT(m->passwordLineEdit);
 
-  auto password = pimpl->passwordLineEdit->text();
+  auto password = m->passwordLineEdit->text();
 
   return password;
 }

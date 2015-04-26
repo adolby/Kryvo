@@ -22,6 +22,7 @@
 
 #include "gui/HeaderFrame.hpp"
 #include "gui/FluidLayout.hpp"
+#include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QLabel>
@@ -45,7 +46,7 @@ class HeaderFrame::HeaderFramePrivate {
 };
 
 HeaderFrame::HeaderFrame(QWidget* parent)
-  : QFrame{parent}, pimpl{make_unique<HeaderFramePrivate>()}
+  : QFrame{parent}
 {
   auto headerLabel = new QLabel{tr("Kryvos"), this};
   headerLabel->setObjectName(QStringLiteral("headerText"));
@@ -54,40 +55,39 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   buttonFrame->setObjectName(QStringLiteral("coloredFrame"));
 
   const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
-  pimpl->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), this};
-  pimpl->pauseButton->setObjectName(QStringLiteral("pauseButton"));
-  pimpl->pauseButton->setCheckable(true);
-  pimpl->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), this};
+  m->pauseButton->setObjectName(QStringLiteral("pauseButton"));
+  m->pauseButton->setCheckable(true);
+  m->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const auto addFilesIcon = QIcon{QStringLiteral(":/images/addFilesIcon.png")};
-  pimpl->addFilesButton = new QPushButton{addFilesIcon,
-                                          tr(" Add files"),
-                                          this};
-  pimpl->addFilesButton->setObjectName(QStringLiteral("addButton"));
-  pimpl->addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m->addFilesButton = new QPushButton{addFilesIcon,
+                                      tr(" Add files"),
+                                      this};
+  m->addFilesButton->setObjectName(QStringLiteral("addButton"));
+  m->addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const auto clearFilesIcon =
-      QIcon{QStringLiteral(":/images/clearFilesIcon.png")};
-  pimpl->clearFilesButton = new QPushButton{clearFilesIcon,
-                                            tr(" Remove all files"),
-                                            this};
-  pimpl->clearFilesButton->setObjectName(QStringLiteral("clearButton"));
-  pimpl->clearFilesButton->setSizePolicy(QSizePolicy::Fixed,
-                                         QSizePolicy::Fixed);
+        QIcon{QStringLiteral(":/images/clearFilesIcon.png")};
+  m->clearFilesButton = new QPushButton{clearFilesIcon,
+                                        tr(" Remove all files"),
+                                        this};
+  m->clearFilesButton->setObjectName(QStringLiteral("clearButton"));
+  m->clearFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const auto settingsIcon = QIcon{QStringLiteral(":/images/gearIcon.png")};
-  pimpl->settingsButton = new QPushButton{settingsIcon,
-                                          tr(" Settings"),
-                                          this};
-  pimpl->settingsButton->setObjectName(QStringLiteral("settingsButton"));
-  pimpl->settingsButton->setSizePolicy(QSizePolicy::Fixed,
-                                       QSizePolicy::Fixed);
+  m->settingsButton = new QPushButton{settingsIcon,
+                                      tr(" Settings"),
+                                      this};
+  m->settingsButton->setObjectName(QStringLiteral("settingsButton"));
+  m->settingsButton->setSizePolicy(QSizePolicy::Fixed,
+                                   QSizePolicy::Fixed);
 
   auto buttonLayout = new FluidLayout{buttonFrame};
-  buttonLayout->addWidget(pimpl->pauseButton);
-  buttonLayout->addWidget(pimpl->addFilesButton);
-  buttonLayout->addWidget(pimpl->clearFilesButton);
-  buttonLayout->addWidget(pimpl->settingsButton);
+  buttonLayout->addWidget(m->pauseButton);
+  buttonLayout->addWidget(m->addFilesButton);
+  buttonLayout->addWidget(m->clearFilesButton);
+  buttonLayout->addWidget(m->settingsButton);
 
   auto headerLayout = new QHBoxLayout{this};
   headerLayout->addWidget(headerLabel, 0);
@@ -95,15 +95,15 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   headerLayout->addWidget(buttonFrame, 1);
   headerLayout->setContentsMargins(10, 0, 0, 0);
 
-  connect(pimpl->pauseButton, &QPushButton::toggled,
+  connect(m->pauseButton, &QPushButton::toggled,
           this, &HeaderFrame::pause);
-  connect(pimpl->pauseButton, &QPushButton::toggled,
+  connect(m->pauseButton, &QPushButton::toggled,
           this, &HeaderFrame::togglePauseIcon);
-  connect(pimpl->addFilesButton, &QPushButton::clicked,
+  connect(m->addFilesButton, &QPushButton::clicked,
           this, &HeaderFrame::addFiles);
-  connect(pimpl->clearFilesButton, &QPushButton::clicked,
+  connect(m->clearFilesButton, &QPushButton::clicked,
           this, &HeaderFrame::removeFiles);
-  connect(pimpl->settingsButton, &QPushButton::clicked,
+  connect(m->settingsButton, &QPushButton::clicked,
           this, &HeaderFrame::switchFrame);
 }
 
@@ -111,35 +111,33 @@ HeaderFrame::~HeaderFrame() {}
 
 void HeaderFrame::togglePauseIcon(const bool toggle)
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->pauseButton);
+  Q_ASSERT(m->pauseButton);
 
   if (toggle)
   {
     const auto resumeIcon = QIcon{QStringLiteral(":/images/resumeIcon.png")};
-    pimpl->pauseButton->setIcon(resumeIcon);
-    pimpl->pauseButton->setText(tr(" Resume"));
+    m->pauseButton->setIcon(resumeIcon);
+    m->pauseButton->setText(tr(" Resume"));
   }
   else
   {
     const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
-    pimpl->pauseButton->setIcon(pauseIcon);
-    pimpl->pauseButton->setText(tr(" Pause"));
+    m->pauseButton->setIcon(pauseIcon);
+    m->pauseButton->setText(tr(" Pause"));
   }
 }
 
 void HeaderFrame::setIconSize(const QSize& iconSize)
 {
-  Q_ASSERT(pimpl);
-  Q_ASSERT(pimpl->pauseButton);
-  Q_ASSERT(pimpl->addFilesButton);
-  Q_ASSERT(pimpl->clearFilesButton);
+  Q_ASSERT(m->pauseButton);
+  Q_ASSERT(m->addFilesButton);
+  Q_ASSERT(m->clearFilesButton);
 
-  pimpl->iconSize = iconSize;
+  m->iconSize = iconSize;
 
-  pimpl->pauseButton->setIconSize(pimpl->iconSize);
-  pimpl->addFilesButton->setIconSize(pimpl->iconSize);
-  pimpl->clearFilesButton->setIconSize(pimpl->iconSize);
+  m->pauseButton->setIconSize(m->iconSize);
+  m->addFilesButton->setIconSize(m->iconSize);
+  m->clearFilesButton->setIconSize(m->iconSize);
 }
 
 HeaderFrame::HeaderFramePrivate::HeaderFramePrivate()

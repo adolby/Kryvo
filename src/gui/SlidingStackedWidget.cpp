@@ -20,7 +20,8 @@
  * Contact : andrewdolby@gmail.com
  */
 
-#include "SlidingStackedWidget.hpp"
+#include "gui/SlidingStackedWidget.hpp"
+#include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
 #include <QtWidgets/QPushButton>
 #include <QtCore/QParallelAnimationGroup>
@@ -34,7 +35,6 @@ class SlidingStackedWidget::SlidingStackedWidgetPrivate {
    * private implementation.
    */
   SlidingStackedWidgetPrivate();
-  virtual ~SlidingStackedWidgetPrivate();
 
   int speed;
   QEasingCurve::Type animationType;
@@ -50,35 +50,35 @@ class SlidingStackedWidget::SlidingStackedWidgetPrivate {
 };
 
 SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
-  : QStackedWidget{parent}, pimpl{make_unique<SlidingStackedWidgetPrivate>()}
+  : QStackedWidget{parent}
 {
-  pimpl->animationGroup->setParent(this);
+  m->animationGroup->setParent(this);
 
-  connect(pimpl->animationGroup, &QParallelAnimationGroup::finished,
+  connect(m->animationGroup, &QParallelAnimationGroup::finished,
           this, &SlidingStackedWidget::animationDone);
 }
 
 SlidingStackedWidget::~SlidingStackedWidget()
 {}
 
-void SlidingStackedWidget::setSpeed(int speed)
+void SlidingStackedWidget::setSpeed(const int speed)
 {
-  pimpl->speed = speed;
+  m->speed = speed;
 }
 
 void SlidingStackedWidget::setAnimation(QEasingCurve::Type animationType)
 {
-  pimpl->animationType = animationType;
+  m->animationType = animationType;
 }
 
-void SlidingStackedWidget::setVerticalMode(bool vertical)
+void SlidingStackedWidget::setVerticalMode(const bool vertical)
 {
-  pimpl->vertical = vertical;
+  m->vertical = vertical;
 }
 
-void SlidingStackedWidget::setWrap(bool wrap)
+void SlidingStackedWidget::setWrap(const bool wrap)
 {
-  pimpl->wrap = wrap;
+  m->wrap = wrap;
 }
 
 void SlidingStackedWidget::slideInNext()
@@ -87,7 +87,7 @@ void SlidingStackedWidget::slideInNext()
 
   auto index = currentIndex();
 
-  if (pimpl->wrap || (index < count() - 1))
+  if (m->wrap || (index < count() - 1))
   {
     slideInIndex(index + 1);
   }
@@ -99,7 +99,7 @@ void SlidingStackedWidget::slideInPrev()
 
   auto index = currentIndex();
 
-  if (pimpl->wrap || (index > 0))
+  if (m->wrap || (index > 0))
   {
     slideInIndex(index - 1);
   }
@@ -114,12 +114,12 @@ void SlidingStackedWidget::slideInIndex(const int index,
   // Bound index and direction to stack
   if (index > count() - 1)
   {
-    updatedDirection = pimpl->vertical ? TopToBottom : RightToLeft;
+    updatedDirection = m->vertical ? TopToBottom : RightToLeft;
     updatedIndex = index % count();
   }
   else if (index < 0)
   {
-    updatedDirection = pimpl->vertical ? BottomToTop : LeftToRight;
+    updatedDirection = m->vertical ? BottomToTop : LeftToRight;
     updatedIndex = (index + count()) % count();
   }
 
@@ -128,10 +128,10 @@ void SlidingStackedWidget::slideInIndex(const int index,
 
 void SlidingStackedWidget::animationDone()
 {
-  setCurrentIndex(pimpl->nextIndex);
+  setCurrentIndex(m->nextIndex);
 
   // Reset the position of the out-shifted widget
-  widget(pimpl->currentIndex)->move(pimpl->lastWidgetPos);
+  widget(m->currentIndex)->move(m->lastWidgetPos);
 
   emit animationFinished();
 }
@@ -150,11 +150,11 @@ void SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
     {
       if (currentIdx < nextIdx)
       {
-        directionHint = pimpl->vertical ? TopToBottom : RightToLeft;
+        directionHint = m->vertical ? TopToBottom : RightToLeft;
       }
       else
       {
-        directionHint = pimpl->vertical ? BottomToTop : LeftToRight;
+        directionHint = m->vertical ? BottomToTop : LeftToRight;
       }
     }
 
@@ -189,7 +189,7 @@ void SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
 
     auto currentWidgetPos = currentWidget->pos();
     // Store current widget position for re-positioning later
-    pimpl->lastWidgetPos = currentWidgetPos;
+    m->lastWidgetPos = currentWidgetPos;
 
     auto nextWidgetPos = nextWidget->pos();
     nextWidget->move(nextWidgetPos.x() - offsetX,
@@ -199,41 +199,41 @@ void SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
     nextWidget->show();
 
     // Animate both the current and next widget to the side
-    pimpl->currentWidgetAnimation->setTargetObject(currentWidget);
-    pimpl->currentWidgetAnimation->setDuration(pimpl->speed);
-    pimpl->currentWidgetAnimation->setEasingCurve(pimpl->animationType);
-    pimpl->currentWidgetAnimation->setStartValue(currentWidgetPos);
-    pimpl->currentWidgetAnimation->setEndValue(QPoint{offsetX +
-                                                      currentWidgetPos.x(),
-                                                      offsetY +
-                                                      currentWidgetPos.y()});
+    m->currentWidgetAnimation->setTargetObject(currentWidget);
+    m->currentWidgetAnimation->setDuration(m->speed);
+    m->currentWidgetAnimation->setEasingCurve(m->animationType);
+    m->currentWidgetAnimation->setStartValue(currentWidgetPos);
+    m->currentWidgetAnimation->setEndValue(QPoint{offsetX +
+                                                  currentWidgetPos.x(),
+                                                  offsetY +
+                                                  currentWidgetPos.y()});
 
-    pimpl->nextWidgetAnimation->setTargetObject(nextWidget);
-    pimpl->nextWidgetAnimation->setDuration(pimpl->speed);
-    pimpl->nextWidgetAnimation->setEasingCurve(pimpl->animationType);
-    pimpl->nextWidgetAnimation->setStartValue(QPoint{-offsetX +
-                                                     nextWidgetPos.x(),
-                                                     offsetY +
-                                                     nextWidgetPos.y()});
-    pimpl->nextWidgetAnimation->setEndValue(nextWidgetPos);
+    m->nextWidgetAnimation->setTargetObject(nextWidget);
+    m->nextWidgetAnimation->setDuration(m->speed);
+    m->nextWidgetAnimation->setEasingCurve(m->animationType);
+    m->nextWidgetAnimation->setStartValue(QPoint{-offsetX +
+                                                 nextWidgetPos.x(),
+                                                 offsetY +
+                                                 nextWidgetPos.y()});
+    m->nextWidgetAnimation->setEndValue(nextWidgetPos);
 
-    pimpl->nextIndex = nextIdx;
-    pimpl->currentIndex = currentIdx;
-    pimpl->animationGroup->start();
+    m->nextIndex = nextIdx;
+    m->currentIndex = currentIdx;
+    m->animationGroup->start();
   }
 }
 
 void SlidingStackedWidget::stopAnimation()
 {
-  if (pimpl->animationGroup->state() == QAbstractAnimation::Running)
+  if (m->animationGroup->state() == QAbstractAnimation::Running)
   {
-    pimpl->animationGroup->stop();
+    m->animationGroup->stop();
 
-    setCurrentIndex(pimpl->nextIndex);
+    setCurrentIndex(m->nextIndex);
 
     // Reset the position of the shifted widgets
-    widget(pimpl->currentIndex)->move(pimpl->lastWidgetPos);
-    widget(pimpl->nextIndex)->move(pimpl->lastWidgetPos);
+    widget(m->currentIndex)->move(m->lastWidgetPos);
+    widget(m->nextIndex)->move(m->lastWidgetPos);
   }
 }
 
@@ -252,7 +252,3 @@ SlidingStackedWidget::SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate()
   animationGroup->addAnimation(currentWidgetAnimation);
   animationGroup->addAnimation(nextWidgetAnimation);
 }
-
-SlidingStackedWidget::SlidingStackedWidgetPrivate::
-~SlidingStackedWidgetPrivate()
-{}

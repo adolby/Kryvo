@@ -21,6 +21,7 @@
  */
 
 #include "settings/Settings.hpp"
+#include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
@@ -54,157 +55,95 @@ class Settings::SettingsPrivate {
   QString mode;
   QString lastDirectory;
   QString styleSheetPath;
-  int fileColumnWidth;
-  int progressColumnWidth;
 };
 
 Settings::Settings()
-  : pimpl{make_unique<SettingsPrivate>()}
 {
-  pimpl->importSettings();
+  m->importSettings();
 }
 
 Settings::~Settings()
 {
-  pimpl->exportSettings();
+  m->exportSettings();
 }
 
 void Settings::position(const QPoint& position)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->position = position;
+  m->position = position;
 }
 
 QPoint Settings::position() const
 {
-  Q_ASSERT(pimpl);
-
-  return pimpl->position;
+  return m->position;
 }
 
 void Settings::maximized(const bool maximized)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->maximized = maximized;
+  m->maximized = maximized;
 }
 
 bool Settings::maximized() const
 {
-  Q_ASSERT(pimpl);
-
-  return pimpl->maximized;
+  return m->maximized;
 }
 
 void Settings::size(const QSize& size)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->size = size;
+  m->size = size;
 }
 
 QSize Settings::size() const
 {
-  Q_ASSERT(pimpl);
-
-  return pimpl->size;
+  return m->size;
 }
 
 void Settings::cipher(const QString& cipherName)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->cipher = cipherName;
+  m->cipher = cipherName;
 }
 
 QString Settings::cipher() const
 {
-  Q_ASSERT(pimpl);
-
-  return pimpl->cipher;
+  return m->cipher;
 }
 
 void Settings::keySize(const std::size_t& keySize)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->keySize = keySize;
+  m->keySize = keySize;
 }
 
 std::size_t Settings::keySize() const
 {
-  Q_ASSERT(pimpl);
-
-  return pimpl->keySize;
+  return m->keySize;
 }
 
 void Settings::modeOfOperation(const QString& modeOfOperation)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->mode = modeOfOperation;
+  m->mode = modeOfOperation;
 }
 
 QString Settings::modeOfOperation() const
 {
-  Q_ASSERT(pimpl);
-
-  return pimpl->mode;
+  return m->mode;
 }
 
 void Settings::lastDirectory(const QString& directory)
 {
-  Q_ASSERT(pimpl);
-
-  pimpl->lastDirectory = directory;
+  m->lastDirectory = directory;
 }
 
 QString Settings::lastDirectory() const
 {
-  Q_ASSERT(pimpl);
-
-  return pimpl->lastDirectory;
+  return m->lastDirectory;
 }
 
 QString Settings::styleSheetPath() const
 {
-  Q_ASSERT(pimpl);
-
-  return pimpl->styleSheetPath;
-}
-
-void Settings::fileColumnWidth(const int fileColumnWidth)
-{
-  Q_ASSERT(pimpl);
-
-  pimpl->fileColumnWidth = fileColumnWidth;
-}
-
-int Settings::fileColumnWidth() const
-{
-  Q_ASSERT(pimpl);
-
-  return pimpl->fileColumnWidth;
-}
-
-void Settings::progressColumnWidth(const int progressColumnWidth)
-{
-  Q_ASSERT(pimpl);
-
-  pimpl->progressColumnWidth = progressColumnWidth;
-}
-
-int Settings::progressColumnWidth() const
-{
-  Q_ASSERT(pimpl);
-
-  return pimpl->progressColumnWidth;
+  return m->styleSheetPath;
 }
 
 Settings::SettingsPrivate::SettingsPrivate()
-  : maximized{false}, keySize{128}, fileColumnWidth{0},
-    progressColumnWidth{0}
+  : maximized{false}, keySize{128}
 {}
 
 void Settings::SettingsPrivate::importSettings()
@@ -254,14 +193,6 @@ void Settings::SettingsPrivate::importSettings()
     auto styleObject =
         static_cast<QJsonValue>(settings[QStringLiteral("styleSheetPath")]);
     styleSheetPath = styleObject.toString(QStringLiteral("default/kryvos.qss"));
-
-    auto fileColumnObject = static_cast<QJsonValue>
-                            (settings[QStringLiteral("fileColumnWidth")]);
-    fileColumnWidth = fileColumnObject.toInt();
-
-    auto progressColumnObject = static_cast<QJsonValue>
-                          (settings[QStringLiteral("progressColumnWidth")]);
-    progressColumnWidth = progressColumnObject.toInt();
   }
   else
   { // Settings file couldn't be opened, so use defaults
@@ -271,8 +202,6 @@ void Settings::SettingsPrivate::importSettings()
     keySize = 128;
     mode = QStringLiteral("GCM");
     styleSheetPath = QStringLiteral("default/kryvos.qss");
-    fileColumnWidth = 0;
-    progressColumnWidth = 0;
   }
 }
 
@@ -306,8 +235,6 @@ void Settings::SettingsPrivate::exportSettings() const
     settings[QStringLiteral("keySize")] = static_cast<int>(keySize);
     settings[QStringLiteral("modeOfOperation")] = mode;
     settings[QStringLiteral("styleSheetPath")] = styleSheetPath;
-    settings[QStringLiteral("fileColumnWidth")] = fileColumnWidth;
-    settings[QStringLiteral("progressColumnWidth")] = progressColumnWidth;
 
     auto settingsDoc = QJsonDocument{settings};
     settingsFile.write(settingsDoc.toJson());

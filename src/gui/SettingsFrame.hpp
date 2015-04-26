@@ -23,9 +23,9 @@
 #ifndef KRYVOS_GUI_SETTINGSFRAME_HPP_
 #define KRYVOS_GUI_SETTINGSFRAME_HPP_
 
+#include "utility/pimpl.h"
 #include <QtWidgets/QFrame>
 #include <QtCore/QString>
-#include <memory>
 
 /*!
  * \brief The SettingsFrame class contains controls for customizing encryption
@@ -98,7 +98,7 @@ class SettingsFrame : public QFrame {
 
  private:
   class SettingsFramePrivate;
-  std::unique_ptr<SettingsFramePrivate> pimpl;
+  pimpl<SettingsFramePrivate> m;
 };
 
 #endif // KRYVOS_GUI_SETTINGSFRAME_HPP_

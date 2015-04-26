@@ -23,8 +23,8 @@
 #ifndef KRYVOS_GUI_CONTROLBUTTONFRAME_HPP_
 #define KRYVOS_GUI_CONTROLBUTTONFRAME_HPP_
 
+#include "utility/pimpl.h"
 #include <QtWidgets/QFrame>
-#include <memory>
 
 /*!
  * \brief The ControlButtonFrame class contains the encryption/decryption
@@ -73,7 +73,7 @@ class ControlButtonFrame : public QFrame {
 
  private:
   class ControlButtonFramePrivate;
-  std::unique_ptr<ControlButtonFramePrivate> pimpl;
+  pimpl<ControlButtonFramePrivate> m;
 };
 
 #endif // KRYVOS_GUI_CONTROLBUTTONFRAME_HPP_

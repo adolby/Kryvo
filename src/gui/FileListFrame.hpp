@@ -23,9 +23,9 @@
 #ifndef KRYVOS_GUI_FILELISTFRAME_HPP_
 #define KRYVOS_GUI_FILELISTFRAME_HPP_
 
+#include "utility/pimpl.h"
 #include <QtWidgets/QFrame>
 #include <QtGui/QStandardItem>
-#include <memory>
 
 /*!
  * \brief The FileListFrame class contains the file list that displays the file
@@ -75,7 +75,7 @@ class FileListFrame : public QFrame {
    * \param row Integer representing the file list model row
    * \return Standard item taken from specified index in the file list model
    */
-  QStandardItem* item(int row) const;
+  QStandardItem* item(const int row);
 
   /*!
    * \brief rowCount Returns the number of rows in the file list model.
@@ -101,7 +101,7 @@ class FileListFrame : public QFrame {
 
  private:
   class FileListFramePrivate;
-  std::unique_ptr<FileListFramePrivate> pimpl;
+  pimpl<FileListFramePrivate> m;
 };
 
 #endif // KRYVOS_GUI_FILELISTFRAME_HPP_
