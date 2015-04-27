@@ -100,7 +100,6 @@ Kryvos::Kryvos(QObject* parent)
 
   m->cipherThread->start();
 
-  // Show the main window
   m->gui->show();
 }
 
