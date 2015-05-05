@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Installer>
-    <Name>Kryvos File Encryptor</Name>
+    <Name>Kryvos</Name>
     <Version>0.9.8</Version>
     <Title>Kryvos File Encryptor</Title>
     <Publisher>The Kryvos Project</Publisher>
@@ -8,6 +8,8 @@
     <InstallerWindowIcon>kryvos</InstallerWindowIcon>
     <InstallerApplicationIcon>kryvos</InstallerApplicationIcon>
     <Logo>logo.png</Logo>
+    <AllowSpaceInPath>true</AllowSpaceInPath>
     <StartMenuDir>Kryvos</StartMenuDir>
-    <TargetDir>@RootDir@/Programs/Kryvos</TargetDir>
+    <TargetDir>@RootDir@/Program Files/@ProductName@</TargetDir>
+    <AdminTargetDir>@RootDir@/Program Files/@ProductName@</AdminTargetDir>
 </Installer>
