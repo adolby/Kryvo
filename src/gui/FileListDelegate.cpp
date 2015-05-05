@@ -104,8 +104,8 @@ void FileListDelegate::paint(QPainter* painter,
       const auto closeIcon =
           QIcon{QStringLiteral(":/images/closeFileIcon.png")};
       buttonOption.icon = closeIcon;
-      const auto iconSize = QSize{static_cast<int>(option.rect.width() * 0.6),
-                                  static_cast<int>(option.rect.height() * 0.6)};
+      const auto iconSize = QSize{static_cast<int>(option.rect.width() * 0.4),
+                                  static_cast<int>(option.rect.height() * 0.4)};
       buttonOption.iconSize = iconSize;
 
       QApplication::style()->drawControl(QStyle::CE_PushButton,
