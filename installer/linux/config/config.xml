@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Installer>
-    <Name>Kryvos File Encryptor</Name>
-    <Version>0.9.6</Version>
+    <Name>Kryvos</Name>
+    <Version>0.9.8</Version>
     <Title>Kryvos File Encryptor</Title>
     <Publisher>The Kryvos Project</Publisher>
     <ProductUrl>https://github.com/adolby/Kryvos/</ProductUrl>
     <InstallerWindowIcon>kryvos</InstallerWindowIcon>
     <Logo>logo.png</Logo>
     <StartMenuDir>Kryvos</StartMenuDir>
-    <TargetDir>@ApplicationsDir@/Kryvos</TargetDir>
+    <TargetDir>@HomeDir@/@ProductName@</TargetDir>
+    <AdminTargetDir>@ApplicationsDir@/@ProductName@</AdminTargetDir>
 </Installer>

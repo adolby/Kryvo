@@ -3,10 +3,9 @@
     <DisplayName>Kryvos</DisplayName>
     <Description>Install Kryvos.</Description>
     <Version>0.9.8</Version>
-    <ReleaseDate>2015-04-06</ReleaseDate>
+    <ReleaseDate>2015-05-05</ReleaseDate>
     <Licenses>
         <License name="GNU General Public License" file="LICENSE.GPL" />
     </Licenses>
-    <Default>script</Default>
-    <Script>installscript.qs</Script>
+    <Default>true</Default>
 </Package>
