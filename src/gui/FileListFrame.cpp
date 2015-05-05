@@ -64,6 +64,7 @@ FileListFrame::FileListFrame(QWidget* parent)
   m->fileListView->setModel(m->fileListModel.get());
   m->fileListView->setShowGrid(false);
   m->fileListView->verticalHeader()->hide();
+  m->fileListView->horizontalHeader()->hide();
   m->fileListView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
   QHeaderView* header = m->fileListView->horizontalHeader();
