@@ -178,11 +178,11 @@ android-g++ {
 
     debug {
       message(Debug)
-      DESTDIR = ../build/macx/x86/debug/
+      DESTDIR = ../build/macx/x64/debug/
     }
     release {
       message(Release)
-      DESTDIR = ../build/macx/x86/release/
+      DESTDIR = ../build/macx/x64/release/
     }
   }
 
