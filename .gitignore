@@ -40,8 +40,8 @@
 ######
 
 [Qq]rc/
-/.qmake.cache
-/.qmake.stash
+.qmake.cache
+.qmake.stash
 *.pro.user
 *.pro.user.*
 *.qbs.user
@@ -56,9 +56,13 @@ Makefile*
 # Qt Creator
 *.autosave
 
-##############
-## Windows detritus
-##############
+# Qt Creator Qml
+*.qmlproject.user
+*.qmlproject.user.*
+
+####################
+## OS detritus
+####################
 
 # Windows image file caches
 Thumbs.db
@@ -130,6 +134,19 @@ ipch/
 
 # Windows Store app package directory
 AppPackages/
+
+#################
+## Packages
+#################
+
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
 
 # Others
 *.Cache
