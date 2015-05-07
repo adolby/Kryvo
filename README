@@ -11,7 +11,7 @@ Theming
 -------
 Kryvos supports user theming. To create your own theme, start with the kryvos.qss file in the themes directory as your template. The kryvos.qss file is a stylesheet file that has syntax very similar to CSS. Colors, fonts, and many other attributes can be styled. Save your stylesheet file inside of the themes folder. To apply your theme to Kryvos, edit the settings.ini file located in the same directory as kryvos.exe. Change the value styleSheetPath to your newly created stylesheet file.
 
-Example: You created a new theme and saved the stylesheet to myTheme.qss in the themes folder. You would then update settings.ini with this value: styleSheetPath=myTheme.qss
+Example: You created a new theme and saved the stylesheet to myTheme.qss in the themes folder. You would then update settings.json with this value: styleSheetPath: myTheme.qss
 
 Licenses
 --------
