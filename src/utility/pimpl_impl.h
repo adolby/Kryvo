@@ -23,7 +23,7 @@
 #ifndef KRYVOS_UTILITY_PIMPL_IMPL_H_
 #define KRYVOS_UTILITY_PIMPL_IMPL_H_
 
-#include "make_unique.h"
+#include "utility/make_unique.h"
 #include <utility>
 
 template<typename T>
