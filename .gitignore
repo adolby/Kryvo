@@ -1,4 +1,4 @@
-# Build results
+# Build output directories
 [Dd]ebug/
 [Rr]elease/
 [Bb]uild/
@@ -52,6 +52,8 @@ qrc_*.cpp
 ui_*.h
 Makefile*
 *-build-*
+*.Debug
+*.Release
 
 # Qt Creator
 *.autosave
@@ -94,6 +96,7 @@ $RECYCLE.BIN/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
+*_resource.rc
 *_i.c
 *_p.c
 *.ilk
