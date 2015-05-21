@@ -79,8 +79,8 @@ HEADERS += \
   gui/SlidingStackedWidget.hpp \
   settings/Settings.hpp \
   utility/make_unique.h \
-    utility/pimpl_impl.h \
-    utility/pimpl.h
+  utility/pimpl_impl.h \
+  utility/pimpl.h
 
 # Platform-specific configuration
 android-g++ {
