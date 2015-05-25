@@ -190,11 +190,8 @@ void Crypto::encrypt(const QString& passphrase,
     keySize = static_cast<std::size_t>(128);
   }
 
-  const auto inputFileNamesSize = inputFileNames.size();
-  for (auto i = 0; i < inputFileNamesSize; ++i)
+  for (const auto& inputFileName : inputFileNames)
   {
-    const auto inputFileName = inputFileNames[i];
-
     try
     {
       this->encryptFile(passphrase, inputFileName, algorithmName, keySize);
@@ -236,11 +233,8 @@ void Crypto::decrypt(const QString& passphrase,
 
   m->resetFlags();
 
-  const auto inputFileNamesSize = inputFileNames.size();
-  for (auto i = 0; i < inputFileNamesSize; ++i)
+  for (const auto& inputFileName : inputFileNames)
   {
-    const auto inputFileName = inputFileNames[i];
-
     try
     {
       this->decryptFile(passphrase, inputFileName);
