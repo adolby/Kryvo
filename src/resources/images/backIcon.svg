@@ -18,6 +18,7 @@
 
     Contact : andrewdolby@gmail.com
 -->
+
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
@@ -28,13 +29,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="50"
-   height="50"
+   width="26.666668"
+   height="40"
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
    sodipodi:docname="backIcon.svg"
-   inkscape:export-filename="C:\Users\Andrew\Documents\GitHub\Kryvos\src\resources\images\backIcon.png"
+   inkscape:export-filename="C:\Users\Andrew\Documents\GitHub\Kryvos\src\resources\images\rightArrowIcon.png"
    inkscape:export-xdpi="89.330002"
    inkscape:export-ydpi="89.330002">
   <defs
@@ -46,17 +47,31 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="11.229167"
-     inkscape:cx="13.879597"
-     inkscape:cy="26.286243"
+     inkscape:zoom="32"
+     inkscape:cx="7.4563007"
+     inkscape:cy="11.350262"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     showgrid="false"
+     showgrid="true"
      inkscape:window-width="1680"
      inkscape:window-height="987"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0">
+    <inkscape:grid
+       type="xygrid"
+       id="grid3297"
+       empspacing="5"
+       visible="true"
+       enabled="true"
+       snapvisiblegridlinesonly="true"
+       originx="0px"
+       originy="0px" />
+  </sodipodi:namedview>
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -73,24 +88,14 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-1002.3622)">
-    <rect
-       style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.83902001;stroke-opacity:1"
-       id="rect3048"
-       width="44.301605"
-       height="6.8452587"
-       x="-445.3981"
-       y="923.54138"
-       ry="3.4171214"
-       transform="matrix(0.89914361,-0.4376537,0.43751442,0.89921139,0,0)" />
-    <rect
-       style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.8340345;stroke-opacity:1"
-       id="rect3048-1"
-       width="44.586205"
-       height="6.7209725"
-       x="523.6579"
-       y="898.88226"
-       ry="3.3550782"
-       transform="matrix(0.88210797,0.47104727,-0.50605665,0.86250024,0,0)" />
+     transform="translate(0,-1012.3622)">
+    <path
+       style="fill:#ffffff;stroke:none"
+       d="m 0,1032.3622 22.222222,-20 4.444445,4.0004 -17.7777781,15.9996 17.7777781,15.9996 -4.444445,4.0004 L 0,1032.3622"
+       id="path4069"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="C:\Users\Andrew\Documents\GitHub\Kryvos\src\resources\images\backIcon.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
   </g>
 </svg>
