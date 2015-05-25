@@ -50,7 +50,7 @@ QSize FluidLayout::minimumSize() const
 {
   QSize size{};
 
-  for (auto item : itemList)
+  for (const auto& item : itemList)
   {
     size = size.expandedTo(item->minimumSize());
   }
@@ -73,7 +73,7 @@ void FluidLayout::doLayout(const QRect& rect)
 
   auto testLineCount = 1;
 
-  for (auto item : itemList)
+  for (const auto& item : itemList)
   {
     auto wid = item->widget();
 
@@ -126,7 +126,7 @@ int FluidLayout::checkLayout(const QRect& rect) const
   auto y = effectiveRect.y();
   int lineHeight = 0;
 
-  for (auto item : itemList)
+  for (const auto& item : itemList)
   {
     auto wid = item->widget();
 
