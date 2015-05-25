@@ -22,9 +22,14 @@
 
 #include "gui/MessageFrame.hpp"
 #include "utility/pimpl_impl.h"
-#include <QtWidgets/QScroller>
-#include <QtWidgets/QPlainTextEdit>
+#include <QtWidgets/QToolButton>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QAction>
+#include <QtGui/QIcon>
+#include <QtCore/QString>
+#include <QtCore/QVector>
+#include <iterator>
 
 class MessageFrame::MessageFramePrivate {
  public:
@@ -34,64 +39,77 @@ class MessageFrame::MessageFramePrivate {
    */
   MessageFramePrivate();
 
-  QPlainTextEdit* messageTextEdit;
+  QVector<QString> messages;
+  QVector<QString>::ConstIterator it;
+  QLabel* messageLabel;
 };
 
 MessageFrame::MessageFrame(QWidget* parent)
   : QFrame{parent}
 {
-  m->messageTextEdit = new QPlainTextEdit{tr("To add files, click the add "
-                                             "files button or drag and "
-                                             "drop files."), this};
-  m->messageTextEdit->setObjectName(QStringLiteral("message"));
-  m->messageTextEdit->setMaximumBlockCount(10);
-  m->messageTextEdit->setReadOnly(true);
-  m->messageTextEdit->setTextInteractionFlags(Qt::NoTextInteraction);
-  m->messageTextEdit->viewport()->setCursor(Qt::ArrowCursor);
-  m->messageTextEdit->setSizePolicy(QSizePolicy::Expanding,
-                                        QSizePolicy::Preferred);
+  auto leftAction = new QAction{this};
+  connect(leftAction, &QAction::triggered, this, &MessageFrame::pageLeft);
+  const auto leftIcon = QIcon{QStringLiteral(":/images/leftArrowIcon.png")};
+  leftAction->setIcon(leftIcon);
+  auto leftButton = new QToolButton{this};
+  leftButton->setObjectName(QStringLiteral("messageNavButton"));
+  leftButton->setDefaultAction(leftAction);
 
-  // Attach a scroller to the message text edit
-  QScroller::grabGesture(m->messageTextEdit, QScroller::TouchGesture);
+  m->messageLabel = new QLabel{this};
+  m->messageLabel->setObjectName(QStringLiteral("message"));
+  m->messageLabel->setWordWrap(true);
 
-  // Disable overshoot; it makes interacting with small widgets harder
-  QScroller* scroller = QScroller::scroller(m->messageTextEdit);
-
-  QScrollerProperties properties = scroller->scrollerProperties();
-
-  QVariant overshootPolicy = QVariant::fromValue
-                              <QScrollerProperties::OvershootPolicy>
-                              (QScrollerProperties::OvershootAlwaysOff);
-
-  properties.setScrollMetric(QScrollerProperties::HorizontalOvershootPolicy,
-                             overshootPolicy);
-  properties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy,
-                             overshootPolicy);
-
-  scroller->setScrollerProperties(properties);
+  auto rightAction = new QAction{this};
+  connect(rightAction, &QAction::triggered, this, &MessageFrame::pageRight);
+  const auto rightIcon = QIcon{QStringLiteral(":/images/rightArrowIcon.png")};
+  rightAction->setIcon(rightIcon);
+  auto rightButton = new QToolButton{this};
+  rightButton->setObjectName(QStringLiteral("messageNavButton"));
+  rightButton->setDefaultAction(rightAction);
 
   auto messageLayout = new QHBoxLayout{this};
-  messageLayout->addWidget(m->messageTextEdit);
-  messageLayout->setContentsMargins(2, 2, 2, 2);
-  messageLayout->setSpacing(0);
+  messageLayout->addWidget(leftButton, 1);
+  messageLayout->addWidget(m->messageLabel, 20);
+  messageLayout->addWidget(rightButton, 1);
+  messageLayout->setContentsMargins(10, 2, 10, 2);
+  messageLayout->setSpacing(5);
 }
 
 MessageFrame::~MessageFrame() {}
 
-void MessageFrame::appendPlainText(const QString& message)
+void MessageFrame::appendText(const QString& message)
 {
-  Q_ASSERT(m->messageTextEdit);
+  Q_ASSERT(m->messageLabel);
 
-  m->messageTextEdit->appendPlainText(message);
+  m->messages.append(message);
+  m->it = std::prev(m->messages.constEnd(), 1);
+  m->messageLabel->setText(*m->it);
 }
 
-void MessageFrame::setText(const QString& startText)
+void MessageFrame::pageLeft()
 {
-  Q_ASSERT(m->messageTextEdit);
+  Q_ASSERT(m->messageLabel);
 
-  m->messageTextEdit->setPlainText(startText);
+  if (m->it != m->messages.constBegin())
+  {
+    m->it = std::prev(m->it, 1);
+    m->messageLabel->setText(*m->it);
+  }
+}
+
+void MessageFrame::pageRight()
+{
+  Q_ASSERT(m->messageLabel);
+
+  const auto end = m->messages.constEnd();
+
+  if (m->it != std::prev(end, 1) && m->it != end)
+  {
+    m->it = std::next(m->it, 1);
+    m->messageLabel->setText(*m->it);
+  }
 }
 
 MessageFrame::MessageFramePrivate::MessageFramePrivate()
-  : messageTextEdit{nullptr}
+  : messageLabel{nullptr}
 {}

@@ -14,5 +14,7 @@
         <file>images/sliderKnobDisable.png</file>
         <file>images/sliderKnobEnable.png</file>
         <file>images/backIcon.png</file>
+        <file>images/leftArrowIcon.png</file>
+        <file>images/rightArrowIcon.png</file>
     </qresource>
 </RCC>
