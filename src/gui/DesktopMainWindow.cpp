@@ -30,14 +30,15 @@ DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent)
 {
   this->settings = settings;
 
-  messageFrame->setText(tr("To begin, click the Add Files button or drag and "
-                           "drop files. Enter a password. Finally, click "
-                           "the Encrypt or Decrypt button."));
+  messageFrame->appendText(tr("To begin, click the Add Files button or drag "
+                              "and drop files. Enter a password. Finally, "
+                              "click the Encrypt or Decrypt button."));
 
   // Adjust stretch of file list view
-  contentLayout->setStretch(1, 20);
+  contentLayout->setStretch(1, 200);
+
   // Adjust stretch of message box
-  contentLayout->setStretch(2, 1);
+  contentLayout->setStretch(2, 0);
 
   // Add files action
   auto addFilesAction = new QAction{this};

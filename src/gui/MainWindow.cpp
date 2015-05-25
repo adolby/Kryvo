@@ -31,7 +31,6 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QBoxLayout>
-#include <QtGui/QIcon>
 #include <QtCore/QModelIndexList>
 #include <QtCore/QModelIndex>
 #include <QtCore/QMimeData>
@@ -108,6 +107,7 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   messageFrame = new MessageFrame{contentFrame};
   messageFrame->setObjectName(QStringLiteral("messageFrame"));
   messageFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  messageFrame->setMinimumHeight(36);
   messageFrame->setContentsMargins(0, 0, 0, 0);
 
   // Password entry frame
@@ -281,7 +281,7 @@ void MainWindow::updateStatusMessage(const QString& message)
 {
   Q_ASSERT(messageFrame);
 
-  messageFrame->appendPlainText(message);
+  messageFrame->appendText(message);
 }
 
 void MainWindow::updateError(const QString& path, const QString& message)

@@ -47,17 +47,21 @@ class MessageFrame : public QFrame {
   virtual ~MessageFrame();
 
   /*!
-   * \brief appendPlainText Appends text to the message frame's text edit.
+   * \brief appendText Appends text to the message frame.
    * \param message Message string
    */
-  void appendPlainText(const QString& message);
+  void appendText(const QString& message);
+
+ public slots:
+  /*!
+   * \brief pageLeft Switches to the previous message in the message vector.
+   */
+  void pageLeft();
 
   /*!
-   * \brief setText Clears the text edit and sets a start up text to the message
-   * frame's text edit.
-   * \param startText Start up text string
+   * \brief pageRight Switches to the next message in the message vector.
    */
-  void setText(const QString& startText);
+  void pageRight();
 
  private:
   class MessageFramePrivate;

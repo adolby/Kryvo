@@ -46,11 +46,15 @@ QFrame#headerFrame {
 
 QFrame#fileListFrame {
   background-color: #2c3e50;
+  margin-left: 6px;
+  margin-right: 6px;
 }
 
 QFrame#messageFrame {
   background-color: #4b77be;
   border: none;
+  margin-left: 6px;
+  margin-right: 6px;
 }
 
 QFrame#passwordFrame {
@@ -153,6 +157,12 @@ QFrame#settingsSubFrame {
   background-color: #9b59b6;
 }
 
+#messageNavButton {
+  background-color: #4b77be;
+  font-size: 18px;
+  border: none;
+}
+
 /*--------- Password Line Edit ---------*/
 QLineEdit#passwordLineEdit {
   font-size: 20px;
@@ -173,6 +183,7 @@ QLabel#headerText {
   color: white;
   background-color: #4b77be;
   font-size: 18px;
+  padding: 1px;
   border: none;
 }
 
