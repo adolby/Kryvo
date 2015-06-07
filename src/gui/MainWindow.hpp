@@ -83,7 +83,8 @@ class MainWindow : public QMainWindow {
   void pauseCipher(const bool pause);
 
   /*!
-   * \brief stopCipher Emitted when the user clicks the Clear Files push button.
+   * \brief abortCipher Emitted when the user clicks the Clear Files push
+   * button.
    */
   void abortCipher();
 
@@ -138,7 +139,7 @@ class MainWindow : public QMainWindow {
   /*!
    * \brief updateBusyStatus Executed when the cipher operation updates its busy
    * status. Stores the status to allow the GUI to decide when the user can
-   * request new encryption events.
+   * request new encryption.
    * \param busy Boolean representing the busy status
    */
   void updateBusyStatus(const bool busy);
