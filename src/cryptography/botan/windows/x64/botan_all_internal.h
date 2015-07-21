@@ -4,8 +4,10 @@
 
 #include <algorithm>
 #include <condition_variable>
+#include <deque>
 #include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -502,6 +504,85 @@ namespace Botan {
 
 namespace Botan {
 
+/*
+* Allocation Size Tracking Helper for Zlib/Bzlib/LZMA
+*/
+class Compression_Alloc_Info
+   {
+   public:
+      template<typename T>
+      static void* malloc(void* self, T n, T size)
+         {
+         return static_cast<Compression_Alloc_Info*>(self)->do_malloc(n, size);
+         }
+
+      static void free(void* self, void* ptr)
+         {
+         static_cast<Compression_Alloc_Info*>(self)->do_free(ptr);
+         }
+
+   private:
+      void* do_malloc(size_t n, size_t size);
+      void do_free(void* ptr);
+
+      std::unordered_map<void*, size_t> m_current_allocs;
+   };
+
+/**
+* Wrapper for Zlib/Bzlib/LZMA stream types
+*/
+template<typename Stream, typename ByteType>
+class Zlib_Style_Stream : public Compression_Stream
+   {
+   public:
+      void next_in(byte* b, size_t len) override
+         {
+         m_stream.next_in = reinterpret_cast<ByteType*>(b);
+         m_stream.avail_in = len;
+         }
+
+      void next_out(byte* b, size_t len) override
+         {
+         m_stream.next_out = reinterpret_cast<ByteType*>(b);
+         m_stream.avail_out = len;
+         }
+
+      size_t avail_in() const override { return m_stream.avail_in; }
+
+      size_t avail_out() const override { return m_stream.avail_out; }
+
+      Zlib_Style_Stream()
+         {
+         clear_mem(&m_stream, 1);
+         m_allocs.reset(new Compression_Alloc_Info);
+         }
+
+      ~Zlib_Style_Stream()
+         {
+         clear_mem(&m_stream, 1);
+         m_allocs.reset();
+         }
+
+   protected:
+      typedef Stream stream_t;
+
+      stream_t* streamp() { return &m_stream; }
+
+      Compression_Alloc_Info* alloc() { return m_allocs.get(); }
+   private:
+      stream_t m_stream;
+      std::unique_ptr<Compression_Alloc_Info> m_allocs;
+   };
+
+#define BOTAN_REGISTER_COMPRESSION(C, D) \
+   BOTAN_REGISTER_T_1LEN(Transform, C, 9) \
+   BOTAN_REGISTER_T_NOARGS(Transform, D)
+
+}
+
+
+namespace Botan {
+
 class donna128
    {
    public:
@@ -777,6 +858,36 @@ T* make_block_cipher_mode_len2(const Transform::Spec& spec)
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(E, D, LEN1, LEN2)                          \
    BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)); \
    BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>));
+
+}
+
+
+namespace Botan {
+
+/**
+* Container of output buffers for Pipe
+*/
+class Output_Buffers
+   {
+   public:
+      size_t read(byte[], size_t, Pipe::message_id);
+      size_t peek(byte[], size_t, size_t, Pipe::message_id) const;
+      size_t get_bytes_read(Pipe::message_id) const;
+      size_t remaining(Pipe::message_id) const;
+
+      void add(class SecureQueue*);
+      void retire();
+
+      Pipe::message_id message_count() const;
+
+      Output_Buffers();
+      ~Output_Buffers();
+   private:
+      class SecureQueue* get(Pipe::message_id) const;
+
+      std::deque<SecureQueue*> buffers;
+      Pipe::message_id offset;
+   };
 
 }
 
