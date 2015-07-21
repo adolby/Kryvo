@@ -63,7 +63,6 @@ SOURCES += \
 
 HEADERS += \
   Kryvos.hpp \
-  cryptography/botan/android/android_to_string.h \
   cryptography/Crypto.hpp \
   gui/MainWindow.hpp \
   gui/SettingsFrame.hpp \
@@ -92,6 +91,7 @@ android-g++ {
   SOURCES += cryptography/botan/android/botan_all.cpp \
              gui/TouchMainWindow.cpp
   HEADERS += cryptography/botan/android/botan_all.h \
+             cryptography/botan/android/android_to_string.h \
              gui/TouchMainWindow.hpp
 
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
@@ -192,7 +192,8 @@ android-g++ {
         message(Windows x64 G++)
 
         SOURCES += cryptography/botan/windows/x64/botan_all.cpp
-        HEADERS += cryptography/botan/windows/x64/botan_all.h
+        HEADERS += cryptography/botan/windows/x64/botan_all.h \
+                   cryptography/botan/windows/x64/botan_all_internal.h
 
         debug {
           message(Debug)
@@ -205,7 +206,8 @@ android-g++ {
       } else {
         message(Windows x86 G++)
         SOURCES += cryptography/botan/windows/x86/botan_all.cpp
-        HEADERS += cryptography/botan/windows/x86/botan_all.h
+        HEADERS += cryptography/botan/windows/x86/botan_all.h \
+                   cryptography/botan/windows/x86/botan_all_internal.h
 
         debug {
           message(Debug)
