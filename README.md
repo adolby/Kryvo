@@ -42,10 +42,10 @@ python configure.py --cc=clang --via-amalgamation --no-autoload --enable-modules
 python configure.py --cpu=armv7 --cc=clang --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
 
 ###Windows MinGW-w64 GCC x64
-python configure.py --cpu=x64 --cc=gcc --os=mingw --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,win32_stats,kdf2,aead_filt
+python configure.py --cpu=x64 --cc=gcc --os=mingw --via-amalgamation --no-autoload --enable-modules=aes,base,base64,eax,gcm,kdf2,keccak,pbkdf2,serpent,serpent_simd,win32_stats
 
 ###Windows MinGW GCC x86
-python configure.py --cpu=x86 --cc=gcc --os=mingw --via-amalgamation --no-autoload --enable-modules=aes,serpent,gcm,eax,keccak,pbkdf2,win32_stats,kdf2,aead_filt
+python configure.py --cpu=x86 --cc=gcc --os=mingw --via-amalgamation --no-autoload --enable-modules=aes,base,base64,eax,gcm,kdf2,keccak,pbkdf2,serpent,win32_stats
 
 ##Contact
 
