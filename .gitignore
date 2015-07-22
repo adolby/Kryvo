@@ -1,7 +1,7 @@
 # Build output directories
 [Dd]ebug/
 [Rr]elease/
-[Bb]uild/
+*[Bb]uild*/
 [Bb]in/
 [Oo]bj/
 
