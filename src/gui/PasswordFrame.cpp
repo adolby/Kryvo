@@ -50,9 +50,6 @@ PasswordFrame::PasswordFrame(QWidget* parent)
   auto passwordLayout = new QHBoxLayout{this};
   passwordLayout->addWidget(passwordLabel);
   passwordLayout->addWidget(m->passwordLineEdit);
-
-  connect(m->passwordLineEdit, &QLineEdit::editingFinished,
-          this, &PasswordFrame::editingFinished);
 }
 
 PasswordFrame::~PasswordFrame() {}
