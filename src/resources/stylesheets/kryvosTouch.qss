@@ -163,6 +163,11 @@ QFrame#coloredFrame {
   background-color: #9b59b6;
 }
 
+#messageNavButton {
+  background-color: #4b77be;
+  border: none;
+}
+
 /*--------- Password Line Edit ---------*/
 QLineEdit#passwordLineEdit {
   font-size: 60px;
