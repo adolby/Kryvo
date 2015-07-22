@@ -48,12 +48,6 @@ TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)
   {
     this->setStyleSheet(styleSheet);
   }
-
-  // Connect the password line edit's editing finished signal to the application
-  // input method's hide slot. This allows Android's virtual keyboard to close
-  // when the user selects Done on the keyboard.
-  connect(passwordFrame, &PasswordFrame::editingFinished,
-          QGuiApplication::inputMethod(), &QInputMethod::hide);
 }
 
 TouchMainWindow::~TouchMainWindow() {}
