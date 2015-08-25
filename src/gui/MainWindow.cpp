@@ -71,9 +71,9 @@ class MainWindow::MainWindowPrivate {
   const QStringList messages;
 
  private:
-  // The busy status, when set to true, indicates that this object is currently
-  // executing a cipher operation. The status allows the GUI to decide whether
-  // to send new encryption/decryption requests.
+  // The busy status, when set to true, indicates that the cryptography object
+  // is currently executing a cipher operation. The status allows the GUI to
+  // decide whether to send new encryption/decryption requests.
   bool busyStatus;
 };
 

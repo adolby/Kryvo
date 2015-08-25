@@ -28,6 +28,7 @@
 #include <QtCore/QStringRef>
 #include <QtCore/QStringBuilder>
 #include <string>
+#include <atomic>
 
 #if defined(Q_OS_ANDROID)
 namespace std {
@@ -140,12 +141,12 @@ class Crypto::CryptoPrivate {
   // The abort status, when set to true, will stop an executing cryptopgraphic
   // operation and prevent new cipher operations from starting until it is reset
   // to false.
-  bool aborted;
+  std::atomic<bool> aborted;
 
   // The pause status, when set to false, will pause an executing cipher
   // operation. When the pause status is set to true, the cipher operation
   // that was in progress when the pause status was set will resume execution.
-  bool paused;
+  std::atomic<bool> paused;
 
   // The container of stopped flags, which are used to stop
   // encrypting/decrypting a file.
@@ -153,7 +154,7 @@ class Crypto::CryptoPrivate {
 
   // The busy status, when set to true, indicates that this class is currently
   // executing a cipher operation.
-  bool busyStatus;
+  std::atomic<bool> busyStatus;
 };
 
 Crypto::Crypto(Settings* settings, QObject* parent)
