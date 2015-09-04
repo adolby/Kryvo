@@ -21,7 +21,7 @@
  */
 
 #include "Kryvos.hpp"
-#include <QtWidgets/QApplication>
+#include <QApplication>
 
 /*!
  * \brief main Main function.

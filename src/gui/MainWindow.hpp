@@ -31,8 +31,8 @@
 #include "gui/PasswordFrame.hpp"
 #include "gui/ControlButtonFrame.hpp"
 #include "utility/pimpl.h"
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QVBoxLayout>
+#include <QMainWindow>
+#include <QVBoxLayout>
 
 /*!
  * \brief The MainWindow class is the main window for the application.

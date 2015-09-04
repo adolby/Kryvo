@@ -24,9 +24,9 @@
 #define KRYVOS_SETTINGS_SETTINGS_HPP_
 
 #include "utility/pimpl.h"
-#include <QtCore/QPoint>
-#include <QtCore/QSize>
-#include <QtCore/QString>
+#include <QPoint>
+#include <QSize>
+#include <QString>
 
 class Settings {
  public:

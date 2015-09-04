@@ -21,7 +21,7 @@
  */
 
 #include "gui/TouchMainWindow.hpp"
-#include <QtWidgets/QApplication>
+#include <QApplication>
 
 TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)
   : MainWindow{settings, parent}

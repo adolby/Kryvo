@@ -22,9 +22,9 @@
 
 #include "gui/ControlButtonFrame.hpp"
 #include "utility/pimpl_impl.h"
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QHBoxLayout>
-#include <QtGui/QIcon>
+#include <QPushButton>
+#include <QHBoxLayout>
+#include <QIcon>
 
 class ControlButtonFrame::ControlButtonFramePrivate {
  public:

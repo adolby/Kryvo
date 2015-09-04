@@ -24,7 +24,7 @@
 #define KRYVOS_GUI_HEADERFRAME_HPP_
 
 #include "utility/pimpl.h"
-#include <QtWidgets/QFrame>
+#include <QFrame>
 
 /*!
  * \brief The HeaderFrame class contains the header frame which contains the

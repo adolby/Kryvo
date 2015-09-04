@@ -24,8 +24,8 @@
 #define KRYVOS_KRYVOS_HPP_
 
 #include "utility/pimpl.h"
-#include <QtCore/QObject>
-#include <QtCore/QMetaType>
+#include <QObject>
+#include <QMetaType>
 
 Q_DECLARE_METATYPE(std::size_t);
 

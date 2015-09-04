@@ -21,9 +21,9 @@
  */
 
 #include "gui/DesktopMainWindow.hpp"
-#include <QtWidgets/QAction>
-#include <QtGui/QDropEvent>
-#include <QtCore/QMimeData>
+#include <QAction>
+#include <QDropEvent>
+#include <QMimeData>
 
 DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent)
   : MainWindow{settings, parent}

@@ -24,16 +24,16 @@
 #include "gui/FileListDelegate.hpp"
 #include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
-#include <QtWidgets/QScroller>
-#include <QtWidgets/QHeaderView>
-#include <QtWidgets/QTableView>
-#include <QtWidgets/QVBoxLayout>
-#include <QtGui/QStandardItemModel>
-#include <QtCore/QFileInfo>
-#include <QtCore/QDir>
-#include <QtCore/QStringRef>
-#include <QtCore/QStringBuilder>
-#include <QtCore/QString>
+#include <QScroller>
+#include <QHeaderView>
+#include <QTableView>
+#include <QVBoxLayout>
+#include <QStandardItemModel>
+#include <QFileInfo>
+#include <QDir>
+#include <QStringRef>
+#include <QStringBuilder>
+#include <QString>
 
 class FileListFrame::FileListFramePrivate {
  public:

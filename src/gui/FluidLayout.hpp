@@ -24,7 +24,7 @@
 #define KRYVOS_GUI_FLUIDLAYOUT_HPP_
 
 #include "gui/flowlayout.h"
-#include <QtWidgets/QWidget>
+#include <QWidget>
 
 /*!
  * \brief The FluidLayout class expands the FlowLayout class, allowing it to

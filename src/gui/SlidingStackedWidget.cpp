@@ -23,10 +23,10 @@
 #include "gui/SlidingStackedWidget.hpp"
 #include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
-#include <QtWidgets/QPushButton>
-#include <QtCore/QParallelAnimationGroup>
-#include <QtCore/QPropertyAnimation>
-#include <QtCore/QByteArray>
+#include <QPushButton>
+#include <QParallelAnimationGroup>
+#include <QPropertyAnimation>
+#include <QByteArray>
 
 class SlidingStackedWidget::SlidingStackedWidgetPrivate {
  public:

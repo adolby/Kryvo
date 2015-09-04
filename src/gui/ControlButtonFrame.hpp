@@ -24,7 +24,7 @@
 #define KRYVOS_GUI_CONTROLBUTTONFRAME_HPP_
 
 #include "utility/pimpl.h"
-#include <QtWidgets/QFrame>
+#include <QFrame>
 
 /*!
  * \brief The ControlButtonFrame class contains the encryption/decryption

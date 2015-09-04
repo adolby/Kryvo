@@ -24,7 +24,7 @@
 #define KRYVOS_GUI_FILELISTDELEGATE_HPP_
 
 #include <QtWidgets/QStyledItemDelegate>
-#include <QtCore/QSize>
+#include <QSize>
 
 /*!
  * \brief The FileListDelegate class augments the view to display a progress bar and to

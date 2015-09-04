@@ -23,7 +23,7 @@
 #ifndef KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_
 #define KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_
 
-#include <QtCore/QtGlobal>
+#include <QtGlobal>
 
 #if defined(Q_OS_ANDROID)
 #include "cryptography/botan/android/botan_all.h"
@@ -43,9 +43,9 @@
 
 #include "settings/Settings.hpp"
 #include "utility/pimpl.h"
-#include <QtCore/QObject>
-#include <QtCore/QStringList>
-#include <QtCore/QString>
+#include <QObject>
+#include <QStringList>
+#include <QString>
 #include <fstream>
 #include <string>
 

@@ -24,10 +24,10 @@
 #include "gui/FluidLayout.hpp"
 #include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QHBoxLayout>
-#include <QtGui/QIcon>
+#include <QPushButton>
+#include <QLabel>
+#include <QHBoxLayout>
+#include <QIcon>
 
 class HeaderFrame::HeaderFramePrivate {
  public:
