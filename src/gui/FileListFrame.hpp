@@ -24,8 +24,8 @@
 #define KRYVOS_GUI_FILELISTFRAME_HPP_
 
 #include "utility/pimpl.h"
-#include <QtWidgets/QFrame>
-#include <QtGui/QStandardItem>
+#include <QFrame>
+#include <QStandardItem>
 
 /*!
  * \brief The FileListFrame class contains the file list that displays the file

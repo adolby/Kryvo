@@ -24,8 +24,8 @@
 #define KRYVOS_GUI_SETTINGSFRAME_HPP_
 
 #include "utility/pimpl.h"
-#include <QtWidgets/QFrame>
-#include <QtCore/QString>
+#include <QFrame>
+#include <QString>
 
 /*!
  * \brief The SettingsFrame class contains controls for customizing encryption

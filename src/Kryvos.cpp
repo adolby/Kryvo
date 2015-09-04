@@ -31,7 +31,7 @@
 #include "settings/Settings.hpp"
 #include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
-#include <QtCore/QThread>
+#include <QThread>
 
 /*!
  * \brief KryvosPrivate class

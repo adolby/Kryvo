@@ -25,10 +25,10 @@
 
 #include "utility/pimpl.h"
 #include "utility/make_unique.h"
-#include <QtWidgets/QAbstractButton>
-#include <QtWidgets/QWidget>
-#include <QtCore/QRectF>
-#include <QtCore/QString>
+#include <QAbstractButton>
+#include <QWidget>
+#include <QRectF>
+#include <QString>
 
 class SlideSwitch : public QAbstractButton {
   Q_OBJECT

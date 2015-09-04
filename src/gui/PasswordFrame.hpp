@@ -24,8 +24,8 @@
 #define KRYVOS_GUI_PASSWORDFRAME_HPP_
 
 #include "utility/pimpl.h"
-#include <QtWidgets/QFrame>
-#include <QtWidgets/QLineEdit>
+#include <QFrame>
+#include <QLineEdit>
 
 /*!
  * \brief The PasswordFrame class contains a line edit that allows the user to

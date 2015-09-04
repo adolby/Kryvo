@@ -25,10 +25,10 @@
 
 #include "gui/MainWindow.hpp"
 #include "settings/Settings.hpp"
-#include <QtGui/QCloseEvent>
-#include <QtGui/QDragEnterEvent>
-#include <QtGui/QDropEvent>
-#include <QtCore/QSize>
+#include <QCloseEvent>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QSize>
 
 /*!
  * \brief The DesktopMainWindow class is used as the main window for the

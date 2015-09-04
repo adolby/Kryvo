@@ -22,11 +22,11 @@
 
 #include "cryptography/Crypto.hpp"
 #include "utility/pimpl_impl.h"
-#include <QtCore/QFileInfo>
-#include <QtCore/QDir>
-#include <QtCore/QHash>
-#include <QtCore/QStringRef>
-#include <QtCore/QStringBuilder>
+#include <QFileInfo>
+#include <QDir>
+#include <QHash>
+#include <QStringRef>
+#include <QStringBuilder>
 #include <string>
 #include <atomic>
 

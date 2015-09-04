@@ -24,7 +24,7 @@
 #define KRYVOS_GUI_MESSAGEFRAME_HPP_
 
 #include "utility/pimpl.h"
-#include <QtWidgets/QFrame>
+#include <QFrame>
 
 /*!
  * \brief The MessageFrame class contains a text edit display used to inform the

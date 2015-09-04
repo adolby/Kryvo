@@ -21,9 +21,9 @@
  */
 
 #include "gui/FileListDelegate.hpp"
-#include <QtWidgets/QApplication>
-#include <QtGui/QMouseEvent>
-#include <QtCore/QEvent>
+#include <QApplication>
+#include <QMouseEvent>
+#include <QEvent>
 
 FileListDelegate::FileListDelegate(QObject* parent)
   : QStyledItemDelegate{parent}, focusBorderEnabled{false}

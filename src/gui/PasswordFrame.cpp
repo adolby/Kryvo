@@ -22,8 +22,8 @@
 
 #include "gui/PasswordFrame.hpp"
 #include "utility/pimpl_impl.h"
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QHBoxLayout>
+#include <QLabel>
+#include <QHBoxLayout>
 
 class PasswordFrame::PasswordFramePrivate {
  public:

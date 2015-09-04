@@ -25,19 +25,19 @@
 #include "gui/FluidLayout.hpp"
 #include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
-#include <QtWidgets/QComboBox>
-#include <QtWidgets/QGroupBox>
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QHBoxLayout>
-#include <QtWidgets/QAction>
-#include <QtWidgets/QToolTip>
-#include <QtGui/QIcon>
-#include <QtGui/QFontMetrics>
-#include <QtGui/QPainter>
-#include <QtCore/QPropertyAnimation>
-#include <QtCore/QStringRef>
-#include <QtCore/QStringBuilder>
+#include <QComboBox>
+#include <QGroupBox>
+#include <QPushButton>
+#include <QLabel>
+#include <QHBoxLayout>
+#include <QAction>
+#include <QToolTip>
+#include <QIcon>
+#include <QFontMetrics>
+#include <QPainter>
+#include <QPropertyAnimation>
+#include <QStringRef>
+#include <QStringBuilder>
 
 class SettingsFrame::SettingsFramePrivate {
  public:

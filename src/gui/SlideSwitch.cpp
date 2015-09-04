@@ -22,11 +22,11 @@
 
 #include "SlideSwitch.hpp"
 #include "utility/pimpl_impl.h"
-#include <QtGui/QMouseEvent>
-#include <QtGui/QPainter>
-#include <QtCore/QTimeLine>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QTimeLine>
 
-#include <QDebug>
+//#include <QDebug>
 
 class SlideSwitch::SlideSwitchPrivate {
  public:
@@ -130,7 +130,7 @@ void SlideSwitch::mouseMoveEvent(QMouseEvent* event)
                         (buttonRect().width() - knobRect().width());
     }
 
-    qDebug() << m->position;
+    //qDebug() << m->position;
 
     if (m->position >= 100)
     {

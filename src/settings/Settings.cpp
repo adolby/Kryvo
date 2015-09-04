@@ -23,10 +23,10 @@
 #include "settings/Settings.hpp"
 #include "utility/pimpl_impl.h"
 #include "utility/make_unique.h"
-#include <QtCore/QJsonDocument>
-#include <QtCore/QJsonObject>
-#include <QtCore/QSaveFile>
-#include <QtCore/QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QSaveFile>
+#include <QFile>
 
 class Settings::SettingsPrivate {
  public:

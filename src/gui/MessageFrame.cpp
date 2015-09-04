@@ -22,13 +22,13 @@
 
 #include "gui/MessageFrame.hpp"
 #include "utility/pimpl_impl.h"
-#include <QtWidgets/QToolButton>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QHBoxLayout>
-#include <QtWidgets/QAction>
-#include <QtGui/QIcon>
-#include <QtCore/QString>
-#include <QtCore/QVector>
+#include <QToolButton>
+#include <QLabel>
+#include <QHBoxLayout>
+#include <QAction>
+#include <QIcon>
+#include <QString>
+#include <QVector>
 #include <iterator>
 
 class MessageFrame::MessageFramePrivate {
