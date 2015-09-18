@@ -23,7 +23,7 @@
 #ifndef KRYVOS_GUI_FILELISTDELEGATE_HPP_
 #define KRYVOS_GUI_FILELISTDELEGATE_HPP_
 
-#include <QtWidgets/QStyledItemDelegate>
+#include <QStyledItemDelegate>
 #include <QSize>
 
 /*!
