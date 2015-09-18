@@ -22,7 +22,6 @@
 
 #include "gui/SlidingStackedWidget.hpp"
 #include "utility/pimpl_impl.h"
-#include "utility/make_unique.h"
 #include <QPushButton>
 #include <QParallelAnimationGroup>
 #include <QPropertyAnimation>

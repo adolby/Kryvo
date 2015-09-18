@@ -22,7 +22,6 @@
 
 #include "settings/Settings.hpp"
 #include "utility/pimpl_impl.h"
-#include "utility/make_unique.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>

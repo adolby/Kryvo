@@ -30,7 +30,6 @@
 #include "cryptography/Crypto.hpp"
 #include "settings/Settings.hpp"
 #include "utility/pimpl_impl.h"
-#include "utility/make_unique.h"
 #include <QThread>
 
 /*!
@@ -121,13 +120,13 @@ Kryvos::~Kryvos()
 }
 
 Kryvos::KryvosPrivate::KryvosPrivate()
-  : settings{make_unique<Settings>()},
+  : settings{std::make_unique<Settings>()},
     #if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
-    gui{make_unique<TouchMainWindow>(settings.get())},
+    gui{std::make_unique<TouchMainWindow>(settings.get())},
     #else
-    gui{make_unique<DesktopMainWindow>(settings.get())},
+    gui{std::make_unique<DesktopMainWindow>(settings.get())},
     #endif
-    cryptography{make_unique<Crypto>()},
-    cipherThread{make_unique<QThread>()} {}
+    cryptography{std::make_unique<Crypto>()},
+    cipherThread{std::make_unique<QThread>()} {}
 
 Kryvos::KryvosPrivate::~KryvosPrivate() {}

@@ -24,7 +24,6 @@
 #define KRYVOS_GUI_SLIDESWITCH_HPP_
 
 #include "utility/pimpl.h"
-#include "utility/make_unique.h"
 #include <QAbstractButton>
 #include <QWidget>
 #include <QRectF>

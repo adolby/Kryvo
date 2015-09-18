@@ -23,7 +23,6 @@
 #include "gui/FileListFrame.hpp"
 #include "gui/FileListDelegate.hpp"
 #include "utility/pimpl_impl.h"
-#include "utility/make_unique.h"
 #include <QScroller>
 #include <QHeaderView>
 #include <QTableView>
@@ -240,5 +239,5 @@ void FileListFrame::resizeEvent(QResizeEvent* event)
 }
 
 FileListFrame::FileListFramePrivate::FileListFramePrivate()
-  : fileListModel{make_unique<QStandardItemModel>()}, fileListView{nullptr}
+  : fileListModel{std::make_unique<QStandardItemModel>()}, fileListView{nullptr}
 {}

@@ -77,7 +77,6 @@ HEADERS += \
   gui/FluidLayout.hpp \
   gui/SlidingStackedWidget.hpp \
   settings/Settings.hpp \
-  utility/make_unique.h \
   utility/pimpl_impl.h \
   utility/pimpl.h
 
@@ -166,14 +165,12 @@ android-g++ {
   macx {
     message(Mac OS X)
 
-    CONFIG += x86
-    CONFIG -= c++14
     CONFIG += c++11
 
     SOURCES += cryptography/botan/mac/x86_64/botan_all.cpp
     HEADERS += cryptography/botan/mac/x86_64/botan_all.h
 
-    QMAKE_MAC_SDK = macosx10.9
+    QMAKE_MAC_SDK = macosx10.11
     ICON = resources/mac/icon/Kryvos.icns
 
     debug {
