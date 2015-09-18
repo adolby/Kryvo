@@ -24,7 +24,6 @@
 #include "gui/SlideSwitch.hpp"
 #include "gui/FluidLayout.hpp"
 #include "utility/pimpl_impl.h"
-#include "utility/make_unique.h"
 #include <QComboBox>
 #include <QGroupBox>
 #include <QPushButton>

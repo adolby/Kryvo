@@ -23,7 +23,6 @@
 #include "gui/HeaderFrame.hpp"
 #include "gui/FluidLayout.hpp"
 #include "utility/pimpl_impl.h"
-#include "utility/make_unique.h"
 #include <QPushButton>
 #include <QLabel>
 #include <QHBoxLayout>
@@ -52,7 +51,6 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   headerLabel->setObjectName(QStringLiteral("headerText"));
 
   auto buttonFrame = new QFrame{this};
-  buttonFrame->setObjectName(QStringLiteral("coloredFrame"));
 
   const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
   m->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), this};
@@ -61,9 +59,7 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   m->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const auto addFilesIcon = QIcon{QStringLiteral(":/images/addFilesIcon.png")};
-  m->addFilesButton = new QPushButton{addFilesIcon,
-                                      tr(" Add files"),
-                                      this};
+  m->addFilesButton = new QPushButton{addFilesIcon, tr(" Add files"), this};
   m->addFilesButton->setObjectName(QStringLiteral("addButton"));
   m->addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
@@ -76,9 +72,7 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   m->clearFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const auto settingsIcon = QIcon{QStringLiteral(":/images/gearIcon.png")};
-  m->settingsButton = new QPushButton{settingsIcon,
-                                      tr(" Settings"),
-                                      this};
+  m->settingsButton = new QPushButton{settingsIcon, tr(" Settings"), this};
   m->settingsButton->setObjectName(QStringLiteral("settingsButton"));
   m->settingsButton->setSizePolicy(QSizePolicy::Fixed,
                                    QSizePolicy::Fixed);

@@ -23,16 +23,16 @@
 #ifndef KRYVOS_UTILITY_PIMPL_IMPL_H_
 #define KRYVOS_UTILITY_PIMPL_IMPL_H_
 
-#include "utility/make_unique.h"
+#include <memory>
 #include <utility>
 
 template<typename T>
-pimpl<T>::pimpl() : m{ make_unique<T>() } { }
+pimpl<T>::pimpl() : m{ std::make_unique<T>() } { }
 
 template<typename T>
 template<typename ...Args>
 pimpl<T>::pimpl( Args&& ...args )
-  : m{ make_unique<T>(std::forward<Args>(args)...) } { }
+  : m{ std::make_unique<T>(std::forward<Args>(args)...) } { }
 
 template<typename T>
 pimpl<T>::~pimpl() { }
