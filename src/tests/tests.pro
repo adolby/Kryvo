@@ -4,7 +4,7 @@ TARGET = CryptoTests
 
 TEMPLATE = app
 
-CONFIG += c++11
+CONFIG += c++14
 
 INCLUDEPATH += ..
 
@@ -71,10 +71,10 @@ android-g++ {
 
   macx {
     message(OS X)
-    CONFIG += x86
+    CONFIG += c++11
     SOURCES += ../cryptography/botan/mac/x86_64/botan_all.cpp
     HEADERS += ../cryptography/botan/mac/x86_64/botan_all.h
-    QMAKE_MAC_SDK = macosx10.9
+    QMAKE_MAC_SDK = macosx10.11
 
     debug {
       DESTDIR = ../../build/macx/x64/debug/test/
