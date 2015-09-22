@@ -1,10 +1,10 @@
-#Kryvos 0.9.8 [![Build Status](http://162.244.31.87:8080/buildStatus/icon?job=Kryvos)](http://162.244.31.87:8080/job/Kryvos/)
+#Kryvos 0.9.8 [![Build Status](http://jenkins.andrewdolby.com/buildStatus/icon?job=Kryvos)](http://jenkins.andrewdolby.com/job/Kryvos/)
 
 Kryvos is an open-source file encryptor and decryptor. It encrypts files with AES and Serpent using the Botan cryptography library.
 
 ##Getting Started
 
-To install Krvyos, run the installer executable or extract the files from the Kryvos archive. Once the install files are copied, run the Kryvos executable. More detailed instructions can be found in the INSTALL file.
+To install Krvyos, run the installer executable or extract the files from the Kryvos archive. Once the install files are copied, run the Kryvos executable.
 
 ##Theming
 
@@ -49,4 +49,4 @@ python configure.py --cpu=x86 --cc=gcc --os=mingw --via-amalgamation --no-autolo
 
 ##Contact
 
-You can contact the project creator via email at andrewdolby@gmail.com
+You can contact the project creator via email at andrewdolby@gmail.com.
