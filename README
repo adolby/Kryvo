@@ -5,7 +5,7 @@ Kryvos is an open-source file encryptor and decryptor. It encrypts files with AE
 
 Getting Started
 ---------------
-To install Krvyos, run the installer executable or extract the files from the Kryvos archive. Once the install files are copied, run the Kryvos executable. More detailed instructions can be found in the INSTALL file.
+To install Krvyos, run the installer executable or extract the files from the Kryvos archive. Once the install files are copied, run the Kryvos executable.
 
 Theming
 -------
@@ -50,4 +50,4 @@ python configure.py --cpu=x86 --cc=gcc --os=mingw --via-amalgamation --no-autolo
 
 Contact
 -------
-You can contact the project creator via email at andrewdolby@gmail.com
+You can contact the project creator via email at andrewdolby@gmail.com.
