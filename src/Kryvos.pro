@@ -170,7 +170,6 @@ android-g++ {
     SOURCES += cryptography/botan/mac/x86_64/botan_all.cpp
     HEADERS += cryptography/botan/mac/x86_64/botan_all.h
 
-    QMAKE_MAC_SDK = macosx10.11
     ICON = resources/mac/icon/Kryvos.icns
 
     debug {
