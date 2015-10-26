@@ -18,7 +18,7 @@ script:
 - /usr/local/opt/qt5/bin/qmake
 - make
 - cd ../../build/macx/x64/release/test/
-- ./tests
+- open CryptoTests.app
 after_script:
 - cd ..
 - /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
