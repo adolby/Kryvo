@@ -70,11 +70,10 @@ android-g++ {
   }
 
   macx {
-    message(OS X)
+    message(Mac OS X)
     CONFIG += c++11
     SOURCES += ../cryptography/botan/mac/x86_64/botan_all.cpp
     HEADERS += ../cryptography/botan/mac/x86_64/botan_all.h
-    QMAKE_MAC_SDK = macosx10.11
 
     debug {
       DESTDIR = ../../build/macx/x64/debug/test/
