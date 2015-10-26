@@ -12,16 +12,17 @@ install:
 before_script:
 - cd src
 script:
-- /usr/local/opt/qt5/bin/qmake -r
+- /usr/local/opt/qt5/bin/qmake
 - make
-- /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
-- mv Kryvos.dmg Kryvos_0.9.8.dmg
 - cd tests
 - /usr/local/opt/qt5/bin/qmake
 - make
+- cd ../../build/macx/x64/release/test/
 - ./tests
 after_script:
 - cd ..
+- /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
+- mv Kryvos.dmg Kryvos_0.9.8.dmg
 notifications:
   email:
     recipients:
@@ -33,5 +34,7 @@ deploy:
   api_key:
     secure: MBeWMiNMlHhvIoTe8XVy0kV8Aqzd79YqPjh6Bee7T6f2ERp+BnQKxuBex/Czp9iNAcXjsv1IURllbLdSoEf0x+9gmOb/WdNdDUyQFW9USR2RP6VPY01nZ59XkYcEInvzpi0Bzy/P8xzg6M13inCSBEX1KDVF73agYBb7Pkr2sM4=
   file: Kryvos_0.9.8.dmg
+  skip_cleanup: true
   on:
     repo: adolby/Kryvos
+    tags: true
