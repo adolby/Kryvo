@@ -18,6 +18,7 @@
 
     Contact : andrewdolby@gmail.com
 -->
+
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
@@ -28,11 +29,11 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="50.018459"
-   height="59.998749"
+   width="50"
+   height="60"
    id="svg2989"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="Kryvos.svg"
    inkscape:export-xdpi="459.70001"
    inkscape:export-ydpi="459.70001">
@@ -46,15 +47,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="11.313709"
-     inkscape:cx="36.471501"
+     inkscape:cx="22.108395"
      inkscape:cy="28.292336"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1680"
-     inkscape:window-height="987"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:window-width="1440"
+     inkscape:window-height="801"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -76,7 +77,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-249.68513,-318.05217)">
+     transform="translate(-249.68513,-318.05092)">
     <rect
        style="fill:#ffcc00;fill-opacity:1;stroke:#ffcc00;stroke-width:0.20848237"
        id="rect3003"
@@ -94,16 +95,13 @@
          id="path3841"
          d="m 32.940186,64.155494 3.422325,-0.01563 4.052814,7.174807 -11.341201,0 z"
          style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.4485704px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
-      <path
+      <circle
          transform="matrix(1.0555556,0,0,1.0555556,-2.3828712,-4.1268063)"
-         d="m 39.740258,60.129871 c 0,2.582111 -2.093214,4.675325 -4.675324,4.675325 -2.582111,0 -4.675325,-2.093214 -4.675325,-4.675325 0,-2.58211 2.093214,-4.675324 4.675325,-4.675324 2.58211,0 4.675324,2.093214 4.675324,4.675324 z"
-         sodipodi:ry="4.6753244"
-         sodipodi:rx="4.6753244"
-         sodipodi:cy="60.129871"
-         sodipodi:cx="35.064934"
          id="path3853"
          style="fill:#000000;fill-opacity:1"
-         sodipodi:type="arc" />
+         cx="35.064934"
+         cy="60.129871"
+         r="4.6753244" />
     </g>
     <path
        style="fill:#ffcc00;fill-opacity:1;stroke:#ffcc00;stroke-width:0.18251781"
