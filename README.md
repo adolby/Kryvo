@@ -1,4 +1,4 @@
-#Kryvos 0.9.8 [![Build Status](https://travis-ci.org/adolby/Kryvos.svg?branch=master)](https://travis-ci.org/adolby/Kryvos)
+#Kryvos 0.9.9 [![Build Status](https://travis-ci.org/adolby/Kryvos.svg?branch=master)](https://travis-ci.org/adolby/Kryvos)
 
 Kryvos is an open-source file encryptor and decryptor. It encrypts files with AES and Serpent using the Botan cryptography library.
 
@@ -14,20 +14,20 @@ Example: You created a new theme and saved the stylesheet to myTheme.qss in the 
 
 ##Licenses
 
-Kryvos is licensed under the GNU GPL License. Read LICENSE.GPL for more information about the license.
+Kryvos is licensed under the MIT License. Read Kryvos License for more information about the license.
 Kryvos source code and binaries are available on GitHub at https://github.com/adolby/Kryvos.
 
 Botan is licensed under the BSD-2 License. Read the Botan License file for more information about the license. The license file can also be found at http://botan.randombit.net/license.html.
 Botan source code is available at http://botan.randombit.net/download.html.
 
-Qt is licensed under the GNU GPL License. Read LICENSE.GPL for more information about the license.
-Qt source code is available at http://andrewdolby.com/downloads/qt-everywhere-opensource-src-5.4.1.tar.gz or at http://code.qt.io.
+Qt is licensed under the GNU Lesser General Public License version 2.1. Read the Qt License file for more information about the license.
+Qt source code is available at http://code.qt.io.
 
 ##Developers
 
 If you'd like to contribute to Kryvos, you can check the project out on GitHub and submit a pull request. To build Kryvos, you'll need Qt 5.2 (or later) and Botan 1.11.9. Development is performed primarily in Qt Creator with GCC 5.1.0 on Ubuntu and Windows (with MinGW for x86 and MinGW-w64 for x64 builds) and Clang (packaged with Xcode 6) on Mac OS X.
 
-Amalgamation configurations of Botan are included in the source tree to simplify the build setup. Android requires a small patch that implements std::string to_string(), which is missing from the NDK STL. The patch, android_to_string.hpp, is included by botan_all.h. Both files are located at src/cryptography/botan/android/. The configuration commands used to generate a minimal Botan amalgamation follows for each platform:
+Amalgamation configurations of Botan are included in the source tree to simplify the build setup. Android requires a small patch that implements std::string to_string(), which is missing from the NDK STL. The patch, android_to_string.hpp, is included by botan_all.h. Both files are located at src/cryptography/botan/android/. The configuration commands used to generate minimal Botan amalgamation files follows for each platform:
 
 ###Android (ARM)
 python configure.py --cpu=armv5te --via-amalgamation --no-autoload --enable-modules=aes,serpent,serpent_simd,gcm,eax,keccak,pbkdf2,locking_allocator,dev_random,kdf2,aead_filt
