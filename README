@@ -1,5 +1,5 @@
-Kryvos 0.9.9
-============
+Kryvos
+======
 
 Kryvos is an open-source file encryptor and decryptor. It encrypts files with AES and Serpent using the Botan cryptography library.
 
