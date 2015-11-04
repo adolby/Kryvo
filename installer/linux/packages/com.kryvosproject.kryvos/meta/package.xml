@@ -2,10 +2,10 @@
 <Package>
     <DisplayName>Kryvos</DisplayName>
     <Description>Install Kryvos.</Description>
-    <Version>0.9.8</Version>
-    <ReleaseDate>2015-05-05</ReleaseDate>
+    <Version>0.9.9</Version>
+    <ReleaseDate>2015-11-03</ReleaseDate>
     <Licenses>
-        <License name="GNU General Public License" file="LICENSE.GPL" />
+        <License name="MIT License" file="Kryvos License" />
     </Licenses>
     <Default>true</Default>
 </Package>

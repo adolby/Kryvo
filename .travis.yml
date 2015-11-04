@@ -23,16 +23,15 @@ after_script:
 - cd ..
 - /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
 before_deploy:
-- mv Kryvos.dmg Kryvos_0.9.8.dmg
+- mv Kryvos.dmg Kryvos_0.9.9.dmg
 deploy:
   provider: releases
   api_key:
     secure: MBeWMiNMlHhvIoTe8XVy0kV8Aqzd79YqPjh6Bee7T6f2ERp+BnQKxuBex/Czp9iNAcXjsv1IURllbLdSoEf0x+9gmOb/WdNdDUyQFW9USR2RP6VPY01nZ59XkYcEInvzpi0Bzy/P8xzg6M13inCSBEX1KDVF73agYBb7Pkr2sM4=
-  file: Kryvos_0.9.8.dmg
+  file: Kryvos_0.9.9.dmg
   skip_cleanup: true
   on:
     repo: adolby/Kryvos
-    tags: true
 notifications:
   email:
     recipients:
