@@ -19,10 +19,9 @@ script:
 - make
 - cd ../../build/macx/x64/release/test/
 - open CryptoTests.app
-after_script:
+before_deploy:
 - cd ..
 - /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
-before_deploy:
 - mv Kryvos.dmg Kryvos_0.9.9.dmg
 deploy:
   provider: releases
