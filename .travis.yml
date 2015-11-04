@@ -31,6 +31,8 @@ deploy:
   skip_cleanup: true
   on:
     repo: adolby/Kryvos
+    branch: master
+    tags: true
 notifications:
   email:
     recipients:
