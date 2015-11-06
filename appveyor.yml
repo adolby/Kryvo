@@ -46,7 +46,7 @@ artifacts:
 - path: build
   name: kryvos_0.9.9_win_x86_64.zip
 - path: build
-    name: kryvos_0.9.9_win_x86.zip
+  name: kryvos_0.9.9_win_x86.zip
 
 deploy:
   release: v0.9.9
