@@ -27,12 +27,12 @@
 #include <vector>
 
 /*
-* This file was automatically generated Thu Nov  5 19:14:26 2015 UTC by
-* andrew@Andrews-MBP running 'configure.py --cpu=armv7 --cc=clang --via-amalgamation --minimized-build --enable-modules=aes,dev_random,eax,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd'
+* This file was automatically generated Thu Nov  5 19:12:02 2015 UTC by
+* andrew@Andrews-MBP running 'configure.py --cc=clang --via-amalgamation --minimized-build --enable-modules=aes,dev_random,eax,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd'
 *
 * Target
-*  - Compiler: clang++  -pthread -std=c++11 -D_REENTRANT -fstack-protector -O3
-*  - Arch: armv7/arm32
+*  - Compiler: clang++  -m64 -pthread -std=c++11 -D_REENTRANT -fstack-protector -O3
+*  - Arch: x86_64/x86_64
 *  - OS: darwin
 */
 
@@ -70,7 +70,7 @@
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4
 
 /* How many bits per limb in a BigInt */
-#define BOTAN_MP_WORD_BITS 32
+#define BOTAN_MP_WORD_BITS 64
 
 /*
 * If enabled uses memset via volatile function pointer to zero memory,
@@ -153,13 +153,22 @@
 #define BOTAN_TARGET_OS_HAS_READDIR
 #define BOTAN_TARGET_OS_HAS_TIMEGM
 
-#define BOTAN_TARGET_ARCH_IS_ARM32
-#define BOTAN_TARGET_CPU_IS_ARMV7
-#define BOTAN_TARGET_SUPPORTS_NEON
+#define BOTAN_TARGET_ARCH_IS_X86_64
+#define BOTAN_TARGET_SUPPORTS_AESNI
+#define BOTAN_TARGET_SUPPORTS_AVX2
+#define BOTAN_TARGET_SUPPORTS_BMI2
+#define BOTAN_TARGET_SUPPORTS_CLMUL
+#define BOTAN_TARGET_SUPPORTS_RDRAND
+#define BOTAN_TARGET_SUPPORTS_SHA
+#define BOTAN_TARGET_SUPPORTS_SSE2
+#define BOTAN_TARGET_SUPPORTS_SSE41
+#define BOTAN_TARGET_SUPPORTS_SSE42
+#define BOTAN_TARGET_SUPPORTS_SSSE3
 #define BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN
-#define BOTAN_TARGET_CPU_IS_ARM_FAMILY
-#define BOTAN_TARGET_CPU_NATIVE_WORD_SIZE 32
-#define BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK 0
+#define BOTAN_TARGET_CPU_IS_X86_FAMILY
+#define BOTAN_TARGET_CPU_NATIVE_WORD_SIZE 64
+#define BOTAN_TARGET_CPU_HAS_NATIVE_64BIT
+#define BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK 1
 
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN) || \
     defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
@@ -245,7 +254,7 @@
 #define BOTAN_HAS_SHA2_32 20131128
 #define BOTAN_HAS_SHA2_64 20131128
 #define BOTAN_HAS_SIMD_32 20131128
-#define BOTAN_HAS_SIMD_SCALAR 20131128
+#define BOTAN_HAS_SIMD_SSE2 20131128
 #define BOTAN_HAS_STREAM_CIPHER 20131128
 #define BOTAN_HAS_TRANSFORM 20131209
 #define BOTAN_HAS_UTIL_FUNCTIONS 20150919

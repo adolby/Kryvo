@@ -34,7 +34,8 @@ class Algo_Registry
       void add(const std::string& name, const std::string& provider, maker_fn fn, byte pref)
          {
          std::unique_lock<std::mutex> lock(m_mutex);
-         m_algo_info[name].add_provider(provider, fn, pref);
+         if(!m_algo_info[name].add_provider(provider, fn, pref))
+            throw std::runtime_error("Duplicated registration of " + name + "/" + provider);
          }
 
       std::vector<std::string> providers_of(const Spec& spec)
@@ -101,13 +102,14 @@ class Algo_Registry
       struct Algo_Info
          {
          public:
-            void add_provider(const std::string& provider, maker_fn fn, byte pref)
+            bool add_provider(const std::string& provider, maker_fn fn, byte pref)
                {
                if(m_maker_fns.count(provider) > 0)
-                  throw std::runtime_error("Duplicated registration of '" + provider + "'");
+                  return false;
 
                m_maker_fns[provider] = fn;
                m_prefs.insert(std::make_pair(pref, provider));
+               return true;
                }
 
             std::vector<std::string> providers() const
@@ -151,7 +153,7 @@ class Algo_Registry
                return r;
                }
          private:
-            std::multimap<byte, std::string> m_prefs;
+            std::multimap<byte, std::string, std::greater<byte>> m_prefs;
             std::unordered_map<std::string, maker_fn> m_maker_fns;
          };
 
@@ -211,30 +213,39 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
    return new T(x.release());
    }
 
+// Append to macros living outside of functions, so that invocations must end with a semicolon.
+// The struct is only declared to force the semicolon, it is never defined.
+#define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
+
 #define BOTAN_REGISTER_TYPE(T, type, name, maker, provider, pref)        \
-   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, maker, provider, pref); }
+   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, maker, provider, pref); } \
+   BOTAN_FORCE_SEMICOLON
 
 #define BOTAN_REGISTER_TYPE_COND(cond, T, type, name, maker, provider, pref) \
-   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(cond, name, maker, provider, pref); }
+   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(cond, name, maker, provider, pref); } \
+   BOTAN_FORCE_SEMICOLON
+
+#define BOTAN_DEFAULT_ALGORITHM_PRIO 100
+#define BOTAN_SIMD_ALGORITHM_PRIO    110
 
 #define BOTAN_REGISTER_NAMED_T(T, name, type, maker)                 \
-   BOTAN_REGISTER_TYPE(T, type, name, maker, "base", 128)
+   BOTAN_REGISTER_TYPE(T, type, name, maker, "base", BOTAN_DEFAULT_ALGORITHM_PRIO)
 
 #define BOTAN_REGISTER_T(T, type, maker)                                \
-   BOTAN_REGISTER_TYPE(T, type, #type, maker, "base", 128)
+   BOTAN_REGISTER_TYPE(T, type, #type, maker, "base", BOTAN_DEFAULT_ALGORITHM_PRIO)
 
 #define BOTAN_REGISTER_T_NOARGS(T, type) \
-   BOTAN_REGISTER_TYPE(T, type, #type, make_new_T<type>, "base", 128)
+   BOTAN_REGISTER_TYPE(T, type, #type, make_new_T<type>, "base", BOTAN_DEFAULT_ALGORITHM_PRIO)
 #define BOTAN_REGISTER_T_1LEN(T, type, def) \
-   BOTAN_REGISTER_TYPE(T, type, #type, (make_new_T_1len<type,def>), "base", 128)
+   BOTAN_REGISTER_TYPE(T, type, #type, (make_new_T_1len<type,def>), "base", BOTAN_DEFAULT_ALGORITHM_PRIO)
 
 #define BOTAN_REGISTER_NAMED_T_NOARGS(T, type, name, provider) \
-   BOTAN_REGISTER_TYPE(T, type, name, make_new_T<type>, provider, 128)
+   BOTAN_REGISTER_TYPE(T, type, name, make_new_T<type>, provider, BOTAN_DEFAULT_ALGORITHM_PRIO)
 #define BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, T, type, name, provider, pref) \
    BOTAN_REGISTER_TYPE_COND(cond, T, type, name, make_new_T<type>, provider, pref)
 
 #define BOTAN_REGISTER_NAMED_T_2LEN(T, type, name, provider, len1, len2) \
-   BOTAN_REGISTER_TYPE(T, type, name, (make_new_T_2len<type,len1,len2>), provider, 128)
+   BOTAN_REGISTER_TYPE(T, type, name, (make_new_T_2len<type,len1,len2>), provider, BOTAN_DEFAULT_ALGORITHM_PRIO)
 
 // TODO move elsewhere:
 #define BOTAN_REGISTER_TRANSFORM(name, maker) BOTAN_REGISTER_T(Transform, name, maker)
@@ -354,156 +365,6 @@ size_t ceil_log2(T x)
 
 namespace Botan {
 
-/**
-* XOR arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
-* @param out the input/output buffer
-* @param in the read-only input buffer
-* @param length the length of the buffers
-*/
-template<typename T>
-void xor_buf(T out[], const T in[], size_t length)
-   {
-   while(length >= 8)
-      {
-      out[0] ^= in[0]; out[1] ^= in[1];
-      out[2] ^= in[2]; out[3] ^= in[3];
-      out[4] ^= in[4]; out[5] ^= in[5];
-      out[6] ^= in[6]; out[7] ^= in[7];
-
-      out += 8; in += 8; length -= 8;
-      }
-
-   for(size_t i = 0; i != length; ++i)
-      out[i] ^= in[i];
-   }
-
-/**
-* XOR arrays. Postcondition out[i] = in[i] ^ in2[i] forall i = 0...length
-* @param out the output buffer
-* @param in the first input buffer
-* @param in2 the second output buffer
-* @param length the length of the three buffers
-*/
-template<typename T> void xor_buf(T out[],
-                                  const T in[],
-                                  const T in2[],
-                                  size_t length)
-   {
-   while(length >= 8)
-      {
-      out[0] = in[0] ^ in2[0];
-      out[1] = in[1] ^ in2[1];
-      out[2] = in[2] ^ in2[2];
-      out[3] = in[3] ^ in2[3];
-      out[4] = in[4] ^ in2[4];
-      out[5] = in[5] ^ in2[5];
-      out[6] = in[6] ^ in2[6];
-      out[7] = in[7] ^ in2[7];
-
-      in += 8; in2 += 8; out += 8; length -= 8;
-      }
-
-   for(size_t i = 0; i != length; ++i)
-      out[i] = in[i] ^ in2[i];
-   }
-
-#if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-
-template<>
-inline void xor_buf<byte>(byte out[], const byte in[], size_t length)
-   {
-   while(length >= 8)
-      {
-      *reinterpret_cast<u64bit*>(out) ^= *reinterpret_cast<const u64bit*>(in);
-      out += 8; in += 8; length -= 8;
-      }
-
-   for(size_t i = 0; i != length; ++i)
-      out[i] ^= in[i];
-   }
-
-template<>
-inline void xor_buf<byte>(byte out[],
-                          const byte in[],
-                          const byte in2[],
-                          size_t length)
-   {
-   while(length >= 8)
-      {
-      *reinterpret_cast<u64bit*>(out) =
-         *reinterpret_cast<const u64bit*>(in) ^
-         *reinterpret_cast<const u64bit*>(in2);
-
-      in += 8; in2 += 8; out += 8; length -= 8;
-      }
-
-   for(size_t i = 0; i != length; ++i)
-      out[i] = in[i] ^ in2[i];
-   }
-
-#endif
-
-template<typename Alloc, typename Alloc2>
-void xor_buf(std::vector<byte, Alloc>& out,
-             const std::vector<byte, Alloc2>& in,
-             size_t n)
-   {
-   xor_buf(out.data(), in.data(), n);
-   }
-
-template<typename Alloc>
-void xor_buf(std::vector<byte, Alloc>& out,
-             const byte* in,
-             size_t n)
-   {
-   xor_buf(out.data(), in, n);
-   }
-
-template<typename Alloc, typename Alloc2>
-void xor_buf(std::vector<byte, Alloc>& out,
-             const byte* in,
-             const std::vector<byte, Alloc2>& in2,
-             size_t n)
-   {
-   xor_buf(out.data(), in, in2.data(), n);
-   }
-
-template<typename T, typename Alloc, typename Alloc2>
-std::vector<T, Alloc>&
-operator^=(std::vector<T, Alloc>& out,
-           const std::vector<T, Alloc2>& in)
-   {
-   if(out.size() < in.size())
-      out.resize(in.size());
-
-   xor_buf(out.data(), in.data(), in.size());
-   return out;
-   }
-
-}
-
-
-namespace Botan {
-
-#define BOTAN_REGISTER_BLOCK_CIPHER(name, maker) BOTAN_REGISTER_T(BlockCipher, name, maker)
-#define BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(name) BOTAN_REGISTER_T_NOARGS(BlockCipher, name)
-
-#define BOTAN_REGISTER_BLOCK_CIPHER_1LEN(name, def) BOTAN_REGISTER_T_1LEN(BlockCipher, name, def)
-
-#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(type, name) BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, make_new_T<type>)
-#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1LEN(type, name, def) \
-   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, (make_new_T_1len<type,def>))
-#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(type, name, def) \
-   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, std::bind(make_new_T_1str<type>, std::placeholders::_1, def));
-
-#define BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(cond, type, name, provider, pref) \
-   BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, BlockCipher, type, name, provider, pref)
-
-}
-
-
-namespace Botan {
-
 /*
 * Allocation Size Tracking Helper for Zlib/Bzlib/LZMA
 */
@@ -575,8 +436,150 @@ class Zlib_Style_Stream : public Compression_Stream
    };
 
 #define BOTAN_REGISTER_COMPRESSION(C, D) \
-   BOTAN_REGISTER_T_1LEN(Transform, C, 9) \
+   BOTAN_REGISTER_T_1LEN(Transform, C, 9); \
    BOTAN_REGISTER_T_NOARGS(Transform, D)
+
+}
+
+
+#if defined(BOTAN_USE_CTGRIND)
+
+// These are external symbols from libctgrind.so
+extern "C" void ct_poison(const void* address, size_t length);
+extern "C" void ct_unpoison(const void* address, size_t length);
+
+#endif
+
+namespace Botan {
+
+namespace CT {
+
+template<typename T>
+inline void poison(T* p, size_t n)
+   {
+#if defined(BOTAN_USE_CTGRIND)
+   ct_poison(p, sizeof(T)*n);
+#else
+   BOTAN_UNUSED(p);
+   BOTAN_UNUSED(n);
+#endif
+   }
+
+template<typename T>
+inline void unpoison(T* p, size_t n)
+   {
+#if defined(BOTAN_USE_CTGRIND)
+   ct_unpoison(p, sizeof(T)*n);
+#else
+   BOTAN_UNUSED(p);
+   BOTAN_UNUSED(n);
+#endif
+   }
+
+template<typename T>
+inline void unpoison(T& p)
+   {
+   unpoison(&p, 1);
+   }
+
+/*
+* T should be an unsigned machine integer type
+* Expand to a mask used for other operations
+* @param in an integer
+* @return If n is zero, returns zero. Otherwise
+* returns a T with all bits set for use as a mask with
+* select.
+*/
+template<typename T>
+inline T expand_mask(T x)
+   {
+   T r = x;
+   // First fold r down to a single bit
+   for(size_t i = 1; i != sizeof(T)*8; i *= 2)
+      r |= r >> i;
+   r &= 1;
+   r = ~(r - 1);
+   return r;
+   }
+
+template<typename T>
+inline T select(T mask, T from0, T from1)
+   {
+   return (from0 & mask) | (from1 & ~mask);
+   }
+
+template<typename T>
+inline T is_zero(T x)
+   {
+   return ~expand_mask(x);
+   }
+
+template<typename T>
+inline T is_equal(T x, T y)
+   {
+   return is_zero(x ^ y);
+   }
+
+template<typename T>
+inline T is_less(T x, T y)
+   {
+   /*
+   This expands to a constant time sequence with GCC 5.2.0 on x86-64
+   but something more complicated may be needed for portable const time.
+   */
+   return expand_mask<T>(x < y);
+   }
+
+template<typename T>
+inline void conditional_copy_mem(T value,
+                                 T* to,
+                                 const T* from0,
+                                 const T* from1,
+                                 size_t bytes)
+   {
+   const T mask = CT::expand_mask(value);
+
+   for(size_t i = 0; i != bytes; ++i)
+      to[i] = CT::select(mask, from0[i], from1[i]);
+   }
+
+template<typename T>
+inline T expand_top_bit(T a)
+   {
+   return expand_mask<T>(a >> (sizeof(T)*8-1));
+   }
+
+template<typename T>
+inline T max(T a, T b)
+   {
+   const T a_larger = b - a; // negative if a is larger
+   return select(expand_top_bit(a), a, b);
+   }
+
+template<typename T>
+inline T min(T a, T b)
+   {
+   const T a_larger = b - a; // negative if a is larger
+   return select(expand_top_bit(b), b, a);
+   }
+
+template<typename T, typename Alloc>
+std::vector<T, Alloc> strip_leading_zeros(const std::vector<T, Alloc>& input)
+   {
+   size_t leading_zeros = 0;
+
+   uint8_t only_zeros = 0xFF;
+
+   for(size_t i = 0; i != input.size(); ++i)
+      {
+      only_zeros &= CT::is_zero(input[i]);
+      leading_zeros += CT::select<uint8_t>(only_zeros, 1, 0);
+      }
+
+   return secure_vector<byte>(input.begin() + leading_zeros, input.end());
+   }
+
+}
 
 }
 
@@ -706,8 +709,8 @@ namespace Botan {
 class Win32_EntropySource : public EntropySource
    {
    public:
-      std::string name() const { return "Win32 Statistics"; }
-      void poll(Entropy_Accumulator& accum);
+      std::string name() const override { return "Win32 Statistics"; }
+      void poll(Entropy_Accumulator& accum) override;
    };
 
 }
@@ -715,50 +718,7 @@ class Win32_EntropySource : public EntropySource
 
 namespace Botan {
 
-#define BOTAN_REGISTER_HASH(name, maker) BOTAN_REGISTER_T(HashFunction, name, maker)
-#define BOTAN_REGISTER_HASH_NOARGS(name) BOTAN_REGISTER_T_NOARGS(HashFunction, name)
-
-#define BOTAN_REGISTER_HASH_1LEN(name, def) BOTAN_REGISTER_T_1LEN(HashFunction, name, def)
-
-#define BOTAN_REGISTER_HASH_NAMED_NOARGS(type, name) \
-   BOTAN_REGISTER_NAMED_T(HashFunction, name, type, make_new_T<type>)
-#define BOTAN_REGISTER_HASH_NAMED_1LEN(type, name, def) \
-   BOTAN_REGISTER_NAMED_T(HashFunction, name, type, (make_new_T_1len<type,def>))
-
-#define BOTAN_REGISTER_HASH_NOARGS_IF(cond, type, name, provider, pref)      \
-   BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, HashFunction, type, name, provider, pref)
-
-}
-
-
-namespace Botan {
-
-#define BOTAN_REGISTER_KDF_NOARGS(type, name)                    \
-   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T<type>))
-#define BOTAN_REGISTER_KDF_1HASH(type, name)                    \
-   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T_1X<type, HashFunction>))
-
-#define BOTAN_REGISTER_KDF_NAMED_1STR(type, name) \
-   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T_1str_req<type>))
-
-}
-
-
-namespace Botan {
-
-#define BOTAN_REGISTER_MAC(name, maker) BOTAN_REGISTER_T(MessageAuthenticationCode, name, maker)
-#define BOTAN_REGISTER_MAC_NOARGS(name) BOTAN_REGISTER_T_NOARGS(MessageAuthenticationCode, name)
-
-#define BOTAN_REGISTER_MAC_1LEN(name, def) BOTAN_REGISTER_T_1LEN(MessageAuthenticationCode, name, def)
-
-#define BOTAN_REGISTER_MAC_NAMED_NOARGS(type, name) \
-   BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, name, type, make_new_T<type>)
-
-#define BOTAN_REGISTER_MAC_NAMED_1LEN(type, name, def)                  \
-   BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, name, type, (make_new_T_1len<type,def>))
-#define BOTAN_REGISTER_MAC_NAMED_1STR(type, name, def) \
-   BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, name, type, \
-                          std::bind(make_new_T_1str<type>, std::placeholders::_1, def));
+BOTAN_DLL std::vector<std::string> get_files_recursive(const std::string& dir);
 
 }
 
@@ -767,17 +727,15 @@ namespace Botan {
 
 /**
 * Round up
-* @param n an integer
+* @param n a non-negative integer
 * @param align_to the alignment boundary
 * @return n rounded up to a multiple of align_to
 */
-template<typename T>
-inline T round_up(T n, T align_to)
+inline size_t round_up(size_t n, size_t align_to)
    {
-   if(align_to == 0)
-      return n;
+   BOTAN_ASSERT(align_to != 0, "align_to must not be 0");
 
-   if(n % align_to || n == 0)
+   if(n % align_to)
       n += align_to - (n % align_to);
    return n;
    }
@@ -817,18 +775,18 @@ namespace Botan {
 template<typename T>
 T* make_block_cipher_mode(const Transform::Spec& spec)
    {
-   if(BlockCipher* bc = get_block_cipher(spec.arg(0)))
-      return new T(bc);
+   if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
+      return new T(bc.release());
    return nullptr;
    }
 
 template<typename T, size_t LEN1>
 T* make_block_cipher_mode_len(const Transform::Spec& spec)
    {
-   if(BlockCipher* bc = get_block_cipher(spec.arg(0)))
+   if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       {
       const size_t len1 = spec.arg_as_integer(1, LEN1);
-      return new T(bc, len1);
+      return new T(bc.release(), len1);
       }
 
    return nullptr;
@@ -837,11 +795,11 @@ T* make_block_cipher_mode_len(const Transform::Spec& spec)
 template<typename T, size_t LEN1, size_t LEN2>
 T* make_block_cipher_mode_len2(const Transform::Spec& spec)
    {
-   if(BlockCipher* bc = get_block_cipher(spec.arg(0)))
+   if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       {
       const size_t len1 = spec.arg_as_integer(1, LEN1);
       const size_t len2 = spec.arg_as_integer(2, LEN2);
-      return new T(bc, len1, len2);
+      return new T(bc.release(), len1, len2);
       }
 
    return nullptr;
@@ -849,15 +807,15 @@ T* make_block_cipher_mode_len2(const Transform::Spec& spec)
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE(E, D)                          \
    BOTAN_REGISTER_NAMED_T(Transform, #E, E, make_block_cipher_mode<E>); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, make_block_cipher_mode<D>);
+   BOTAN_REGISTER_NAMED_T(Transform, #D, D, make_block_cipher_mode<D>)
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(E, D, LEN)                          \
    BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len<E, LEN>)); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len<D, LEN>));
+   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len<D, LEN>))
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(E, D, LEN1, LEN2)                          \
    BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>));
+   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>))
 
 }
 
@@ -888,16 +846,6 @@ class Output_Buffers
       std::deque<SecureQueue*> buffers;
       Pipe::message_id offset;
    };
-
-}
-
-
-namespace Botan {
-
-#define BOTAN_REGISTER_PBKDF_1HASH(type, name)                    \
-   BOTAN_REGISTER_NAMED_T(PBKDF, name, type, (make_new_T_1X<type, HashFunction>))
-#define BOTAN_REGISTER_PBKDF_1MAC(type, name)                    \
-   BOTAN_REGISTER_NAMED_T(PBKDF, name, type, (make_new_T_1X<type, MessageAuthenticationCode>))
 
 }
 
@@ -1364,183 +1312,16 @@ class Semaphore
       } while(0);
 
 
-#if defined(BOTAN_HAS_SIMD_SSE2)
-#if defined(BOTAN_TARGET_SUPPORTS_SSE2)
-
-#include <emmintrin.h>
-
-namespace Botan {
-
-class SIMD_SSE2
-   {
-   public:
-      static bool enabled() { return CPUID::has_sse2(); }
-
-      SIMD_SSE2(const u32bit B[4])
-         {
-         reg = _mm_loadu_si128(reinterpret_cast<const __m128i*>(B));
-         }
-
-      SIMD_SSE2(u32bit B0, u32bit B1, u32bit B2, u32bit B3)
-         {
-         reg = _mm_set_epi32(B0, B1, B2, B3);
-         }
-
-      SIMD_SSE2(u32bit B)
-         {
-         reg = _mm_set1_epi32(B);
-         }
-
-      static SIMD_SSE2 load_le(const void* in)
-         {
-         return _mm_loadu_si128(reinterpret_cast<const __m128i*>(in));
-         }
-
-      static SIMD_SSE2 load_be(const void* in)
-         {
-         return load_le(in).bswap();
-         }
-
-      void store_le(byte out[]) const
-         {
-         _mm_storeu_si128(reinterpret_cast<__m128i*>(out), reg);
-         }
-
-      void store_be(byte out[]) const
-         {
-         bswap().store_le(out);
-         }
-
-      void rotate_left(size_t rot)
-         {
-         reg = _mm_or_si128(_mm_slli_epi32(reg, static_cast<int>(rot)),
-                            _mm_srli_epi32(reg, static_cast<int>(32-rot)));
-         }
-
-      void rotate_right(size_t rot)
-         {
-         rotate_left(32 - rot);
-         }
-
-      void operator+=(const SIMD_SSE2& other)
-         {
-         reg = _mm_add_epi32(reg, other.reg);
-         }
-
-      SIMD_SSE2 operator+(const SIMD_SSE2& other) const
-         {
-         return _mm_add_epi32(reg, other.reg);
-         }
-
-      void operator-=(const SIMD_SSE2& other)
-         {
-         reg = _mm_sub_epi32(reg, other.reg);
-         }
-
-      SIMD_SSE2 operator-(const SIMD_SSE2& other) const
-         {
-         return _mm_sub_epi32(reg, other.reg);
-         }
-
-      void operator^=(const SIMD_SSE2& other)
-         {
-         reg = _mm_xor_si128(reg, other.reg);
-         }
-
-      SIMD_SSE2 operator^(const SIMD_SSE2& other) const
-         {
-         return _mm_xor_si128(reg, other.reg);
-         }
-
-      void operator|=(const SIMD_SSE2& other)
-         {
-         reg = _mm_or_si128(reg, other.reg);
-         }
-
-      SIMD_SSE2 operator&(const SIMD_SSE2& other)
-         {
-         return _mm_and_si128(reg, other.reg);
-         }
-
-      void operator&=(const SIMD_SSE2& other)
-         {
-         reg = _mm_and_si128(reg, other.reg);
-         }
-
-      SIMD_SSE2 operator<<(size_t shift) const
-         {
-         return _mm_slli_epi32(reg, static_cast<int>(shift));
-         }
-
-      SIMD_SSE2 operator>>(size_t shift) const
-         {
-         return _mm_srli_epi32(reg, static_cast<int>(shift));
-         }
-
-      SIMD_SSE2 operator~() const
-         {
-         return _mm_xor_si128(reg, _mm_set1_epi32(0xFFFFFFFF));
-         }
-
-      // (~reg) & other
-      SIMD_SSE2 andc(const SIMD_SSE2& other)
-         {
-         return _mm_andnot_si128(reg, other.reg);
-         }
-
-      SIMD_SSE2 bswap() const
-         {
-         __m128i T = reg;
-
-         T = _mm_shufflehi_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
-         T = _mm_shufflelo_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
-
-         return _mm_or_si128(_mm_srli_epi16(T, 8),
-                             _mm_slli_epi16(T, 8));
-         }
-
-      static void transpose(SIMD_SSE2& B0, SIMD_SSE2& B1,
-                            SIMD_SSE2& B2, SIMD_SSE2& B3)
-         {
-         __m128i T0 = _mm_unpacklo_epi32(B0.reg, B1.reg);
-         __m128i T1 = _mm_unpacklo_epi32(B2.reg, B3.reg);
-         __m128i T2 = _mm_unpackhi_epi32(B0.reg, B1.reg);
-         __m128i T3 = _mm_unpackhi_epi32(B2.reg, B3.reg);
-         B0.reg = _mm_unpacklo_epi64(T0, T1);
-         B1.reg = _mm_unpackhi_epi64(T0, T1);
-         B2.reg = _mm_unpacklo_epi64(T2, T3);
-         B3.reg = _mm_unpackhi_epi64(T2, T3);
-         }
-
-   private:
-      SIMD_SSE2(__m128i in) { reg = in; }
-
-      __m128i reg;
-   };
-
-}
-
-#endif
-
-  namespace Botan { typedef SIMD_SSE2 SIMD_32; }
-
-#elif defined(BOTAN_HAS_SIMD_ALTIVEC)
-  namespace Botan { typedef SIMD_Altivec SIMD_32; }
-
-#elif defined(BOTAN_HAS_SIMD_SCALAR)
-  namespace Botan { typedef SIMD_Scalar<u32bit,4> SIMD_32; }
-
-#else
-  #error "No SIMD module defined"
-
-#endif
-
-
 namespace Botan {
 
 inline std::vector<byte> to_byte_vector(const std::string& s)
    {
    return std::vector<byte>(s.cbegin(), s.cend());
+   }
+
+inline std::string to_string(const secure_vector<byte> &bytes)
+   {
+   return std::string(bytes.cbegin(), bytes.cend());
    }
 
 /*
@@ -1611,65 +1392,6 @@ void map_remove_if(Pred pred, T& assoc)
          i++;
       }
    }
-
-}
-
-
-namespace Botan {
-
-#define BOTAN_REGISTER_STREAM_CIPHER(name, maker) BOTAN_REGISTER_T(StreamCipher, name, maker)
-#define BOTAN_REGISTER_STREAM_CIPHER_NOARGS(name) BOTAN_REGISTER_T_NOARGS(StreamCipher, name)
-
-#define BOTAN_REGISTER_STREAM_CIPHER_1LEN(name, def) BOTAN_REGISTER_T_1LEN(StreamCipher, name, def)
-
-#define BOTAN_REGISTER_STREAM_CIPHER_NAMED_NOARGS(type, name) BOTAN_REGISTER_NAMED_T(StreamCipher, name, type, make_new_T<type>)
-#define BOTAN_REGISTER_STREAM_CIPHER_NAMED_1LEN(type, name, def) \
-   BOTAN_REGISTER_NAMED_T(StreamCipher, name, type, (make_new_T_1len<type,def>))
-
-}
-
-
-namespace Botan {
-
-namespace TA_CM {
-
-/**
-* Function used in timing attack countermeasures
-* See Wagner, Molnar, et al "The Program Counter Security Model"
-*
-* @param in an integer
-* @return 0 if in == 0 else 0xFFFFFFFF
-*/
-u32bit expand_mask_u32bit(u32bit in);
-
-
-/**
- * Expand an input to a bit mask depending on it being being zero or
- * non-zero
- * @ param in the input
- * @return the mask 0xFFFF if tst is non-zero and 0 otherwise
- */
-u16bit expand_mask_u16bit(u16bit in);
-
-/**
-* Branch-free maximum
-* Note: assumes twos-complement signed representation
-* @param a an integer
-* @param b an integer
-* @return max(a,b)
-*/
-u32bit max_32(u32bit a, u32bit b);
-
-/**
-* Branch-free minimum
-* Note: assumes twos-complement signed representation
-* @param a an integer
-* @param b an integer
-* @return min(a,b)
-*/
-u32bit min_32(u32bit a, u32bit b);
-
-}
 
 }
 
