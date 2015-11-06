@@ -107,91 +107,148 @@ android-g++ {
 
   linux {
     message(Linux)
+    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
-    linux-g++-64 {
-      message(Linux G++ 64)
-      SOURCES += cryptography/botan/linux/x86_64/botan_all.cpp
-      HEADERS += cryptography/botan/linux/x86_64/botan_all.h
+    linux-clang {
+      message(Linux Clang x86_64)
+      SOURCES += cryptography/botan/linux/clang/x86_64/botan_all.cpp
+      HEADERS += cryptography/botan/linux/clang/x86_64/botan_all.h
 
       debug {
         message(Debug)
-        DESTDIR = ../build/linux/x64/debug/
+        DESTDIR = ../build/linux/clang/x86_64/debug/
       }
       release {
         message(Release)
-        DESTDIR = ../build/linux/x64/release/
+        DESTDIR = ../build/linux/clang/x86_64/release/
+      }
+    }
+
+    linux-g++-64 {
+      message(Linux G++ x86_64)
+      QMAKE_CXXFLAGS += -fstack-protector
+      QMAKE_LFLAGS += -fstack-protector
+
+      SOURCES += cryptography/botan/linux/gcc/x86_64/botan_all.cpp
+      HEADERS += cryptography/botan/linux/gcc/x86_64/botan_all.h
+
+      debug {
+        message(Debug)
+        DESTDIR = ../build/linux/gcc/x86_64/debug/
+      }
+      release {
+        message(Release)
+        DESTDIR = ../build/linux/gcc/x86_64/release/
       }
     }
 
     linux-g++-32 {
-      message(Linux G++ 32)
+      message(Linux G++ x86)
+      QMAKE_CXXFLAGS += -fstack-protector
+      QMAKE_LFLAGS += -fstack-protector
 
-      SOURCES += cryptography/botan/linux/x86/botan_all.cpp
-      HEADERS += cryptography/botan/linux/x86/botan_all.h
+      SOURCES += cryptography/botan/linux/gcc/x86/botan_all.cpp
+      HEADERS += cryptography/botan/linux/gcc/x86/botan_all.h
 
       debug {
         message(Debug)
-        DESTDIR = ../build/linux/x86/debug/
+        DESTDIR = ../build/linux/gcc/x86/debug/
       }
       release {
         message(Release)
-        DESTDIR = ../build/linux/x86/release/
+        DESTDIR = ../build/linux/gcc/x86/release/
       }
     } # End linux-g++-32
-
-    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
   } # End Linux
 
   macx {
     message(Mac OS X)
 
-    CONFIG += c++11
+    # Manually set c++1y until config += c++14 is fixed for OS X
+    CONFIG -= c++14
+    QMAKE_CXXFLAGS += -std=c++1y
 
-    SOURCES += cryptography/botan/mac/x86_64/botan_all.cpp
-    HEADERS += cryptography/botan/mac/x86_64/botan_all.h
+    SOURCES += cryptography/botan/mac/clang/x86_64/botan_all.cpp
+    HEADERS += cryptography/botan/mac/clang/x86_64/botan_all.h
 
     ICON = resources/mac/icon/Kryvos.icns
 
     debug {
       message(Debug)
-      DESTDIR = ../build/macx/x64/debug/
+      DESTDIR = ../build/macx/clang/x86_64/debug/
     }
     release {
       message(Release)
-      DESTDIR = ../build/macx/x64/release/
+      DESTDIR = ../build/macx/clang/x86_64/release/
     }
   }
 
   win32 {
     win32-g++ {
+      QMAKE_CXXFLAGS += -fstack-protector
+      QMAKE_LFLAGS += -fstack-protector
+
       contains(QT_ARCH, x86_64) {
         message(Windows x64 G++)
 
-        SOURCES += cryptography/botan/windows/x64/botan_all.cpp
-        HEADERS += cryptography/botan/windows/x64/botan_all.h \
-                   cryptography/botan/windows/x64/botan_all_internal.h
+        SOURCES += cryptography/botan/windows/mingw/x64/botan_all.cpp
+        HEADERS += cryptography/botan/windows/mingw/x64/botan_all.h \
+                   cryptography/botan/windows/mingw/x64/botan_all_internal.h
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/x64/debug/
+          DESTDIR = ../build/win/mingw/x64/debug/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/x64/release/
+          DESTDIR = ../build/win/mingw/x64/release/
         }
       } else {
         message(Windows x86 G++)
-        SOURCES += cryptography/botan/windows/x86/botan_all.cpp
-        HEADERS += cryptography/botan/windows/x86/botan_all.h \
-                   cryptography/botan/windows/x86/botan_all_internal.h
+        SOURCES += cryptography/botan/windows/mingw/x86/botan_all.cpp
+        HEADERS += cryptography/botan/windows/mingw/x86/botan_all.h \
+                   cryptography/botan/windows/mingw/x86/botan_all_internal.h
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/x86/debug/
+          DESTDIR = ../build/win/mingw/x86/debug/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/x86/release/
+          DESTDIR = ../build/win/mingw/x86/release/
+        }
+      }
+    }
+
+    win32-msvc {
+      contains(QT_ARCH, x86_64) {
+        message(Windows x64 MSVC 2015)
+
+        SOURCES += cryptography/botan/windows/msvc/botan_all.cpp
+        HEADERS += cryptography/botan/windows/msvc/x64/botan_all.h \
+                   cryptography/botan/windows/msvc/x64/botan_all_internal.h
+
+        debug {
+          message(Debug)
+          DESTDIR = ../build/win/msvc-2015/x64/debug/
+        }
+        release {
+          message(Release)
+          DESTDIR = ../build/win/msvc-2015/x64/release/
+        }
+      } else {
+        message(Windows x86 MSVC 2015)
+        SOURCES += cryptography/botan/windows/msvc/x86/botan_all.cpp
+        HEADERS += cryptography/botan/windows/msvc/x86/botan_all.h \
+                   cryptography/botan/windows/msvc/x86/botan_all_internal.h
+
+        debug {
+          message(Debug)
+          DESTDIR = ../build/win/x86/msvc-2015/debug/
+        }
+        release {
+          message(Release)
+          DESTDIR = ../build/win/msvc-2015/x86/release/
         }
       }
     }
@@ -205,6 +262,3 @@ MOC_DIR = $$DESTDIR/moc
 RCC_DIR = $$DESTDIR/qrc
 
 RESOURCES += resources/kryvos.qrc
-
-QMAKE_CXXFLAGS += -fstack-protector
-QMAKE_LFLAGS += -fstack-protector
