@@ -8,14 +8,26 @@
 #elif defined(Q_OS_IOS)
 #include "cryptography/botan/ios/botan_all.h"
 #elif defined(Q_OS_MACX)
-#include "cryptography/botan/mac/x86_64/botan_all.h"
+#include "cryptography/botan/mac/clang/x86_64/botan_all.h"
 #elif defined(Q_OS_LINUX)
-#include "cryptography/botan/linux/x86_64/botan_all.h"
+  #if defined(__clang__)
+#include "cryptography/botan/linux/clang/x86_64/botan_all.h"
+  #elif defined(__GNUC__) || defined(__GNUG__)
+#include "cryptography/botan/linux/gcc/x86_64/botan_all.h"
+  #endif
 #elif defined(Q_OS_WIN)
   #if defined(Q_OS_WIN64)
-#include "cryptography/botan/windows/x64/botan_all.h"
+    #if defined(__GNUC__) || defined(__GNUG__)
+#include "cryptography/botan/windows/mingw/x86_64/botan_all.h"
+    #elif defined(_MSC_VER)
+#include "cryptography/botan/windows/msvc/x86_64/botan_all.h"
+    #endif
   #else
-#include "cryptography/botan/windows/x86/botan_all.h"
+    #if defined(__GNUC__) || defined(__GNUG__)
+#include "cryptography/botan/windows/mingw/x86/botan_all.h"
+    #elif defined(_MSC_VER)
+#include "cryptography/botan/windows/msvc/x86/botan_all.h"
+    #endif
   #endif
 #endif
 
