@@ -1210,6 +1210,254 @@ Transform* get_transform(const std::string& specstr,
 
 }
 /*
+* Base64 Encoding and Decoding
+* (C) 2010,2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+namespace {
+
+static const byte BIN_TO_BASE64[64] = {
+   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+   'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+   'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+   'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
+};
+
+void do_base64_encode(char out[4], const byte in[3])
+   {
+   out[0] = BIN_TO_BASE64[((in[0] & 0xFC) >> 2)];
+   out[1] = BIN_TO_BASE64[((in[0] & 0x03) << 4) | (in[1] >> 4)];
+   out[2] = BIN_TO_BASE64[((in[1] & 0x0F) << 2) | (in[2] >> 6)];
+   out[3] = BIN_TO_BASE64[((in[2] & 0x3F)     )];
+   }
+
+}
+
+size_t base64_encode(char out[],
+                     const byte in[],
+                     size_t input_length,
+                     size_t& input_consumed,
+                     bool final_inputs)
+   {
+   input_consumed = 0;
+
+   size_t input_remaining = input_length;
+   size_t output_produced = 0;
+
+   while(input_remaining >= 3)
+      {
+      do_base64_encode(out + output_produced, in + input_consumed);
+
+      input_consumed += 3;
+      output_produced += 4;
+      input_remaining -= 3;
+      }
+
+   if(final_inputs && input_remaining)
+      {
+      byte remainder[3] = { 0 };
+      for(size_t i = 0; i != input_remaining; ++i)
+         remainder[i] = in[input_consumed + i];
+
+      do_base64_encode(out + output_produced, remainder);
+
+      size_t empty_bits = 8 * (3 - input_remaining);
+      size_t index = output_produced + 4 - 1;
+      while(empty_bits >= 8)
+         {
+         out[index--] = '=';
+         empty_bits -= 6;
+         }
+
+      input_consumed += input_remaining;
+      output_produced += 4;
+      }
+
+   return output_produced;
+   }
+
+std::string base64_encode(const byte input[],
+                          size_t input_length)
+   {
+   const size_t output_length = (round_up(input_length, 3) / 3) * 4;
+   std::string output(output_length, 0);
+
+   size_t consumed = 0;
+   size_t produced = 0;
+   
+   if (output_length > 0)
+   {
+      produced = base64_encode(&output.front(),
+                               input, input_length,
+                               consumed, true);
+   }
+
+   BOTAN_ASSERT_EQUAL(consumed, input_length, "Consumed the entire input");
+   BOTAN_ASSERT_EQUAL(produced, output.size(), "Produced expected size");
+
+   return output;
+   }
+
+size_t base64_decode(byte output[],
+                     const char input[],
+                     size_t input_length,
+                     size_t& input_consumed,
+                     bool final_inputs,
+                     bool ignore_ws)
+   {
+   /*
+   * Base64 Decoder Lookup Table
+   * Warning: assumes ASCII encodings
+   */
+   static const byte BASE64_TO_BIN[256] = {
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
+      0x80, 0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0x3E, 0xFF, 0xFF, 0xFF, 0x3F, 0x34, 0x35,
+      0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0xFF, 0xFF,
+      0xFF, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04,
+      0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
+      0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+      0x19, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x1A, 0x1B, 0x1C,
+      0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
+      0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30,
+      0x31, 0x32, 0x33, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+   byte* out_ptr = output;
+   byte decode_buf[4];
+   size_t decode_buf_pos = 0;
+   size_t final_truncate = 0;
+
+   clear_mem(output, input_length * 3 / 4);
+
+   for(size_t i = 0; i != input_length; ++i)
+      {
+      const byte bin = BASE64_TO_BIN[static_cast<byte>(input[i])];
+
+      if(bin <= 0x3F)
+         {
+         decode_buf[decode_buf_pos] = bin;
+         decode_buf_pos += 1;
+         }
+      else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws)))
+         {
+         std::string bad_char(1, input[i]);
+         if(bad_char == "\t")
+           bad_char = "\\t";
+         else if(bad_char == "\n")
+           bad_char = "\\n";
+         else if(bad_char == "\r")
+           bad_char = "\\r";
+
+         throw std::invalid_argument(
+           std::string("base64_decode: invalid base64 character '") +
+           bad_char + "'");
+         }
+
+      /*
+      * If we're at the end of the input, pad with 0s and truncate
+      */
+      if(final_inputs && (i == input_length - 1))
+         {
+         if(decode_buf_pos)
+            {
+            for(size_t j = decode_buf_pos; j != 4; ++j)
+               decode_buf[j] = 0;
+            final_truncate = (4 - decode_buf_pos);
+            decode_buf_pos = 4;
+            }
+         }
+
+      if(decode_buf_pos == 4)
+         {
+         out_ptr[0] = (decode_buf[0] << 2) | (decode_buf[1] >> 4);
+         out_ptr[1] = (decode_buf[1] << 4) | (decode_buf[2] >> 2);
+         out_ptr[2] = (decode_buf[2] << 6) | decode_buf[3];
+
+         out_ptr += 3;
+         decode_buf_pos = 0;
+         input_consumed = i+1;
+         }
+      }
+
+   while(input_consumed < input_length &&
+         BASE64_TO_BIN[static_cast<byte>(input[input_consumed])] == 0x80)
+      {
+      ++input_consumed;
+      }
+
+   size_t written = (out_ptr - output) - final_truncate;
+
+   return written;
+   }
+
+size_t base64_decode(byte output[],
+                     const char input[],
+                     size_t input_length,
+                     bool ignore_ws)
+   {
+   size_t consumed = 0;
+   size_t written = base64_decode(output, input, input_length,
+                                  consumed, true, ignore_ws);
+
+   if(consumed != input_length)
+      throw std::invalid_argument("base64_decode: input did not have full bytes");
+
+   return written;
+   }
+
+size_t base64_decode(byte output[],
+                     const std::string& input,
+                     bool ignore_ws)
+   {
+   return base64_decode(output, input.data(), input.length(), ignore_ws);
+   }
+
+secure_vector<byte> base64_decode(const char input[],
+                                 size_t input_length,
+                                 bool ignore_ws)
+   {
+   const size_t output_length = (round_up(input_length, 4) * 3) / 4;
+   secure_vector<byte> bin(output_length);
+
+   size_t written = base64_decode(bin.data(),
+                                  input,
+                                  input_length,
+                                  ignore_ws);
+
+   bin.resize(written);
+   return bin;
+   }
+
+secure_vector<byte> base64_decode(const std::string& input,
+                                 bool ignore_ws)
+   {
+   return base64_decode(input.data(), input.size(), ignore_ws);
+   }
+
+
+}
+/*
 * Block Ciphers
 * (C) 2015 Jack Lloyd
 *
@@ -1664,6 +1912,237 @@ CMAC::CMAC(BlockCipher* cipher) : m_cipher(cipher)
 
 }
 /*
+* Compression Transform
+* (C) 2014 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include <cstdlib>
+
+namespace Botan {
+
+void* Compression_Alloc_Info::do_malloc(size_t n, size_t size)
+   {
+   const size_t total_sz = n * size;
+
+   void* ptr = std::malloc(total_sz);
+   m_current_allocs[ptr] = total_sz;
+   return ptr;
+   }
+
+void Compression_Alloc_Info::do_free(void* ptr)
+   {
+   if(ptr)
+      {
+      auto i = m_current_allocs.find(ptr);
+
+      if(i == m_current_allocs.end())
+         throw std::runtime_error("Compression_Alloc_Info::free got pointer not allocated by us");
+
+      zero_mem(ptr, i->second);
+      std::free(ptr);
+      m_current_allocs.erase(i);
+      }
+   }
+
+namespace {
+
+Compressor_Transform* do_make_compressor(const std::string& type, const std::string suffix)
+   {
+   const std::map<std::string, std::string> trans{
+      {"zlib", "Zlib"},
+      {"deflate", "Deflate"},
+      {"gzip", "Gzip"},
+      {"gz", "Gzip"},
+      {"bzip2", "Bzip2"},
+      {"bz2", "Bzip2"},
+      {"lzma", "LZMA"},
+      {"xz", "LZMA"}};
+
+   auto i = trans.find(type);
+
+   if(i == trans.end())
+      return nullptr;
+
+   const std::string t_name = i->second + suffix;
+
+   std::unique_ptr<Transform> t(get_transform(t_name));
+
+   if(!t)
+      return nullptr;
+
+   Compressor_Transform* r = dynamic_cast<Compressor_Transform*>(t.get());
+   if(!r)
+      throw std::runtime_error("Bad cast of compression object " + t_name);
+
+   t.release();
+   return r;
+   }
+
+}
+
+Compressor_Transform* make_compressor(const std::string& type, size_t level)
+   {
+   return do_make_compressor(type, "_Compression(" + std::to_string(level) + ")");
+   }
+
+Compressor_Transform* make_decompressor(const std::string& type)
+   {
+   return do_make_compressor(type, "_Decompression");
+   }
+
+void Stream_Compression::clear()
+   {
+   m_stream.reset();
+   }
+
+secure_vector<byte> Stream_Compression::start_raw(const byte[], size_t nonce_len)
+   {
+   if(!valid_nonce_length(nonce_len))
+      throw Invalid_IV_Length(name(), nonce_len);
+
+   m_stream.reset(make_stream());
+   return secure_vector<byte>();
+   }
+
+void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit flags)
+   {
+   BOTAN_ASSERT(m_stream, "Initialized");
+   BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
+
+   if(m_buffer.size() < buf.size() + offset)
+      m_buffer.resize(buf.size() + offset);
+
+   // If the output buffer has zero length, .data() might return nullptr. This would
+   // make some compression algorithms (notably those provided by zlib) fail.
+   // Any small positive value works fine, but we choose 32 as it is the smallest power
+   // of two that is large enough to hold all the headers and trailers of the common
+   // formats, preventing further resizings to make room for output data.
+   if(m_buffer.size() == 0)
+      m_buffer.resize(32);
+
+   m_stream->next_in(buf.data() + offset, buf.size() - offset);
+   m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
+
+   while(true)
+      {
+      m_stream->run(flags);
+
+      if(m_stream->avail_out() == 0)
+         {
+         const size_t added = 8 + m_buffer.size();
+         m_buffer.resize(m_buffer.size() + added);
+         m_stream->next_out(m_buffer.data() + m_buffer.size() - added, added);
+         }
+      else if(m_stream->avail_in() == 0)
+         {
+         m_buffer.resize(m_buffer.size() - m_stream->avail_out());
+         break;
+         }
+      }
+
+   copy_mem(m_buffer.data(), buf.data(), offset);
+   buf.swap(m_buffer);
+   }
+
+void Stream_Compression::update(secure_vector<byte>& buf, size_t offset)
+   {
+   BOTAN_ASSERT(m_stream, "Initialized");
+   process(buf, offset, m_stream->run_flag());
+   }
+
+void Stream_Compression::flush(secure_vector<byte>& buf, size_t offset)
+   {
+   BOTAN_ASSERT(m_stream, "Initialized");
+   process(buf, offset, m_stream->flush_flag());
+   }
+
+void Stream_Compression::finish(secure_vector<byte>& buf, size_t offset)
+   {
+   BOTAN_ASSERT(m_stream, "Initialized");
+   process(buf, offset, m_stream->finish_flag());
+   clear();
+   }
+
+void Stream_Decompression::clear()
+   {
+   m_stream.reset();
+   }
+
+secure_vector<byte> Stream_Decompression::start_raw(const byte[], size_t nonce_len)
+   {
+   if(!valid_nonce_length(nonce_len))
+      throw Invalid_IV_Length(name(), nonce_len);
+
+   m_stream.reset(make_stream());
+
+   return secure_vector<byte>();
+   }
+
+void Stream_Decompression::process(secure_vector<byte>& buf, size_t offset, u32bit flags)
+   {
+   BOTAN_ASSERT(m_stream, "Initialized");
+   BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
+
+   if(m_buffer.size() < buf.size() + offset)
+      m_buffer.resize(buf.size() + offset);
+
+   m_stream->next_in(buf.data() + offset, buf.size() - offset);
+   m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
+
+   while(true)
+      {
+      const bool stream_end = m_stream->run(flags);
+
+      if(stream_end)
+         {
+         if(m_stream->avail_in() == 0) // all data consumed?
+            {
+            m_buffer.resize(m_buffer.size() - m_stream->avail_out());
+            clear();
+            break;
+            }
+
+         // More data follows: try to process as a following stream
+         const size_t read = (buf.size() - offset) - m_stream->avail_in();
+         start();
+         m_stream->next_in(buf.data() + offset + read, buf.size() - offset - read);
+         }
+
+      if(m_stream->avail_out() == 0)
+         {
+         const size_t added = 8 + m_buffer.size();
+         m_buffer.resize(m_buffer.size() + added);
+         m_stream->next_out(m_buffer.data() + m_buffer.size() - added, added);
+         }
+      else if(m_stream->avail_in() == 0)
+         {
+         m_buffer.resize(m_buffer.size() - m_stream->avail_out());
+         break;
+         }
+      }
+
+   copy_mem(m_buffer.data(), buf.data(), offset);
+   buf.swap(m_buffer);
+   }
+
+void Stream_Decompression::update(secure_vector<byte>& buf, size_t offset)
+   {
+   process(buf, offset, m_stream->run_flag());
+   }
+
+void Stream_Decompression::finish(secure_vector<byte>& buf, size_t offset)
+   {
+   if(buf.size() != offset || m_stream.get())
+      process(buf, offset, m_stream->finish_flag());
+
+   if(m_stream.get())
+      throw std::runtime_error(name() + " finished but not at stream end");
+   }
+
+}
+/*
 * Counter mode
 * (C) 1999-2011,2014 Jack Lloyd
 *
@@ -1774,101 +2253,6 @@ void CTR_BE::increment_counter()
 
    m_cipher->encrypt_n(m_counter.data(), m_pad.data(), n_wide);
    m_pad_pos = 0;
-   }
-
-}
-/*
-* Reader of /dev/random and company
-* (C) 1999-2009,2013 Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-#include <sys/types.h>
-#include <sys/select.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-
-namespace Botan {
-
-/**
-Device_EntropySource constructor
-Open a file descriptor to each (available) device in fsnames
-*/
-Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnames)
-   {
-#ifndef O_NONBLOCK
-  #define O_NONBLOCK 0
-#endif
-
-#ifndef O_NOCTTY
-  #define O_NOCTTY 0
-#endif
-
-   const int flags = O_RDONLY | O_NONBLOCK | O_NOCTTY;
-
-   for(auto fsname : fsnames)
-      {
-      fd_type fd = ::open(fsname.c_str(), flags);
-
-      if(fd >= 0 && fd < FD_SETSIZE)
-         m_devices.push_back(fd);
-      else if(fd >= 0)
-         ::close(fd);
-      }
-   }
-
-/**
-Device_EntropySource destructor: close all open devices
-*/
-Device_EntropySource::~Device_EntropySource()
-   {
-   for(size_t i = 0; i != m_devices.size(); ++i)
-      ::close(m_devices[i]);
-   }
-
-/**
-* Gather entropy from a RNG device
-*/
-void Device_EntropySource::poll(Entropy_Accumulator& accum)
-   {
-   if(m_devices.empty())
-      return;
-
-   const size_t ENTROPY_BITS_PER_BYTE = 8;
-   const size_t MS_WAIT_TIME = 32;
-   const size_t READ_ATTEMPT = 32;
-
-   int max_fd = m_devices[0];
-   fd_set read_set;
-   FD_ZERO(&read_set);
-   for(size_t i = 0; i != m_devices.size(); ++i)
-      {
-      FD_SET(m_devices[i], &read_set);
-      max_fd = std::max(m_devices[i], max_fd);
-      }
-
-   struct ::timeval timeout;
-
-   timeout.tv_sec = (MS_WAIT_TIME / 1000);
-   timeout.tv_usec = (MS_WAIT_TIME % 1000) * 1000;
-
-   if(::select(max_fd + 1, &read_set, nullptr, nullptr, &timeout) < 0)
-      return;
-
-   m_buf.resize(READ_ATTEMPT);
-
-   for(size_t i = 0; i != m_devices.size(); ++i)
-      {
-      if(FD_ISSET(m_devices[i], &read_set))
-         {
-         const ssize_t got = ::read(m_devices[i], m_buf.data(), m_buf.size());
-         if(got > 0)
-            accum.add(m_buf.data(), got, ENTROPY_BITS_PER_BYTE);
-         }
-      }
    }
 
 }
@@ -2157,6 +2541,1699 @@ void EntropySource::poll_available_sources(class Entropy_Accumulator& accum)
 
 }
 
+/*
+* Filters
+* (C) 1999-2007,2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher) :
+   m_buffer(DEFAULT_BUFFERSIZE),
+   m_cipher(cipher)
+   {
+   }
+
+StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher, const SymmetricKey& key) :
+   m_buffer(DEFAULT_BUFFERSIZE),
+   m_cipher(cipher)
+   {
+   m_cipher->set_key(key);
+   }
+
+StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
+   m_buffer(DEFAULT_BUFFERSIZE),
+   m_cipher(StreamCipher::create(sc_name))
+   {
+   if(!m_cipher)
+      throw Algorithm_Not_Found(sc_name);
+   }
+
+StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name, const SymmetricKey& key) :
+   m_buffer(DEFAULT_BUFFERSIZE),
+   m_cipher(StreamCipher::create(sc_name))
+   {
+   if(!m_cipher)
+      throw Algorithm_Not_Found(sc_name);
+   m_cipher->set_key(key);
+   }
+
+void StreamCipher_Filter::write(const byte input[], size_t length)
+   {
+   while(length)
+      {
+      size_t copied = std::min<size_t>(length, m_buffer.size());
+      m_cipher->cipher(input, m_buffer.data(), copied);
+      send(m_buffer, copied);
+      input += copied;
+      length -= copied;
+      }
+   }
+
+Hash_Filter::Hash_Filter(const std::string& hash_name, size_t len) :
+   m_hash(HashFunction::create(hash_name)),
+   m_out_len(len)
+   {
+   if(!m_hash)
+      throw Algorithm_Not_Found(hash_name);
+   }
+void Hash_Filter::end_msg()   {
+   secure_vector<byte> output = m_hash->final();
+   if(m_out_len)
+      send(output, std::min<size_t>(m_out_len, output.size()));
+   else
+      send(output);
+   }
+
+MAC_Filter::MAC_Filter(const std::string& mac_name, size_t len) :
+   m_mac(MessageAuthenticationCode::create(mac_name)),
+   m_out_len(len)
+   {
+   if(!m_mac)
+      throw Algorithm_Not_Found(mac_name);
+   }
+
+MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key, size_t len) :
+   m_mac(MessageAuthenticationCode::create(mac_name)),
+   m_out_len(len)
+   {
+   if(!m_mac)
+      throw Algorithm_Not_Found(mac_name);
+   m_mac->set_key(key);
+   }
+
+void MAC_Filter::end_msg()
+   {
+   secure_vector<byte> output = m_mac->final();
+   if(m_out_len)
+      send(output, std::min<size_t>(m_out_len, output.size()));
+   else
+      send(output);
+   }
+
+}
+/*
+* Basic Filters
+* (C) 1999-2007 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+void Keyed_Filter::set_iv(const InitializationVector& iv)
+   {
+   if(iv.length() != 0)
+      throw Invalid_IV_Length(name(), iv.length());
+   }
+
+/*
+* Chain Constructor
+*/
+Chain::Chain(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
+   {
+   if(f1) { attach(f1); incr_owns(); }
+   if(f2) { attach(f2); incr_owns(); }
+   if(f3) { attach(f3); incr_owns(); }
+   if(f4) { attach(f4); incr_owns(); }
+   }
+
+/*
+* Chain Constructor
+*/
+Chain::Chain(Filter* filters[], size_t count)
+   {
+   for(size_t j = 0; j != count; ++j)
+      if(filters[j])
+         {
+         attach(filters[j]);
+         incr_owns();
+         }
+   }
+
+std::string Chain::name() const
+   {
+   return "Chain";
+   }
+
+/*
+* Fork Constructor
+*/
+Fork::Fork(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
+   {
+   Filter* filters[4] = { f1, f2, f3, f4 };
+   set_next(filters, 4);
+   }
+
+/*
+* Fork Constructor
+*/
+Fork::Fork(Filter* filters[], size_t count)
+   {
+   set_next(filters, count);
+   }
+
+std::string Fork::name() const
+   {
+   return "Fork";
+   }
+
+}
+/*
+* Buffered Filter
+* (C) 1999-2007 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+/*
+* Buffered_Filter Constructor
+*/
+Buffered_Filter::Buffered_Filter(size_t b, size_t f) :
+   main_block_mod(b), final_minimum(f)
+   {
+   if(main_block_mod == 0)
+      throw std::invalid_argument("main_block_mod == 0");
+
+   if(final_minimum > main_block_mod)
+      throw std::invalid_argument("final_minimum > main_block_mod");
+
+   buffer.resize(2 * main_block_mod);
+   buffer_pos = 0;
+   }
+
+/*
+* Buffer input into blocks, trying to minimize copying
+*/
+void Buffered_Filter::write(const byte input[], size_t input_size)
+   {
+   if(!input_size)
+      return;
+
+   if(buffer_pos + input_size >= main_block_mod + final_minimum)
+      {
+      size_t to_copy = std::min<size_t>(buffer.size() - buffer_pos, input_size);
+
+      copy_mem(&buffer[buffer_pos], input, to_copy);
+      buffer_pos += to_copy;
+
+      input += to_copy;
+      input_size -= to_copy;
+
+      size_t total_to_consume =
+         round_down(std::min(buffer_pos,
+                             buffer_pos + input_size - final_minimum),
+                    main_block_mod);
+
+      buffered_block(buffer.data(), total_to_consume);
+
+      buffer_pos -= total_to_consume;
+
+      copy_mem(buffer.data(), buffer.data() + total_to_consume, buffer_pos);
+      }
+
+   if(input_size >= final_minimum)
+      {
+      size_t full_blocks = (input_size - final_minimum) / main_block_mod;
+      size_t to_copy = full_blocks * main_block_mod;
+
+      if(to_copy)
+         {
+         buffered_block(input, to_copy);
+
+         input += to_copy;
+         input_size -= to_copy;
+         }
+      }
+
+   copy_mem(&buffer[buffer_pos], input, input_size);
+   buffer_pos += input_size;
+   }
+
+/*
+* Finish/flush operation
+*/
+void Buffered_Filter::end_msg()
+   {
+   if(buffer_pos < final_minimum)
+      throw std::runtime_error("Buffered filter end_msg without enough input");
+
+   size_t spare_blocks = (buffer_pos - final_minimum) / main_block_mod;
+
+   if(spare_blocks)
+      {
+      size_t spare_bytes = main_block_mod * spare_blocks;
+      buffered_block(buffer.data(), spare_bytes);
+      buffered_final(&buffer[spare_bytes], buffer_pos - spare_bytes);
+      }
+   else
+      {
+      buffered_final(buffer.data(), buffer_pos);
+      }
+
+   buffer_pos = 0;
+   }
+
+}
+/*
+* Filter interface for compression
+* (C) 2014,2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+Compression_Filter::Compression_Filter(const std::string& type, size_t level, size_t bs) :
+   Compression_Decompression_Filter(make_compressor(type, level), bs)
+   {
+   }
+
+Decompression_Filter::Decompression_Filter(const std::string& type, size_t bs) :
+   Compression_Decompression_Filter(make_decompressor(type), bs)
+   {
+   }
+
+Compression_Decompression_Filter::Compression_Decompression_Filter(Transform* transform, size_t bs) :
+   m_buffersize(std::max<size_t>(256, bs)), m_buffer(m_buffersize)
+   {
+   m_transform.reset(dynamic_cast<Compressor_Transform*>(transform));
+   if(!m_transform)
+      throw std::invalid_argument("Transform " + transform->name() + " is not a compressor");
+   }
+
+std::string Compression_Decompression_Filter::name() const
+   {
+   return m_transform->name();
+   }
+
+void Compression_Decompression_Filter::start_msg()
+   {
+   send(m_transform->start());
+   }
+
+void Compression_Decompression_Filter::write(const byte input[], size_t input_length)
+   {
+   while(input_length)
+      {
+      const size_t take = std::min(m_buffersize, input_length);
+      BOTAN_ASSERT(take > 0, "Consumed something");
+
+      m_buffer.assign(input, input + take);
+      m_transform->update(m_buffer);
+
+      send(m_buffer);
+
+      input += take;
+      input_length -= take;
+      }
+   }
+
+void Compression_Decompression_Filter::flush()
+   {
+   m_buffer.clear();
+   m_transform->flush(m_buffer);
+   send(m_buffer);
+   }
+
+void Compression_Decompression_Filter::end_msg()
+   {
+   m_buffer.clear();
+   m_transform->finish(m_buffer);
+   send(m_buffer);
+   }
+
+}
+/*
+* DataSink
+* (C) 1999-2007 Jack Lloyd
+*     2005 Matthew Gregan
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include <fstream>
+
+namespace Botan {
+
+/*
+* Write to a stream
+*/
+void DataSink_Stream::write(const byte out[], size_t length)
+   {
+   sink.write(reinterpret_cast<const char*>(out), length);
+   if(!sink.good())
+      throw Stream_IO_Error("DataSink_Stream: Failure writing to " +
+                            identifier);
+   }
+
+/*
+* DataSink_Stream Constructor
+*/
+DataSink_Stream::DataSink_Stream(std::ostream& out,
+                                 const std::string& name) :
+   identifier(name),
+   sink_p(nullptr),
+   sink(out)
+   {
+   }
+
+/*
+* DataSink_Stream Constructor
+*/
+DataSink_Stream::DataSink_Stream(const std::string& path,
+                                 bool use_binary) :
+   identifier(path),
+   sink_p(new std::ofstream(path,
+                            use_binary ? std::ios::binary : std::ios::out)),
+   sink(*sink_p)
+   {
+   if(!sink.good())
+      {
+      delete sink_p;
+      throw Stream_IO_Error("DataSink_Stream: Failure opening " + path);
+      }
+   }
+
+/*
+* DataSink_Stream Destructor
+*/
+DataSink_Stream::~DataSink_Stream()
+   {
+   delete sink_p;
+   }
+
+}
+/*
+* Filter
+* (C) 1999-2007 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+/*
+* Filter Constructor
+*/
+Filter::Filter()
+   {
+   next.resize(1);
+   port_num = 0;
+   filter_owns = 0;
+   owned = false;
+   }
+
+/*
+* Send data to all ports
+*/
+void Filter::send(const byte input[], size_t length)
+   {
+   if(!length)
+      return;
+
+   bool nothing_attached = true;
+   for(size_t j = 0; j != total_ports(); ++j)
+      if(next[j])
+         {
+         if(write_queue.size())
+            next[j]->write(write_queue.data(), write_queue.size());
+         next[j]->write(input, length);
+         nothing_attached = false;
+         }
+
+   if(nothing_attached)
+      write_queue += std::make_pair(input, length);
+   else
+      write_queue.clear();
+   }
+
+/*
+* Start a new message
+*/
+void Filter::new_msg()
+   {
+   start_msg();
+   for(size_t j = 0; j != total_ports(); ++j)
+      if(next[j])
+         next[j]->new_msg();
+   }
+
+/*
+* End the current message
+*/
+void Filter::finish_msg()
+   {
+   end_msg();
+   for(size_t j = 0; j != total_ports(); ++j)
+      if(next[j])
+         next[j]->finish_msg();
+   }
+
+/*
+* Attach a filter to the current port
+*/
+void Filter::attach(Filter* new_filter)
+   {
+   if(new_filter)
+      {
+      Filter* last = this;
+      while(last->get_next())
+         last = last->get_next();
+      last->next[last->current_port()] = new_filter;
+      }
+   }
+
+/*
+* Set the active port on a filter
+*/
+void Filter::set_port(size_t new_port)
+   {
+   if(new_port >= total_ports())
+      throw Invalid_Argument("Filter: Invalid port number");
+   port_num = new_port;
+   }
+
+/*
+* Return the next Filter in the logical chain
+*/
+Filter* Filter::get_next() const
+   {
+   if(port_num < next.size())
+      return next[port_num];
+   return nullptr;
+   }
+
+/*
+* Set the next Filters
+*/
+void Filter::set_next(Filter* filters[], size_t size)
+   {
+   next.clear();
+
+   port_num = 0;
+   filter_owns = 0;
+
+   while(size && filters && (filters[size-1] == nullptr))
+      --size;
+
+   if(filters && size)
+      next.assign(filters, filters + size);
+   }
+
+/*
+* Return the total number of ports
+*/
+size_t Filter::total_ports() const
+   {
+   return next.size();
+   }
+
+}
+/*
+* (C) 2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+Keyed_Filter* get_cipher(const std::string& algo_spec,
+                         Cipher_Dir direction)
+   {
+   std::unique_ptr<Cipher_Mode> c(get_cipher_mode(algo_spec, direction));
+   if(c)
+      return new Transform_Filter(c.release());
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+Keyed_Filter* get_cipher(const std::string& algo_spec,
+                         const SymmetricKey& key,
+                         const InitializationVector& iv,
+                         Cipher_Dir direction)
+   {
+   Keyed_Filter* cipher = get_cipher(algo_spec, key, direction);
+   if(iv.length())
+      cipher->set_iv(iv);
+   return cipher;
+   }
+
+Keyed_Filter* get_cipher(const std::string& algo_spec,
+                         const SymmetricKey& key,
+                         Cipher_Dir direction)
+   {
+   Keyed_Filter* cipher = get_cipher(algo_spec, direction);
+   cipher->set_key(key);
+   return cipher;
+   }
+
+}
+/*
+* Pipe Output Buffer
+* (C) 1999-2007,2011 Jack Lloyd
+*     2012 Markus Wanner
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+/*
+* Read data from a message
+*/
+size_t Output_Buffers::read(byte output[], size_t length,
+                            Pipe::message_id msg)
+   {
+   SecureQueue* q = get(msg);
+   if(q)
+      return q->read(output, length);
+   return 0;
+   }
+
+/*
+* Peek at data in a message
+*/
+size_t Output_Buffers::peek(byte output[], size_t length,
+                            size_t stream_offset,
+                            Pipe::message_id msg) const
+   {
+   SecureQueue* q = get(msg);
+   if(q)
+      return q->peek(output, length, stream_offset);
+   return 0;
+   }
+
+/*
+* Check available bytes in a message
+*/
+size_t Output_Buffers::remaining(Pipe::message_id msg) const
+   {
+   SecureQueue* q = get(msg);
+   if(q)
+      return q->size();
+   return 0;
+   }
+
+/*
+* Return the total bytes of a message that have already been read.
+*/
+size_t Output_Buffers::get_bytes_read(Pipe::message_id msg) const
+   {
+   SecureQueue* q = get(msg);
+   if (q)
+      return q->get_bytes_read();
+   return 0;
+   }
+
+/*
+* Add a new output queue
+*/
+void Output_Buffers::add(SecureQueue* queue)
+   {
+   BOTAN_ASSERT(queue, "queue was provided");
+
+   BOTAN_ASSERT(buffers.size() < buffers.max_size(),
+                "Room was available in container");
+
+   buffers.push_back(queue);
+   }
+
+/*
+* Retire old output queues
+*/
+void Output_Buffers::retire()
+   {
+   for(size_t i = 0; i != buffers.size(); ++i)
+      if(buffers[i] && buffers[i]->size() == 0)
+         {
+         delete buffers[i];
+         buffers[i] = nullptr;
+         }
+
+   while(buffers.size() && !buffers[0])
+      {
+      buffers.pop_front();
+      offset = offset + Pipe::message_id(1);
+      }
+   }
+
+/*
+* Get a particular output queue
+*/
+SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
+   {
+   if(msg < offset)
+      return nullptr;
+
+   BOTAN_ASSERT(msg < message_count(), "Message number is in range");
+
+   return buffers[msg-offset];
+   }
+
+/*
+* Return the total number of messages
+*/
+Pipe::message_id Output_Buffers::message_count() const
+   {
+   return (offset + buffers.size());
+   }
+
+/*
+* Output_Buffers Constructor
+*/
+Output_Buffers::Output_Buffers()
+   {
+   offset = 0;
+   }
+
+/*
+* Output_Buffers Destructor
+*/
+Output_Buffers::~Output_Buffers()
+   {
+   for(size_t j = 0; j != buffers.size(); ++j)
+      delete buffers[j];
+   }
+
+}
+/*
+* Pipe
+* (C) 1999-2007 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+namespace {
+
+/*
+* A Filter that does nothing
+*/
+class Null_Filter : public Filter
+   {
+   public:
+      void write(const byte input[], size_t length) override
+         { send(input, length); }
+
+      std::string name() const override { return "Null"; }
+   };
+
+}
+
+/*
+* Pipe Constructor
+*/
+Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
+   {
+   init();
+   append(f1);
+   append(f2);
+   append(f3);
+   append(f4);
+   }
+
+/*
+* Pipe Constructor
+*/
+Pipe::Pipe(std::initializer_list<Filter*> args)
+   {
+   init();
+
+   for(auto i = args.begin(); i != args.end(); ++i)
+      append(*i);
+   }
+
+/*
+* Pipe Destructor
+*/
+Pipe::~Pipe()
+   {
+   destruct(pipe);
+   delete outputs;
+   }
+
+/*
+* Initialize the Pipe
+*/
+void Pipe::init()
+   {
+   outputs = new Output_Buffers;
+   pipe = nullptr;
+   default_read = 0;
+   inside_msg = false;
+   }
+
+/*
+* Reset the Pipe
+*/
+void Pipe::reset()
+   {
+   destruct(pipe);
+   pipe = nullptr;
+   inside_msg = false;
+   }
+
+/*
+* Destroy the Pipe
+*/
+void Pipe::destruct(Filter* to_kill)
+   {
+   if(!to_kill || dynamic_cast<SecureQueue*>(to_kill))
+      return;
+   for(size_t j = 0; j != to_kill->total_ports(); ++j)
+      destruct(to_kill->next[j]);
+   delete to_kill;
+   }
+
+/*
+* Test if the Pipe has any data in it
+*/
+bool Pipe::end_of_data() const
+   {
+   return (remaining() == 0);
+   }
+
+/*
+* Set the default read message
+*/
+void Pipe::set_default_msg(message_id msg)
+   {
+   if(msg >= message_count())
+      throw Invalid_Argument("Pipe::set_default_msg: msg number is too high");
+   default_read = msg;
+   }
+
+/*
+* Process a full message at once
+*/
+void Pipe::process_msg(const byte input[], size_t length)
+   {
+   start_msg();
+   write(input, length);
+   end_msg();
+   }
+
+/*
+* Process a full message at once
+*/
+void Pipe::process_msg(const secure_vector<byte>& input)
+   {
+   process_msg(input.data(), input.size());
+   }
+
+void Pipe::process_msg(const std::vector<byte>& input)
+   {
+   process_msg(input.data(), input.size());
+   }
+
+/*
+* Process a full message at once
+*/
+void Pipe::process_msg(const std::string& input)
+   {
+   process_msg(reinterpret_cast<const byte*>(input.data()), input.length());
+   }
+
+/*
+* Process a full message at once
+*/
+void Pipe::process_msg(DataSource& input)
+   {
+   start_msg();
+   write(input);
+   end_msg();
+   }
+
+/*
+* Start a new message
+*/
+void Pipe::start_msg()
+   {
+   if(inside_msg)
+      throw Invalid_State("Pipe::start_msg: Message was already started");
+   if(pipe == nullptr)
+      pipe = new Null_Filter;
+   find_endpoints(pipe);
+   pipe->new_msg();
+   inside_msg = true;
+   }
+
+/*
+* End the current message
+*/
+void Pipe::end_msg()
+   {
+   if(!inside_msg)
+      throw Invalid_State("Pipe::end_msg: Message was already ended");
+   pipe->finish_msg();
+   clear_endpoints(pipe);
+   if(dynamic_cast<Null_Filter*>(pipe))
+      {
+      delete pipe;
+      pipe = nullptr;
+      }
+   inside_msg = false;
+
+   outputs->retire();
+   }
+
+/*
+* Find the endpoints of the Pipe
+*/
+void Pipe::find_endpoints(Filter* f)
+   {
+   for(size_t j = 0; j != f->total_ports(); ++j)
+      if(f->next[j] && !dynamic_cast<SecureQueue*>(f->next[j]))
+         find_endpoints(f->next[j]);
+      else
+         {
+         SecureQueue* q = new SecureQueue;
+         f->next[j] = q;
+         outputs->add(q);
+         }
+   }
+
+/*
+* Remove the SecureQueues attached to the Filter
+*/
+void Pipe::clear_endpoints(Filter* f)
+   {
+   if(!f) return;
+   for(size_t j = 0; j != f->total_ports(); ++j)
+      {
+      if(f->next[j] && dynamic_cast<SecureQueue*>(f->next[j]))
+         f->next[j] = nullptr;
+      clear_endpoints(f->next[j]);
+      }
+   }
+
+/*
+* Append a Filter to the Pipe
+*/
+void Pipe::append(Filter* filter)
+   {
+   if(inside_msg)
+      throw Invalid_State("Cannot append to a Pipe while it is processing");
+   if(!filter)
+      return;
+   if(dynamic_cast<SecureQueue*>(filter))
+      throw Invalid_Argument("Pipe::append: SecureQueue cannot be used");
+   if(filter->owned)
+      throw Invalid_Argument("Filters cannot be shared among multiple Pipes");
+
+   filter->owned = true;
+
+   if(!pipe) pipe = filter;
+   else      pipe->attach(filter);
+   }
+
+/*
+* Prepend a Filter to the Pipe
+*/
+void Pipe::prepend(Filter* filter)
+   {
+   if(inside_msg)
+      throw Invalid_State("Cannot prepend to a Pipe while it is processing");
+   if(!filter)
+      return;
+   if(dynamic_cast<SecureQueue*>(filter))
+      throw Invalid_Argument("Pipe::prepend: SecureQueue cannot be used");
+   if(filter->owned)
+      throw Invalid_Argument("Filters cannot be shared among multiple Pipes");
+
+   filter->owned = true;
+
+   if(pipe) filter->attach(pipe);
+   pipe = filter;
+   }
+
+/*
+* Pop a Filter off the Pipe
+*/
+void Pipe::pop()
+   {
+   if(inside_msg)
+      throw Invalid_State("Cannot pop off a Pipe while it is processing");
+
+   if(!pipe)
+      return;
+
+   if(pipe->total_ports() > 1)
+      throw Invalid_State("Cannot pop off a Filter with multiple ports");
+
+   Filter* f = pipe;
+   size_t owns = f->owns();
+   pipe = pipe->next[0];
+   delete f;
+
+   while(owns--)
+      {
+      f = pipe;
+      pipe = pipe->next[0];
+      delete f;
+      }
+   }
+
+/*
+* Return the number of messages in this Pipe
+*/
+Pipe::message_id Pipe::message_count() const
+   {
+   return outputs->message_count();
+   }
+
+/*
+* Static Member Variables
+*/
+const Pipe::message_id Pipe::LAST_MESSAGE =
+   static_cast<Pipe::message_id>(-2);
+
+const Pipe::message_id Pipe::DEFAULT_MESSAGE =
+   static_cast<Pipe::message_id>(-1);
+
+}
+/*
+* Pipe I/O
+* (C) 1999-2007 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include <iostream>
+
+namespace Botan {
+
+/*
+* Write data from a pipe into an ostream
+*/
+std::ostream& operator<<(std::ostream& stream, Pipe& pipe)
+   {
+   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
+   while(stream.good() && pipe.remaining())
+      {
+      size_t got = pipe.read(buffer.data(), buffer.size());
+      stream.write(reinterpret_cast<const char*>(buffer.data()), got);
+      }
+   if(!stream.good())
+      throw Stream_IO_Error("Pipe output operator (iostream) has failed");
+   return stream;
+   }
+
+/*
+* Read data from an istream into a pipe
+*/
+std::istream& operator>>(std::istream& stream, Pipe& pipe)
+   {
+   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
+   while(stream.good())
+      {
+      stream.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
+      pipe.write(buffer.data(), stream.gcount());
+      }
+   if(stream.bad() || (stream.fail() && !stream.eof()))
+      throw Stream_IO_Error("Pipe input operator (iostream) has failed");
+   return stream;
+   }
+
+}
+/*
+* Pipe Reading/Writing
+* (C) 1999-2007 Jack Lloyd
+*     2012 Markus Wanner
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+/*
+* Look up the canonical ID for a queue
+*/
+Pipe::message_id Pipe::get_message_no(const std::string& func_name,
+                                      message_id msg) const
+   {
+   if(msg == DEFAULT_MESSAGE)
+      msg = default_msg();
+   else if(msg == LAST_MESSAGE)
+      msg = message_count() - 1;
+
+   if(msg >= message_count())
+      throw Invalid_Message_Number(func_name, msg);
+
+   return msg;
+   }
+
+/*
+* Write into a Pipe
+*/
+void Pipe::write(const byte input[], size_t length)
+   {
+   if(!inside_msg)
+      throw Invalid_State("Cannot write to a Pipe while it is not processing");
+   pipe->write(input, length);
+   }
+
+/*
+* Write a string into a Pipe
+*/
+void Pipe::write(const std::string& str)
+   {
+   write(reinterpret_cast<const byte*>(str.data()), str.size());
+   }
+
+/*
+* Write a single byte into a Pipe
+*/
+void Pipe::write(byte input)
+   {
+   write(&input, 1);
+   }
+
+/*
+* Write the contents of a DataSource into a Pipe
+*/
+void Pipe::write(DataSource& source)
+   {
+   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
+   while(!source.end_of_data())
+      {
+      size_t got = source.read(buffer.data(), buffer.size());
+      write(buffer.data(), got);
+      }
+   }
+
+/*
+* Read some data from the pipe
+*/
+size_t Pipe::read(byte output[], size_t length, message_id msg)
+   {
+   return outputs->read(output, length, get_message_no("read", msg));
+   }
+
+/*
+* Read some data from the pipe
+*/
+size_t Pipe::read(byte output[], size_t length)
+   {
+   return read(output, length, DEFAULT_MESSAGE);
+   }
+
+/*
+* Read a single byte from the pipe
+*/
+size_t Pipe::read(byte& out, message_id msg)
+   {
+   return read(&out, 1, msg);
+   }
+
+/*
+* Return all data in the pipe
+*/
+secure_vector<byte> Pipe::read_all(message_id msg)
+   {
+   msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
+   secure_vector<byte> buffer(remaining(msg));
+   size_t got = read(buffer.data(), buffer.size(), msg);
+   buffer.resize(got);
+   return buffer;
+   }
+
+/*
+* Return all data in the pipe as a string
+*/
+std::string Pipe::read_all_as_string(message_id msg)
+   {
+   msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
+   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
+   std::string str;
+   str.reserve(remaining(msg));
+
+   while(true)
+      {
+      size_t got = read(buffer.data(), buffer.size(), msg);
+      if(got == 0)
+         break;
+      str.append(reinterpret_cast<const char*>(buffer.data()), got);
+      }
+
+   return str;
+   }
+
+/*
+* Find out how many bytes are ready to read
+*/
+size_t Pipe::remaining(message_id msg) const
+   {
+   return outputs->remaining(get_message_no("remaining", msg));
+   }
+
+/*
+* Peek at some data in the pipe
+*/
+size_t Pipe::peek(byte output[], size_t length,
+                  size_t offset, message_id msg) const
+   {
+   return outputs->peek(output, length, offset, get_message_no("peek", msg));
+   }
+
+/*
+* Peek at some data in the pipe
+*/
+size_t Pipe::peek(byte output[], size_t length, size_t offset) const
+   {
+   return peek(output, length, offset, DEFAULT_MESSAGE);
+   }
+
+/*
+* Peek at a byte in the pipe
+*/
+size_t Pipe::peek(byte& out, size_t offset, message_id msg) const
+   {
+   return peek(&out, 1, offset, msg);
+   }
+
+size_t Pipe::get_bytes_read() const
+   {
+   return outputs->get_bytes_read(DEFAULT_MESSAGE);
+   }
+
+size_t Pipe::get_bytes_read(message_id msg) const
+   {
+   return outputs->get_bytes_read(msg);
+   }
+
+bool Pipe::check_available(size_t n)
+   {
+   return (n <= remaining(DEFAULT_MESSAGE));
+   }
+
+bool Pipe::check_available_msg(size_t n, message_id msg)
+   {
+   return (n <= remaining(msg));
+   }
+
+}
+/*
+* SecureQueue
+* (C) 1999-2007 Jack Lloyd
+*     2012 Markus Wanner
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+/**
+* A node in a SecureQueue
+*/
+class SecureQueueNode
+   {
+   public:
+      SecureQueueNode() : buffer(DEFAULT_BUFFERSIZE)
+         { next = nullptr; start = end = 0; }
+
+      ~SecureQueueNode() { next = nullptr; start = end = 0; }
+
+      size_t write(const byte input[], size_t length)
+         {
+         size_t copied = std::min<size_t>(length, buffer.size() - end);
+         copy_mem(buffer.data() + end, input, copied);
+         end += copied;
+         return copied;
+         }
+
+      size_t read(byte output[], size_t length)
+         {
+         size_t copied = std::min(length, end - start);
+         copy_mem(output, buffer.data() + start, copied);
+         start += copied;
+         return copied;
+         }
+
+      size_t peek(byte output[], size_t length, size_t offset = 0)
+         {
+         const size_t left = end - start;
+         if(offset >= left) return 0;
+         size_t copied = std::min(length, left - offset);
+         copy_mem(output, buffer.data() + start + offset, copied);
+         return copied;
+         }
+
+      size_t size() const { return (end - start); }
+   private:
+      friend class SecureQueue;
+      SecureQueueNode* next;
+      secure_vector<byte> buffer;
+      size_t start, end;
+   };
+
+/*
+* Create a SecureQueue
+*/
+SecureQueue::SecureQueue()
+   {
+   m_bytes_read = 0;
+   set_next(nullptr, 0);
+   m_head = m_tail = new SecureQueueNode;
+   }
+
+/*
+* Copy a SecureQueue
+*/
+SecureQueue::SecureQueue(const SecureQueue& input) :
+   Fanout_Filter(), DataSource()
+   {
+   m_bytes_read = 0;
+   set_next(nullptr, 0);
+
+   m_head = m_tail = new SecureQueueNode;
+   SecureQueueNode* temp = input.m_head;
+   while(temp)
+      {
+      write(&temp->buffer[temp->start], temp->end - temp->start);
+      temp = temp->next;
+      }
+   }
+
+/*
+* Destroy this SecureQueue
+*/
+void SecureQueue::destroy()
+   {
+   SecureQueueNode* temp = m_head;
+   while(temp)
+      {
+      SecureQueueNode* holder = temp->next;
+      delete temp;
+      temp = holder;
+      }
+   m_head = m_tail = nullptr;
+   }
+
+/*
+* Copy a SecureQueue
+*/
+SecureQueue& SecureQueue::operator=(const SecureQueue& input)
+   {
+   destroy();
+   m_head = m_tail = new SecureQueueNode;
+   SecureQueueNode* temp = input.m_head;
+   while(temp)
+      {
+      write(&temp->buffer[temp->start], temp->end - temp->start);
+      temp = temp->next;
+      }
+   return (*this);
+   }
+
+/*
+* Add some bytes to the queue
+*/
+void SecureQueue::write(const byte input[], size_t length)
+   {
+   if(!m_head)
+      m_head = m_tail = new SecureQueueNode;
+   while(length)
+      {
+      const size_t n = m_tail->write(input, length);
+      input += n;
+      length -= n;
+      if(length)
+         {
+         m_tail->next = new SecureQueueNode;
+         m_tail = m_tail->next;
+         }
+      }
+   }
+
+/*
+* Read some bytes from the queue
+*/
+size_t SecureQueue::read(byte output[], size_t length)
+   {
+   size_t got = 0;
+   while(length && m_head)
+      {
+      const size_t n = m_head->read(output, length);
+      output += n;
+      got += n;
+      length -= n;
+      if(m_head->size() == 0)
+         {
+         SecureQueueNode* holder = m_head->next;
+         delete m_head;
+         m_head = holder;
+         }
+      }
+   m_bytes_read += got;
+   return got;
+   }
+
+/*
+* Read data, but do not remove it from queue
+*/
+size_t SecureQueue::peek(byte output[], size_t length, size_t offset) const
+   {
+   SecureQueueNode* current = m_head;
+
+   while(offset && current)
+      {
+      if(offset >= current->size())
+         {
+         offset -= current->size();
+         current = current->next;
+         }
+      else
+         break;
+      }
+
+   size_t got = 0;
+   while(length && current)
+      {
+      const size_t n = current->peek(output, length, offset);
+      offset = 0;
+      output += n;
+      got += n;
+      length -= n;
+      current = current->next;
+      }
+   return got;
+   }
+
+/**
+* Return how many bytes have been read so far.
+*/
+size_t SecureQueue::get_bytes_read() const
+   {
+   return m_bytes_read;
+   }
+
+/*
+* Return how many bytes the queue holds
+*/
+size_t SecureQueue::size() const
+   {
+   SecureQueueNode* current = m_head;
+   size_t count = 0;
+
+   while(current)
+      {
+      count += current->size();
+      current = current->next;
+      }
+   return count;
+   }
+
+/*
+* Test if the queue has any data in it
+*/
+bool SecureQueue::end_of_data() const
+   {
+   return (size() == 0);
+   }
+
+bool SecureQueue::empty() const
+   {
+   return (size() == 0);
+   }
+
+}
+/*
+* Threaded Fork
+* (C) 2013 Joel Low
+*     2013 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+struct Threaded_Fork_Data
+   {
+   /*
+   * Semaphore for indicating that there is work to be done (or to
+   * quit)
+   */
+   Semaphore m_input_ready_semaphore;
+
+   /*
+   * Ensures that all threads have completed processing data.
+   */
+   Semaphore m_input_complete_semaphore;
+
+   /*
+   * The work that needs to be done. This should be only when the threads
+   * are NOT running (i.e. before notifying the work condition, after
+   * the input_complete_semaphore is completely reset.)
+   */
+   const byte* m_input = nullptr;
+
+   /*
+   * The length of the work that needs to be done.
+   */
+   size_t m_input_length = 0;
+   };
+
+/*
+* Threaded_Fork constructor
+*/
+Threaded_Fork::Threaded_Fork(Filter* f1, Filter* f2, Filter* f3, Filter* f4) :
+   Fork(nullptr, static_cast<size_t>(0)),
+   m_thread_data(new Threaded_Fork_Data)
+   {
+   Filter* filters[4] = { f1, f2, f3, f4 };
+   set_next(filters, 4);
+   }
+
+/*
+* Threaded_Fork constructor
+*/
+Threaded_Fork::Threaded_Fork(Filter* filters[], size_t count) :
+   Fork(nullptr, static_cast<size_t>(0)),
+   m_thread_data(new Threaded_Fork_Data)
+   {
+   set_next(filters, count);
+   }
+
+Threaded_Fork::~Threaded_Fork()
+   {
+   m_thread_data->m_input = nullptr;
+   m_thread_data->m_input_length = 0;
+
+   m_thread_data->m_input_ready_semaphore.release(m_threads.size());
+
+   for(auto& thread : m_threads)
+     thread->join();
+   }
+
+std::string Threaded_Fork::name() const
+   {
+   return "Threaded Fork";
+   }
+
+void Threaded_Fork::set_next(Filter* f[], size_t n)
+   {
+   Fork::set_next(f, n);
+   n = next.size();
+
+   if(n < m_threads.size())
+      m_threads.resize(n);
+   else
+      {
+      m_threads.reserve(n);
+      for(size_t i = m_threads.size(); i != n; ++i)
+         {
+         m_threads.push_back(
+            std::shared_ptr<std::thread>(
+               new std::thread(
+                  std::bind(&Threaded_Fork::thread_entry, this, next[i]))));
+         }
+      }
+   }
+
+void Threaded_Fork::send(const byte input[], size_t length)
+   {
+   if(write_queue.size())
+      thread_delegate_work(write_queue.data(), write_queue.size());
+   thread_delegate_work(input, length);
+
+   bool nothing_attached = true;
+   for(size_t j = 0; j != total_ports(); ++j)
+      if(next[j])
+         nothing_attached = false;
+
+   if(nothing_attached)
+      write_queue += std::make_pair(input, length);
+   else
+      write_queue.clear();
+   }
+
+void Threaded_Fork::thread_delegate_work(const byte input[], size_t length)
+   {
+   //Set the data to do.
+   m_thread_data->m_input = input;
+   m_thread_data->m_input_length = length;
+
+   //Let the workers start processing.
+   m_thread_data->m_input_ready_semaphore.release(total_ports());
+
+   //Wait for all the filters to finish processing.
+   for(size_t i = 0; i != total_ports(); ++i)
+      m_thread_data->m_input_complete_semaphore.acquire();
+
+   //Reset the thread data
+   m_thread_data->m_input = nullptr;
+   m_thread_data->m_input_length = 0;
+   }
+
+void Threaded_Fork::thread_entry(Filter* filter)
+   {
+   while(true)
+      {
+      m_thread_data->m_input_ready_semaphore.acquire();
+
+      if(!m_thread_data->m_input)
+         break;
+
+      filter->write(m_thread_data->m_input, m_thread_data->m_input_length);
+      m_thread_data->m_input_complete_semaphore.release();
+      }
+   }
+
+}
+/*
+* Filter interface for Transforms
+* (C) 2013,2014 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+namespace {
+
+size_t choose_update_size(size_t update_granularity)
+   {
+   const size_t target_size = 1024;
+
+   if(update_granularity >= target_size)
+      return update_granularity;
+
+   return round_up(target_size, update_granularity);
+   }
+
+}
+
+Transform_Filter::Transform_Filter(Transform* transform) :
+   Buffered_Filter(choose_update_size(transform->update_granularity()),
+                   transform->minimum_final_size()),
+   m_nonce(transform->default_nonce_length() == 0),
+   m_transform(transform),
+   m_buffer(m_transform->update_granularity())
+   {
+   }
+
+std::string Transform_Filter::name() const
+   {
+   return m_transform->name();
+   }
+
+void Transform_Filter::Nonce_State::update(const InitializationVector& iv)
+   {
+   m_nonce = unlock(iv.bits_of());
+   m_fresh_nonce = true;
+   }
+
+std::vector<byte> Transform_Filter::Nonce_State::get()
+   {
+   BOTAN_ASSERT(m_fresh_nonce, "The nonce is fresh for this message");
+
+   if(!m_nonce.empty())
+      m_fresh_nonce = false;
+   return m_nonce;
+   }
+
+void Transform_Filter::set_iv(const InitializationVector& iv)
+   {
+   m_nonce.update(iv);
+   }
+
+void Transform_Filter::set_key(const SymmetricKey& key)
+   {
+   if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(m_transform.get()))
+      keyed->set_key(key);
+   else if(key.length() != 0)
+      throw std::runtime_error("Transform " + name() + " does not accept keys");
+   }
+
+Key_Length_Specification Transform_Filter::key_spec() const
+   {
+   if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(m_transform.get()))
+      return keyed->key_spec();
+   return Key_Length_Specification(0);
+   }
+
+bool Transform_Filter::valid_iv_length(size_t length) const
+   {
+   return m_transform->valid_nonce_length(length);
+   }
+
+void Transform_Filter::write(const byte input[], size_t input_length)
+   {
+   Buffered_Filter::write(input, input_length);
+   }
+
+void Transform_Filter::end_msg()
+   {
+   Buffered_Filter::end_msg();
+   }
+
+void Transform_Filter::start_msg()
+   {
+   send(m_transform->start(m_nonce.get()));
+   }
+
+void Transform_Filter::buffered_block(const byte input[], size_t input_length)
+   {
+   while(input_length)
+      {
+      const size_t take = std::min(m_transform->update_granularity(), input_length);
+
+      m_buffer.assign(input, input + take);
+      m_transform->update(m_buffer);
+
+      send(m_buffer);
+
+      input += take;
+      input_length -= take;
+      }
+   }
+
+void Transform_Filter::buffered_final(const byte input[], size_t input_length)
+   {
+   secure_vector<byte> buf(input, input + input_length);
+   m_transform->finish(buf);
+   send(buf);
+   }
+
+}
 /*
 * GCM Mode Encryption
 * (C) 2013 Jack Lloyd
@@ -3439,306 +5516,6 @@ void Keccak_1600::final_result(byte output[])
 
 }
 /*
-* Mlock Allocator
-* (C) 2012,2014 Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-#include <cstdlib>
-
-#include <sys/mman.h>
-#include <sys/resource.h>
-
-namespace Botan {
-
-namespace {
-
-size_t reset_mlock_limit(size_t max_req)
-   {
-#if defined(RLIMIT_MEMLOCK)
-   struct rlimit limits;
-
-   ::getrlimit(RLIMIT_MEMLOCK, &limits);
-
-   if(limits.rlim_cur < limits.rlim_max)
-      {
-      limits.rlim_cur = limits.rlim_max;
-      ::setrlimit(RLIMIT_MEMLOCK, &limits);
-      ::getrlimit(RLIMIT_MEMLOCK, &limits);
-      }
-
-   return std::min<size_t>(limits.rlim_cur, max_req);
-#endif
-
-   return 0;
-   }
-
-size_t mlock_limit()
-   {
-   /*
-   * Linux defaults to only 64 KiB of mlockable memory per process
-   * (too small) but BSDs offer a small fraction of total RAM (more
-   * than we need). Bound the total mlock size to 512 KiB which is
-   * enough to run the entire test suite without spilling to non-mlock
-   * memory (and thus presumably also enough for many useful
-   * programs), but small enough that we should not cause problems
-   * even if many processes are mlocking on the same machine.
-   */
-   size_t mlock_requested = 512;
-
-   /*
-   * Allow override via env variable
-   */
-   if(const char* env = ::getenv("BOTAN_MLOCK_POOL_SIZE"))
-      {
-      try
-         {
-         const size_t user_req = std::stoul(env, nullptr);
-         mlock_requested = std::min(user_req, mlock_requested);
-         }
-      catch(std::exception&) { /* ignore it */ }
-      }
-
-   return reset_mlock_limit(mlock_requested*1024);
-   }
-
-bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
-                 const void* buf_ptr, size_t bufsize)
-   {
-   const uintptr_t pool = reinterpret_cast<uintptr_t>(pool_ptr);
-   const uintptr_t buf = reinterpret_cast<uintptr_t>(buf_ptr);
-
-   if(buf < pool || buf >= pool + poolsize)
-      return false;
-
-   BOTAN_ASSERT(buf + bufsize <= pool + poolsize,
-                "Pointer does not partially overlap pool");
-
-   return true;
-   }
-
-size_t padding_for_alignment(size_t offset, size_t desired_alignment)
-   {
-   size_t mod = offset % desired_alignment;
-   if(mod == 0)
-      return 0; // already right on
-   return desired_alignment - mod;
-   }
-
-}
-
-void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
-   {
-   if(!m_pool)
-      return nullptr;
-
-   const size_t n = num_elems * elem_size;
-   const size_t alignment = 16;
-
-   if(n / elem_size != num_elems)
-      return nullptr; // overflow!
-
-   if(n > m_poolsize)
-      return nullptr;
-   if(n < BOTAN_MLOCK_ALLOCATOR_MIN_ALLOCATION || n > BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION)
-      return nullptr;
-
-   std::lock_guard<std::mutex> lock(m_mutex);
-
-   auto best_fit = m_freelist.end();
-
-   for(auto i = m_freelist.begin(); i != m_freelist.end(); ++i)
-      {
-      // If we have a perfect fit, use it immediately
-      if(i->second == n && (i->first % alignment) == 0)
-         {
-         const size_t offset = i->first;
-         m_freelist.erase(i);
-         clear_mem(m_pool + offset, n);
-
-         BOTAN_ASSERT((reinterpret_cast<size_t>(m_pool) + offset) % alignment == 0,
-                      "Returning correctly aligned pointer");
-
-         return m_pool + offset;
-         }
-
-      if((i->second >= (n + padding_for_alignment(i->first, alignment)) &&
-          ((best_fit == m_freelist.end()) || (best_fit->second > i->second))))
-         {
-         best_fit = i;
-         }
-      }
-
-   if(best_fit != m_freelist.end())
-      {
-      const size_t offset = best_fit->first;
-
-      const size_t alignment_padding = padding_for_alignment(offset, alignment);
-
-      best_fit->first += n + alignment_padding;
-      best_fit->second -= n + alignment_padding;
-
-      // Need to realign, split the block
-      if(alignment_padding)
-         {
-         /*
-         If we used the entire block except for small piece used for
-         alignment at the beginning, so just update the entry already
-         in place (as it is in the correct location), rather than
-         deleting the empty range and inserting the new one in the
-         same location.
-         */
-         if(best_fit->second == 0)
-            {
-            best_fit->first = offset;
-            best_fit->second = alignment_padding;
-            }
-         else
-            m_freelist.insert(best_fit, std::make_pair(offset, alignment_padding));
-         }
-
-      clear_mem(m_pool + offset + alignment_padding, n);
-
-      BOTAN_ASSERT((reinterpret_cast<size_t>(m_pool) + offset + alignment_padding) % alignment == 0,
-                   "Returning correctly aligned pointer");
-
-      return m_pool + offset + alignment_padding;
-      }
-
-   return nullptr;
-   }
-
-bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
-   {
-   if(!m_pool)
-      return false;
-
-   /*
-   We do not have to zero the memory here, as
-   secure_allocator::deallocate does that for all arguments before
-   invoking the deallocator (us or delete[])
-   */
-
-   size_t n = num_elems * elem_size;
-
-   /*
-   We return nullptr in allocate if there was an overflow, so we
-   should never ever see an overflow in a deallocation.
-   */
-   BOTAN_ASSERT(n / elem_size == num_elems,
-                "No overflow in deallocation");
-
-   if(!ptr_in_pool(m_pool, m_poolsize, p, n))
-      return false;
-
-   std::lock_guard<std::mutex> lock(m_mutex);
-
-   const size_t start = static_cast<byte*>(p) - m_pool;
-
-   auto comp = [](std::pair<size_t, size_t> x, std::pair<size_t, size_t> y){ return x.first < y.first; };
-
-   auto i = std::lower_bound(m_freelist.begin(), m_freelist.end(),
-                             std::make_pair(start, 0), comp);
-
-   // try to merge with later block
-   if(i != m_freelist.end() && start + n == i->first)
-      {
-      i->first = start;
-      i->second += n;
-      n = 0;
-      }
-
-   // try to merge with previous block
-   if(i != m_freelist.begin())
-      {
-      auto prev = std::prev(i);
-
-      if(prev->first + prev->second == start)
-         {
-         if(n)
-            {
-            prev->second += n;
-            n = 0;
-            }
-         else
-            {
-            // merge adjoining
-            prev->second += i->second;
-            m_freelist.erase(i);
-            }
-         }
-      }
-
-   if(n != 0) // no merge possible?
-      m_freelist.insert(i, std::make_pair(start, n));
-
-   return true;
-   }
-
-mlock_allocator::mlock_allocator() :
-   m_poolsize(mlock_limit()),
-   m_pool(nullptr)
-   {
-#if !defined(MAP_NOCORE)
-   #define MAP_NOCORE 0
-#endif
-
-#if !defined(MAP_ANONYMOUS)
-   #define MAP_ANONYMOUS MAP_ANON
-#endif
-
-   if(m_poolsize)
-      {
-      m_pool = static_cast<byte*>(
-         ::mmap(
-            nullptr, m_poolsize,
-            PROT_READ | PROT_WRITE,
-            MAP_ANONYMOUS | MAP_SHARED | MAP_NOCORE,
-            -1, 0));
-
-      if(m_pool == static_cast<byte*>(MAP_FAILED))
-         {
-         m_pool = nullptr;
-         throw std::runtime_error("Failed to mmap locking_allocator pool");
-         }
-
-      clear_mem(m_pool, m_poolsize);
-
-      if(::mlock(m_pool, m_poolsize) != 0)
-         {
-         ::munmap(m_pool, m_poolsize);
-         m_pool = nullptr;
-         throw std::runtime_error("Could not mlock " + std::to_string(m_poolsize) + " bytes");
-         }
-
-#if defined(MADV_DONTDUMP)
-      ::madvise(m_pool, m_poolsize, MADV_DONTDUMP);
-#endif
-
-      m_freelist.push_back(std::make_pair(0, m_poolsize));
-      }
-   }
-
-mlock_allocator::~mlock_allocator()
-   {
-   if(m_pool)
-      {
-      clear_mem(m_pool, m_poolsize);
-      ::munlock(m_pool, m_poolsize);
-      ::munmap(m_pool, m_poolsize);
-      m_pool = nullptr;
-      }
-   }
-
-mlock_allocator& mlock_allocator::instance()
-   {
-   static mlock_allocator mlock;
-   return mlock;
-   }
-
-}
-/*
 * Message Authentication Code base class
 * (C) 1999-2008 Jack Lloyd
 *
@@ -4488,218 +6265,6 @@ void Serpent::key_schedule(const byte key[], size_t length)
 void Serpent::clear()
    {
    zap(round_key);
-   }
-
-}
-/*
-* Serpent (SIMD)
-* (C) 2009,2013 Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-namespace Botan {
-
-namespace {
-
-#define key_xor(round, B0, B1, B2, B3)                             \
-   do {                                                            \
-      B0 ^= SIMD_32(keys[4*round  ]);                              \
-      B1 ^= SIMD_32(keys[4*round+1]);                              \
-      B2 ^= SIMD_32(keys[4*round+2]);                              \
-      B3 ^= SIMD_32(keys[4*round+3]);                              \
-   } while(0);
-
-/*
-* Serpent's linear transformations
-*/
-#define transform(B0, B1, B2, B3)                                  \
-   do {                                                            \
-      B0.rotate_left(13);                                          \
-      B2.rotate_left(3);                                           \
-      B1 ^= B0 ^ B2;                                               \
-      B3 ^= B2 ^ (B0 << 3);                                        \
-      B1.rotate_left(1);                                           \
-      B3.rotate_left(7);                                           \
-      B0 ^= B1 ^ B3;                                               \
-      B2 ^= B3 ^ (B1 << 7);                                        \
-      B0.rotate_left(5);                                           \
-      B2.rotate_left(22);                                          \
-   } while(0);
-
-#define i_transform(B0, B1, B2, B3)                                \
-   do {                                                            \
-      B2.rotate_right(22);                                         \
-      B0.rotate_right(5);                                          \
-      B2 ^= B3 ^ (B1 << 7);                                        \
-      B0 ^= B1 ^ B3;                                               \
-      B3.rotate_right(7);                                          \
-      B1.rotate_right(1);                                          \
-      B3 ^= B2 ^ (B0 << 3);                                        \
-      B1 ^= B0 ^ B2;                                               \
-      B2.rotate_right(3);                                          \
-      B0.rotate_right(13);                                         \
-   } while(0);
-
-/*
-* SIMD Serpent Encryption of 4 blocks in parallel
-*/
-void serpent_encrypt_4(const byte in[64],
-                       byte out[64],
-                       const u32bit keys[132])
-   {
-   SIMD_32 B0 = SIMD_32::load_le(in);
-   SIMD_32 B1 = SIMD_32::load_le(in + 16);
-   SIMD_32 B2 = SIMD_32::load_le(in + 32);
-   SIMD_32 B3 = SIMD_32::load_le(in + 48);
-
-   SIMD_32::transpose(B0, B1, B2, B3);
-
-   key_xor( 0,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor( 1,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor( 2,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor( 3,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor( 4,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor( 5,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor( 6,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor( 7,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-
-   key_xor( 8,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor( 9,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(10,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(11,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(12,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(13,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(14,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(15,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-
-   key_xor(16,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(17,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(18,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(19,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(20,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(21,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(22,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(23,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-
-   key_xor(24,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(25,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(26,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(27,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(28,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(29,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(30,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
-   key_xor(31,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); key_xor(32,B0,B1,B2,B3);
-
-   SIMD_32::transpose(B0, B1, B2, B3);
-
-   B0.store_le(out);
-   B1.store_le(out + 16);
-   B2.store_le(out + 32);
-   B3.store_le(out + 48);
-   }
-
-/*
-* SIMD Serpent Decryption of 4 blocks in parallel
-*/
-void serpent_decrypt_4(const byte in[64],
-                       byte out[64],
-                       const u32bit keys[132])
-   {
-   SIMD_32 B0 = SIMD_32::load_le(in);
-   SIMD_32 B1 = SIMD_32::load_le(in + 16);
-   SIMD_32 B2 = SIMD_32::load_le(in + 32);
-   SIMD_32 B3 = SIMD_32::load_le(in + 48);
-
-   SIMD_32::transpose(B0, B1, B2, B3);
-
-   key_xor(32,B0,B1,B2,B3);  SBoxD8(B0,B1,B2,B3); key_xor(31,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(30,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(29,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(28,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(27,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(26,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor(25,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor(24,B0,B1,B2,B3);
-
-   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor(23,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(22,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(21,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(20,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(19,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(18,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor(17,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor(16,B0,B1,B2,B3);
-
-   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor(15,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(14,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(13,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(12,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(11,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(10,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 9,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 8,B0,B1,B2,B3);
-
-   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor( 7,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor( 6,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor( 5,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor( 4,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor( 3,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor( 2,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 1,B0,B1,B2,B3);
-   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 0,B0,B1,B2,B3);
-
-   SIMD_32::transpose(B0, B1, B2, B3);
-
-   B0.store_le(out);
-   B1.store_le(out + 16);
-   B2.store_le(out + 32);
-   B3.store_le(out + 48);
-   }
-
-}
-
-#undef key_xor
-#undef transform
-#undef i_transform
-
-/*
-* Serpent Encryption
-*/
-void Serpent_SIMD::encrypt_n(const byte in[], byte out[], size_t blocks) const
-   {
-   const u32bit* KS = &(this->get_round_keys()[0]);
-
-   while(blocks >= 4)
-      {
-      serpent_encrypt_4(in, out, KS);
-      in += 4 * BLOCK_SIZE;
-      out += 4 * BLOCK_SIZE;
-      blocks -= 4;
-      }
-
-   if(blocks)
-     Serpent::encrypt_n(in, out, blocks);
-   }
-
-/*
-* Serpent Decryption
-*/
-void Serpent_SIMD::decrypt_n(const byte in[], byte out[], size_t blocks) const
-   {
-   const u32bit* KS = &(this->get_round_keys()[0]);
-
-   while(blocks >= 4)
-      {
-      serpent_decrypt_4(in, out, KS);
-      in += 4 * BLOCK_SIZE;
-      out += 4 * BLOCK_SIZE;
-      blocks -= 4;
-      }
-
-   if(blocks)
-     Serpent::decrypt_n(in, out, blocks);
    }
 
 }
@@ -5907,7 +7472,6 @@ void CPUID::initialize()
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <fstream>
 
 namespace Botan {
 
@@ -6121,6 +7685,8 @@ DataSource_Stream::~DataSource_Stream()
 #elif defined(BOTAN_HAS_BOOST_FILESYSTEM)
   #include <boost/filesystem.hpp>
 #elif defined(BOTAN_TARGET_OS_HAS_READDIR)
+  #include <sys/types.h>
+  #include <sys/stat.h>
   #include <dirent.h>
 #endif
 
@@ -6766,6 +8332,122 @@ void zero_mem(void* ptr, size_t n)
    for(size_t i = 0; i != n; ++i)
       p[i] = 0;
 #endif
+   }
+
+}
+/*
+* Win32 EntropySource
+* (C) 1999-2009 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include <tlhelp32.h>
+
+namespace Botan {
+
+/**
+* Win32 poll using stats functions including Tooltip32
+*/
+void Win32_EntropySource::poll(Entropy_Accumulator& accum)
+   {
+   /*
+   First query a bunch of basic statistical stuff, though
+   don't count it for much in terms of contributed entropy.
+   */
+   accum.add(GetTickCount(), 0);
+   accum.add(GetMessagePos(), 0);
+   accum.add(GetMessageTime(), 0);
+   accum.add(GetInputState(), 0);
+   accum.add(GetCurrentProcessId(), 0);
+   accum.add(GetCurrentThreadId(), 0);
+
+   SYSTEM_INFO sys_info;
+   GetSystemInfo(&sys_info);
+   accum.add(sys_info, 1);
+
+   MEMORYSTATUS mem_info;
+   GlobalMemoryStatus(&mem_info);
+   accum.add(mem_info, 1);
+
+   POINT point;
+   GetCursorPos(&point);
+   accum.add(point, 1);
+
+   GetCaretPos(&point);
+   accum.add(point, 1);
+
+   LARGE_INTEGER perf_counter;
+   QueryPerformanceCounter(&perf_counter);
+   accum.add(perf_counter, 0);
+
+   /*
+   Now use the Tooltip library to iterate throug various objects on
+   the system, including processes, threads, and heap objects.
+   */
+
+   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, 0);
+
+#define TOOLHELP32_ITER(DATA_TYPE, FUNC_FIRST, FUNC_NEXT) \
+   if(!accum.polling_finished())                     \
+      {                                                   \
+      DATA_TYPE info;                                     \
+      info.dwSize = sizeof(DATA_TYPE);                    \
+      if(FUNC_FIRST(snapshot, &info))                     \
+         {                                                \
+         do                                               \
+            {                                             \
+            accum.add(info, 1);                           \
+            } while(FUNC_NEXT(snapshot, &info));          \
+         }                                                \
+      }
+
+   TOOLHELP32_ITER(MODULEENTRY32, Module32First, Module32Next);
+   TOOLHELP32_ITER(PROCESSENTRY32, Process32First, Process32Next);
+   TOOLHELP32_ITER(THREADENTRY32, Thread32First, Thread32Next);
+
+#undef TOOLHELP32_ITER
+
+   if(!accum.polling_finished())
+      {
+      size_t heap_lists_found = 0;
+      HEAPLIST32 heap_list;
+      heap_list.dwSize = sizeof(HEAPLIST32);
+
+      const size_t HEAP_LISTS_MAX = 32;
+      const size_t HEAP_OBJS_PER_LIST = 128;
+
+      if(Heap32ListFirst(snapshot, &heap_list))
+         {
+         do
+            {
+            accum.add(heap_list, 1);
+
+            if(++heap_lists_found > HEAP_LISTS_MAX)
+               break;
+
+            size_t heap_objs_found = 0;
+            HEAPENTRY32 heap_entry;
+            heap_entry.dwSize = sizeof(HEAPENTRY32);
+            if(Heap32First(&heap_entry, heap_list.th32ProcessID,
+                           heap_list.th32HeapID))
+               {
+               do
+                  {
+                  if(heap_objs_found++ > HEAP_OBJS_PER_LIST)
+                     break;
+                  accum.add(heap_entry, 1);
+                  } while(Heap32Next(&heap_entry));
+               }
+
+            if(accum.polling_finished())
+               break;
+
+            } while(Heap32ListNext(snapshot, &heap_list));
+         }
+      }
+
+   CloseHandle(snapshot);
    }
 
 }

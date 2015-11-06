@@ -1,5 +1,5 @@
 /*
-* Botan 1.11.18 Amalgamation
+* Botan 1.11.24 Amalgamation
 * (C) 1999-2013,2014,2015 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -15,7 +15,52 @@
 */
 
 
+#if defined(BOTAN_HAS_AEAD_CCM)
+#endif
+
+#if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
+#endif
+
+#if defined(BOTAN_HAS_AEAD_EAX)
+#endif
+
+#if defined(BOTAN_HAS_AEAD_GCM)
+#endif
+
+#if defined(BOTAN_HAS_AEAD_OCB)
+#endif
+
+#if defined(BOTAN_HAS_AEAD_SIV)
+#endif
+
 namespace Botan {
+
+AEAD_Mode::~AEAD_Mode() {}
+
+#if defined(BOTAN_HAS_AEAD_CCM)
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(CCM_Encryption, CCM_Decryption, 16, 3);
+#endif
+
+#if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
+BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Encryption);
+BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Decryption);
+#endif
+
+#if defined(BOTAN_HAS_AEAD_EAX)
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(EAX_Encryption, EAX_Decryption, 0);
+#endif
+
+#if defined(BOTAN_HAS_AEAD_GCM)
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(GCM_Encryption, GCM_Decryption, 16);
+#endif
+
+#if defined(BOTAN_HAS_AEAD_OCB)
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(OCB_Encryption, OCB_Decryption, 16);
+#endif
+
+#if defined(BOTAN_HAS_AEAD_SIV)
+BOTAN_REGISTER_BLOCK_CIPHER_MODE(SIV_Encryption, SIV_Decryption);
+#endif
 
 AEAD_Mode* get_aead(const std::string& algo_spec, Cipher_Dir direction)
    {
@@ -42,10 +87,6 @@ AEAD_Mode* get_aead(const std::string& algo_spec, Cipher_Dir direction)
 
 
 namespace Botan {
-
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_128, "AES-128");
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_192, "AES-192");
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_256, "AES-256");
 
 namespace {
 
@@ -807,107 +848,6 @@ void LibraryInitializer::deinitialize()
 
 }
 /*
-* Algorithm Retrieval
-* (C) 1999-2007,2015 Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-namespace Botan {
-
-Transform* get_transform(const std::string& specstr,
-                         const std::string& provider,
-                         const std::string& dirstr)
-   {
-   Algo_Registry<Transform>::Spec spec(specstr, dirstr);
-   return Algo_Registry<Transform>::global_registry().make(spec, provider);
-   }
-
-BlockCipher* get_block_cipher(const std::string& algo_spec, const std::string& provider)
-   {
-   return make_a<BlockCipher>(algo_spec, provider);
-   }
-
-StreamCipher* get_stream_cipher(const std::string& algo_spec, const std::string& provider)
-   {
-   return make_a<StreamCipher>(algo_spec, provider);
-   }
-
-HashFunction* get_hash_function(const std::string& algo_spec, const std::string& provider)
-   {
-   return make_a<HashFunction>(algo_spec, provider);
-   }
-
-MessageAuthenticationCode* get_mac(const std::string& algo_spec, const std::string& provider)
-   {
-   return make_a<MessageAuthenticationCode>(algo_spec, provider);
-   }
-
-std::unique_ptr<BlockCipher> make_block_cipher(const std::string& algo_spec,
-                                               const std::string& provider)
-   {
-   if(auto x = get_block_cipher(algo_spec, provider))
-      return std::unique_ptr<BlockCipher>(x);
-   throw Algorithm_Not_Found(algo_spec);
-   }
-
-std::unique_ptr<StreamCipher> make_stream_cipher(const std::string& algo_spec,
-                                                 const std::string& provider)
-   {
-   if(auto x = get_stream_cipher(algo_spec, provider))
-      return std::unique_ptr<StreamCipher>(x);
-   throw Algorithm_Not_Found(algo_spec);
-   }
-
-std::unique_ptr<HashFunction> make_hash_function(const std::string& algo_spec,
-                                                 const std::string& provider)
-   {
-   if(auto x = get_hash_function(algo_spec, provider))
-      return std::unique_ptr<HashFunction>(x);
-   throw Algorithm_Not_Found(algo_spec);
-   }
-
-std::unique_ptr<MessageAuthenticationCode> make_message_auth(const std::string& algo_spec,
-                                                             const std::string& provider)
-   {
-   if(auto x = get_mac(algo_spec, provider))
-      return std::unique_ptr<MessageAuthenticationCode>(x);
-   throw Algorithm_Not_Found(algo_spec);
-   }
-
-std::vector<std::string> get_block_cipher_providers(const std::string& algo_spec)
-   {
-   return providers_of<BlockCipher>(BlockCipher::Spec(algo_spec));
-   }
-
-std::vector<std::string> get_stream_cipher_providers(const std::string& algo_spec)
-   {
-   return providers_of<StreamCipher>(StreamCipher::Spec(algo_spec));
-   }
-
-std::vector<std::string> get_hash_function_providers(const std::string& algo_spec)
-   {
-   return providers_of<HashFunction>(HashFunction::Spec(algo_spec));
-   }
-
-std::vector<std::string> get_mac_providers(const std::string& algo_spec)
-   {
-   return providers_of<MessageAuthenticationCode>(MessageAuthenticationCode::Spec(algo_spec));
-   }
-
-/*
-* Get a PBKDF algorithm by name
-*/
-PBKDF* get_pbkdf(const std::string& algo_spec, const std::string& provider)
-   {
-   if(PBKDF* pbkdf = make_a<PBKDF>(algo_spec, provider))
-      return pbkdf;
-   throw Algorithm_Not_Found(algo_spec);
-   }
-
-}
-/*
 * SCAN Name Abstraction
 * (C) 2008-2009,2015 Jack Lloyd
 *
@@ -934,7 +874,7 @@ std::string make_arg(
 
       if(name[i].first > level)
          {
-         output += '(' + name[i].second;
+         output += "(" + name[i].second;
          ++paren_depth;
          }
       else if(name[i].first < level)
@@ -953,7 +893,7 @@ std::string make_arg(
       }
 
    for(size_t i = 0; i != paren_depth; ++i)
-      output += ')';
+      output += ")";
 
    return output;
    }
@@ -1046,14 +986,14 @@ std::string SCAN_Name::all_arguments() const
    std::string out;
    if(arg_count())
       {
-      out += '(';
+      out += "(";
       for(size_t i = 0; i != arg_count(); ++i)
          {
          out += arg(i);
          if(i != arg_count() - 1)
-            out += ',';
+            out += ",";
          }
-      out += ')';
+      out += ")";
       }
    return out;
    }
@@ -1252,6 +1192,24 @@ OctetString operator^(const OctetString& k1, const OctetString& k2)
 
 }
 /*
+* (C) 2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+Transform* get_transform(const std::string& specstr,
+                         const std::string& provider,
+                         const std::string& dirstr)
+   {
+   Algo_Registry<Transform>::Spec spec(specstr, dirstr);
+   return Algo_Registry<Transform>::global_registry().make(spec, provider);
+   }
+
+}
+/*
 * Base64 Encoding and Decoding
 * (C) 2010,2015 Jack Lloyd
 *
@@ -1327,9 +1285,7 @@ size_t base64_encode(char out[],
 std::string base64_encode(const byte input[],
                           size_t input_length)
    {
-   const size_t output_length = (input_length == 0)
-           ? 0
-           : (round_up<size_t>(input_length, 3) / 3) * 4;
+   const size_t output_length = (round_up(input_length, 3) / 3) * 4;
    std::string output(output_length, 0);
 
    size_t consumed = 0;
@@ -1480,10 +1436,8 @@ size_t base64_decode(byte output[],
 secure_vector<byte> base64_decode(const char input[],
                                  size_t input_length,
                                  bool ignore_ws)
-   { 
-   const size_t output_length = (input_length == 0)
-           ? 0
-           : (round_up<size_t>(input_length, 4) * 3) / 4;
+   {
+   const size_t output_length = (round_up(input_length, 4) * 3) / 4;
    secure_vector<byte> bin(output_length);
 
    size_t written = base64_decode(bin.data(),
@@ -1504,6 +1458,283 @@ secure_vector<byte> base64_decode(const std::string& input,
 
 }
 /*
+* Block Ciphers
+* (C) 2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+#if defined(BOTAN_HAS_AES)
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+#endif
+
+#if defined(BOTAN_HAS_AES_NI)
+#endif
+
+#if defined(BOTAN_HAS_BLOWFISH)
+#endif
+
+#if defined(BOTAN_HAS_CAMELLIA)
+#endif
+
+#if defined(BOTAN_HAS_CAST)
+#endif
+
+#if defined(BOTAN_HAS_CASCADE)
+#endif
+
+#if defined(BOTAN_HAS_DES)
+#endif
+
+#if defined(BOTAN_HAS_GOST_28147_89)
+#endif
+
+#if defined(BOTAN_HAS_IDEA)
+#endif
+
+#if defined(BOTAN_HAS_IDEA_SSE2)
+#endif
+
+#if defined(BOTAN_HAS_KASUMI)
+#endif
+
+#if defined(BOTAN_HAS_LION)
+#endif
+
+#if defined(BOTAN_HAS_LUBY_RACKOFF)
+#endif
+
+#if defined(BOTAN_HAS_MARS)
+#endif
+
+#if defined(BOTAN_HAS_MISTY1)
+#endif
+
+#if defined(BOTAN_HAS_NOEKEON)
+#endif
+
+#if defined(BOTAN_HAS_NOEKEON_SIMD)
+#endif
+
+#if defined(BOTAN_HAS_RC2)
+#endif
+
+#if defined(BOTAN_HAS_RC5)
+#endif
+
+#if defined(BOTAN_HAS_RC6)
+#endif
+
+#if defined(BOTAN_HAS_SAFER)
+#endif
+
+#if defined(BOTAN_HAS_SEED)
+#endif
+
+#if defined(BOTAN_HAS_SERPENT)
+#endif
+
+#if defined(BOTAN_HAS_SERPENT_SIMD)
+#endif
+
+#if defined(BOTAN_HAS_SKIPJACK)
+#endif
+
+#if defined(BOTAN_HAS_SQUARE)
+#endif
+
+#if defined(BOTAN_HAS_TEA)
+#endif
+
+#if defined(BOTAN_HAS_TWOFISH)
+#endif
+
+#if defined(BOTAN_HAS_THREEFISH_512)
+#endif
+
+#if defined(BOTAN_HAS_THREEFISH_512_AVX2)
+#endif
+
+#if defined(BOTAN_HAS_XTEA)
+#endif
+
+#if defined(BOTAN_HAS_XTEA_SIMD)
+#endif
+
+namespace Botan {
+
+BlockCipher::~BlockCipher() {}
+
+std::unique_ptr<BlockCipher> BlockCipher::create(const std::string& algo_spec,
+                                                 const std::string& provider)
+   {
+   return std::unique_ptr<BlockCipher>(make_a<BlockCipher>(algo_spec, provider));
+   }
+
+std::vector<std::string> BlockCipher::providers(const std::string& algo_spec)
+   {
+   return providers_of<BlockCipher>(BlockCipher::Spec(algo_spec));
+   }
+
+#define BOTAN_REGISTER_BLOCK_CIPHER(name, maker) BOTAN_REGISTER_T(BlockCipher, name, maker)
+#define BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(name) BOTAN_REGISTER_T_NOARGS(BlockCipher, name)
+
+#define BOTAN_REGISTER_BLOCK_CIPHER_1LEN(name, def) BOTAN_REGISTER_T_1LEN(BlockCipher, name, def)
+
+#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(type, name) \
+   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, make_new_T<type>)
+#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1LEN(type, name, def) \
+   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, (make_new_T_1len<type,def>))
+#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(type, name, def) \
+   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, std::bind(make_new_T_1str<type>, std::placeholders::_1, def))
+
+#define BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(cond, type, name, provider, pref) \
+   BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, BlockCipher, type, name, provider, pref)
+
+#if defined(BOTAN_HAS_AES)
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_128, "AES-128");
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_192, "AES-192");
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_256, "AES-256");
+#endif
+
+#if defined(BOTAN_HAS_AES_NI)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_aes_ni(), AES_128_NI, "AES-128", "aes_ni", 200);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_aes_ni(), AES_192_NI, "AES-192", "aes_ni", 200);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_aes_ni(), AES_256_NI, "AES-256", "aes_ni", 200);
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_ssse3(), AES_128_SSSE3, "AES-128",
+                                      "ssse3", BOTAN_SIMD_ALGORITHM_PRIO);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_ssse3(), AES_192_SSSE3, "AES-192",
+                                      "ssse3", BOTAN_SIMD_ALGORITHM_PRIO);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_ssse3(), AES_256_SSSE3, "AES-256",
+                                      "ssse3", BOTAN_SIMD_ALGORITHM_PRIO);
+#endif
+
+#if defined(BOTAN_HAS_BLOWFISH)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Blowfish);
+#endif
+
+#if defined(BOTAN_HAS_CAMELLIA)
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Camellia_128, "Camellia-128");
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Camellia_192, "Camellia-192");
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Camellia_256, "Camellia-256");
+#endif
+
+#if defined(BOTAN_HAS_CAST)
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(CAST_128, "CAST-128");
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(CAST_256, "CAST-256");
+#endif
+
+#if defined(BOTAN_HAS_DES)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(DES);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(TripleDES);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(DESX);
+#endif
+
+#if defined(BOTAN_HAS_GOST_28147_89)
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(GOST_28147_89, "GOST-28147-89", "R3411_94_TestParam");
+#endif
+
+#if defined(BOTAN_HAS_IDEA)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(IDEA);
+#endif
+
+#if defined(BOTAN_HAS_IDEA_SSE2)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_sse2(), IDEA_SSE2, "IDEA",
+                                      "sse2", BOTAN_SIMD_ALGORITHM_PRIO);
+#endif
+
+#if defined(BOTAN_HAS_KASUMI)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(KASUMI);
+#endif
+
+#if defined(BOTAN_HAS_MARS)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(MARS);
+#endif
+
+#if defined(BOTAN_HAS_MISTY1)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(MISTY1);
+#endif
+
+#if defined(BOTAN_HAS_NOEKEON)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Noekeon);
+#endif
+
+#if defined(BOTAN_HAS_NOEKEON_SIMD)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), Noekeon_SIMD, "Noekeon",
+                                      "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
+#endif
+
+#if defined(BOTAN_HAS_RC2)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(RC2);
+#endif
+
+#if defined(BOTAN_HAS_RC5)
+BOTAN_REGISTER_BLOCK_CIPHER_1LEN(RC5, 12);
+#endif
+
+#if defined(BOTAN_HAS_RC6)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(RC6);
+#endif
+
+#if defined(BOTAN_HAS_SAFER)
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1LEN(SAFER_SK, "SAFER-SK", 10);
+#endif
+
+#if defined(BOTAN_HAS_SEED)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(SEED);
+#endif
+
+#if defined(BOTAN_HAS_SERPENT)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent);
+#endif
+
+#if defined(BOTAN_HAS_SERPENT_SIMD)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), Serpent_SIMD, "Serpent",
+                                      "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
+#endif
+
+#if defined(BOTAN_HAS_TEA)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(TEA);
+#endif
+
+#if defined(BOTAN_HAS_TWOFISH)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Twofish);
+#endif
+
+#if defined(BOTAN_HAS_THREEFISH_512)
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Threefish_512, "Threefish-512");
+#endif
+
+#if defined(BOTAN_HAS_THREEFISH_512_AVX2)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_avx2(), Threefish_512_AVX2, "Threefish-512",
+                                      "avx2", BOTAN_SIMD_ALGORITHM_PRIO);
+#endif
+
+#if defined(BOTAN_HAS_XTEA)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(XTEA);
+#endif
+
+#if defined(BOTAN_HAS_XTEA_SIMD)
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), XTEA_SIMD, "XTEA",
+                                      "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
+#endif
+
+#if defined(BOTAN_HAS_CASCADE)
+BOTAN_REGISTER_NAMED_T(BlockCipher, "Cascade", Cascade_Cipher, Cascade_Cipher::make);
+#endif
+
+#if defined(BOTAN_HAS_LION)
+BOTAN_REGISTER_NAMED_T(BlockCipher, "Lion", Lion, Lion::make);
+#endif
+
+}
+/*
 * CMAC
 * (C) 1999-2007,2014 Jack Lloyd
 *
@@ -1517,13 +1748,11 @@ CMAC* CMAC::make(const Spec& spec)
    {
    if(spec.arg_count() == 1)
       {
-      if(BlockCipher* bc = get_block_cipher(spec.arg(0)))
-         return new CMAC(bc);
+      if(auto bc = BlockCipher::create(spec.arg(0)))
+         return new CMAC(bc.release());
       }
    return nullptr;
    }
-
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CMAC", CMAC, CMAC::make);
 
 /*
 * Perform CMAC's multiplication in GF(2^n)
@@ -1785,8 +2014,16 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
    if(m_buffer.size() < buf.size() + offset)
       m_buffer.resize(buf.size() + offset);
 
-   m_stream->next_in(&buf[offset], buf.size() - offset);
-   m_stream->next_out(&m_buffer[offset], m_buffer.size() - offset);
+   // If the output buffer has zero length, .data() might return nullptr. This would
+   // make some compression algorithms (notably those provided by zlib) fail.
+   // Any small positive value works fine, but we choose 32 as it is the smallest power
+   // of two that is large enough to hold all the headers and trailers of the common
+   // formats, preventing further resizings to make room for output data.
+   if(m_buffer.size() == 0)
+      m_buffer.resize(32);
+
+   m_stream->next_in(buf.data() + offset, buf.size() - offset);
+   m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
 
    while(true)
       {
@@ -1796,7 +2033,7 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
          {
          const size_t added = 8 + m_buffer.size();
          m_buffer.resize(m_buffer.size() + added);
-         m_stream->next_out(&m_buffer[m_buffer.size() - added], added);
+         m_stream->next_out(m_buffer.data() + m_buffer.size() - added, added);
          }
       else if(m_stream->avail_in() == 0)
          {
@@ -1851,8 +2088,8 @@ void Stream_Decompression::process(secure_vector<byte>& buf, size_t offset, u32b
    if(m_buffer.size() < buf.size() + offset)
       m_buffer.resize(buf.size() + offset);
 
-   m_stream->next_in(&buf[offset], buf.size() - offset);
-   m_stream->next_out(&m_buffer[offset], m_buffer.size() - offset);
+   m_stream->next_in(buf.data() + offset, buf.size() - offset);
+   m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
 
    while(true)
       {
@@ -1870,14 +2107,14 @@ void Stream_Decompression::process(secure_vector<byte>& buf, size_t offset, u32b
          // More data follows: try to process as a following stream
          const size_t read = (buf.size() - offset) - m_stream->avail_in();
          start();
-         m_stream->next_in(&buf[offset + read], buf.size() - offset - read);
+         m_stream->next_in(buf.data() + offset + read, buf.size() - offset - read);
          }
 
       if(m_stream->avail_out() == 0)
          {
          const size_t added = 8 + m_buffer.size();
          m_buffer.resize(m_buffer.size() + added);
-         m_stream->next_out(&m_buffer[m_buffer.size() - added], added);
+         m_stream->next_out(m_buffer.data() + m_buffer.size() - added, added);
          }
       else if(m_stream->avail_in() == 0)
          {
@@ -1915,14 +2152,12 @@ void Stream_Decompression::finish(secure_vector<byte>& buf, size_t offset)
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(StreamCipher, "CTR-BE", CTR_BE, CTR_BE::make);
-
 CTR_BE* CTR_BE::make(const Spec& spec)
    {
    if(spec.algo_name() == "CTR-BE" && spec.arg_count() == 1)
       {
-      if(BlockCipher* c = get_block_cipher(spec.arg(0)))
-         return new CTR_BE(c);
+      if(auto c = BlockCipher::create(spec.arg(0)))
+         return new CTR_BE(c.release());
       }
    return nullptr;
    }
@@ -2030,8 +2265,6 @@ void CTR_BE::increment_counter()
 
 
 namespace Botan {
-
-BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(EAX_Encryption, EAX_Decryption, 0);
 
 namespace {
 
@@ -2222,6 +2455,9 @@ void EAX_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 #if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
+#endif
+
 namespace Botan {
 
 namespace {
@@ -2276,6 +2512,10 @@ std::vector<std::unique_ptr<EntropySource>> get_default_entropy_sources()
       ));
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
+   sources.push_back(std::unique_ptr<EntropySource>(new Darwin_SecRandom));
+#endif
+
    return sources;
    }
 
@@ -2326,14 +2566,18 @@ StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher, const SymmetricKe
 
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
    m_buffer(DEFAULT_BUFFERSIZE),
-   m_cipher(make_stream_cipher(sc_name))
+   m_cipher(StreamCipher::create(sc_name))
    {
+   if(!m_cipher)
+      throw Algorithm_Not_Found(sc_name);
    }
 
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name, const SymmetricKey& key) :
    m_buffer(DEFAULT_BUFFERSIZE),
-   m_cipher(make_stream_cipher(sc_name))
+   m_cipher(StreamCipher::create(sc_name))
    {
+   if(!m_cipher)
+      throw Algorithm_Not_Found(sc_name);
    m_cipher->set_key(key);
    }
 
@@ -2350,13 +2594,13 @@ void StreamCipher_Filter::write(const byte input[], size_t length)
    }
 
 Hash_Filter::Hash_Filter(const std::string& hash_name, size_t len) :
-   m_hash(make_hash_function(hash_name)),
+   m_hash(HashFunction::create(hash_name)),
    m_out_len(len)
    {
+   if(!m_hash)
+      throw Algorithm_Not_Found(hash_name);
    }
-
-void Hash_Filter::end_msg()
-   {
+void Hash_Filter::end_msg()   {
    secure_vector<byte> output = m_hash->final();
    if(m_out_len)
       send(output, std::min<size_t>(m_out_len, output.size()));
@@ -2365,15 +2609,19 @@ void Hash_Filter::end_msg()
    }
 
 MAC_Filter::MAC_Filter(const std::string& mac_name, size_t len) :
-   m_mac(make_message_auth(mac_name)),
+   m_mac(MessageAuthenticationCode::create(mac_name)),
    m_out_len(len)
    {
+   if(!m_mac)
+      throw Algorithm_Not_Found(mac_name);
    }
 
 MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key, size_t len) :
-   m_mac(make_message_auth(mac_name)),
+   m_mac(MessageAuthenticationCode::create(mac_name)),
    m_out_len(len)
    {
+   if(!m_mac)
+      throw Algorithm_Not_Found(mac_name);
    m_mac->set_key(key);
    }
 
@@ -2681,192 +2929,6 @@ DataSink_Stream::DataSink_Stream(const std::string& path,
 DataSink_Stream::~DataSink_Stream()
    {
    delete sink_p;
-   }
-
-}
-/*
-* DataSource
-* (C) 1999-2007 Jack Lloyd
-*     2005 Matthew Gregan
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-namespace Botan {
-
-/*
-* Read a single byte from the DataSource
-*/
-size_t DataSource::read_byte(byte& out)
-   {
-   return read(&out, 1);
-   }
-
-/*
-* Peek a single byte from the DataSource
-*/
-size_t DataSource::peek_byte(byte& out) const
-   {
-   return peek(&out, 1, 0);
-   }
-
-/*
-* Discard the next N bytes of the data
-*/
-size_t DataSource::discard_next(size_t n)
-   {
-   size_t discarded = 0;
-   byte dummy;
-   for(size_t j = 0; j != n; ++j)
-      discarded += read_byte(dummy);
-   return discarded;
-   }
-
-/*
-* Read from a memory buffer
-*/
-size_t DataSource_Memory::read(byte out[], size_t length)
-   {
-   size_t got = std::min<size_t>(source.size() - offset, length);
-   copy_mem(out, source.data() + offset, got);
-   offset += got;
-   return got;
-   }
-
-/*
-* Peek into a memory buffer
-*/
-size_t DataSource_Memory::peek(byte out[], size_t length,
-                               size_t peek_offset) const
-   {
-   const size_t bytes_left = source.size() - offset;
-   if(peek_offset >= bytes_left) return 0;
-
-   size_t got = std::min(bytes_left - peek_offset, length);
-   copy_mem(out, &source[offset + peek_offset], got);
-   return got;
-   }
-
-/*
-* Check if the memory buffer is empty
-*/
-bool DataSource_Memory::end_of_data() const
-   {
-   return (offset == source.size());
-   }
-
-/*
-* DataSource_Memory Constructor
-*/
-DataSource_Memory::DataSource_Memory(const std::string& in) :
-   source(reinterpret_cast<const byte*>(in.data()),
-          reinterpret_cast<const byte*>(in.data()) + in.length()),
-   offset(0)
-   {
-   offset = 0;
-   }
-
-/*
-* Read from a stream
-*/
-size_t DataSource_Stream::read(byte out[], size_t length)
-   {
-   source.read(reinterpret_cast<char*>(out), length);
-   if(source.bad())
-      throw Stream_IO_Error("DataSource_Stream::read: Source failure");
-
-   size_t got = source.gcount();
-   total_read += got;
-   return got;
-   }
-
-/*
-* Peek into a stream
-*/
-size_t DataSource_Stream::peek(byte out[], size_t length, size_t offset) const
-   {
-   if(end_of_data())
-      throw Invalid_State("DataSource_Stream: Cannot peek when out of data");
-
-   size_t got = 0;
-
-   if(offset)
-      {
-      secure_vector<byte> buf(offset);
-      source.read(reinterpret_cast<char*>(buf.data()), buf.size());
-      if(source.bad())
-         throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
-      got = source.gcount();
-      }
-
-   if(got == offset)
-      {
-      source.read(reinterpret_cast<char*>(out), length);
-      if(source.bad())
-         throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
-      got = source.gcount();
-      }
-
-   if(source.eof())
-      source.clear();
-   source.seekg(total_read, std::ios::beg);
-
-   return got;
-   }
-
-/*
-* Check if the stream is empty or in error
-*/
-bool DataSource_Stream::end_of_data() const
-   {
-   return (!source.good());
-   }
-
-/*
-* Return a human-readable ID for this stream
-*/
-std::string DataSource_Stream::id() const
-   {
-   return identifier;
-   }
-
-/*
-* DataSource_Stream Constructor
-*/
-DataSource_Stream::DataSource_Stream(const std::string& path,
-                                     bool use_binary) :
-   identifier(path),
-   source_p(new std::ifstream(path,
-                              use_binary ? std::ios::binary : std::ios::in)),
-   source(*source_p),
-   total_read(0)
-   {
-   if(!source.good())
-      {
-      delete source_p;
-      throw Stream_IO_Error("DataSource: Failure opening file " + path);
-      }
-   }
-
-/*
-* DataSource_Stream Constructor
-*/
-DataSource_Stream::DataSource_Stream(std::istream& in,
-                                     const std::string& name) :
-   identifier(name),
-   source_p(nullptr),
-   source(in),
-   total_read(0)
-   {
-   }
-
-/*
-* DataSource_Stream Destructor
-*/
-DataSource_Stream::~DataSource_Stream()
-   {
-   delete source_p;
    }
 
 }
@@ -3183,10 +3245,10 @@ namespace {
 class Null_Filter : public Filter
    {
    public:
-      void write(const byte input[], size_t length)
+      void write(const byte input[], size_t length) override
          { send(input, length); }
 
-      std::string name() const { return "Null"; }
+      std::string name() const override { return "Null"; }
    };
 
 }
@@ -3674,6 +3736,16 @@ size_t Pipe::get_bytes_read(message_id msg) const
    return outputs->get_bytes_read(msg);
    }
 
+bool Pipe::check_available(size_t n)
+   {
+   return (n <= remaining(DEFAULT_MESSAGE));
+   }
+
+bool Pipe::check_available_msg(size_t n, message_id msg)
+   {
+   return (n <= remaining(msg));
+   }
+
 }
 /*
 * SecureQueue
@@ -3735,9 +3807,9 @@ class SecureQueueNode
 */
 SecureQueue::SecureQueue()
    {
-   bytes_read = 0;
+   m_bytes_read = 0;
    set_next(nullptr, 0);
-   head = tail = new SecureQueueNode;
+   m_head = m_tail = new SecureQueueNode;
    }
 
 /*
@@ -3746,11 +3818,11 @@ SecureQueue::SecureQueue()
 SecureQueue::SecureQueue(const SecureQueue& input) :
    Fanout_Filter(), DataSource()
    {
-   bytes_read = 0;
+   m_bytes_read = 0;
    set_next(nullptr, 0);
 
-   head = tail = new SecureQueueNode;
-   SecureQueueNode* temp = input.head;
+   m_head = m_tail = new SecureQueueNode;
+   SecureQueueNode* temp = input.m_head;
    while(temp)
       {
       write(&temp->buffer[temp->start], temp->end - temp->start);
@@ -3763,14 +3835,14 @@ SecureQueue::SecureQueue(const SecureQueue& input) :
 */
 void SecureQueue::destroy()
    {
-   SecureQueueNode* temp = head;
+   SecureQueueNode* temp = m_head;
    while(temp)
       {
       SecureQueueNode* holder = temp->next;
       delete temp;
       temp = holder;
       }
-   head = tail = nullptr;
+   m_head = m_tail = nullptr;
    }
 
 /*
@@ -3779,8 +3851,8 @@ void SecureQueue::destroy()
 SecureQueue& SecureQueue::operator=(const SecureQueue& input)
    {
    destroy();
-   head = tail = new SecureQueueNode;
-   SecureQueueNode* temp = input.head;
+   m_head = m_tail = new SecureQueueNode;
+   SecureQueueNode* temp = input.m_head;
    while(temp)
       {
       write(&temp->buffer[temp->start], temp->end - temp->start);
@@ -3794,17 +3866,17 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input)
 */
 void SecureQueue::write(const byte input[], size_t length)
    {
-   if(!head)
-      head = tail = new SecureQueueNode;
+   if(!m_head)
+      m_head = m_tail = new SecureQueueNode;
    while(length)
       {
-      const size_t n = tail->write(input, length);
+      const size_t n = m_tail->write(input, length);
       input += n;
       length -= n;
       if(length)
          {
-         tail->next = new SecureQueueNode;
-         tail = tail->next;
+         m_tail->next = new SecureQueueNode;
+         m_tail = m_tail->next;
          }
       }
    }
@@ -3815,20 +3887,20 @@ void SecureQueue::write(const byte input[], size_t length)
 size_t SecureQueue::read(byte output[], size_t length)
    {
    size_t got = 0;
-   while(length && head)
+   while(length && m_head)
       {
-      const size_t n = head->read(output, length);
+      const size_t n = m_head->read(output, length);
       output += n;
       got += n;
       length -= n;
-      if(head->size() == 0)
+      if(m_head->size() == 0)
          {
-         SecureQueueNode* holder = head->next;
-         delete head;
-         head = holder;
+         SecureQueueNode* holder = m_head->next;
+         delete m_head;
+         m_head = holder;
          }
       }
-   bytes_read += got;
+   m_bytes_read += got;
    return got;
    }
 
@@ -3837,7 +3909,7 @@ size_t SecureQueue::read(byte output[], size_t length)
 */
 size_t SecureQueue::peek(byte output[], size_t length, size_t offset) const
    {
-   SecureQueueNode* current = head;
+   SecureQueueNode* current = m_head;
 
    while(offset && current)
       {
@@ -3868,7 +3940,7 @@ size_t SecureQueue::peek(byte output[], size_t length, size_t offset) const
 */
 size_t SecureQueue::get_bytes_read() const
    {
-   return bytes_read;
+   return m_bytes_read;
    }
 
 /*
@@ -3876,7 +3948,7 @@ size_t SecureQueue::get_bytes_read() const
 */
 size_t SecureQueue::size() const
    {
-   SecureQueueNode* current = head;
+   SecureQueueNode* current = m_head;
    size_t count = 0;
 
    while(current)
@@ -4175,8 +4247,6 @@ void Transform_Filter::buffered_final(const byte input[], size_t input_length)
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(GCM_Encryption, GCM_Decryption, 16);
-
 void GHASH::gcm_multiply(secure_vector<byte>& x) const
    {
 #if defined(BOTAN_HAS_GCM_CLMUL)
@@ -4449,6 +4519,189 @@ void GCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 
 }
 /*
+* Hash Functions
+* (C) 2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+#if defined(BOTAN_HAS_ADLER32)
+#endif
+
+#if defined(BOTAN_HAS_CRC24)
+#endif
+
+#if defined(BOTAN_HAS_CRC32)
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_11)
+#endif
+
+#if defined(BOTAN_HAS_HAS_160)
+#endif
+
+#if defined(BOTAN_HAS_KECCAK)
+#endif
+
+#if defined(BOTAN_HAS_MD2)
+#endif
+
+#if defined(BOTAN_HAS_MD4)
+#endif
+
+#if defined(BOTAN_HAS_MD5)
+#endif
+
+#if defined(BOTAN_HAS_RIPEMD_128)
+#endif
+
+#if defined(BOTAN_HAS_RIPEMD_160)
+#endif
+
+#if defined(BOTAN_HAS_SHA1)
+#endif
+
+#if defined(BOTAN_HAS_SHA1_SSE2)
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32)
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64)
+#endif
+
+#if defined(BOTAN_HAS_SKEIN_512)
+#endif
+
+#if defined(BOTAN_HAS_TIGER)
+#endif
+
+#if defined(BOTAN_HAS_WHIRLPOOL)
+#endif
+
+#if defined(BOTAN_HAS_PARALLEL_HASH)
+#endif
+
+#if defined(BOTAN_HAS_COMB4P)
+#endif
+
+namespace Botan {
+
+std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
+                                                   const std::string& provider)
+   {
+   return std::unique_ptr<HashFunction>(make_a<HashFunction>(algo_spec, provider));
+   }
+
+std::vector<std::string> HashFunction::providers(const std::string& algo_spec)
+   {
+   return providers_of<HashFunction>(HashFunction::Spec(algo_spec));
+   }
+
+HashFunction::HashFunction() {}
+
+HashFunction::~HashFunction() {}
+
+#define BOTAN_REGISTER_HASH(name, maker) BOTAN_REGISTER_T(HashFunction, name, maker)
+#define BOTAN_REGISTER_HASH_NOARGS(name) BOTAN_REGISTER_T_NOARGS(HashFunction, name)
+
+#define BOTAN_REGISTER_HASH_1LEN(name, def) BOTAN_REGISTER_T_1LEN(HashFunction, name, def)
+
+#define BOTAN_REGISTER_HASH_NAMED_NOARGS(type, name) \
+   BOTAN_REGISTER_NAMED_T(HashFunction, name, type, make_new_T<type>)
+#define BOTAN_REGISTER_HASH_NAMED_1LEN(type, name, def) \
+   BOTAN_REGISTER_NAMED_T(HashFunction, name, type, (make_new_T_1len<type,def>))
+
+#define BOTAN_REGISTER_HASH_NOARGS_IF(cond, type, name, provider, pref)      \
+   BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, HashFunction, type, name, provider, pref)
+
+#if defined(BOTAN_HAS_ADLER32)
+BOTAN_REGISTER_HASH_NOARGS(Adler32);
+#endif
+
+#if defined(BOTAN_HAS_CRC24)
+BOTAN_REGISTER_HASH_NOARGS(CRC24);
+#endif
+
+#if defined(BOTAN_HAS_CRC32)
+BOTAN_REGISTER_HASH_NOARGS(CRC32);
+#endif
+
+#if defined(BOTAN_HAS_COMB4P)
+BOTAN_REGISTER_NAMED_T(HashFunction, "Comb4P", Comb4P, Comb4P::make);
+#endif
+
+#if defined(BOTAN_HAS_PARALLEL_HASH)
+BOTAN_REGISTER_NAMED_T(HashFunction, "Parallel", Parallel, Parallel::make);
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_11)
+BOTAN_REGISTER_HASH_NAMED_NOARGS(GOST_34_11, "GOST-R-34.11-94");
+#endif
+
+#if defined(BOTAN_HAS_HAS_160)
+BOTAN_REGISTER_HASH_NAMED_NOARGS(HAS_160, "HAS-160");
+#endif
+
+#if defined(BOTAN_HAS_KECCAK)
+BOTAN_REGISTER_HASH_NAMED_1LEN(Keccak_1600, "Keccak-1600", 512);
+#endif
+
+#if defined(BOTAN_HAS_MD2)
+BOTAN_REGISTER_HASH_NOARGS(MD2);
+#endif
+
+#if defined(BOTAN_HAS_MD4)
+BOTAN_REGISTER_HASH_NOARGS(MD4);
+#endif
+
+#if defined(BOTAN_HAS_MD5)
+BOTAN_REGISTER_HASH_NOARGS(MD5);
+#endif
+
+#if defined(BOTAN_HAS_RIPEMD_128)
+BOTAN_REGISTER_HASH_NAMED_NOARGS(RIPEMD_128, "RIPEMD-128");
+#endif
+
+#if defined(BOTAN_HAS_RIPEMD_160)
+BOTAN_REGISTER_HASH_NAMED_NOARGS(RIPEMD_160, "RIPEMD-160");
+#endif
+
+#if defined(BOTAN_HAS_SHA1)
+BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_160, "SHA-160");
+#endif
+
+#if defined(BOTAN_HAS_SHA1_SSE2)
+BOTAN_REGISTER_HASH_NOARGS_IF(CPUID::has_sse2(), SHA_160_SSE2, "SHA-160",
+                              "sse2", BOTAN_SIMD_ALGORITHM_PRIO);
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32)
+BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_224, "SHA-224");
+BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_256, "SHA-256");
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64)
+BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_384, "SHA-384");
+BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_512, "SHA-512");
+BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_512_256, "SHA-512-256");
+#endif
+
+#if defined(BOTAN_HAS_TIGER)
+BOTAN_REGISTER_NAMED_T_2LEN(HashFunction, Tiger, "Tiger", "base", 24, 3);
+#endif
+
+#if defined(BOTAN_HAS_SKEIN_512)
+BOTAN_REGISTER_NAMED_T(HashFunction, "Skein-512", Skein_512, Skein_512::make);
+#endif
+
+#if defined(BOTAN_HAS_WHIRLPOOL)
+BOTAN_REGISTER_HASH_NOARGS(Whirlpool);
+#endif
+
+}
+/*
 * Hex Encoding and Decoding
 * (C) 2010 Jack Lloyd
 *
@@ -4664,13 +4917,11 @@ HMAC* HMAC::make(const Spec& spec)
    {
    if(spec.arg_count() == 1)
       {
-      if(HashFunction* h = get_hash_function(spec.arg(0)))
-         return new HMAC(h);
+      if(auto h = HashFunction::create(spec.arg(0)))
+         return new HMAC(h.release());
       }
    return nullptr;
    }
-
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "HMAC", HMAC, HMAC::make);
 
 /*
 * Update a HMAC Calculation
@@ -4959,7 +5210,46 @@ std::string HMAC_RNG::name() const
 */
 
 
+#if defined(BOTAN_HAS_HKDF)
+#endif
+
+#if defined(BOTAN_HAS_KDF1)
+#endif
+
+#if defined(BOTAN_HAS_KDF2)
+#endif
+
+#if defined(BOTAN_HAS_TLS_V10_PRF)
+#endif
+
+#if defined(BOTAN_HAS_TLS_V12_PRF)
+#endif
+
+#if defined(BOTAN_HAS_X942_PRF)
+#endif
+
+#define BOTAN_REGISTER_KDF_NOARGS(type, name)                    \
+   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T<type>))
+#define BOTAN_REGISTER_KDF_1HASH(type, name)                    \
+   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T_1X<type, HashFunction>))
+
+#define BOTAN_REGISTER_KDF_NAMED_1STR(type, name) \
+   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T_1str_req<type>))
+
 namespace Botan {
+
+KDF::~KDF() {}
+
+std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
+                                                 const std::string& provider)
+   {
+   return std::unique_ptr<KDF>(make_a<KDF>(algo_spec, provider));
+   }
+
+std::vector<std::string> KDF::providers(const std::string& algo_spec)
+   {
+   return providers_of<KDF>(KDF::Spec(algo_spec));
+   }
 
 KDF* get_kdf(const std::string& algo_spec)
    {
@@ -4968,10 +5258,35 @@ KDF* get_kdf(const std::string& algo_spec)
    if(request.algo_name() == "Raw")
       return nullptr; // No KDF
 
-   if(KDF* kdf = make_a<KDF>(algo_spec))
-      return kdf;
-   throw Algorithm_Not_Found(algo_spec);
+   auto kdf = KDF::create(algo_spec);
+   if(!kdf)
+      throw Algorithm_Not_Found(algo_spec);
+   return kdf.release();
    }
+
+#if defined(BOTAN_HAS_HKDF)
+BOTAN_REGISTER_NAMED_T(KDF, "HKDF", HKDF, HKDF::make);
+#endif
+
+#if defined(BOTAN_HAS_KDF1)
+BOTAN_REGISTER_KDF_1HASH(KDF1, "KDF1");
+#endif
+
+#if defined(BOTAN_HAS_KDF2)
+BOTAN_REGISTER_KDF_1HASH(KDF2, "KDF2");
+#endif
+
+#if defined(BOTAN_HAS_TLS_V10_PRF)
+BOTAN_REGISTER_KDF_NOARGS(TLS_PRF, "TLS-PRF");
+#endif
+
+#if defined(BOTAN_HAS_TLS_V12_PRF)
+BOTAN_REGISTER_NAMED_T(KDF, "TLS-12-PRF", TLS_12_PRF, TLS_12_PRF::make);
+#endif
+
+#if defined(BOTAN_HAS_X942_PRF)
+BOTAN_REGISTER_KDF_NAMED_1STR(X942_PRF, "X9.42-PRF");
+#endif
 
 }
 /*
@@ -4983,8 +5298,6 @@ KDF* get_kdf(const std::string& algo_spec)
 
 
 namespace Botan {
-
-BOTAN_REGISTER_KDF_1HASH(KDF2, "KDF2");
 
 size_t KDF2::kdf(byte key[], size_t key_len,
                  const byte secret[], size_t secret_len,
@@ -5019,8 +5332,6 @@ size_t KDF2::kdf(byte key[], size_t key_len,
 
 
 namespace Botan {
-
-BOTAN_REGISTER_HASH_NAMED_1LEN(Keccak_1600, "Keccak-1600", 512);
 
 namespace {
 
@@ -5212,7 +5523,38 @@ void Keccak_1600::final_result(byte output[])
 */
 
 
+#if defined(BOTAN_HAS_CBC_MAC)
+#endif
+
+#if defined(BOTAN_HAS_CMAC)
+#endif
+
+#if defined(BOTAN_HAS_HMAC)
+#endif
+
+#if defined(BOTAN_HAS_POLY1305)
+#endif
+
+#if defined(BOTAN_HAS_SIPHASH)
+#endif
+
+#if defined(BOTAN_HAS_ANSI_X919_MAC)
+#endif
+
 namespace Botan {
+
+std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(const std::string& algo_spec,
+                                                                             const std::string& provider)
+   {
+   return std::unique_ptr<MessageAuthenticationCode>(make_a<MessageAuthenticationCode>(algo_spec, provider));
+   }
+
+std::vector<std::string> MessageAuthenticationCode::providers(const std::string& algo_spec)
+   {
+   return providers_of<MessageAuthenticationCode>(MessageAuthenticationCode::Spec(algo_spec));
+   }
+
+MessageAuthenticationCode::~MessageAuthenticationCode() {}
 
 /*
 * Default (deterministic) MAC verification operation
@@ -5226,6 +5568,30 @@ bool MessageAuthenticationCode::verify_mac(const byte mac[], size_t length)
 
    return same_mem(our_mac.data(), mac, length);
    }
+
+#if defined(BOTAN_HAS_CBC_MAC)
+BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CBC-MAC", CBC_MAC, CBC_MAC::make);
+#endif
+
+#if defined(BOTAN_HAS_CMAC)
+BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CMAC", CMAC, CMAC::make);
+#endif
+
+#if defined(BOTAN_HAS_HMAC)
+BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "HMAC", HMAC, HMAC::make);
+#endif
+
+#if defined(BOTAN_HAS_POLY1305)
+BOTAN_REGISTER_T_NOARGS(MessageAuthenticationCode, Poly1305);
+#endif
+
+#if defined(BOTAN_HAS_SIPHASH)
+BOTAN_REGISTER_NAMED_T_2LEN(MessageAuthenticationCode, SipHash, "SipHash", "base", 2, 4);
+#endif
+
+#if defined(BOTAN_HAS_ANSI_X919_MAC)
+BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "X9.19-MAC", ANSI_X919_MAC, make_new_T<ANSI_X919_MAC>);
+#endif
 
 }
 /*
@@ -5342,7 +5708,67 @@ void MDx_HashFunction::write_count(byte out[])
 
 #include <sstream>
 
+#if defined(BOTAN_HAS_MODE_ECB)
+#endif
+
+#if defined(BOTAN_HAS_MODE_CBC)
+#endif
+
+#if defined(BOTAN_HAS_MODE_CFB)
+#endif
+
+#if defined(BOTAN_HAS_MODE_XTS)
+#endif
+
 namespace Botan {
+
+#if defined(BOTAN_HAS_MODE_ECB)
+
+template<typename T>
+Transform* make_ecb_mode(const Transform::Spec& spec)
+   {
+   std::unique_ptr<BlockCipher> bc(BlockCipher::create(spec.arg(0)));
+   std::unique_ptr<BlockCipherModePaddingMethod> pad(get_bc_pad(spec.arg(1, "NoPadding")));
+   if(bc && pad)
+      return new T(bc.release(), pad.release());
+   return nullptr;
+   }
+
+BOTAN_REGISTER_TRANSFORM(ECB_Encryption, make_ecb_mode<ECB_Encryption>);
+BOTAN_REGISTER_TRANSFORM(ECB_Decryption, make_ecb_mode<ECB_Decryption>);
+#endif
+
+#if defined(BOTAN_HAS_MODE_CBC)
+
+template<typename CBC_T, typename CTS_T>
+Transform* make_cbc_mode(const Transform::Spec& spec)
+   {
+   std::unique_ptr<BlockCipher> bc(BlockCipher::create(spec.arg(0)));
+
+   if(bc)
+      {
+      const std::string padding = spec.arg(1, "PKCS7");
+
+      if(padding == "CTS")
+         return new CTS_T(bc.release());
+      else
+         return new CBC_T(bc.release(), get_bc_pad(padding));
+      }
+
+   return nullptr;
+   }
+
+BOTAN_REGISTER_TRANSFORM(CBC_Encryption, (make_cbc_mode<CBC_Encryption,CTS_Encryption>));
+BOTAN_REGISTER_TRANSFORM(CBC_Decryption, (make_cbc_mode<CBC_Decryption,CTS_Decryption>));
+#endif
+
+#if defined(BOTAN_HAS_MODE_CFB)
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(CFB_Encryption, CFB_Decryption, 0);
+#endif
+
+#if defined(BOTAN_HAS_MODE_XTS)
+BOTAN_REGISTER_BLOCK_CIPHER_MODE(XTS_Encryption, XTS_Decryption);
+#endif
 
 Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction)
    {
@@ -5398,8 +5824,8 @@ Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction)
       return cipher;
       }
 
-   if(StreamCipher* stream_cipher = get_stream_cipher(mode_name, provider))
-      return new Stream_Cipher_Mode(stream_cipher);
+   if(auto sc = StreamCipher::create(mode_name, provider))
+      return new Stream_Cipher_Mode(sc.release());
 
    return nullptr;
    }
@@ -5413,7 +5839,37 @@ Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction)
 */
 
 
+#if defined(BOTAN_HAS_PBKDF1)
+#endif
+
+#if defined(BOTAN_HAS_PBKDF2)
+#endif
+
 namespace Botan {
+
+#define BOTAN_REGISTER_PBKDF_1HASH(type, name)                          \
+   BOTAN_REGISTER_NAMED_T(PBKDF, name, type, (make_new_T_1X<type, HashFunction>))
+
+#if defined(BOTAN_HAS_PBKDF1)
+BOTAN_REGISTER_PBKDF_1HASH(PKCS5_PBKDF1, "PBKDF1");
+#endif
+
+#if defined(BOTAN_HAS_PBKDF2)
+BOTAN_REGISTER_NAMED_T(PBKDF, "PBKDF2", PKCS5_PBKDF2, PKCS5_PBKDF2::make);
+#endif
+
+PBKDF::~PBKDF() {}
+
+std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
+                                     const std::string& provider)
+   {
+   return std::unique_ptr<PBKDF>(make_a<PBKDF>(algo_spec, provider));
+   }
+
+std::vector<std::string> PBKDF::providers(const std::string& algo_spec)
+   {
+   return providers_of<PBKDF>(PBKDF::Spec(algo_spec));
+   }
 
 void PBKDF::pbkdf_timed(byte out[], size_t out_len,
                         const std::string& passphrase,
@@ -5470,15 +5926,13 @@ secure_vector<byte> PBKDF::pbkdf_timed(size_t out_len,
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(PBKDF, "PBKDF2", PKCS5_PBKDF2, PKCS5_PBKDF2::make);
-
 PKCS5_PBKDF2* PKCS5_PBKDF2::make(const Spec& spec)
    {
-   if(auto mac = get_mac(spec.arg(0)))
-      return new PKCS5_PBKDF2(mac);
+   if(auto mac = MessageAuthenticationCode::create(spec.arg(0)))
+      return new PKCS5_PBKDF2(mac.release());
 
-   if(auto mac = get_mac("HMAC(" + spec.arg(0) + ")"))
-      return new PKCS5_PBKDF2(mac);
+   if(auto mac = MessageAuthenticationCode::create("HMAC(" + spec.arg(0) + ")"))
+      return new PKCS5_PBKDF2(mac.release());
 
    return nullptr;
    }
@@ -5600,8 +6054,11 @@ namespace Botan {
 
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
-   std::unique_ptr<MessageAuthenticationCode> h1(make_message_auth("HMAC(SHA-512)"));
-   std::unique_ptr<MessageAuthenticationCode> h2(h1->clone());
+   std::unique_ptr<MessageAuthenticationCode> h1(MessageAuthenticationCode::create("HMAC(SHA-512)"));
+   std::unique_ptr<MessageAuthenticationCode> h2(MessageAuthenticationCode::create("HMAC(SHA-512)"));
+
+   if(!h1 || !h2)
+      throw Algorithm_Not_Found("HMAC_RNG HMACs");
    std::unique_ptr<RandomNumberGenerator> rng(new HMAC_RNG(h1.release(), h2.release()));
 
    rng->reseed(256);
@@ -5619,8 +6076,6 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
 
 
 namespace Botan {
-
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent);
 
 namespace {
 
@@ -5814,6 +6269,218 @@ void Serpent::clear()
 
 }
 /*
+* Serpent (SIMD)
+* (C) 2009,2013 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+namespace {
+
+#define key_xor(round, B0, B1, B2, B3)                             \
+   do {                                                            \
+      B0 ^= SIMD_32(keys[4*round  ]);                              \
+      B1 ^= SIMD_32(keys[4*round+1]);                              \
+      B2 ^= SIMD_32(keys[4*round+2]);                              \
+      B3 ^= SIMD_32(keys[4*round+3]);                              \
+   } while(0);
+
+/*
+* Serpent's linear transformations
+*/
+#define transform(B0, B1, B2, B3)                                  \
+   do {                                                            \
+      B0.rotate_left(13);                                          \
+      B2.rotate_left(3);                                           \
+      B1 ^= B0 ^ B2;                                               \
+      B3 ^= B2 ^ (B0 << 3);                                        \
+      B1.rotate_left(1);                                           \
+      B3.rotate_left(7);                                           \
+      B0 ^= B1 ^ B3;                                               \
+      B2 ^= B3 ^ (B1 << 7);                                        \
+      B0.rotate_left(5);                                           \
+      B2.rotate_left(22);                                          \
+   } while(0);
+
+#define i_transform(B0, B1, B2, B3)                                \
+   do {                                                            \
+      B2.rotate_right(22);                                         \
+      B0.rotate_right(5);                                          \
+      B2 ^= B3 ^ (B1 << 7);                                        \
+      B0 ^= B1 ^ B3;                                               \
+      B3.rotate_right(7);                                          \
+      B1.rotate_right(1);                                          \
+      B3 ^= B2 ^ (B0 << 3);                                        \
+      B1 ^= B0 ^ B2;                                               \
+      B2.rotate_right(3);                                          \
+      B0.rotate_right(13);                                         \
+   } while(0);
+
+/*
+* SIMD Serpent Encryption of 4 blocks in parallel
+*/
+void serpent_encrypt_4(const byte in[64],
+                       byte out[64],
+                       const u32bit keys[132])
+   {
+   SIMD_32 B0 = SIMD_32::load_le(in);
+   SIMD_32 B1 = SIMD_32::load_le(in + 16);
+   SIMD_32 B2 = SIMD_32::load_le(in + 32);
+   SIMD_32 B3 = SIMD_32::load_le(in + 48);
+
+   SIMD_32::transpose(B0, B1, B2, B3);
+
+   key_xor( 0,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 1,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 2,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 3,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 4,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 5,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 6,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 7,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+
+   key_xor( 8,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor( 9,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(10,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(11,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(12,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(13,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(14,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(15,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+
+   key_xor(16,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(17,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(18,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(19,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(20,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(21,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(22,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(23,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+
+   key_xor(24,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(25,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(26,B0,B1,B2,B3); SBoxE3(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(27,B0,B1,B2,B3); SBoxE4(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(28,B0,B1,B2,B3); SBoxE5(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(29,B0,B1,B2,B3); SBoxE6(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(30,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
+   key_xor(31,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); key_xor(32,B0,B1,B2,B3);
+
+   SIMD_32::transpose(B0, B1, B2, B3);
+
+   B0.store_le(out);
+   B1.store_le(out + 16);
+   B2.store_le(out + 32);
+   B3.store_le(out + 48);
+   }
+
+/*
+* SIMD Serpent Decryption of 4 blocks in parallel
+*/
+void serpent_decrypt_4(const byte in[64],
+                       byte out[64],
+                       const u32bit keys[132])
+   {
+   SIMD_32 B0 = SIMD_32::load_le(in);
+   SIMD_32 B1 = SIMD_32::load_le(in + 16);
+   SIMD_32 B2 = SIMD_32::load_le(in + 32);
+   SIMD_32 B3 = SIMD_32::load_le(in + 48);
+
+   SIMD_32::transpose(B0, B1, B2, B3);
+
+   key_xor(32,B0,B1,B2,B3);  SBoxD8(B0,B1,B2,B3); key_xor(31,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(30,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(29,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(28,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(27,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(26,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor(25,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor(24,B0,B1,B2,B3);
+
+   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor(23,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(22,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(21,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(20,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(19,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(18,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor(17,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor(16,B0,B1,B2,B3);
+
+   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor(15,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(14,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor(13,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor(12,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor(11,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor(10,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 9,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 8,B0,B1,B2,B3);
+
+   i_transform(B0,B1,B2,B3); SBoxD8(B0,B1,B2,B3); key_xor( 7,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor( 6,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD6(B0,B1,B2,B3); key_xor( 5,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD5(B0,B1,B2,B3); key_xor( 4,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD4(B0,B1,B2,B3); key_xor( 3,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD3(B0,B1,B2,B3); key_xor( 2,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 1,B0,B1,B2,B3);
+   i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 0,B0,B1,B2,B3);
+
+   SIMD_32::transpose(B0, B1, B2, B3);
+
+   B0.store_le(out);
+   B1.store_le(out + 16);
+   B2.store_le(out + 32);
+   B3.store_le(out + 48);
+   }
+
+}
+
+#undef key_xor
+#undef transform
+#undef i_transform
+
+/*
+* Serpent Encryption
+*/
+void Serpent_SIMD::encrypt_n(const byte in[], byte out[], size_t blocks) const
+   {
+   const u32bit* KS = &(this->get_round_keys()[0]);
+
+   while(blocks >= 4)
+      {
+      serpent_encrypt_4(in, out, KS);
+      in += 4 * BLOCK_SIZE;
+      out += 4 * BLOCK_SIZE;
+      blocks -= 4;
+      }
+
+   if(blocks)
+     Serpent::encrypt_n(in, out, blocks);
+   }
+
+/*
+* Serpent Decryption
+*/
+void Serpent_SIMD::decrypt_n(const byte in[], byte out[], size_t blocks) const
+   {
+   const u32bit* KS = &(this->get_round_keys()[0]);
+
+   while(blocks >= 4)
+      {
+      serpent_decrypt_4(in, out, KS);
+      in += 4 * BLOCK_SIZE;
+      out += 4 * BLOCK_SIZE;
+      blocks -= 4;
+      }
+
+   if(blocks)
+     Serpent::decrypt_n(in, out, blocks);
+   }
+
+}
+/*
 * SHA-{224,256}
 * (C) 1999-2010 Jack Lloyd
 *     2007 FlexSecure GmbH
@@ -5823,9 +6490,6 @@ void Serpent::clear()
 
 
 namespace Botan {
-
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_224, "SHA-224");
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_256, "SHA-256");
 
 namespace {
 
@@ -6047,10 +6711,6 @@ void SHA_256::clear()
 
 
 namespace Botan {
-
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_384, "SHA-384");
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_512, "SHA-512");
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_512_256, "SHA-512-256");
 
 namespace {
 
@@ -6285,6 +6945,72 @@ void SHA_512::clear()
 
 }
 /*
+* Stream Ciphers
+* (C) 2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+#if defined(BOTAN_HAS_CHACHA)
+#endif
+
+#if defined(BOTAN_HAS_SALSA20)
+#endif
+
+#if defined(BOTAN_HAS_CTR_BE)
+#endif
+
+#if defined(BOTAN_HAS_OFB)
+#endif
+
+#if defined(BOTAN_HAS_RC4)
+#endif
+
+namespace Botan {
+
+std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
+                                                   const std::string& provider)
+   {
+   return std::unique_ptr<StreamCipher>(make_a<StreamCipher>(algo_spec, provider));
+   }
+
+std::vector<std::string> StreamCipher::providers(const std::string& algo_spec)
+   {
+   return providers_of<StreamCipher>(StreamCipher::Spec(algo_spec));
+   }
+
+StreamCipher::StreamCipher() {}
+StreamCipher::~StreamCipher() {}
+
+void StreamCipher::set_iv(const byte[], size_t iv_len)
+   {
+   if(!valid_iv_length(iv_len))
+      throw Invalid_IV_Length(name(), iv_len);
+   }
+
+#if defined(BOTAN_HAS_CHACHA)
+BOTAN_REGISTER_T_NOARGS(StreamCipher, ChaCha);
+#endif
+
+#if defined(BOTAN_HAS_SALSA20)
+BOTAN_REGISTER_T_NOARGS(StreamCipher, Salsa20);
+#endif
+
+#if defined(BOTAN_HAS_CTR_BE)
+BOTAN_REGISTER_NAMED_T(StreamCipher, "CTR-BE", CTR_BE, CTR_BE::make);
+#endif
+
+#if defined(BOTAN_HAS_OFB)
+BOTAN_REGISTER_NAMED_T(StreamCipher, "OFB", OFB, OFB::make);
+#endif
+
+#if defined(BOTAN_HAS_RC4)
+BOTAN_REGISTER_NAMED_T(StreamCipher, "RC4", RC4, RC4::make);
+#endif
+
+}
+/*
 * Runtime assertion checking
 * (C) 2010,2012 Jack Lloyd
 *
@@ -6321,11 +7047,17 @@ void assertion_failure(const char* expr_str,
 /*
 * Calendar Functions
 * (C) 1999-2010 Jack Lloyd
+* (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <ctime>
+#include <iomanip>
+
+#if defined(BOTAN_HAS_BOOST_DATETIME)
+#include <boost/date_time/posix_time/posix_time_types.hpp>
+#endif
 
 namespace Botan {
 
@@ -6341,7 +7073,7 @@ std::tm do_gmtime(std::time_t time_val)
    gmtime_r(&time_val, &tm); // Unix/SUSv2
 #else
    std::tm* tm_p = std::gmtime(&time_val);
-   if (tm_p == 0)
+   if (tm_p == nullptr)
       throw Encoding_Error("time_t_to_tm could not convert");
    tm = *tm_p;
 #endif
@@ -6349,11 +7081,137 @@ std::tm do_gmtime(std::time_t time_val)
    return tm;
    }
 
+#if !defined(BOTAN_TARGET_OS_HAS_TIMEGM) && !defined(BOTAN_TARGET_OS_HAS_MKGMTIME)
+
+#if defined(BOTAN_HAS_BOOST_DATETIME)
+
+std::time_t boost_timegm(std::tm *tm)
+   {
+   const int sec  = tm->tm_sec;
+   const int min  = tm->tm_min;
+   const int hour = tm->tm_hour;
+   const int day  = tm->tm_mday;
+   const int mon  = tm->tm_mon + 1;
+   const int year = tm->tm_year + 1900;
+
+   std::time_t out;
+
+      {
+      using namespace boost::posix_time;
+      using namespace boost::gregorian;
+      const auto epoch = ptime(date(1970, 01, 01));
+      const auto time = ptime(date(year, mon, day), 
+                              hours(hour) + minutes(min) + seconds(sec));
+      const time_duration diff(time - epoch);
+      out = diff.ticks() / diff.ticks_per_second();
+      }
+
+   return out;
+   }
+
+#else
+
+#pragma message "Caution! A fallback version of timegm() is used which is not thread-safe"
+
+std::mutex ENV_TZ;
+
+std::time_t fallback_timegm(std::tm *tm)
+   {
+   std::time_t out;
+   std::string tz_backup;
+
+   ENV_TZ.lock();
+
+   // Store current value of env variable TZ
+   const char* tz_env_pointer = ::getenv("TZ");
+   if (tz_env_pointer != nullptr)
+      tz_backup = std::string(tz_env_pointer);
+
+   // Clear value of TZ
+   ::setenv("TZ", "", 1);
+   ::tzset();
+   
+   out = ::mktime(tm);
+
+   // Restore TZ
+   if (!tz_backup.empty())
+      {
+      // setenv makes a copy of the second argument
+      ::setenv("TZ", tz_backup.data(), 1);
+      }
+   else
+      {
+      ::unsetenv("TZ");
+      }
+   ::tzset();
+
+   ENV_TZ.unlock();
+
+   return out;
+}
+#endif // BOTAN_HAS_BOOST_DATETIME
+
+#endif
+
 }
 
-/*
-* Convert a time_point to a calendar_point
-*/
+std::chrono::system_clock::time_point calendar_point::to_std_timepoint()
+   {
+   if (year < 1970)
+      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1990.");
+
+   // 32 bit time_t ends at January 19, 2038
+   // https://msdn.microsoft.com/en-us/library/2093ets1.aspx
+   // For consistency reasons, throw after 2037 as long as
+   // no other implementation is available.
+   if (year > 2037)
+      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2037.");
+
+   // std::tm: struct without any timezone information
+   std::tm tm;
+   tm.tm_isdst = -1; // i.e. no DST information available
+   tm.tm_sec   = seconds;
+   tm.tm_min   = minutes;
+   tm.tm_hour  = hour;
+   tm.tm_mday  = day;
+   tm.tm_mon   = month - 1;
+   tm.tm_year  = year - 1900;
+
+   // Define a function alias `botan_timegm`
+   #if defined(BOTAN_TARGET_OS_HAS_TIMEGM)
+   std::time_t (&botan_timegm)(std::tm *tm) = timegm;
+   #elif defined(BOTAN_TARGET_OS_HAS_MKGMTIME)
+   // http://stackoverflow.com/questions/16647819/timegm-cross-platform
+   std::time_t (&botan_timegm)(std::tm *tm) = _mkgmtime;
+   #elif defined(BOTAN_HAS_BOOST_DATETIME)
+   std::time_t (&botan_timegm)(std::tm *tm) = boost_timegm;
+   #else
+   std::time_t (&botan_timegm)(std::tm *tm) = fallback_timegm;
+   #endif
+
+   // Convert std::tm to std::time_t
+   std::time_t tt = botan_timegm(&tm);
+   if (tt == -1)
+      throw Invalid_Argument("calendar_point couldn't be converted: " + to_string());
+
+   return std::chrono::system_clock::from_time_t(tt);
+   }
+
+std::string calendar_point::to_string() const
+   {
+   // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
+   std::stringstream output;
+      {
+      using namespace std;
+      output << setfill('0')
+             << setw(4) << year << "-" << setw(2) << month << "-" << setw(2) << day
+             << "T"
+             << setw(2) << hour << ":" << setw(2) << minutes << ":" << setw(2) << seconds;
+      }
+   return output.str();
+   }
+
+
 calendar_point calendar_value(
    const std::chrono::system_clock::time_point& time_point)
    {
@@ -6614,7 +7472,7 @@ bool caseless_cmp(char a, char b)
    asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
        : "0" (type), "2" (level))
 
-#elif defined(BOTAN_BUILD_COMPILER_IS_GCC)
+#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
 
 #include <cpuid.h>
 
@@ -6720,6 +7578,19 @@ bool altivec_check_pvr_emul()
 
 }
 
+bool CPUID::has_simd_32()
+   {
+#if defined(BOTAN_HAS_SIMD_SSE2)
+   return CPUID::has_sse2();
+#elif defined(BOTAN_HAS_SIMD_ALTIVEC)
+   return CPUID::has_altivec();
+#elif defined(BOTAN_HAS_SIMD_SCALAR)
+   return true;
+#else
+   return false;
+#endif
+   }
+
 void CPUID::print(std::ostream& o)
    {
    o << "CPUID flags: ";
@@ -6806,15 +7677,225 @@ void CPUID::initialize()
 
 }
 /*
-* (C) 2015 Jack Lloyd
+* DataSource
+* (C) 1999-2007 Jack Lloyd
+*     2005 Matthew Gregan
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 
-#if defined(BOTAN_HAS_BOOST_FILESYSTEM)
-  #include <boost/filesystem.hpp>
+namespace Botan {
 
+/*
+* Read a single byte from the DataSource
+*/
+size_t DataSource::read_byte(byte& out)
+   {
+   return read(&out, 1);
+   }
+
+/*
+* Peek a single byte from the DataSource
+*/
+size_t DataSource::peek_byte(byte& out) const
+   {
+   return peek(&out, 1, 0);
+   }
+
+/*
+* Discard the next N bytes of the data
+*/
+size_t DataSource::discard_next(size_t n)
+   {
+   byte buf[64] = { 0 };
+   size_t discarded = 0;
+
+   while(n)
+      {
+      const size_t got = this->read(buf, std::min(n, sizeof(buf)));
+      discarded += got;
+
+      if(got == 0)
+         break;
+      }
+
+   return discarded;
+   }
+
+/*
+* Read from a memory buffer
+*/
+size_t DataSource_Memory::read(byte out[], size_t length)
+   {
+   size_t got = std::min<size_t>(source.size() - offset, length);
+   copy_mem(out, source.data() + offset, got);
+   offset += got;
+   return got;
+   }
+
+bool DataSource_Memory::check_available(size_t n)
+   {
+   return (n <= (source.size() - offset));
+   }
+
+/*
+* Peek into a memory buffer
+*/
+size_t DataSource_Memory::peek(byte out[], size_t length,
+                               size_t peek_offset) const
+   {
+   const size_t bytes_left = source.size() - offset;
+   if(peek_offset >= bytes_left) return 0;
+
+   size_t got = std::min(bytes_left - peek_offset, length);
+   copy_mem(out, &source[offset + peek_offset], got);
+   return got;
+   }
+
+/*
+* Check if the memory buffer is empty
+*/
+bool DataSource_Memory::end_of_data() const
+   {
+   return (offset == source.size());
+   }
+
+/*
+* DataSource_Memory Constructor
+*/
+DataSource_Memory::DataSource_Memory(const std::string& in) :
+   source(reinterpret_cast<const byte*>(in.data()),
+          reinterpret_cast<const byte*>(in.data()) + in.length()),
+   offset(0)
+   {
+   offset = 0;
+   }
+
+/*
+* Read from a stream
+*/
+size_t DataSource_Stream::read(byte out[], size_t length)
+   {
+   source.read(reinterpret_cast<char*>(out), length);
+   if(source.bad())
+      throw Stream_IO_Error("DataSource_Stream::read: Source failure");
+
+   size_t got = source.gcount();
+   total_read += got;
+   return got;
+   }
+
+bool DataSource_Stream::check_available(size_t n)
+   {
+   const std::streampos orig_pos = source.tellg();
+   source.seekg(0, std::ios::end);
+   const size_t avail = source.tellg() - orig_pos;
+   source.seekg(orig_pos);
+   return (avail >= n);
+   }
+
+/*
+* Peek into a stream
+*/
+size_t DataSource_Stream::peek(byte out[], size_t length, size_t offset) const
+   {
+   if(end_of_data())
+      throw Invalid_State("DataSource_Stream: Cannot peek when out of data");
+
+   size_t got = 0;
+
+   if(offset)
+      {
+      secure_vector<byte> buf(offset);
+      source.read(reinterpret_cast<char*>(buf.data()), buf.size());
+      if(source.bad())
+         throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
+      got = source.gcount();
+      }
+
+   if(got == offset)
+      {
+      source.read(reinterpret_cast<char*>(out), length);
+      if(source.bad())
+         throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
+      got = source.gcount();
+      }
+
+   if(source.eof())
+      source.clear();
+   source.seekg(total_read, std::ios::beg);
+
+   return got;
+   }
+
+/*
+* Check if the stream is empty or in error
+*/
+bool DataSource_Stream::end_of_data() const
+   {
+   return (!source.good());
+   }
+
+/*
+* Return a human-readable ID for this stream
+*/
+std::string DataSource_Stream::id() const
+   {
+   return identifier;
+   }
+
+/*
+* DataSource_Stream Constructor
+*/
+DataSource_Stream::DataSource_Stream(const std::string& path,
+                                     bool use_binary) :
+   identifier(path),
+   source_p(new std::ifstream(path,
+                              use_binary ? std::ios::binary : std::ios::in)),
+   source(*source_p),
+   total_read(0)
+   {
+   if(!source.good())
+      {
+      delete source_p;
+      throw Stream_IO_Error("DataSource: Failure opening file " + path);
+      }
+   }
+
+/*
+* DataSource_Stream Constructor
+*/
+DataSource_Stream::DataSource_Stream(std::istream& in,
+                                     const std::string& name) :
+   identifier(name),
+   source_p(nullptr),
+   source(in),
+   total_read(0)
+   {
+   }
+
+/*
+* DataSource_Stream Destructor
+*/
+DataSource_Stream::~DataSource_Stream()
+   {
+   delete source_p;
+   }
+
+}
+/*
+* (C) 2015 Jack Lloyd
+* (C) 2015 Simon Warta (Kullo GmbH)
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+#if defined(BOTAN_TARGET_OS_HAS_STL_FILESYSTEM_MSVC) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+  #include <filesystem>
+#elif defined(BOTAN_HAS_BOOST_FILESYSTEM)
+  #include <boost/filesystem.hpp>
 #elif defined(BOTAN_TARGET_OS_HAS_READDIR)
   #include <sys/types.h>
   #include <sys/stat.h>
@@ -6823,23 +7904,51 @@ void CPUID::initialize()
 
 namespace Botan {
 
-std::vector<std::string>
-list_all_readable_files_in_or_under(const std::string& dir_path)
+namespace {
+
+#if defined(BOTAN_TARGET_OS_HAS_STL_FILESYSTEM_MSVC) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+std::vector<std::string> impl_stl_filesystem(const std::string& dir)
    {
-   std::vector<std::string> paths;
+   using namespace std::tr2::sys;
 
-#if defined(BOTAN_HAS_BOOST_FILESYSTEM)
-   namespace fs = boost::filesystem;
+   std::vector<std::string> out;
 
-   fs::recursive_directory_iterator end;
-   for(fs::recursive_directory_iterator dir(dir_path); dir != end; ++dir)
+   path p(dir);
+
+   if (is_directory(p))
       {
-      if(fs::is_regular_file(dir->path()))
-         paths.push_back(dir->path().string());
+      for (recursive_directory_iterator itr(p), end; itr != end; ++itr)
+         {
+         if (is_regular_file(itr->path()))
+            {
+            out.push_back(itr->path().string());
+            }
+         }
       }
 
-#elif defined(BOTAN_TARGET_OS_HAS_READDIR)
+   return out;
+   }
+#elif defined(BOTAN_HAS_BOOST_FILESYSTEM)
+std::vector<std::string> impl_boost_filesystem(const std::string& dir_path)
+{
+   namespace fs = boost::filesystem;
 
+   std::vector<std::string> out;
+
+   for(fs::recursive_directory_iterator dir(dir_path), end; dir != end; ++dir)
+      {
+      if(fs::is_regular_file(dir->path()))
+         {
+         out.push_back(dir->path().string());
+         }
+      }
+
+   return out;
+}
+#elif defined(BOTAN_TARGET_OS_HAS_READDIR)
+std::vector<std::string> impl_readdir(const std::string& dir_path)
+   {
+   std::vector<std::string> out;
    std::deque<std::string> dir_list;
    dir_list.push_back(dir_path);
 
@@ -6857,7 +7966,7 @@ list_all_readable_files_in_or_under(const std::string& dir_path)
             const std::string filename = dirent->d_name;
             if(filename == "." || filename == "..")
                continue;
-            const std::string full_path = cur_path + '/' + filename;
+            const std::string full_path = cur_path + "/" + filename;
 
             struct stat stat_buf;
 
@@ -6867,32 +7976,46 @@ list_all_readable_files_in_or_under(const std::string& dir_path)
             if(S_ISDIR(stat_buf.st_mode))
                dir_list.push_back(full_path);
             else if(S_ISREG(stat_buf.st_mode))
-               paths.push_back(full_path);
+               out.push_back(full_path);
             }
          }
       }
-#else
-#if defined(_MSC_VER)
-  #pragma message ( "No filesystem access enabled" )
-#else
-  #warning "No filesystem access enabled"
-#endif
-#endif
 
-   std::sort(paths.begin(), paths.end());
-
-   return paths;
+   return out;
    }
+#endif
 
 }
 
+std::vector<std::string> get_files_recursive(const std::string& dir)
+   {
+   std::vector<std::string> files;
+
+#if defined(BOTAN_TARGET_OS_HAS_STL_FILESYSTEM_MSVC) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   files = impl_stl_filesystem(dir);
+#elif defined(BOTAN_HAS_BOOST_FILESYSTEM)
+   files = impl_boost_filesystem(dir);
+#elif defined(BOTAN_TARGET_OS_HAS_READDIR)
+   files = impl_readdir(dir);
+#else
+   throw No_Filesystem_Access();
+#endif
+
+   std::sort(files.begin(), files.end());
+
+   return files;
+   }
+
+}
 /*
 * Various string utils and parsing functions
-* (C) 1999-2007,2013,2014 Jack Lloyd
+* (C) 1999-2007,2013,2014,2015 Jack Lloyd
+* (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <limits>
 
 namespace Botan {
 
@@ -6900,11 +8023,32 @@ u32bit to_u32bit(const std::string& str)
    {
    try
       {
-      return std::stoul(str, nullptr);
+      // std::stoul is not strict enough. Ensure that str is digit only [0-9]*
+      for (const char chr : str)
+         {
+         if (chr < '0' || chr > '9')
+            {
+            auto chrAsString = std::string(1, chr);
+            throw Invalid_Argument("String contains non-digit char: " + chrAsString);
+            }
+         }
+
+      const auto integerValue = std::stoul(str);
+
+      // integerValue might be uint64
+      if (integerValue > std::numeric_limits<u32bit>::max())
+         {
+         throw Invalid_Argument("Integer value exceeds 32 bit range: " + std::to_string(integerValue));
+         }
+
+      return integerValue;
       }
-   catch(std::exception&)
+   catch(std::exception& e)
       {
-      throw std::runtime_error("Could not read '" + str + "' as decimal string");
+      auto message = std::string("Could not read '" + str + "' as decimal string");
+      auto exceptionMessage = std::string(e.what());
+      if (!exceptionMessage.empty()) message += ": " + exceptionMessage;
+      throw std::runtime_error(message);
       }
    }
 
@@ -7192,6 +8336,27 @@ std::string replace_char(const std::string& str, char from_char, char to_char)
    return out;
    }
 
+bool host_wildcard_match(const std::string& issued, const std::string& host)
+   {
+   if(issued == host)
+      return true;
+
+   if(issued.size() > 2 && issued[0] == '*' && issued[1] == '.')
+      {
+      size_t host_i = host.find('.');
+      if(host_i == std::string::npos || host_i == host.size() - 1)
+         return false;
+
+      const std::string host_base = host.substr(host_i + 1);
+      const std::string issued_base = issued.substr(2);
+
+      if(host_base == issued_base)
+         return true;
+         }
+
+   return false;
+   }
+
 }
 /*
 * Simple config/test file reader
@@ -7295,71 +8460,6 @@ void Semaphore::acquire()
 
 }
 /*
-* Timing Attack Countermeasure Functions
-* (C) 2010 Falko Strenzke, Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-namespace Botan {
-
-namespace TA_CM {
-
-/*
-* We use volatile in these functions in an attempt to ensure that the
-* compiler doesn't optimize in a way that would create branching
-* operations.
-*
-* Note: this needs further testing; on at least x86-64 with GCC,
-* volatile is not required to get branch-free operations, it just
-* makes the functions much longer/slower. It may not be required
-* anywhere.
-*/
-
-namespace {
-
-template<typename T>
-T expand_mask(T x)
-   {
-   volatile T r = x;
-   for(size_t i = 1; i != sizeof(T) * 8; i *= 2)
-      r |= r >> i;
-   r &= 1;
-   r = ~(r - 1);
-   return r;
-   }
-
-}
-
-u32bit expand_mask_u32bit(u32bit in)
-   {
-   return expand_mask<u32bit>(in);
-   }
-
-u16bit expand_mask_u16bit(u16bit in)
-   {
-   return expand_mask<u16bit>(in);
-   }
-
-u32bit max_32(u32bit a, u32bit b)
-   {
-   const u32bit a_larger = b - a; /* negative if a larger */
-   const u32bit mask = expand_mask<u32bit>(a_larger >> 31);
-   return (a & mask) | (b & ~mask);
-   }
-
-u32bit min_32(u32bit a, u32bit b)
-   {
-   const u32bit a_larger = b - a; /* negative if a larger */
-   const u32bit mask = expand_mask<u32bit>(a_larger >> 31);
-   return (a & ~mask) | (b & mask);
-   }
-
-}
-
-}
-/*
 * Version Information
 * (C) 1999-2013 Jack Lloyd
 *
@@ -7454,7 +8554,6 @@ void zero_mem(void* ptr, size_t n)
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <windows.h>
 #include <tlhelp32.h>
 
 namespace Botan {
