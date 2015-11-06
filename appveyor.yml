@@ -27,7 +27,7 @@ before_build:
 
 build_script:
   - if %platform%==mingw set PATH=C:\Qt\%qt%\bin;C:\Qt\Tools\mingw492_32\bin
-  - qmake
+  - C:\Qt\%qt%\bin\qmake
   - if not %platform%==mingw (nmake) else (mingw32-make)
 
 after_build:
@@ -37,10 +37,10 @@ after_build:
 
 test_script:
   - cd tests
-  - qmake
+  - C:\Qt\%qt%\bin\qmake
   - if not %platform%==mingw (nmake) else (mingw32-make)
   - cd ../../build/macx/clang/x86_64/release/test/
-  - CryptoTests.exe
+  - CryptoTests
 
 artifacts:
 - path: build
