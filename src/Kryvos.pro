@@ -165,8 +165,9 @@ android-g++ {
     message(Mac OS X)
 
     # Manually set c++1y until config += c++14 is fixed for OS X
-    CONFIG -= c++14
-    QMAKE_CXXFLAGS += -std=c++1y
+    #QMAKE_CXXFLAGS += -std=c++1y
+
+    CONFIG += c++11
 
     SOURCES += cryptography/botan/mac/clang/x86_64/botan_all.cpp
     HEADERS += cryptography/botan/mac/clang/x86_64/botan_all.h
@@ -189,19 +190,19 @@ android-g++ {
       QMAKE_LFLAGS += -fstack-protector
 
       contains(QT_ARCH, x86_64) {
-        message(Windows x64 G++)
+        message(Windows x86_64 G++)
 
-        SOURCES += cryptography/botan/windows/mingw/x64/botan_all.cpp
-        HEADERS += cryptography/botan/windows/mingw/x64/botan_all.h \
-                   cryptography/botan/windows/mingw/x64/botan_all_internal.h
+        SOURCES += cryptography/botan/windows/mingw/x86_64/botan_all.cpp
+        HEADERS += cryptography/botan/windows/mingw/x86_64/botan_all.h \
+                   cryptography/botan/windows/mingw/x86_64/botan_all_internal.h
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/mingw/x64/debug/
+          DESTDIR = ../build/win/mingw/x86_64/debug/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/mingw/x64/release/
+          DESTDIR = ../build/win/mingw/x86_64/release/
         }
       } else {
         message(Windows x86 G++)
@@ -222,33 +223,33 @@ android-g++ {
 
     win32-msvc {
       contains(QT_ARCH, x86_64) {
-        message(Windows x64 MSVC 2015)
+        message(Windows x86_64 MSVC)
 
-        SOURCES += cryptography/botan/windows/msvc/botan_all.cpp
-        HEADERS += cryptography/botan/windows/msvc/x64/botan_all.h \
-                   cryptography/botan/windows/msvc/x64/botan_all_internal.h
+        SOURCES += cryptography/botan/windows/msvc/x86_64/botan_all.cpp
+        HEADERS += cryptography/botan/windows/msvc/x86_64/botan_all.h \
+                   cryptography/botan/windows/msvc/x86_64/botan_all_internal.h
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/msvc-2015/x64/debug/
+          DESTDIR = ../build/win/msvc/x86_64/debug/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/msvc-2015/x64/release/
+          DESTDIR = ../build/win/msvc/x86_64/release/
         }
       } else {
-        message(Windows x86 MSVC 2015)
+        message(Windows x86 MSVC)
         SOURCES += cryptography/botan/windows/msvc/x86/botan_all.cpp
         HEADERS += cryptography/botan/windows/msvc/x86/botan_all.h \
                    cryptography/botan/windows/msvc/x86/botan_all_internal.h
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/x86/msvc-2015/debug/
+          DESTDIR = ../build/win/msvc/x86/debug/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/msvc-2015/x86/release/
+          DESTDIR = ../build/win/msvc/x86/release/
         }
       }
     }
