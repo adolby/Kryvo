@@ -5,7 +5,7 @@ branches:
   only:
   - master
 before_install:
-- brew update
+- brew update >/dev/null
 install:
 - brew install -v qt5
 - chmod -R 755 /usr/local/opt/qt5/*
@@ -17,7 +17,7 @@ script:
 - cd tests
 - /usr/local/opt/qt5/bin/qmake
 - make
-- cd ../../build/macx/x64/release/test/
+- cd ../../build/macx/clang/x86_64/release/test/
 - open CryptoTests.app
 before_deploy:
 - cd ..
