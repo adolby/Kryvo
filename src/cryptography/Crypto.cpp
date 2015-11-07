@@ -19,34 +19,76 @@ int64_t stoll(const string& str)
 }
 #endif
 
+/*!
+ * \brief removeExtension Attempts to return the file name string input
+ * without the last extension. It's used to extract an extension to determine
+ * a decrypted file name.
+ * \param fileName String representing the file name.
+ * \param extension String representing the extension to remove from the
+ * file name.
+ * \return String representing a file name without an extension.
+ */
+QString removeExtension(const QString& fileName, const QString& extension)
+{
+  QFileInfo file{fileName};
+  QString newFileName = fileName;
+
+  if (file.suffix() == extension)
+  {
+    newFileName = file.absolutePath() % QDir::separator() %
+                  file.completeBaseName();
+  }
+
+  return newFileName;
+}
+
+/*!
+ * \brief uniqueFileName Returns a unique file name from the input file name
+ * by appending numbers, if necessary.
+ * \param fileName String representing the file name that will be tested
+ * for uniqueness.
+ * \return String representing a unique file name created from the input file
+ * name.
+ */
+QString uniqueFileName(const QString& fileName)
+{
+  QFileInfo originalFile{fileName};
+  QString uniqueFileName = fileName;
+
+  auto foundUniqueFileName = false;
+  auto i = 0;
+
+  while (!foundUniqueFileName && i < 100000)
+  {
+    QFileInfo uniqueFile{uniqueFileName};
+
+    if (uniqueFile.exists() && uniqueFile.isFile())
+    { // Write number of copies before file extension
+      uniqueFileName = originalFile.absolutePath() % QDir::separator() %
+                       originalFile.baseName() % QString{" (%1)"}.arg(i + 2);
+
+      if (!originalFile.completeSuffix().isEmpty())
+      { // Add the file extension if there is one
+        uniqueFileName += QStringLiteral(".") % originalFile.completeSuffix();
+      }
+
+      ++i;
+    }
+    else
+    {
+      foundUniqueFileName = true;
+    }
+  }
+
+  return uniqueFileName;
+}
+
 class Crypto::CryptoPrivate {
  public:
   /*!
    * \brief CryptoPrivate Constructs the Crypto private implementation.
    */
   CryptoPrivate();
-
-  /*!
-   * \brief removeExtension Attempts to return the file name string input
-   * without the last extension. It's used to extract an extension to determine
-   * a decrypted file name.
-   * \param fileName String representing the file name.
-   * \param extension String representing the extension to remove from the
-   * file name.
-   * \return String representing a file name without an extension.
-   */
-  QString removeExtension(const QString& fileName,
-                          const QString& extension) const;
-
-  /*!
-   * \brief uniqueFileName Returns a unique file name from the input file name
-   * by appending numbers, if necessary.
-   * \param fileName String representing the file name that will be tested
-   * for uniqueness.
-   * \return String representing a unique file name created from the input file
-   * name.
-   */
-  QString uniqueFileName(const QString& fileName) const;
 
   /*!
    * \brief resetFlags Resets the status flags, except pause, to default values.
@@ -427,11 +469,11 @@ void Crypto::decryptFile(const QString& passphrase,
     Botan::InitializationVector iv{kdf->derive_key(ivSize, pbkdfKey, ivSalt)};
 
     // Remove the .enc extension if it's in the file name
-    const auto outputFileName = m->removeExtension(inputFileName,
-                                                   QStringLiteral("enc"));
+    const auto outputFileName = removeExtension(inputFileName,
+                                                QStringLiteral("enc"));
 
     // Create a unique file name for the file in this directory
-    auto uniqueOutputFileName = m->uniqueFileName(outputFileName);
+    auto uniqueOutputFileName = uniqueFileName(outputFileName);
 
     std::ofstream out{uniqueOutputFileName.toStdString(), std::ios::binary};
 
@@ -536,54 +578,6 @@ Crypto::CryptoPrivate::CryptoPrivate()
 {
   // Reserve elements to improve dictionary performance
   stopped.reserve(100);
-}
-
-QString Crypto::CryptoPrivate::removeExtension(const QString& fileName,
-                                               const QString& extension) const
-{
-  QFileInfo file{fileName};
-  QString newFileName = fileName;
-
-  if (file.suffix() == extension)
-  {
-    newFileName = file.absolutePath() % QDir::separator() %
-                  file.completeBaseName();
-  }
-
-  return newFileName;
-}
-
-QString Crypto::CryptoPrivate::uniqueFileName(const QString& fileName) const
-{
-  QFileInfo originalFile{fileName};
-  QString uniqueFileName = fileName;
-
-  auto foundUniqueFileName = false;
-  auto i = 0;
-
-  while (!foundUniqueFileName && i < 100000)
-  {
-    QFileInfo uniqueFile{uniqueFileName};
-
-    if (uniqueFile.exists() && uniqueFile.isFile())
-    { // Write number of copies before file extension
-      uniqueFileName = originalFile.absolutePath() % QDir::separator() %
-                       originalFile.baseName() % QString{" (%1)"}.arg(i + 2);
-
-      if (!originalFile.completeSuffix().isEmpty())
-      { // Add the file extension if there is one
-        uniqueFileName += QStringLiteral(".") % originalFile.completeSuffix();
-      }
-
-      ++i;
-    }
-    else
-    {
-      foundUniqueFileName = true;
-    }
-  }
-
-  return uniqueFileName;
 }
 
 void Crypto::CryptoPrivate::abort(const bool abort)
