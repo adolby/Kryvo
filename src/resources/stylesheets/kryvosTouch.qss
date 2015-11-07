@@ -1,0 +1,152 @@
+/*
+    Kryvos File Encryptor - Encrypts and decrypts files.
+    Copyright (C) 2014 Andrew Dolby
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contact : andrewdolby@gmail.com
+*/
+
+/*--------- Main window ---------*/
+QMainWindow {
+  background-color: black;
+  margin: 0;
+  padding: 0;
+}
+
+/*--------- Layout containers ---------*/
+QFrame#mainFrame {
+  background-color: black;
+  margin: 0;
+  padding: 0;
+}
+
+QFrame#headerFrame {
+  background-color: #34495e;
+}
+
+QFrame#contentFrame {
+  background-color: #34495e;
+  margin: 0;
+  padding: 0;
+}
+
+QFrame#passwordFrame {
+  background-color: #2980b9;
+  border-color: #2980b9;
+  border-width: 2px;
+}
+
+QFrame#buttonFrame {
+  background-color: #27ae60;
+  border-color: #2980b9;
+  border-width: 2px;
+}
+
+/*--------- Buttons ---------*/
+#cryptButton {
+  color: white;
+  background-color: #2980b9;
+  font-size: 75px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
+
+#cryptButton:pressed {
+  background-color: #3498db;
+}
+
+#addButton {
+  color: white;
+  background-color: #27ae60;
+  font-size: 70px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
+
+#addButton:pressed {
+  background-color: #2ecc71;
+}
+
+#clearButton {
+  color: white;
+  background-color: #c0392b;
+  font-size: 70px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
+
+#clearButton:pressed {
+  background-color: #e74c3c;
+}
+
+#pauseButton {
+  color: white;
+  background-color: #2980b9;
+  font-size: 70px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
+
+#pauseButton:checked {
+  background-color: #3498db;
+}
+
+/*--------- Password Line Edit ---------*/
+QLineEdit#passwordLineEdit {
+  font-size: 70px;
+}
+
+/*--------- Text ---------*/
+QLabel#text {
+  color: white;
+  font-size: 70px;
+}
+
+#message {
+  color: white;
+  background-color: #4b77be;
+  font-size: 50px;
+  border: none;
+}
+
+/*--------- File list view ---------*/
+QTableView {
+  font-size: 50px;
+}
+
+QTableView::item {
+  border: 0px;
+  padding-left: 5px;
+  padding-right: 50px;
+}
+
+QTableView::item:selected:!active {
+  color: black;
+  background-color: white;
+}
+
+QTableView::item:selected:active {
+  color: black;
+  background-color: white;
+}
+
+QTableView::item:hover {
+  color: black;
+  background-color: white;
+}

@@ -1,0 +1,28 @@
+ï»¿IDI_ICON1 ICON DISCARDABLE "kryvos.ico"
+
+#include <windows.h>
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     0,9,3,0
+PRODUCTVERSION  0,9,3,0
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName",        "The Kryvos project"
+            VALUE "FileDescription",    "Kryvos File Encryptor"
+            VALUE "FileVersion",        "0.9.3.0"
+            VALUE "InternalName",       "kryvos"
+            VALUE "LegalCopyright",     "Copyright © 2014 The Kryvos project"
+            VALUE "OriginalFilename",   "kryvos.exe"
+            VALUE "ProductName",        "Kryvos"
+            VALUE "ProductVersion",     "0.9.3.0"
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
