@@ -1,9 +1,6 @@
 language: cpp
 os: osx
 compiler: clang
-branches:
-  only:
-  - master
 before_install:
 - brew update >/dev/null
 install:
