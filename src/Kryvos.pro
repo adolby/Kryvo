@@ -221,7 +221,7 @@ android-g++ {
       }
     }
 
-    win32-msvc {
+    win32-msvc2013 {
       contains(QT_ARCH, x86_64) {
         message(Windows x86_64 MSVC)
 
