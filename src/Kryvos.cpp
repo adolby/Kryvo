@@ -10,6 +10,10 @@
 #include "utility/pimpl_impl.h"
 #include <QThread>
 
+#if defined(_MSC_VER)
+#include "utility/make_unique.h"
+#endif
+
 /*!
  * \brief KryvosPrivate class
  */

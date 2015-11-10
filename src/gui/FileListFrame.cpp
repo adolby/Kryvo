@@ -12,6 +12,10 @@
 #include <QStringBuilder>
 #include <QString>
 
+#if defined(_MSC_VER)
+#include "utility/make_unique.h"
+#endif
+
 class FileListFrame::FileListFramePrivate {
  public:
   /*!

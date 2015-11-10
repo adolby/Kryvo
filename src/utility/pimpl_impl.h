@@ -1,6 +1,10 @@
 #ifndef KRYVOS_UTILITY_PIMPL_IMPL_H_
 #define KRYVOS_UTILITY_PIMPL_IMPL_H_
 
+#if defined(_MSC_VER)
+#include "utility/make_unique.h"
+#endif
+
 #include <memory>
 #include <utility>
 
