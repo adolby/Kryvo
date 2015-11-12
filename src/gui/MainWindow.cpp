@@ -22,6 +22,7 @@
 #include <QStringRef>
 #include <QStringBuilder>
 #include <QString>
+#include <initializer_list>
 
 class MainWindow::MainWindowPrivate {
  public:
@@ -328,10 +329,11 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
 
 MainWindow::MainWindowPrivate::MainWindowPrivate()
   : settings{nullptr},
-    messages{tr("A password is required to encrypt or decrypt files. Please "
-                "enter one to continue."),
-             tr("Encryption/decryption is already in progress. Please wait "
-                "until the current operation finishes.")},
+    messages(std::initializer_list<QString>(
+             {tr("A password is required to encrypt or decrypt files. Please "
+                 "enter one to continue."),
+              tr("Encryption/decryption is already in progress. Please wait "
+                 "until the current operation finishes.")})),
     busyStatus{false} {}
 
 void MainWindow::MainWindowPrivate::busy(const bool busy)
