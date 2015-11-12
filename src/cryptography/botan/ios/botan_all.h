@@ -29,8 +29,8 @@
 #include <vector>
 
 /*
-* This file was automatically generated Thu Nov  5 21:28:05 2015 UTC by
-* andrew@Andrews-MBP running 'configure.py --cpu=armv7 --cc=clang --via-amalgamation --minimized-build --enable-modules=aes,base,base64,dev_random,eax,filters,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd'
+* This file was automatically generated Wed Nov 11 21:47:13 2015 UTC by
+* andrew@Andrews-MBP running 'configure.py --cpu=armv7 --cc=clang --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,dev_random,eax,filters,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd'
 *
 * Target
 *  - Compiler: clang++  -pthread -std=c++11 -D_REENTRANT -fstack-protector -O3
@@ -55,7 +55,7 @@
 #define BOTAN_LIB_LINK ""
 
 #ifndef BOTAN_DLL
-  #define BOTAN_DLL __attribute__((visibility("default")))
+  #define BOTAN_DLL 
 #endif
 
 /* How much to allocate for a buffer of no particular size */
