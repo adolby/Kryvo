@@ -8356,9 +8356,9 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    don't count it for much in terms of contributed entropy.
    */
    accum.add(GetTickCount(), 0);
-   accum.add(GetMessagePos(), 0);
-   accum.add(GetMessageTime(), 0);
-   accum.add(GetInputState(), 0);
+//   accum.add(GetMessagePos(), 0);
+//   accum.add(GetMessageTime(), 0);
+//   accum.add(GetInputState(), 0);
    accum.add(GetCurrentProcessId(), 0);
    accum.add(GetCurrentThreadId(), 0);
 
@@ -8370,12 +8370,12 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    GlobalMemoryStatus(&mem_info);
    accum.add(mem_info, 1);
 
-   POINT point;
-   GetCursorPos(&point);
-   accum.add(point, 1);
+//   POINT point;
+//   GetCursorPos(&point);
+//   accum.add(point, 1);
 
-   GetCaretPos(&point);
-   accum.add(point, 1);
+//   GetCaretPos(&point);
+//   accum.add(point, 1);
 
    LARGE_INTEGER perf_counter;
    QueryPerformanceCounter(&perf_counter);
