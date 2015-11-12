@@ -29,8 +29,8 @@
 #include <vector>
 
 /*
-* This file was automatically generated Thu Nov  5 18:49:46 2015 UTC by
-* andrew@ANDREWDOLBY32A7 running 'configure.py --cpu=x64 --cc=msvc --via-amalgamation --minimized-build --enable-modules=aes,base,base64,eax,filters,gcm,kdf2,keccak,pbkdf2,serpent,serpent_simd,win32_stats'
+* This file was automatically generated Wed Nov 11 21:33:20 2015 UTC by
+* andrew@ANDREWDOLBY32A7 running 'configure.py --cpu=x64 --cc=msvc --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,eax,filters,gcm,kdf2,keccak,pbkdf2,serpent,serpent_simd,win32_stats'
 *
 * Target
 *  - Compiler: cl  /MD /bigobj /EHs /GR /O2
@@ -55,7 +55,7 @@
 #define BOTAN_LIB_LINK "user32.lib"
 
 #ifndef BOTAN_DLL
-  #define BOTAN_DLL __declspec(dllimport)
+  #define BOTAN_DLL 
 #endif
 
 /* How much to allocate for a buffer of no particular size */

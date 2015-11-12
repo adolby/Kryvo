@@ -29,13 +29,13 @@
 #include <vector>
 
 /*
-* This file was automatically generated Thu Nov  5 21:29:03 2015 UTC by
-* andrew@Andrews-MBP running 'configure.py --cpu=armv5te --via-amalgamation --minimized-build --enable-modules=aes,base,base64,dev_random,eax,filters,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd'
+* This file was automatically generated Wed Nov 11 21:43:39 2015 UTC by
+* andrew@Andrews-MBP running 'configure.py --cpu=armv5te --os=linux --via-amalgamation --minimized-build --enable-modules=aes,base,base64,dev_random,eax,filters,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd'
 *
 * Target
-*  - Compiler: clang++  -pthread -std=c++11 -D_REENTRANT -fstack-protector -O3
+*  - Compiler: g++  -pthread -fstack-protector -std=c++11 -D_REENTRANT -O2 -march=armv5te
 *  - Arch: armv5te/arm32
-*  - OS: darwin
+*  - OS: linux
 */
 
 #define BOTAN_VERSION_MAJOR 1
@@ -146,12 +146,13 @@
 #endif
 
 /* Target identification and feature test macros */
-#define BOTAN_TARGET_OS_IS_DARWIN
+#define BOTAN_TARGET_OS_IS_LINUX
+#define BOTAN_TARGET_OS_HAS_CLOCK_GETTIME
 #define BOTAN_TARGET_OS_HAS_DLOPEN
 #define BOTAN_TARGET_OS_HAS_GETSID
 #define BOTAN_TARGET_OS_HAS_GETTIMEOFDAY
 #define BOTAN_TARGET_OS_HAS_GMTIME_R
-#define BOTAN_TARGET_OS_HAS_MEMSET_S
+#define BOTAN_TARGET_OS_HAS_POSIX_MLOCK
 #define BOTAN_TARGET_OS_HAS_READDIR
 #define BOTAN_TARGET_OS_HAS_TIMEGM
 
@@ -168,7 +169,7 @@
   #define BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS
 #endif
 
-#define BOTAN_BUILD_COMPILER_IS_CLANG
+#define BOTAN_BUILD_COMPILER_IS_GCC
 
 #if defined(_MSC_VER)
   // 4250: inherits via dominance (diamond inheritence issue)
