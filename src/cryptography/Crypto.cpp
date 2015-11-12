@@ -560,8 +560,8 @@ void Crypto::executeCipher(const QString& inputFileName,
 Crypto::CryptoPrivate::CryptoPrivate()
   : settings{nullptr},
     // ToDo: Parentheses for initialization here is a workaround for VS 2013
-    messages(std::initializer_list<QString>({
-              tr("File %1 encrypted."),
+    messages(std::initializer_list<QString>(
+             {tr("File %1 encrypted."),
               tr("File %1 decrypted."),
               tr("Encryption stopped. File %1 is incomplete."),
               tr("Decryption stopped. File %1 is incomplete."),
