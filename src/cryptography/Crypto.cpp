@@ -558,7 +558,8 @@ void Crypto::executeCipher(const QString& inputFileName,
 
 Crypto::CryptoPrivate::CryptoPrivate()
   : settings{nullptr},
-    messages{tr("File %1 encrypted."),
+    // ToDo: Parentheses for initialization here is a workaround for VS 2013
+    messages(tr("File %1 encrypted."),
              tr("File %1 decrypted."),
              tr("Encryption stopped. File %1 is incomplete."),
              tr("Decryption stopped. File %1 is incomplete."),
@@ -573,7 +574,7 @@ Crypto::CryptoPrivate::CryptoPrivate()
                 "read."),
              tr("Error: Encryption failed. Can't encrypt file %1. Check that "
                 "this file exists and that you have permission to access it "
-                "and try again.")},
+                "and try again.")),
     aborted{false}, paused{false}, busyStatus{false}
 {
   // Reserve elements to improve dictionary performance
