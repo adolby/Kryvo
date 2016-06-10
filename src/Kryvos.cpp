@@ -9,6 +9,7 @@
 #include "settings/Settings.hpp"
 #include "utility/pimpl_impl.h"
 #include <QThread>
+#include <memory>
 
 #if defined(_MSC_VER)
 #include "utility/make_unique.h"
