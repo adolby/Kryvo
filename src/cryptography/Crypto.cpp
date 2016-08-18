@@ -7,7 +7,6 @@
 #include <QStringBuilder>
 #include <string>
 #include <atomic>
-#include <initializer_list>
 
 #if defined(Q_OS_ANDROID)
 namespace std {
@@ -216,18 +215,17 @@ void Crypto::encrypt(const QString& passphrase,
   {
     try
     {
-      this->encryptFile(passphrase, inputFileName, algorithmName, keySize);
+      encryptFile(passphrase, inputFileName, algorithmName, keySize);
 
-      if (m->isAborted())
-      { // Reset abort flag
-        m->abort(false);
-        emit errorMessage(inputFileName, m->messages[2].arg(inputFileName));
-        break;
-      }
-
-      if (m->isStopped(inputFileName))
+      if (m->isAborted() || m->isStopped(inputFileName))
       {
         emit errorMessage(inputFileName, m->messages[2].arg(inputFileName));
+
+        if (m->isAborted())
+        {
+          m->abort(false);
+          break;
+        }
       }
     }
     catch (const Botan::Stream_IO_Error&)
@@ -259,10 +257,11 @@ void Crypto::decrypt(const QString& passphrase,
   {
     try
     {
-      this->decryptFile(passphrase, inputFileName);
+      decryptFile(passphrase, inputFileName);
 
       if (m->isAborted())
-      {
+      { // Reset abort flag
+        m->abort(false);
         emit errorMessage(inputFileName, m->messages[3].arg(inputFileName));
         break;
       }
@@ -395,8 +394,8 @@ void Crypto::encryptFile(const QString& passphrase,
     out << Botan::base64_encode(&keySalt[0], keySalt.size()) << std::endl;
     out << Botan::base64_encode(&ivSalt[0], ivSalt.size()) << std::endl;
 
-    this->executeCipher(inputFileName, algorithmNameStd, key, iv,
-                        Botan::ENCRYPTION, in, out);
+    executeCipher(inputFileName, algorithmNameStd, key, iv,
+                  Botan::ENCRYPTION, in, out);
 
     if (!m->isAborted() && !m->isStopped(inputFileName))
     {
@@ -478,8 +477,8 @@ void Crypto::decryptFile(const QString& passphrase,
 
     std::ofstream out{uniqueOutputFileName.toStdString(), std::ios::binary};
 
-    this->executeCipher(inputFileName, algorithmNameStd, key, iv,
-                        Botan::DECRYPTION, in, out);
+    executeCipher(inputFileName, algorithmNameStd, key, iv,
+                  Botan::DECRYPTION, in, out);
 
     if (!m->isAborted() && !m->isStopped(inputFileName))
     {
@@ -559,24 +558,22 @@ void Crypto::executeCipher(const QString& inputFileName,
 
 Crypto::CryptoPrivate::CryptoPrivate()
   : settings{nullptr},
-    // ToDo: Parentheses for initialization here is a workaround for VS 2013
-    messages(std::initializer_list<QString>(
-             {tr("File %1 encrypted."),
-              tr("File %1 decrypted."),
-              tr("Encryption stopped. File %1 is incomplete."),
-              tr("Decryption stopped. File %1 is incomplete."),
-              tr("Error: File %1 couldn't be read."),
-              tr("Error: Decryption failed. Wrong password entered or file %1 "
-                 "has changed since it was created. This could mean someone "
-                 "has tampered with the file. It also could mean the file has "
-                 "become corrupted. You'll need to encrypt the source file "
-                 "again."),
-              tr("Error: File %1's header is not recognized."),
-              tr("Error: Decryption failed. File %1's header couldn't be "
-                 "read."),
-              tr("Error: Encryption failed. Can't encrypt file %1. Check that "
-                 "this file exists and that you have permission to access it "
-                 "and try again.")})),
+    messages{tr("File %1 encrypted."),
+             tr("File %1 decrypted."),
+             tr("Encryption stopped. File %1 is incomplete."),
+             tr("Decryption stopped. File %1 is incomplete."),
+             tr("Error: File %1 couldn't be read."),
+             tr("Error: Decryption failed. Wrong password entered or file %1 "
+                "has changed since it was created. This could mean someone "
+                "has tampered with the file. It also could mean the file has "
+                "become corrupted. You'll need to encrypt the source file "
+                "again."),
+             tr("Error: File %1's header is not recognized."),
+             tr("Error: Decryption failed. File %1's header couldn't be "
+                "read."),
+             tr("Error: Encryption failed. Can't encrypt file %1. Check that "
+                "this file exists and that you have permission to access it "
+                "and try again.")},
     aborted{false}, paused{false}, busyStatus{false}
 {
   // Reserve elements to improve dictionary performance
