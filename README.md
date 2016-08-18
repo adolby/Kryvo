@@ -6,17 +6,24 @@ Latest version: v0.9.9.1
 
 ##Getting Started
 
-To install Krvyos, run the installer executable or extract the files from the Kryvos archive. Once the install files are copied, run the Kryvos executable. Add files by clicking/tapping the Add Files button and selecting them in the dialog or by dragging and dropping files to the Kryvos window. Click encrypt or decrypt to process the entire list. Files are encrypted/decrypted one-to-one, meaning that encryption of a "file.txt" will yield an encrypted "file.txt.enc" and decryption of "file.txt.enc" will yield a decrypted "file (2).txt" (or with a larger number appended: Kryvos will not overwrite your existing files).
+To install Krvyos, run the installer executable or extract the files from the Kryvos archive. Once the install files are copied, run the Kryvos executable.
+
+Add files by clicking/tapping the Add Files button and selecting them in the dialog or by dragging and dropping files to the Kryvos window. Click encrypt or decrypt to process the entire list.
+
+Files are encrypted/decrypted one-to-one, meaning that encryption of a "file.txt" will yield an encrypted "file.txt.enc" and decryption of "file.txt.enc" will yield a decrypted "file (2).txt".
 
 ##Theming
 
-Kryvos supports user theming. To create your own theme, start with the kryvos.qss file in the themes directory as your template. The kryvos.qss file is a stylesheet file that has syntax very similar to CSS. Colors, fonts, and many other attributes can be styled. Save your stylesheet file inside of the themes folder. To apply your theme to Kryvos, edit the settings.ini file located in the same directory as kryvos.exe. Change the value styleSheetPath to your newly created stylesheet file.
+Kryvos supports user theming. To create your own theme, start with the kryvos.qss file in the themes directory as your template. The kryvos.qss file is a stylesheet file that has syntax very similar to CSS.
+
+Colors, fonts, and many other attributes can be styled. Save your stylesheet file inside of the themes folder. To apply your theme to Kryvos, edit the settings.ini file located in the same directory as kryvos.exe. Change the value styleSheetPath to your newly created stylesheet file.
 
 Example: You created a new theme and saved the stylesheet to myTheme.qss in the themes folder. You would then update settings.json with this value: styleSheetPath: myTheme.qss
 
 ##Licenses
 
 Kryvos is licensed under the MIT License. Read the Kryvos License file for more information about the license.
+
 Kryvos source code and binaries are available on GitHub at https://github.com/adolby/Kryvos.
 
 Botan is licensed under the Simplified BSD License. Read the Botan License file for more information about the license. The license file can also be found at http://botan.randombit.net/license.txt.
