@@ -77,6 +77,7 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
 
   headerFrame = new HeaderFrame{contentFrame};
   headerFrame->setObjectName(QStringLiteral("headerFrame"));
+  headerFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
   fileListFrame = new FileListFrame{contentFrame};
   fileListFrame->setObjectName(QStringLiteral("fileListFrame"));

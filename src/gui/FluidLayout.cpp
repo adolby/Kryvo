@@ -7,9 +7,7 @@ FluidLayout::FluidLayout(QWidget* parent, int margin,
 
 FluidLayout::FluidLayout(int margin, int hSpacing, int vSpacing)
   : FlowLayout{margin, hSpacing, vSpacing}, lineCount{1}
-{
-  setContentsMargins(margin, margin, margin, margin);
-}
+{}
 
 int FluidLayout::heightForWidth(int width) const
 {
@@ -26,23 +24,35 @@ void FluidLayout::setGeometry(const QRect& rect)
 
 QSize FluidLayout::minimumSize() const
 {
-  QSize size{};
+  auto largestChildSize = QSize{};
 
   for (const auto& item : itemList)
   {
-    size = size.expandedTo(item->minimumSize());
+    largestChildSize = largestChildSize.expandedTo(item->sizeHint());
   }
 
-  // Account for number of lines
-  size.setHeight(size.height() * lineCount);
-  size += QSize{2 * lineCount * margin(), 2 * lineCount * margin()};
+  auto left = 0;
+  auto top = 0;
+  auto right = 0;
+  auto bottom = 0;
+  getContentsMargins(&left, &top, &right, &bottom);
+  const auto margin = left;
 
-  return size;
+  const auto margins = QSize{2 * margin,
+                             (lineCount + 1) * margin};
+  const auto minSize = QSize{largestChildSize.width(),
+                             lineCount * largestChildSize.height()} +
+                       margins;
+
+  return minSize;
 }
 
 void FluidLayout::doLayout(const QRect& rect)
 {
-  int left, top, right, bottom;
+  auto left = 0;
+  auto top = 0;
+  auto right = 0;
+  auto bottom = 0;
   getContentsMargins(&left, &top, &right, &bottom);
   auto effectiveRect = rect.adjusted(+left, +top, -right, -bottom);
   auto x = effectiveRect.x();
@@ -97,12 +107,15 @@ void FluidLayout::doLayout(const QRect& rect)
 
 int FluidLayout::checkLayout(const QRect& rect) const
 {
-  int left, top, right, bottom;
+  auto left = 0;
+  auto top = 0;
+  auto right = 0;
+  auto bottom = 0;
   getContentsMargins(&left, &top, &right, &bottom);
   auto effectiveRect = rect.adjusted(+left, +top, -right, -bottom);
   auto x = effectiveRect.x();
   auto y = effectiveRect.y();
-  int lineHeight = 0;
+  auto lineHeight = 0;
 
   for (const auto& item : itemList)
   {
