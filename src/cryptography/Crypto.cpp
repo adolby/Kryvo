@@ -464,7 +464,7 @@ void Crypto::decryptFile(const QString& passphrase,
     Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes, pbkdfKey, keySalt)};
 
     Botan::secure_vector<Botan::byte> ivSalt =
-        Botan::base64_decode(ivSaltString);
+      Botan::base64_decode(ivSaltString);
     const auto ivSize = static_cast<std::size_t>(256);
     Botan::InitializationVector iv{kdf->derive_key(ivSize, pbkdfKey, ivSalt)};
 
