@@ -2,8 +2,6 @@ sudo: false
 language: cpp
 os: osx
 compiler: clang
-env:
-- VERSION=$(head -n1 VERSION)
 before_install:
 - brew update
 install:
@@ -22,19 +20,18 @@ script:
 before_deploy:
 - cd ..
 - /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
-- mv Kryvos.dmg Kryvos_0.9.9.dmg
+- mv Kryvos.dmg Kryvos_$(TRAVIS_TAG).dmg
 deploy:
   provider: releases
   api_key:
     secure: MBeWMiNMlHhvIoTe8XVy0kV8Aqzd79YqPjh6Bee7T6f2ERp+BnQKxuBex/Czp9iNAcXjsv1IURllbLdSoEf0x+9gmOb/WdNdDUyQFW9USR2RP6VPY01nZ59XkYcEInvzpi0Bzy/P8xzg6M13inCSBEX1KDVF73agYBb7Pkr2sM4=
-  file: Kryvos_$VERSION.dmg
+  file: Kryvos_$(TRAVIS_TAG).dmg
   skip_cleanup: true
   on:
-    branch: master
     tags: true
 notifications:
   email:
     recipients:
     - andrewdolby@gmail.com
     on_success: change
-    on_failure: always
+    on_failure: change
