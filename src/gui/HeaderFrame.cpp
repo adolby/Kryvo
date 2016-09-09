@@ -25,9 +25,6 @@ class HeaderFrame::HeaderFramePrivate {
 HeaderFrame::HeaderFrame(QWidget* parent)
   : QFrame{parent}
 {
-  auto headerLabel = new QLabel{tr("Kryvos"), this};
-  headerLabel->setObjectName(QStringLiteral("headerText"));
-
   auto buttonFrame = new QFrame{this};
 
   const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
@@ -62,8 +59,6 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   buttonLayout->addWidget(m->settingsButton);
 
   auto headerLayout = new QHBoxLayout{this};
-  headerLayout->addWidget(headerLabel, 0);
-  headerLayout->addSpacing(20);
   headerLayout->addWidget(buttonFrame, 1);
   headerLayout->setContentsMargins(10, 0, 0, 0);
 
