@@ -1,45 +1,39 @@
 branches:
-  only:
-    - master
-    - develop
+  except:
+    - gh-pages
+
+image: Visual Studio 2015
 
 environment:
   matrix:
   # MSVC x86
   - name: win32
     platform: amd64_x86
-    qt: 5.5\msvc2013
-    suffix: msvc2013
-
-  # MSVC x64
+    qt: 5.7\msvc2015
+    suffix: msvc2015
+    # MSVC x64
   - name: win64
     platform: amd64
-    qt: 5.5\msvc2013_64
-    suffix: msvc2013
+    qt: 5.7\msvc2015_64
+    suffix: msvc2015
 
-  # MinGW
-  # - name: win32
-  #   platform: mingw
-  #   qt: 5.5\mingw492_32
-  #   suffix: mingw
+matrix:
+  fast_finish: true
 
 init:
   - set PATH=C:\Qt\%qt%\bin;%PATH%
-  - if %platform%==mingw set PATH=C:\Qt\Tools\mingw492_32\bin;%PATH%
-  - if not %platform%==mingw call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %platform%
-  - if not %platform%==mingw (set makefiles="NMake Makefiles") else (set makefiles="MinGW Makefiles")
 
 before_build:
   - cd src
 
 build_script:
   - C:\Qt\%qt%\bin\qmake
-  - if not %platform%==mingw (nmake) else (mingw32-make)
+  - nmake
 
 after_build:
   - if %platform%==amd64 (cd build/win/msvc/x86_64) else (cd build/win/msvc/x86)
   - windeployqt
-  - if %platform%==amd64 (7z a kryvos_0.9.9_win_x86_64.zip *.*) else (7z a kryvos_0.9.9_win_x86.zip *.*)
+  - if %platform%==amd64 (7z a kryvos-0.9.9_win_x86_64.zip *.*) else (7z a kryvos_0.9.9_win_x86.zip *.*)
 
 test_script:
   - cd tests
@@ -60,9 +54,10 @@ deploy:
   provider: GitHub
   auth_token:
     secure: MBeWMiNMlHhvIoTe8XVy0kV8Aqzd79YqPjh6Bee7T6f2ERp+BnQKxuBex/Czp9iNAcXjsv1IURllbLdSoEf0x+9gmOb/WdNdDUyQFW9USR2RP6VPY01nZ59XkYcEInvzpi0Bzy/P8xzg6M13inCSBEX1KDVF73agYBb7Pkr2sM4=
-  artifact: kryvos_0.9.9_*.exe
+  artifact: /.*\.zip/
   draft: false
-  prerelease: true
+  prerelease: false
+  force_update: true
   on:
-    branch: master                 # release from master branch only
-    appveyor_repo_tag: true        # deploy on tag push only
+    branch: master
+    appveyor_repo_tag: true # deploy on tag push only
