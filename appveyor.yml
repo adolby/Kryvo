@@ -3,7 +3,7 @@ image: Visual Studio 2015
 environment:
   matrix:
   - QT: C:\Qt\5.7\msvc2015
-    PLATFORM: amd64_86
+    PLATFORM: amd64_x86
     VSVER: 14
   - QT: C:\Qt\5.7\msvc2015_64
     PLATFORM: amd64
