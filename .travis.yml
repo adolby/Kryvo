@@ -26,7 +26,7 @@ deploy:
   provider: releases
   api_key:
     secure: MBeWMiNMlHhvIoTe8XVy0kV8Aqzd79YqPjh6Bee7T6f2ERp+BnQKxuBex/Czp9iNAcXjsv1IURllbLdSoEf0x+9gmOb/WdNdDUyQFW9USR2RP6VPY01nZ59XkYcEInvzpi0Bzy/P8xzg6M13inCSBEX1KDVF73agYBb7Pkr2sM4=
-  file: Kryvos_"$TRAVIS_TAG".dmg
+  file: Kryvos_$TRAVIS_TAG.dmg
   skip_cleanup: true
   on:
     tags: true
