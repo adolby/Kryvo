@@ -19,7 +19,7 @@ init:
   - set PATH=%QT%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
 
 before_build:
-  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
   - cd src
 
 build_script:
@@ -54,5 +54,4 @@ deploy:
     prerelease: false
     force_update: true
     on:
-      branch: master
       appveyor_repo_tag: true # deploy on tag push only
