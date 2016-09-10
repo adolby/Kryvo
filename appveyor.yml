@@ -27,7 +27,7 @@ build_script:
   - nmake
 
 after_build:
-  - if %PLATFORM%==amd64 (cd build/win/msvc/x86_64) else (cd build/win/msvc/x86)
+  - if %PLATFORM%==amd64 (cd build/win/msvc/x86_64/) else (cd build/win/msvc/x86/)
   - windeployqt
   - if %PLATFORM%==amd64 (7z a kryvos-%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip *.*) else (7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86.zip *.*)
 
@@ -35,7 +35,7 @@ test_script:
   - cd tests
   - qmake
   - nmake
-  - cd ../../build/macx/clang/x86_64/release/test/
+  - if %PLATFORM%==amd64 (cd ../../build/win/msvc/x86_64/release/test/) else (cd ../../build/win/msvc/x86/release/test/)
   - CryptoTests
 
 artifacts:
