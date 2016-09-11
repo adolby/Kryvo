@@ -3,7 +3,7 @@ language: cpp
 os: osx
 compiler: clang
 before_install:
-- echo "$TRAVIS_TAG"
+- echo $TRAVIS_TAG
 - brew update
 install:
 - brew install -v qt5
@@ -21,7 +21,7 @@ script:
 before_deploy:
 - cd ..
 - /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
-- mv Kryvos.dmg Kryvos_"$TRAVIS_TAG".dmg
+- mv Kryvos.dmg Kryvos_$TRAVIS_TAG.dmg
 deploy:
   provider: releases
   api_key:
