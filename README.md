@@ -20,15 +20,13 @@ Example: You created a new theme and saved the stylesheet to myTheme.qss in the 
 
 ##Licenses
 
-Kryvos is licensed under the MIT License. Read the Kryvos License file for more information about the license.
+Kryvos is licensed under the MIT License. Read the LICENSE file or go to https://opensource.org/licenses/MIT for more information about the license.
 
-Kryvos source code and binaries are available on GitHub at https://github.com/adolby/Kryvos.
+Botan is licensed under the Simplified BSD License. Read the Botan License file for more information about the license. The license file can also be found at https://botan.randombit.net/license.txt.
+Botan source code is available at https://botan.randombit.net/download.html.
 
-Botan is licensed under the Simplified BSD License. Read the Botan License file for more information about the license. The license file can also be found at http://botan.randombit.net/license.txt.
-Botan source code is available at http://botan.randombit.net/download.html.
-
-Qt is licensed under the GNU Lesser General Public License version 2.1. Read the Qt License file for more information about the license.
-Qt source code is available at http://code.qt.io.
+Qt is licensed under the GNU Lesser General Public License version 2.1. Read the Qt License file or go to https://www.gnu.org/licenses/lgpl-2.1.html for more information about the license.
+Qt source code is available at https://code.qt.io.
 
 ##Developers
 
