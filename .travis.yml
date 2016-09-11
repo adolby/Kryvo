@@ -1,38 +1,53 @@
 sudo: false
+
 language: cpp
-os: osx
-compiler: clang
+
+os:
+  # - linux
+  - osx
+
+compiler:
+  # - gcc
+  - clang
+
 before_install:
-- echo $TRAVIS_TAG
-- brew update
+  - brew update
+
 install:
-- brew install -v qt5
-- chmod -R 755 /usr/local/opt/qt5/*
+  - brew install -v qt5
+  - chmod -R 755 /usr/local/opt/qt5/*
+
 before_script:
-- cd src
+  - cd src
+
 script:
-- /usr/local/opt/qt5/bin/qmake
-- make
-- cd tests
-- /usr/local/opt/qt5/bin/qmake
-- make
-- cd ../../build/macx/clang/x86_64/release/test/
-- open CryptoTests.app
+  - /usr/local/opt/qt5/bin/qmake
+  - make
+  - cd tests
+  - /usr/local/opt/qt5/bin/qmake
+  - make
+  - cd ../../build/macx/clang/x86_64/release/test/
+  - open CryptoTests.app
+
 before_deploy:
-- cd ..
-- /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
-- mv Kryvos.dmg Kryvos_${TRAVIS_TAG}.dmg
+  - cd ..
+  - /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
+  - mv Kryvos.dmg Kryvos_${TRAVIS_TAG}.dmg
+  - ls
+  - 7z a kryvos_${TRAVIS_TAG}_mac.zip Kryvos_${TRAVIS_TAG}.dmg LICENSE "Botan License" "Qt License"
+
 deploy:
   provider: releases
   api_key:
     secure: MBeWMiNMlHhvIoTe8XVy0kV8Aqzd79YqPjh6Bee7T6f2ERp+BnQKxuBex/Czp9iNAcXjsv1IURllbLdSoEf0x+9gmOb/WdNdDUyQFW9USR2RP6VPY01nZ59XkYcEInvzpi0Bzy/P8xzg6M13inCSBEX1KDVF73agYBb7Pkr2sM4=
-  file: Kryvos_${TRAVIS_TAG}.dmg
+  file: Kryvos_${TRAVIS_TAG}.zip
   skip_cleanup: true
   on:
     tags: true
+
 notifications:
   email:
     recipients:
-    - andrewdolby@gmail.com
+      - andrewdolby@gmail.com
     on_success: change
     on_failure: change

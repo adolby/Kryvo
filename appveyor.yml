@@ -2,21 +2,21 @@ image: Visual Studio 2015
 
 environment:
   matrix:
-  - QT: C:\Qt\5.7\msvc2015
+  - QT: C:\Qt\5.7\mingw53_32
     PLATFORM: amd64_x86
-    VSVER: 14
+    MINGW: C:\Qt\Tools\mingw530_32
+  # - QT: C:\Qt\5.7\msvc2015
+  #   PLATFORM: amd64_x86
+  #   VSVER: 14
   - QT: C:\Qt\5.7\msvc2015_64
     PLATFORM: amd64
     VSVER: 14
 
-clone_depth: 5
-
-matrix:
-  fast_finish: true
+clone_depth: 1
 
 init:
   - echo %APPVEYOR_REPO_TAG_NAME%
-  - set PATH=%QT%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
+  - set PATH=%QT%\bin;C:\Qt\Tools\QtCreator\bin;%MINGW%\bin;%PATH%
 
 before_build:
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
@@ -27,9 +27,9 @@ build_script:
   - nmake
 
 after_build:
-  - if %PLATFORM%==amd64 (cd build/win/msvc/x86_64/) else (cd build/win/msvc/x86/)
+  - if %PLATFORM%==amd64 (cd build/win/msvc/x86_64/) else (cd build/win/mingw/x86/)
   - windeployqt
-  - if %PLATFORM%==amd64 (7z a kryvos-%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip *.*) else (7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86.zip *.*)
+  - if %PLATFORM%==amd64 (7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip *.*) else (7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86.zip *.*)
 
 test_script:
   - cd tests
