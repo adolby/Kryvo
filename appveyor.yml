@@ -19,6 +19,9 @@ environment:
 clone_depth: 1
 
 init:
+  - echo on
+  - echo %PLATFORM%
+  - echo %COMPILER%
   - echo %APPVEYOR_REPO_TAG_NAME%
   - set PATH=%QT%\bin;C:\Qt\Tools\QtCreator\bin;%MINGW%\bin;%PATH%
 
