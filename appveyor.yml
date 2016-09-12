@@ -27,7 +27,7 @@ before_build:
   - cd src
 
 build_script:
-  - if "%PLATFORM%"" == "amd64" (qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG+=release) else (qmake -spec win32-g++ CONFIG+=x86 CONFIG+=release)
+  - if "%PLATFORM%" == "amd64" (qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG+=release) else (qmake -spec win32-g++ CONFIG+=x86 CONFIG+=release)
   - if "%COMPILER%" == "gcc" (mingw32-make) else (nmake)
 
 after_build:
