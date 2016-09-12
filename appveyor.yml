@@ -6,7 +6,6 @@ environment:
     PLATFORM: amd64_x86
     COMPILER: gcc
     MINGW: C:\Qt\Tools\mingw530_32
-    QMAKE_ARGS: "-spec win32-g++ CONFIG+=x86 CONFIG+=release"
   # - QT: C:\Qt\5.7\msvc2015
   #   PLATFORM: amd64_x86
   #   COMPILER: msvc
@@ -16,7 +15,6 @@ environment:
     PLATFORM: amd64
     COMPILER: msvc
     VSVER: 14
-    QMAKE_ARGS: "-spec win32-msvc2015 CONFIG+=x86_64 CONFIG+=release"
 
 clone_depth: 1
 
@@ -29,8 +27,7 @@ before_build:
   - cd src
 
 build_script:
-  - echo %QMAKE_ARGS%
-  - qmake %QMAKE_ARGS%
+  - if %PLATFORM%==amd64 (qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG+=release) else (qmake -spec win32-g++ CONFIG+=x86 CONFIG+=release)
   - if %COMPILER%==gcc (mingw32-make) else (nmake)
 
 after_build:
