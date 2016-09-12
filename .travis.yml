@@ -14,7 +14,8 @@ before_install:
   - brew update
 
 install:
-  - brew install -v qt5
+  - brew install qt5
+  - brew install p7zip
   - chmod -R 755 /usr/local/opt/qt5/*
 
 before_script:
@@ -33,7 +34,10 @@ before_deploy:
   - cd ..
   - /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
   - mv Kryvos.dmg Kryvos_${TRAVIS_TAG}.dmg
-  - ls
+  - cp ../../../../../src/LICENSE LICENSE
+  - cp ../../../../../src/README.md README.md
+  - cp "../../../../../src/Botan License" "Botan License"
+  - cp "../../../../../src/Qt License" "Qt License"
   - 7z a kryvos_${TRAVIS_TAG}_mac.zip Kryvos_${TRAVIS_TAG}.dmg LICENSE "Botan License" "Qt License"
 
 deploy:
