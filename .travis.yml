@@ -34,6 +34,8 @@ before_deploy:
   - cd ..
   - /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
   - mv Kryvos.dmg Kryvos_${TRAVIS_TAG}.dmg
+  - ls ../../../../
+  - ls ../../../../../
   - cp ../../../../../src/LICENSE LICENSE
   - cp ../../../../../src/README.md README.md
   - cp "../../../../../src/Botan License" "Botan License"
