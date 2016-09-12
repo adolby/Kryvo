@@ -34,13 +34,13 @@ before_deploy:
   - cd ..
   - /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
   - mv Kryvos.dmg Kryvos_${TRAVIS_TAG}.dmg
-  - ls ../../../../
-  - ls ../../../../../
-  - cp ../../../../../src/LICENSE LICENSE
-  - cp ../../../../../src/README.md README.md
-  - cp "../../../../../src/Botan License" "Botan License"
-  - cp "../../../../../src/Qt License" "Qt License"
-  - 7z a kryvos_${TRAVIS_TAG}_mac.zip Kryvos_${TRAVIS_TAG}.dmg LICENSE "Botan License" "Qt License"
+  - rm -rf Kryvos.app
+  - cp "../../../../../Release Notes" "Release Notes"
+  - cp "../../../../../README.md" "README.md"
+  - cp "../../../../../LICENSE" "LICENSE"
+  - cp "../../../../../Botan License" "Botan License"
+  - cp "../../../../../Qt License" "Qt License"
+  - 7z a kryvos_${TRAVIS_TAG}_mac.zip Kryvos_${TRAVIS_TAG}.dmg "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
 
 deploy:
   provider: releases
