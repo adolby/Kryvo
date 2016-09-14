@@ -10,10 +10,6 @@ environment:
 clone_depth: 1
 
 init:
-  - echo on
-  - echo %PLATFORM%
-  - echo %COMPILER%
-  - echo %APPVEYOR_REPO_TAG_NAME%
   - set PATH=%QT%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
 
 before_build:
@@ -21,19 +17,19 @@ before_build:
   - cd src
 
 build_script:
-  - qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG+=release
+  - qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
   - nmake
 
 after_build:
-  - cd build/win/msvc/x86_64/release/
+  - cd ..\build\win\msvc\x86_64\release\
   - windeployqt
   - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip *.*
 
 test_script:
-  - cd tests
+  - cd ..\..\..\..\..\src\tests
   - qmake
   - nmake
-  - cd ../../build/win/msvc/x86_64/release/test/
+  - cd ..\..\build\win\msvc\x86_64\release\test\
   - CryptoTests
 
 artifacts:
