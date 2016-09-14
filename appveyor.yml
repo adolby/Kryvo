@@ -39,18 +39,19 @@ after_build:
   - cp "..\..\..\..\..\Botan License" "Botan License"
   - cp "..\..\..\..\..\Qt License" "Qt License"
   - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip *
-  - dir
 
 artifacts:
-  - path: build
-    name: kryvos_$(appveyor_repo_tag_name)_win_x86_64.zip
+  - path: build\win\msvc\x86_64\release\kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip
+    name: kryvos
 
 deploy:
   - provider: GitHub
+    tag: $(appveyor_repo_tag_name)
     release: $(appveyor_repo_tag_name)
+    description: $(appveyor_repo_tag_name)
     auth_token:
       secure: MBeWMiNMlHhvIoTe8XVy0kV8Aqzd79YqPjh6Bee7T6f2ERp+BnQKxuBex/Czp9iNAcXjsv1IURllbLdSoEf0x+9gmOb/WdNdDUyQFW9USR2RP6VPY01nZ59XkYcEInvzpi0Bzy/P8xzg6M13inCSBEX1KDVF73agYBb7Pkr2sM4=
-    artifact: kryvos_$(appveyor_repo_tag_name)_win_x86_64.zip
+    artifact: kryvos
     draft: false
     prerelease: false
     force_update: true
