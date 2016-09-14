@@ -20,14 +20,7 @@ build_script:
   - qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
   - nmake
 
-test_script:
-  - cd ..\..\..\..\..\src\tests
-  - qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
-  - nmake
-  - cd ..\..\build\win\msvc\x86_64\release\test\
-  - CryptoTests
-
-before_deploy:
+after_build:
   - cd ..\build\win\msvc\x86_64\release\
   - windeployqt Kryvos.exe
   - rd /s /q moc
@@ -39,6 +32,13 @@ before_deploy:
   - cp "..\..\..\..\..\Botan License" "Botan License"
   - cp "..\..\..\..\..\Qt License" "Qt License"
   - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip *
+
+test_script:
+  - cd ..\..\..\..\..\src\tests
+  - qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
+  - nmake
+  - cd ..\..\build\win\msvc\x86_64\release\test\
+  - CryptoTests
 
 artifacts:
   - path: build\win\msvc\x86_64\release\kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip
