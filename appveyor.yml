@@ -2,15 +2,6 @@ image: Visual Studio 2015
 
 environment:
   matrix:
-  - QT: C:\Qt\5.7\mingw53_32
-    PLATFORM: amd64_x86
-    COMPILER: gcc
-    MINGW: C:\Qt\Tools\mingw530_32
-  # - QT: C:\Qt\5.7\msvc2015
-  #   PLATFORM: amd64_x86
-  #   COMPILER: msvc
-  #   VSVER: 14
-  #   QMAKE_ARGS: "-spec macx-clang CONFIG+=x86 CONFIG+=release"
   - QT: C:\Qt\5.7\msvc2015_64
     PLATFORM: amd64
     COMPILER: msvc
@@ -23,33 +14,31 @@ init:
   - echo %PLATFORM%
   - echo %COMPILER%
   - echo %APPVEYOR_REPO_TAG_NAME%
-  - set PATH=%QT%\bin;C:\Qt\Tools\QtCreator\bin;%MINGW%\bin;%PATH%
+  - set PATH=%QT%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
 
 before_build:
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
   - cd src
 
 build_script:
-  - if "%PLATFORM%" == "amd64" (qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG+=release) else (qmake -spec win32-g++ CONFIG+=x86 CONFIG+=release)
-  - if "%COMPILER%" == "gcc" (mingw32-make) else (nmake)
+  - qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG+=release
+  - nmake
 
 after_build:
-  - if "%PLATFORM%" == "amd64" (cd build/win/msvc/x86_64/release/) else (cd build/win/mingw/x86/release/)
+  - cd build/win/msvc/x86_64/release/
   - windeployqt
-  - if "%PLATFORM%" == "amd64" (7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip *.*) else (7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86.zip *.*)
+  - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip *.*
 
 test_script:
   - cd tests
   - qmake
   - nmake
-  - if %PLATFORM%==amd64 (cd ../../build/win/msvc/x86_64/release/test/) else (cd ../../build/win/msvc/x86/release/test/)
+  - cd ../../build/win/msvc/x86_64/release/test/
   - CryptoTests
 
 artifacts:
   - path: build
     name: kryvos_$(appveyor_repo_tag_name)_win_x86_64.zip
-  - path: build
-    name: kryvos_$(appveyor_repo_tag_name)_win_x86.zip
 
 deploy:
   - provider: GitHub
