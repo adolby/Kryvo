@@ -22,7 +22,7 @@ build_script:
 
 test_script:
   - cd ..\..\..\..\..\src\tests
-  - qmake
+  - qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
   - nmake
   - cd ..\..\build\win\msvc\x86_64\release\test\
   - CryptoTests
