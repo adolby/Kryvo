@@ -27,7 +27,7 @@ test_script:
   - cd ..\..\build\win\msvc\x86_64\release\test\
   - CryptoTests
 
-after_build:
+before_deploy:
   - cd ..\build\win\msvc\x86_64\release\
   - windeployqt Kryvos.exe
   - rd /s /q moc
