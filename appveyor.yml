@@ -29,18 +29,17 @@ test_script:
 
 after_build:
   - cd ..\build\win\msvc\x86_64\release\
-  - dir
   - windeployqt Kryvos.exe
   - rd /s /q moc
   - rd /s /q obj
   - rd /s /q qrc
-  - dir
   - cp "..\..\..\..\..\Release Notes" "Release Notes"
   - cp "..\..\..\..\..\README.md" "README.md"
   - cp "..\..\..\..\..\LICENSE" "LICENSE"
   - cp "..\..\..\..\..\Botan License" "Botan License"
   - cp "..\..\..\..\..\Qt License" "Qt License"
   - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip *
+  - dir
 
 artifacts:
   - path: build
