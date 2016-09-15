@@ -162,12 +162,9 @@ android-g++ {
   } # End Linux
 
   macx {
-    message(Mac OS X)
+    message(macOS)
 
-    # Manually set c++1y until config += c++14 is fixed for OS X
-    #QMAKE_CXXFLAGS += -std=c++1y
-
-    CONFIG += c++11
+    CONFIG += c++14
 
     SOURCES += cryptography/botan/mac/clang/x86_64/botan_all.cpp
     HEADERS += cryptography/botan/mac/clang/x86_64/botan_all.h
