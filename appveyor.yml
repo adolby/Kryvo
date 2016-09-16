@@ -50,7 +50,7 @@ deploy:
     release: $(appveyor_repo_tag_name)
     description: $(appveyor_repo_tag_name)
     auth_token:
-      secure: A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo=
+      secure: bOwrg0z7hv/7CnAQD2q+sf74q2vH40mWJLZYc8EzYvqkrXk9KYnd23rVCJ3Fsrqs
     artifact: kryvos
     draft: false
     prerelease: false
