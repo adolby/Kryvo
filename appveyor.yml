@@ -41,8 +41,8 @@ test_script:
   - CryptoTests
 
 artifacts:
-  - path: build\win\msvc\x86_64\release\kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip
-    name: kryvos
+  - path: '**\*.zip'
+    name: Kryvos
 
 deploy:
   - provider: GitHub
@@ -51,7 +51,7 @@ deploy:
     description: $(appveyor_repo_tag_name)
     auth_token:
       secure: bOwrg0z7hv/7CnAQD2q+sf74q2vH40mWJLZYc8EzYvqkrXk9KYnd23rVCJ3Fsrqs
-    artifact: kryvos
+    artifact: /.*\.zip/
     draft: false
     prerelease: false
     force_update: true
