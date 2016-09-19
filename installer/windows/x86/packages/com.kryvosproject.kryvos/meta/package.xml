@@ -3,7 +3,7 @@
     <DisplayName>Kryvos</DisplayName>
     <Description>Install Kryvos.</Description>
     <Version>0.9.9</Version>
-    <ReleaseDate>2015-11-03</ReleaseDate>
+    <ReleaseDate>2016-09-19</ReleaseDate>
     <Licenses>
         <License name="MIT License" file="Kryvos License" />
     </Licenses>
