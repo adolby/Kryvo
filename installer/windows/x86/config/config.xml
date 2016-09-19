@@ -10,6 +10,6 @@
     <Logo>logo.png</Logo>
     <AllowSpaceInPath>true</AllowSpaceInPath>
     <StartMenuDir>Kryvos</StartMenuDir>
-    <TargetDir>@HomeDir@/@ProductName@</TargetDir>
-    <AdminTargetDir>@ApplicationsDir@/@ProductName@</AdminTargetDir>
+    <TargetDir>@RootDir@/Program Files/@ProductName@</TargetDir>
+    <AdminTargetDir>@RootDir@/Program Files/@ProductName@</AdminTargetDir>
 </Installer>
