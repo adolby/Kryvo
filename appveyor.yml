@@ -36,7 +36,7 @@ after_build:
   - cp *.* ..\..\..\..\..\installer\windows\x64\packages\com.kryvosproject.kryvos\data\
   - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_portable_x86_64.zip *
   - cd ..\..\..\..\..\installer\windows\x64\
-  - binarycreator.exe --offline-only -c config -p packages kryvos_%APPVEYOR_REPO_TAG_NAME%_win_installer_x86_64.exe
+  - binarycreator.exe --offline-only -c config\config.xml -p packages kryvos_%APPVEYOR_REPO_TAG_NAME%_win_installer_x86_64.exe
 
 test_script:
   - cd ..\..\..\..\..\src\tests
