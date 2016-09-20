@@ -10,7 +10,7 @@ environment:
 clone_depth: 1
 
 init:
-  - set PATH=%QT%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
+  - set PATH=%QT%\bin\;C:\Qt\Tools\QtCreator\bin\;C:\Qt\QtIFW2.0.1\;%PATH%
 
 before_build:
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
@@ -26,12 +26,15 @@ after_build:
   - rd /s /q moc
   - rd /s /q obj
   - rd /s /q qrc
-  - cp "..\..\..\..\..\Release Notes" "Release Notes"
+  - cp "..\..\..\..\..\Release Notes" "Release Notes.txt"
   - cp "..\..\..\..\..\README.md" "README.md"
-  - cp "..\..\..\..\..\LICENSE" "LICENSE"
-  - cp "..\..\..\..\..\Botan License" "Botan License"
-  - cp "..\..\..\..\..\Qt License" "Qt License"
-  - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64.zip *
+  - cp "..\..\..\..\..\LICENSE" "LICENSE.txt"
+  - cp "..\..\..\..\..\Botan License" "Botan License.txt"
+  - cp "..\..\..\..\..\Qt License" "Qt License.txt"
+  - cp *.* ..\..\..\..\..\installer\windows\x64\packages\com.kryvosproject.kryvos\data\
+  - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_portable_x86_64.zip *
+  - cd ..\..\..\..\..\installer\windows\x64\
+  - binarycreator.exe --offline-only -c config -p packages kryvos_%APPVEYOR_REPO_TAG_NAME%_win_installer_x86_64.exe
 
 test_script:
   - cd ..\..\..\..\..\src\tests
@@ -41,9 +44,9 @@ test_script:
   - CryptoTests
 
 artifacts:
-  - path: '**\*.zip'
+  - path: 'build\win\msvc\x86_64\kryvos_$(appveyor_repo_tag_name)_win_portable_x86_64.zip'
     name: portable
-  - path: '**\kryvos_$(appveyor_repo_tag_name)_installer_x86_64.exe'
+  - path: 'installer\windows\msvc\x64\kryvos_$(appveyor_repo_tag_name)_win_installer_x86_64.exe'
     name: installer
 
 deploy:
@@ -53,7 +56,7 @@ deploy:
     description: $(appveyor_repo_tag_name)
     auth_token:
       secure: bOwrg0z7hv/7CnAQD2q+sf74q2vH40mWJLZYc8EzYvqkrXk9KYnd23rVCJ3Fsrqs
-    artifact: /.*\.zip/
+    artifact: portable, installer
     draft: true
     prerelease: false
     force_update: true
