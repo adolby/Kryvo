@@ -42,7 +42,9 @@ test_script:
 
 artifacts:
   - path: '**\*.zip'
-    name: Kryvos
+    name: portable
+  - path: '**\kryvos_$(appveyor_repo_tag_name)_installer_x86_64.exe'
+    name: installer
 
 deploy:
   - provider: GitHub
@@ -52,7 +54,7 @@ deploy:
     auth_token:
       secure: bOwrg0z7hv/7CnAQD2q+sf74q2vH40mWJLZYc8EzYvqkrXk9KYnd23rVCJ3Fsrqs
     artifact: /.*\.zip/
-    draft: false
+    draft: true
     prerelease: false
     force_update: true
     on:
