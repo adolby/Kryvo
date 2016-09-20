@@ -34,7 +34,9 @@ after_build:
   - cp "..\..\..\..\..\Botan License" "Botan License.txt"
   - cp "..\..\..\..\..\Qt License" "Qt License.txt"
   - cp *.* ..\..\..\..\..\installer\windows\x64\packages\com.kryvosproject.kryvos\data\
-  - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_portable_x86_64.zip *
+  - mkdir Kryvos
+  - cp *.* Kryvos\
+  - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_portable_x86_64.zip Kryvos
   - cd ..\..\..\..\..\installer\windows\x64\
   - binarycreator.exe --offline-only -c config\config.xml -p packages kryvos_%APPVEYOR_REPO_TAG_NAME%_win_installer_x86_64.exe
 
@@ -46,9 +48,9 @@ test_script:
   - CryptoTests
 
 artifacts:
-  - path: 'build\win\msvc\x86_64\kryvos_$(appveyor_repo_tag_name)_win_portable_x86_64.zip'
+  - path: build\win\msvc\x86_64\release\kryvos_$(appveyor_repo_tag_name)_win_portable_x86_64.zip
     name: portable
-  - path: 'installer\windows\msvc\x64\kryvos_$(appveyor_repo_tag_name)_win_installer_x86_64.exe'
+  - path: '**\*.exe'
     name: installer
 
 deploy:
