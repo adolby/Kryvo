@@ -50,7 +50,7 @@ test_script:
 artifacts:
   - path: build\win\msvc\x86_64\release\kryvos_$(appveyor_repo_tag_name)_win_portable_x86_64.zip
     name: portable
-  - path: '**\*.exe'
+  - path: installer\windows\x64\kryvos_$(appveyor_repo_tag_name)_win_installer_x86_64.exe
     name: installer
 
 deploy:
