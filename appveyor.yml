@@ -21,7 +21,9 @@ build_script:
   - nmake
 
 after_build:
-  - cd ..\build\win\msvc\x86_64\release\
+  - cd ..
+  - mkdir installer\windows\x64\packages\com.kryvosproject.kryvos\data\
+  - cd build\win\msvc\x86_64\release\
   - windeployqt Kryvos.exe
   - rd /s /q moc
   - rd /s /q obj
