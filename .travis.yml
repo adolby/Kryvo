@@ -2,13 +2,19 @@ sudo: false
 
 language: cpp
 
-os:
-  - linux
-  - osx
-
-compiler:
-  - gcc
-  - clang
+matrix:
+  include:
+    - os: osx
+      compiler: clang
+    - os: linux
+      env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
+      addons:
+        apt:
+          packages:
+            - g++-5
+          sources: &sources
+            - llvm-toolchain-precise-3.8
+            - ubuntu-toolchain-r-test
 
 script:
   - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_mac.sh ; fi
