@@ -4,11 +4,11 @@ set -o errexit -o nounset
 
 # Update platform
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-sudo add-apt-repository -y "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.9 main"
+sudo add-apt-repository -y "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.8 main"
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 sudo apt-get install libc++-dev
-sudo apt-get install clang-3.9
+sudo apt-get install clang-3.8
 sudo DEBIAN_FRONTEND=noninteractive apt-get install libfontconfig1 -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 sudo DEBIAN_FRONTEND=noninteractive apt-get install libfontconfig1-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 sudo DEBIAN_FRONTEND=noninteractive apt-get install libfreetype6-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
