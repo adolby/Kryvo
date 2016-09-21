@@ -4,7 +4,8 @@ set -o errexit -o nounset
 
 # Update platform
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-sudo add-apt-repository "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.9 main" --enable-source --yes
+sudo add-apt-repository -y "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.9 main"
+sudo add-apt-repository -y "deb-src http://apt.llvm.org/precise/ llvm-toolchain-precise-3.9 main"
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 sudo apt-get install libc++-dev
