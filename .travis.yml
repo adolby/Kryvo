@@ -7,6 +7,9 @@ matrix:
     - os: osx
       compiler: clang
       env: CXX=clang++ CC=clang OSNAME=macos
+      cache:
+        directories:
+          - /usr/local/Qt-5.7.0/
     - os: linux
       compiler: gcc
       env: CXX=g++-5 CC=gcc-5 OSNAME=linux
