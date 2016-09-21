@@ -1,13 +1,15 @@
 sudo: false
 
-language: cpp
+language: generic
 
 matrix:
   include:
     - os: osx
       compiler: clang
+      env: CXX=clang++ CC=clang
     - os: linux
-      env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
+      compiler: gcc
+      env: CXX=g++-5 CC=gcc-5
       addons:
         apt:
           packages:
