@@ -30,7 +30,7 @@ tar xf qt-everywhere-opensource-src-5.7.0.tar
 
 cd qt-everywhere-opensource-src-5.7.0
 sudo chmod +x configure
-./configure
+./configure -opensource -release 
 
 make
 make install
