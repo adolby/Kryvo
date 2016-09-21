@@ -2,7 +2,7 @@
 
 set -o errexit -o nounset
 
-sudo add-apt-repository ppa:beineri/opt-qt57-trusty
+sudo add-apt-repository ppa:beineri/opt-qt57-trusty -y
 sudo apt-get update && sudo apt-get upgrade
 sudo apt-get install build-essential
 sudo apt-get install libfontconfig1
