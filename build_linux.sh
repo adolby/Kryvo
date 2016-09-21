@@ -3,21 +3,21 @@
 set -o errexit -o nounset
 
 # Update platform
-sudo DEBIAN_FRONTEND=noninteractive apt-get update
-sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade
-sudo DEBIAN_FRONTEND=noninteractiveapt-get -y install libfontconfig1
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libfontconfig1-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libfreetype6-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libx11-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libxext-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libxfixes-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libxi-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libxrender-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libxcb1-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libx11-xcb-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libxcb-glx0-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install mesa-common-dev
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libglu1-mesa-dev -y
+sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libfontconfig1 -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libfontconfig1-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libfreetype6-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libx11-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libxext-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libxfixes-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libxi-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libxrender-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libxcb1-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libx11-xcb-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libxcb-glx0-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install mesa-common-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install libglu1-mesa-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 # Capture build directory
 project=$(pwd)
