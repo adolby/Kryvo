@@ -24,15 +24,15 @@ after_build:
   - cd ..
   - mkdir installer\windows\x64\packages\com.kryvosproject.kryvos\data\
   - cd build\win\msvc\x86_64\release\
-  - windeployqt Kryvos.exe
-  - rd /s /q moc
-  - rd /s /q obj
-  - rd /s /q qrc
-  - copy "..\..\..\..\..\Release Notes" "Release Notes.txt"
-  - copy "..\..\..\..\..\README.md" "README.md"
-  - copy "..\..\..\..\..\LICENSE" "LICENSE.txt"
-  - copy "..\..\..\..\..\Botan License" "Botan License.txt"
-  - copy "..\..\..\..\..\Qt License" "Qt License.txt"
+  - windeployqt Kryvos\Kryvos.exe
+  - rd /s /q Kryvos\moc
+  - rd /s /q Kryvos\obj
+  - rd /s /q Kryvos\qrc
+  - copy "..\..\..\..\..\Release Notes" "Kryvos\Release Notes.txt"
+  - copy "..\..\..\..\..\README.md" "Kryvos\README.md"
+  - copy "..\..\..\..\..\LICENSE" "Kryvos\LICENSE.txt"
+  - copy "..\..\..\..\..\Botan License" "Kryvos\Botan License.txt"
+  - copy "..\..\..\..\..\Qt License" "Kryvos\Qt License.txt"
   - ..\..\..\..\..\copy-files.cmd
   - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_portable_x86_64.zip Kryvos
   - cd ..\..\..\..\..\installer\windows\x64\

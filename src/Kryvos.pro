@@ -195,11 +195,11 @@ android-g++ {
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/mingw/x86_64/debug/
+          DESTDIR = ../build/win/mingw/x86_64/debug/Kryvos/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/mingw/x86_64/release/
+          DESTDIR = ../build/win/mingw/x86_64/release/Kryvos/
         }
       } else {
         message(Windows x86 G++)
@@ -209,11 +209,11 @@ android-g++ {
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/mingw/x86/debug/
+          DESTDIR = ../build/win/mingw/x86/debug/Kryvos/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/mingw/x86/release/
+          DESTDIR = ../build/win/mingw/x86/release/Kryvos/
         }
       }
     }
@@ -228,11 +228,11 @@ android-g++ {
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/msvc/x86_64/debug/
+          DESTDIR = ../build/win/msvc/x86_64/debug/Kryvos/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/msvc/x86_64/release/
+          DESTDIR = ../build/win/msvc/x86_64/release/Kryvos/
         }
       } else {
         message(Windows x86 MSVC)
@@ -242,11 +242,11 @@ android-g++ {
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/msvc/x86/debug/
+          DESTDIR = ../build/win/msvc/x86/debug/Kryvos/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/msvc/x86/release/
+          DESTDIR = ../build/win/msvc/x86/release/Kryvos/
         }
       }
     }
