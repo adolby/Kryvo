@@ -26,7 +26,8 @@ project=$(pwd)
 cd /tmp/
 wget https://download.qt.io/official_releases/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz
 gunzip qt-everywhere-opensource-src-5.7.0.tar.gz
-tar xvf qt-everywhere-opensource-src-5.7.0.tar.gz
+tar xvf qt-everywhere-opensource-src-5.7.0.tar
+
 cd qt-everywhere-opensource-src-5.7.0
 sudo chmod +x configure
 ./configure
