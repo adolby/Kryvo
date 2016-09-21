@@ -4,19 +4,19 @@ set -o errexit -o nounset
 
 # Update platform
 sudo apt-get update && sudo apt-get upgrade
-sudo apt-get install libfontconfig1
-sudo apt-get install libfontconfig1-dev
-sudo apt-get install libfreetype6-dev
-sudo apt-get install libx11-dev
-sudo apt-get install libxext-dev
-sudo apt-get install libxfixes-dev
-sudo apt-get install libxi-dev
-sudo apt-get install libxrender-dev
-sudo apt-get install libxcb1-dev
-sudo apt-get install libx11-xcb-dev
-sudo apt-get install libxcb-glx0-dev
-sudo apt-get install mesa-common-dev
-sudo apt-get install libglu1-mesa-dev -y
+sudo apt-get -y install libfontconfig1
+sudo apt-get -y install libfontconfig1-dev
+sudo apt-get -y install libfreetype6-dev
+sudo apt-get -y install libx11-dev
+sudo apt-get -y install libxext-dev
+sudo apt-get -y install libxfixes-dev
+sudo apt-get -y install libxi-dev
+sudo apt-get -y install libxrender-dev
+sudo apt-get -y install libxcb1-dev
+sudo apt-get -y install libx11-xcb-dev
+sudo apt-get -y install libxcb-glx0-dev
+sudo apt-get -y install mesa-common-dev
+sudo apt-get -y install libglu1-mesa-dev -y
 
 # Capture build directory
 project=$(pwd)
