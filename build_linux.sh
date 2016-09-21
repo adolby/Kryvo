@@ -3,6 +3,7 @@
 set -o errexit -o nounset
 
 # Update platform
+wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 sudo add-apt-repository -y "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.8 main"
 sudo apt-get update
