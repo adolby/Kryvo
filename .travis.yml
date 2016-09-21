@@ -6,10 +6,10 @@ matrix:
   include:
     - os: osx
       compiler: clang
-      env: CXX=clang++ CC=clang
+      env: CXX=clang++ CC=clang OSNAME=macos
     - os: linux
       compiler: gcc
-      env: CXX=g++-5 CC=gcc-5
+      env: CXX=g++-5 CC=gcc-5 OSNAME=linux
       addons:
         apt:
           packages:
@@ -28,7 +28,7 @@ deploy:
   provider: releases
   api_key:
     secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
-  file: kryvos_${TRAVIS_TAG}_${TRAVIS_OS_NAME}.zip
+  file: kryvos_${TRAVIS_TAG}_${OSNAME}.zip
   skip_cleanup: true
   on:
     tags: true
