@@ -26,6 +26,6 @@ cp "../../../../../README.md" "README.md"
 cp "../../../../../LICENSE" "LICENSE"
 cp "../../../../../Botan License" "Botan License"
 cp "../../../../../Qt License" "Qt License"
-7z a kryvos_${TRAVIS_TAG}_mac.zip Kryvos_${TRAVIS_TAG}.dmg "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
+7z a kryvos_${TRAVIS_TAG}_mac.zip "Kryvos_${TRAVIS_TAG}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
 
 exit 0
