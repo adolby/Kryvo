@@ -2,22 +2,26 @@
 
 set -o errexit -o nounset
 
+# Update platform
 brew update
 brew install qt5
 brew install p7zip
 npm install -g appdmg
 chmod -R 755 /usr/local/opt/qt5/*
 
+# Build
 cd src
-
 /usr/local/opt/qt5/bin/qmake -config release
 make
+
+# Run tests
 cd tests
 /usr/local/opt/qt5/bin/qmake -config release
 make
 cd ../../build/macx/clang/x86_64/release/test/
 open CryptoTests.app
 
+# Package
 cd ..
 /usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
 mv Kryvos.dmg "Kryvos_${TRAVIS_TAG}.dmg"
