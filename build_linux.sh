@@ -26,7 +26,13 @@ sudo apt-get -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--f
 
 # Get Qt
 wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-x86_64-gcc6.zip
-sudo 7z e qt-opensource-5.7.0-x86_64-gcc6.zip /usr/local/
+
+project=$(pwd)
+
+cd /usr/local/
+sudo 7z e qt-opensource-5.7.0-x86_64-gcc6.zip
+
+cd ${project}/src/
 
 make -j2
 make install
