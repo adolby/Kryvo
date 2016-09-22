@@ -29,7 +29,7 @@ project=$(pwd)
 # Get Qt
 cd /usr/local/
 sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-x86_64-gcc6.zip
-sudo 7z x qt-opensource-5.7.0-x86_64-gcc6.zip
+sudo 7z x qt-opensource-5.7.0-x86_64-gcc6.zip &>/dev/null
 sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
 
 # Install Qt Installer Framework
