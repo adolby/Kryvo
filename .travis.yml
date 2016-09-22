@@ -8,15 +8,14 @@ matrix:
       compiler: clang
       env: OSNAME=macos
     - os: linux
-      compiler: clang
+      compiler: gcc
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
           packages:
-            - clang-3.7
-      env: COMPILER=clang++-3.7 OSNAME=linux
+            - g++-5
+      env: COMPILER=g++-5 OSNAME=linux
 
 script:
   - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_mac.sh ; fi
