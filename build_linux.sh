@@ -3,6 +3,7 @@
 set -o errexit -o nounset
 
 # Update platform
+echo "Updating platform..."
 sudo apt-get update
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 100
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 100
@@ -27,23 +28,27 @@ sudo apt-get -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--f
 project=$(pwd)
 
 # Get Qt
+echo "Installing Qt..."
 cd /usr/local/
 sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-x86_64-gcc6.zip
 sudo 7z x qt-opensource-5.7.0-x86_64-gcc6.zip &>/dev/null
 sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
 
 # Install Qt Installer Framework
+echo "Installing Qt Installer Framework..."
 sudo wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-2.0.3/qt-installer-framework-opensource-2.0.3.zip
 sudo 7z x qt-installer-framework-opensource-2.0.3.zip &>/dev/null
 sudo chmod -R +x /usr/local/QtIFW2.0.3/bin/
 
 # Build
+echo "Building Kryvos..."
 echo ${project}
 cd ${project}/src/
 /usr/local/Qt-5.7.0/bin/qmake -config release
 make -j2
 
 # Run tests
+echo "Running tests..."
 cd tests
 /usr/local/Qt-5.7.0/bin/qmake -config release
 make -j2
@@ -52,6 +57,7 @@ sudo chmod +x CryptoTests
 ./CryptoTests
 
 # Package
+echo "Packaging..."
 cd ..
 cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "Kryvos/libQt5Core.so"
 cp "/usr/local/Qt-5.7.0/lib/libQt5Gui.so.5.7.0" "Kryvos/libQt5Gui.so"
@@ -66,8 +72,14 @@ cp "../../../../../README.md" "Kryvos/README.md"
 cp "../../../../../LICENSE" "Kryvos/LICENSE"
 cp "../../../../../Botan License" "Kryvos/Botan License"
 cp "../../../../../Qt License" "Kryvos/Qt License"
+
+ls
+
+echo "Packaging portable archive..."
 cp -R Kryvos/ "../../../../../installer/linux/packages/com.kryvosproject.kryvos/data/"
 7z a kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip "Kryvos" "libQt5Core.so" "libQt5Gui.so" "libQt5Svg.so" "libQt5Widgets.so" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
+
+echo "Building installer..."
 cd "../../../../../installer/linux/"
 /usr/local/QtIFW2.0.3/bin/binarycreator --offline-only -c config\config.xml -p packages kryvos_${TRAVIS_TAG}_linux_x86_64_installer
 
