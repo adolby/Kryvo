@@ -67,8 +67,8 @@ cp "../../../../../LICENSE" "Kryvos/LICENSE"
 cp "../../../../../Botan License" "Kryvos/Botan License"
 cp "../../../../../Qt License" "Kryvos/Qt License"
 cp "Kryvos" "../../../../../installer/linux/packages/com.kryvosproject.kryvos/data/"
-7z a kryvos_${TRAVIS_TAG}_linux_x86_64.zip "Kryvos" "libQt5Core.so" "libQt5Gui.so" "libQt5Svg.so" "libQt5Widgets.so" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
+7z a kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip "Kryvos" "libQt5Core.so" "libQt5Gui.so" "libQt5Svg.so" "libQt5Widgets.so" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
 cd "../../../../../installer/linux/"
-/usr/local/QtIFW2.0.3/bin/binarycreator --offline-only -c config\config.xml -p packages kryvos_${TRAVIS_TAG}_linux_installer_x86_64
+/usr/local/QtIFW2.0.3/bin/binarycreator --offline-only -c config\config.xml -p packages kryvos_${TRAVIS_TAG}_linux_x86_64_installer
 
 exit 0
