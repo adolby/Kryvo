@@ -14,8 +14,12 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-5
-      env: COMPILER=g++-5 OSNAME=linux
+            - gcc-6
+            - g++-6
+      env: OSNAME=linux_x86-64
+
+install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
 
 script:
   - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_mac.sh ; fi
@@ -27,7 +31,7 @@ deploy:
   provider: releases
   api_key:
     secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
-  file: kryvos_${TRAVIS_TAG}_${OSNAME}_x86_64.zip
+  file: kryvos_${TRAVIS_TAG}_${OSNAME}.zip
   skip_cleanup: true
   on:
     tags: true
