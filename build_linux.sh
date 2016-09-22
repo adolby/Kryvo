@@ -4,20 +4,21 @@ set -o errexit -o nounset
 
 # Update platform
 sudo apt-get update
-sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libfontconfig1 -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libfontconfig1-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libfreetype6-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libx11-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libxext-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libxfixes-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libxi-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libxrender-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libxcb1-dev -y -qq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libx11-xcb-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libxcb-glx0-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install mesa-common-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo DEBIAN_FRONTEND=noninteractive apt-get install libglu1-mesa-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get upgrade -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libstdc++6
+sudo apt-get install libfontconfig1 -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libfontconfig1-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libfreetype6-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libx11-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libxext-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libxfixes-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libxi-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libxrender-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libxcb1-dev -y -qq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libx11-xcb-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libxcb-glx0-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install mesa-common-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install libglu1-mesa-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 # Capture build directory
 project=$(pwd)
