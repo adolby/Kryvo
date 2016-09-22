@@ -77,9 +77,10 @@ rm -rf obj
 rm -rf qrc
 
 echo "Packaging portable archive..."
-cd Kryvos
+cd Kryvos/
 cp -R * "../../../../../installer/linux/packages/com.kryvosproject.kryvos/data/"
-7z a kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip "Kryvos" "libQt5Core.so" "libQt5Gui.so" "libQt5Svg.so" "libQt5Widgets.so" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
+cd ..
+7z a kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip Kryvos
 
 echo "Building installer..."
 cd "../../../../../installer/linux/"
