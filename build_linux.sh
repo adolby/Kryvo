@@ -23,24 +23,17 @@ sudo apt-get -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--f
 sudo apt-get -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install mesa-common-dev
 sudo apt-get -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install libglu1-mesa-dev
 
-# Capture build directory
-project=$(pwd)
-
-# Build Qt
-cd /tmp/
-wget https://download.qt.io/official_releases/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz
-gunzip qt-everywhere-opensource-src-5.7.0.tar.gz
-tar xf qt-everywhere-opensource-src-5.7.0.tar
-
-cd qt-everywhere-opensource-src-5.7.0
-sudo chmod +x configure
-./configure -platform linux-g++-64 -opensource -confirm-license -release -c++std c++14 -shared -largefile -no-qml-debug -qt-libpng -qt-libjpeg -qt-doubleconversion -qt-harfbuzz -qt-xcb -openssl -qt-pcre -skip qtwebengine -nomake examples
+# Get Qt
+wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-x86_64-gcc6.zip
+sudo 7z e qt-opensource-5.7.0-x86_64-gcc6.zip /usr/local/Qt-5.7.0/
 
 make -j2
 make install
 
+sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
+
 # Build
-cd ${project}/src/
+cd src/
 /usr/local/Qt-5.7.0/bin/qmake -config release
 make -j2
 

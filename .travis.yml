@@ -16,7 +16,7 @@ matrix:
           packages:
             - gcc-6
             - g++-6
-      env: OSNAME=linux_x86-64
+      env: OSNAME=linux_x86_64
 
 script:
   - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_mac.sh ; fi
