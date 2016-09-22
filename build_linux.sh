@@ -5,7 +5,7 @@ set -o errexit -o nounset
 # Update platform
 sudo apt-get update
 sudo apt-get upgrade -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo apt-get install libstdc++6
+sudo apt-get install libstdc++6 -qq -y
 sudo apt-get install libfontconfig1 -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 sudo apt-get install libfontconfig1-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 sudo apt-get install libfreetype6-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
