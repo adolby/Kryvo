@@ -36,7 +36,7 @@ tar xf qt-everywhere-opensource-src-5.7.0.tar
 cd qt-everywhere-opensource-src-5.7.0
 sudo chmod +x configure
 ./configure -help
-./configure -platform linux-clang-libc++ -opensource -confirm-license -release -skip qtwebengine -nomake examples
+./configure -platform linux-clang-libc++ -opensource -confirm-license -release -c++std c++14 -shared -largefile -no-qml-debug -qt-libpng -qt-libjpeg -qt-doubleconversion -qt-harfbuzz -openssl -qt-pcre -skip qtwebengine -nomake examples
 
 make
 make install
