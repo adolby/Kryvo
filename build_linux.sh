@@ -34,7 +34,7 @@ sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
 
 # Install Qt Installer Framework
 sudo wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-2.0.3/qt-installer-framework-opensource-2.0.3.zip
-sudo 7z x qt-opensource-5.7.0-x86_64-gcc6.zip
+sudo 7z x qt-installer-framework-opensource-2.0.3.zip
 sudo chmod -R +x /usr/local/QtIFW2.0.3/bin/
 
 # Build
