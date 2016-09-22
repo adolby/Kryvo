@@ -5,7 +5,6 @@ set -o errexit -o nounset
 # Update platform
 sudo apt-get update
 sudo apt-get upgrade -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo apt-get install libstdc++6 -qq -y
 sudo apt-get install libfontconfig1 -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 sudo apt-get install libfontconfig1-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 sudo apt-get install libfreetype6-dev -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
@@ -32,8 +31,8 @@ tar xf qt-everywhere-opensource-src-5.7.0.tar
 cd qt-everywhere-opensource-src-5.7.0
 sudo chmod +x configure
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 100
-echo ${CXX}
-echo ${CC}
+gcc -v
+g++ -v
 ./configure -platform linux-g++-64 -opensource -confirm-license -release -c++std c++14 -shared -largefile -no-qml-debug -qt-libpng -qt-libjpeg -qt-doubleconversion -qt-harfbuzz -openssl -qt-pcre -skip qtwebengine -nomake examples
 
 make
