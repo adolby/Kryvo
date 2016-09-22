@@ -34,7 +34,7 @@ sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
 
 # Install Qt Installer Framework
 sudo wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-2.0.3/qt-installer-framework-opensource-2.0.3.zip
-sudo 7z x qt-installer-framework-opensource-2.0.3.zip
+sudo 7z x qt-installer-framework-opensource-2.0.3.zip &>/dev/null
 sudo chmod -R +x /usr/local/QtIFW2.0.3/bin/
 
 # Build
@@ -67,7 +67,7 @@ cp "../../../../../LICENSE" "Kryvos/LICENSE"
 cp "../../../../../Botan License" "Kryvos/Botan License"
 cp "../../../../../Qt License" "Kryvos/Qt License"
 cp -R Kryvos/ "../../../../../installer/linux/packages/com.kryvosproject.kryvos/data/"
-7z a kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip "Kryvos" "libQt5Core.so" "libQt5Gui.so" "libQt5Svg.so" "libQt5Widgets.so" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
+7z a kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip "Kryvos" "libQt5Core.so" "libQt5Gui.so" "libQt5Svg.so" "libQt5Widgets.so" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License" &>/dev/null
 cd "../../../../../installer/linux/"
 /usr/local/QtIFW2.0.3/bin/binarycreator --offline-only -c config\config.xml -p packages kryvos_${TRAVIS_TAG}_linux_x86_64_installer
 
