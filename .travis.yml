@@ -21,7 +21,7 @@ deploy:
   provider: releases
   api_key:
     secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
-  file: kryvos_${TRAVIS_TAG}_${OSNAME}.zip
+  file: kryvos_${TRAVIS_TAG}_${OSNAME}_x86_64.zip
   skip_cleanup: true
   on:
     tags: true
