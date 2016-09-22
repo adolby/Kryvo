@@ -36,18 +36,18 @@ cd qt-everywhere-opensource-src-5.7.0
 sudo chmod +x configure
 ./configure -platform linux-g++-64 -opensource -confirm-license -release -c++std c++14 -shared -largefile -no-qml-debug -qt-libpng -qt-libjpeg -qt-doubleconversion -qt-harfbuzz -qt-xcb -openssl -qt-pcre -skip qtwebengine -nomake examples
 
-make
+make -j2
 make install
 
 # Build
 cd ${project}/src/
 /usr/local/Qt-5.7.0/bin/qmake -config release
-make
+make -j2
 
 # Run tests
 cd tests
 /usr/local/Qt-5.7.0/bin/qmake -config release
-make
+make -j2
 cd ../../build/linux/gcc/x86_64/release/test/
 sudo chmod +x CryptoTests
 ./CryptoTests

@@ -12,7 +12,7 @@ chmod -R 755 /usr/local/opt/qt5/*
 # Build
 cd src
 /usr/local/opt/qt5/bin/qmake -config release
-make
+make -j2
 
 # Run tests
 cd tests
