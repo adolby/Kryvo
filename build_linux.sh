@@ -53,6 +53,13 @@ sudo chmod +x CryptoTests
 
 # Package
 cd ..
+cp /usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0 libQt5Core.so
+cp /usr/local/Qt-5.7.0/lib/libQt5Gui.so.5.7.0 libQt5Gui.so
+cp /usr/local/Qt-5.7.0/lib/libQt5Svg.so.5.7.0 libQt5Svg.so
+cp /usr/local/Qt-5.7.0/lib/libQt5Widgets.so.5.7.0 libQt5Widgets.so
+#mkdir platforms
+#cp /usr/local/Qt-5.7.0/lib/libQt5XcbQpa.so.5.7.0 platforms/libQt5XcbQpa.so
+#cp /usr/local/Qt-5.7.0/lib/libQt5DBus.so.5.7.0 platforms/libQt5DBus.so
 cp "../../../../../Release Notes" "Release Notes"
 cp "../../../../../README.md" "README.md"
 cp "../../../../../LICENSE" "LICENSE"
