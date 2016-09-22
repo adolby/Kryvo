@@ -18,14 +18,11 @@ matrix:
             - g++-6
       env: OSNAME=linux_x86-64
 
-install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
-
 script:
   - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_mac.sh ; fi
   - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then ./build_mac.sh ; fi
   - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then chmod +x build_linux.sh ; fi
-  - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then ./build_linux.sh ; fi
+  - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then CXX="g++-6" CC="gcc-6" ./build_linux.sh ; fi
 
 deploy:
   provider: releases
