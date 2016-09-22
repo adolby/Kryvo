@@ -83,4 +83,6 @@ echo "Building installer..."
 cd "../../../../../installer/linux/"
 /usr/local/QtIFW2.0.3/bin/binarycreator --offline-only -c config\config.xml -p packages kryvos_${TRAVIS_TAG}_linux_x86_64_installer
 
+echo "Done!"
+
 exit 0
