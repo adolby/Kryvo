@@ -3,13 +3,8 @@
 set -o errexit -o nounset
 
 # Update platform
-wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
-sudo add-apt-repository -y "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu precise main"
-sudo add-apt-repository -y "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.8 main"
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-sudo apt-get --yes --force-yes install libc++-dev
-sudo apt-get --yes --force-yes install clang-3.8
 sudo DEBIAN_FRONTEND=noninteractive apt-get install libfontconfig1 -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 sudo DEBIAN_FRONTEND=noninteractive apt-get install libfontconfig1-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 sudo DEBIAN_FRONTEND=noninteractive apt-get install libfreetype6-dev -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
