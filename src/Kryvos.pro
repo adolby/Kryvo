@@ -116,11 +116,11 @@ android-g++ {
 
       debug {
         message(Debug)
-        DESTDIR = ../build/linux/clang/x86_64/debug/
+        DESTDIR = ../build/linux/clang/x86_64/debug/Kryvos/
       }
       release {
         message(Release)
-        DESTDIR = ../build/linux/clang/x86_64/release/
+        DESTDIR = ../build/linux/clang/x86_64/release/Kryvos/
       }
     }
 
@@ -134,11 +134,11 @@ android-g++ {
 
       debug {
         message(Debug)
-        DESTDIR = ../build/linux/gcc/x86_64/debug/
+        DESTDIR = ../build/linux/gcc/x86_64/debug/Kryvos/
       }
       release {
         message(Release)
-        DESTDIR = ../build/linux/gcc/x86_64/release/
+        DESTDIR = ../build/linux/gcc/x86_64/release/Kryvos/
       }
     }
 
@@ -152,11 +152,11 @@ android-g++ {
 
       debug {
         message(Debug)
-        DESTDIR = ../build/linux/gcc/x86/debug/
+        DESTDIR = ../build/linux/gcc/x86/debug/Kryvos/
       }
       release {
         message(Release)
-        DESTDIR = ../build/linux/gcc/x86/release/
+        DESTDIR = ../build/linux/gcc/x86/release/Kryvos/
       }
     } # End linux-g++-32
   } # End Linux
