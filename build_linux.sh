@@ -47,43 +47,45 @@ cd ${project}/src/
 /usr/local/Qt-5.7.0/bin/qmake -config release
 make -j2
 
-# Run tests
-echo "Running tests..."
-cd tests
+# Build tests
+echo "Building tests..."
+cd ${project}/src/tests/
 /usr/local/Qt-5.7.0/bin/qmake -config release
 make -j2
-cd ../../build/linux/gcc/x86_64/release/test/
+
+# Run tests
+echo "Running tests..."
+cd ${project}/build/linux/gcc/x86_64/release/test/
 sudo chmod +x CryptoTests
 ./CryptoTests
 
 # Package
 echo "Packaging..."
-cd ..
-cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "Kryvos/libQt5Core.so"
-cp "/usr/local/Qt-5.7.0/lib/libQt5Gui.so.5.7.0" "Kryvos/libQt5Gui.so"
-cp "/usr/local/Qt-5.7.0/lib/libQt5Svg.so.5.7.0" "Kryvos/libQt5Svg.so"
-cp "/usr/local/Qt-5.7.0/lib/libQt5Widgets.so.5.7.0" "Kryvos/libQt5Widgets.so"
-#mkdir platforms
-#cp "/usr/local/Qt-5.7.0/lib/libQt5XcbQpa.so.5.7.0" "platforms/libQt5XcbQpa.so"
-#cp "/usr/local/Qt-5.7.0/lib/libQt5DBus.so.5.7.0" "platforms/libQt5DBus.so"
-#cp "../../../../../installer/linux/packages/com.kryvosproject.kryvos/data/Kryvos.sh"
-cp "../../../../../Release Notes" "Kryvos/Release Notes"
-cp "../../../../../README.md" "Kryvos/README.md"
-cp "../../../../../LICENSE" "Kryvos/LICENSE"
-cp "../../../../../Botan License" "Kryvos/Botan License"
-cp "../../../../../Qt License" "Kryvos/Qt License"
+cd ${project}/build/linux/gcc/x86_64/release/Kryvos/
 rm -rf moc
 rm -rf obj
 rm -rf qrc
+cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "libQt5Core.so"
+cp "/usr/local/Qt-5.7.0/lib/libQt5Gui.so.5.7.0" "libQt5Gui.so"
+cp "/usr/local/Qt-5.7.0/lib/libQt5Svg.so.5.7.0" "libQt5Svg.so"
+cp "/usr/local/Qt-5.7.0/lib/libQt5Widgets.so.5.7.0" "libQt5Widgets.so"
+#mkdir platforms
+#cp "/usr/local/Qt-5.7.0/lib/libQt5XcbQpa.so.5.7.0" "platforms/libQt5XcbQpa.so"
+#cp "/usr/local/Qt-5.7.0/lib/libQt5DBus.so.5.7.0" "platforms/libQt5DBus.so"
+#cp "${project}/installer/linux/packages/com.kryvosproject.kryvos/data/Kryvos.sh"
+cp "${project}/Release Notes" "Release Notes"
+cp "${project}/README.md" "README.md"
+cp "${project}/LICENSE" "LICENSE"
+cp "${project}/Botan License" "Botan License"
+cp "${project}/Qt License" "Qt License"
 
 echo "Packaging portable archive..."
-cd Kryvos/
-cp -R * "../../../../../installer/linux/packages/com.kryvosproject.kryvos/data/"
+cp -R * "${project}/installer/linux/packages/com.kryvosproject.kryvos/data/"
 cd ..
 7z a kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip Kryvos
 
 echo "Building installer..."
-cd "../../../../../installer/linux/"
+cd "${project}/installer/linux/"
 /usr/local/QtIFW2.0.3/bin/binarycreator --offline-only -c config/config.xml -p packages kryvos_${TRAVIS_TAG}_linux_x86_64_installer
 
 echo "Done!"
