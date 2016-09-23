@@ -33,6 +33,8 @@ after_build:
   - copy "..\..\..\..\..\LICENSE" "Kryvos\LICENSE.txt"
   - copy "..\..\..\..\..\Botan License" "Kryvos\Botan License.txt"
   - copy "..\..\..\..\..\Qt License" "Kryvos\Qt License.txt"
+  - mkdir Kryvos\themes
+  - copy "..\..\..\..\..\src\resources\stylesheets\kryvos.qss" "Kryvos\themes\kryvos.qss"
   - ..\..\..\..\..\deploy\copy-files.cmd
   - 7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_win_x86_64_portable.zip Kryvos
   - cd ..\..\..\..\..\installer\windows\x64\
