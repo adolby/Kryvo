@@ -61,7 +61,7 @@ deploy:
     auth_token:
       secure: bOwrg0z7hv/7CnAQD2q+sf74q2vH40mWJLZYc8EzYvqkrXk9KYnd23rVCJ3Fsrqs
     artifact: portable, installer
-    draft: true
+    draft: false
     prerelease: false
     force_update: true
     on:
