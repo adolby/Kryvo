@@ -6,7 +6,6 @@ matrix:
   include:
     - os: osx
       compiler: clang
-      env: OSNAME=macos
     - os: linux
       compiler: gcc
       addons:
@@ -16,7 +15,6 @@ matrix:
           packages:
             - gcc-6
             - g++-6
-      env: OSNAME=linux_x86_64
 
 script:
   - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_mac.sh ; fi
@@ -25,15 +23,27 @@ script:
   - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then CXX="g++-6" CC="gcc-6" ./build_linux.sh ; fi
 
 deploy:
-  provider: releases
-  api_key:
-    secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
-  file:
-    - kryvos_${TRAVIS_TAG}_${OSNAME}.zip
-    - kryvos_${TRAVIS_TAG}_${OSNAME}_installer
-  skip_cleanup: true
-  on:
-    tags: true
+  - provider: releases
+    api_key:
+      secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
+    file:
+      - kryvos_${TRAVIS_TAG}_macos.zip
+    overwrite: true
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $TRAVIS_OS_NAME = osx
+  - provider: releases
+    api_key:
+      secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
+    file:
+      - kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip
+      - kryvos_${TRAVIS_TAG}_linux_x86_64_installer
+    overwrite: true
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $TRAVIS_OS_NAME = linux
 
 notifications:
   email:
