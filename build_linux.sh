@@ -82,7 +82,7 @@ cp "${project}/Qt License" "Qt License"
 echo "Packaging portable archive..."
 cp -R * "${project}/installer/linux/packages/com.kryvosproject.kryvos/data/"
 cd ..
-7z a kryvos_${TRAVIS_TAG}_linux_x86_64.zip Kryvos
+7z a kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip Kryvos
 
 echo "Building installer..."
 cd "${project}/installer/linux/"
