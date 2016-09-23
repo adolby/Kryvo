@@ -14,13 +14,13 @@ chmod -R 755 /usr/local/opt/qt5/*
 
 # Build
 echo "Building Kryvos..."
-cd ${project_dir}/src
+cd ${project_dir}/src/
 /usr/local/opt/qt5/bin/qmake -config release
 make -j2
 
 # Run tests
 echo "Building tests..."
-cd ${project_dir}/tests
+cd ${project_dir}/src/tests/
 /usr/local/opt/qt5/bin/qmake -config release
 make
 
