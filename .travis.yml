@@ -29,6 +29,7 @@ deploy:
     file:
       - build/macx/clang/x86_64/release/kryvos_${TRAVIS_TAG}_macos.zip
     overwrite: true
+    draft: true
     skip_cleanup: true
     on:
       tags: true
@@ -40,6 +41,7 @@ deploy:
       - build/linux/gcc/x86_64/release/kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip
       - installer/linux/kryvos_${TRAVIS_TAG}_linux_x86_64_installer
     overwrite: true
+    draft: true
     skip_cleanup: true
     on:
       tags: true
