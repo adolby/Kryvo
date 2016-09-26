@@ -9,15 +9,11 @@ environment:
 
 clone_depth: 1
 
+init:
+  - set TAG_NAME=%APPVEYOR_REPO_TAG_NAME%
+
 build_script:
   - call "build_windows.cmd"
-
-test_script:
-  - cd ..\..\..\src\tests
-  - qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
-  - nmake
-  - cd ..\..\build\win\msvc\x86_64\release\test\
-  - CryptoTests
 
 artifacts:
   - path: build\win\msvc\x86_64\release\kryvos_$(appveyor_repo_tag_name)_windows_x86_64_portable.zip

@@ -23,6 +23,13 @@ copy "..\..\..\..\..\Qt License" "Kryvos\Qt License.txt"
 mkdir Kryvos\themes
 copy "..\..\..\..\..\src\resources\stylesheets\kryvos.qss" "Kryvos\themes\kryvos.qss"
 robocopy Kryvos\ ..\..\..\..\..\installer\windows\x64\packages\com.kryvosproject.kryvos\data\ /E
-7z a kryvos_%APPVEYOR_REPO_TAG_NAME%_windows_x86_64_portable.zip Kryvos
+7z a kryvos_%TAG_NAME%_windows_x86_64_portable.zip Kryvos
 cd ..\..\..\..\..\installer\windows\x64\
-binarycreator.exe --offline-only -c config\config.xml -p packages kryvos_%APPVEYOR_REPO_TAG_NAME%_windows_x86_64_installer.exe
+binarycreator.exe --offline-only -c config\config.xml -p packages kryvos_%TAG_NAME%_windows_x86_64_installer.exe
+
+;; Build and run tests
+cd ..\..\..\src\tests
+qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
+nmake
+cd ..\..\build\win\msvc\x86_64\release\test\
+CryptoTests
