@@ -9,7 +9,6 @@ echo "Updating platform..."
 brew update
 brew install p7zip
 npm install -g appdmg
-chmod -R 755 /usr/local/opt/qt5/*
 
 # Get Qt
 echo "Installing Qt..."
