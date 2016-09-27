@@ -35,7 +35,6 @@ deploy:
     file:
       - build/macx/clang/x86_64/release/kryvos_${TRAVIS_TAG}_macos.zip
     overwrite: true
-    draft: true
     skip_cleanup: true
     on:
       tags: true
