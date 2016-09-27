@@ -5,8 +5,6 @@ set -o errexit -o nounset
 # Update platform
 echo "Updating platform..."
 sudo apt-get update
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 100
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 100
 gcc --version
 g++ --version
 sudo apt-get -qq -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
@@ -30,8 +28,8 @@ project_dir=$(pwd)
 # Get Qt
 echo "Installing Qt..."
 cd /usr/local/
-sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-x86_64-gcc6.zip
-sudo 7z x qt-opensource-5.7.0-x86_64-gcc6.zip &>/dev/null
+sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-x86_64-linux-gcc6.zip
+sudo 7z x qt-opensource-5.7.0-x86_64-linux-gcc6.zip &>/dev/null
 sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
 
 # Install Qt Installer Framework
@@ -69,10 +67,6 @@ cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "libQt5Core.so"
 cp "/usr/local/Qt-5.7.0/lib/libQt5Gui.so.5.7.0" "libQt5Gui.so"
 cp "/usr/local/Qt-5.7.0/lib/libQt5Svg.so.5.7.0" "libQt5Svg.so"
 cp "/usr/local/Qt-5.7.0/lib/libQt5Widgets.so.5.7.0" "libQt5Widgets.so"
-#mkdir platforms
-#cp "/usr/local/Qt-5.7.0/lib/libQt5XcbQpa.so.5.7.0" "platforms/libQt5XcbQpa.so"
-#cp "/usr/local/Qt-5.7.0/lib/libQt5DBus.so.5.7.0" "platforms/libQt5DBus.so"
-#cp "${project_dir}/installer/linux/packages/com.kryvosproject.kryvos/data/Kryvos.sh"
 cp "${project_dir}/Release Notes" "Release Notes"
 cp "${project_dir}/README.md" "README.md"
 cp "${project_dir}/LICENSE" "LICENSE"
@@ -84,11 +78,11 @@ cp "${project_dir}/src/resources/stylesheets/kryvos.qss" "themes/kryvos.qss"
 echo "Packaging portable archive..."
 cp -R * "${project_dir}/installer/linux/packages/com.kryvosproject.kryvos/data/"
 cd ..
-7z a kryvos_${TRAVIS_TAG}_linux_x86_64_portable.zip Kryvos
+7z a kryvos_${TAG_NAME}_linux_x86_64_portable.zip Kryvos
 
 echo "Building installer..."
 cd "${project_dir}/installer/linux/"
-/usr/local/QtIFW2.0.3/bin/binarycreator --offline-only -c config/config.xml -p packages kryvos_${TRAVIS_TAG}_linux_x86_64_installer
+/usr/local/QtIFW2.0.3/bin/binarycreator --offline-only -c config/config.xml -p packages kryvos_${TAG_NAME}_linux_x86_64_installer
 
 echo "Done!"
 
