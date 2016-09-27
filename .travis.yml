@@ -9,6 +9,7 @@ matrix:
   include:
     - os: osx
       compiler: clang
+      osx_image: xcode8
     - os: linux
       compiler: gcc
       addons:
@@ -21,9 +22,11 @@ matrix:
 
 script:
   - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_mac.sh ; fi
-  - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then ./build_mac.sh ; fi
+  - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_mac.sh ; fi
+  - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 100
+  - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 100
   - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then chmod +x build_linux.sh ; fi
-  - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then CXX="g++-6" CC="gcc-6" ./build_linux.sh ; fi
+  - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then TAG_NAME=${TRAVIS_TAG} CXX="g++-6" CC="gcc-6" ./build_linux.sh ; fi
 
 deploy:
   - provider: releases

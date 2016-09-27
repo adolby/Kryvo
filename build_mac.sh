@@ -7,21 +7,27 @@ project_dir=$(pwd)
 # Update platform
 echo "Updating platform..."
 brew update
-brew install qt5
 brew install p7zip
 npm install -g appdmg
 chmod -R 755 /usr/local/opt/qt5/*
 
+# Get Qt
+echo "Installing Qt..."
+cd /usr/local/
+sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-x86_64-macos-clang.zip
+sudo 7z x qt-opensource-5.7.0-x86_64-macos-clang.zip &>/dev/null
+sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
+
 # Build
 echo "Building Kryvos..."
 cd ${project_dir}/src/
-/usr/local/opt/qt5/bin/qmake -config release
-make -j2
+/usr/local/Qt-5.7.0/bin/qmake -config release
+make
 
 # Run tests
 echo "Building tests..."
 cd ${project_dir}/src/tests/
-/usr/local/opt/qt5/bin/qmake -config release
+/usr/local/Qt-5.7.0/bin/qmake -config release
 make
 
 echo "Running tests..."
@@ -36,8 +42,8 @@ rm -rf obj
 rm -rf qrc
 
 echo "Creating dmg archive..."
-/usr/local/opt/qt5/bin/macdeployqt Kryvos.app -dmg
-mv Kryvos.dmg "Kryvos_${TRAVIS_TAG}.dmg"
+/usr/local/Qt-5.7.0/bin/macdeployqt Kryvos.app -dmg
+mv Kryvos.dmg "Kryvos_${TAG_NAME}.dmg"
 # appdmg json-path Kryvos_${TRAVIS_TAG}.dmg
 
 cp "${project_dir}/Release Notes" "Release Notes"
@@ -49,7 +55,7 @@ mkdir themes
 cp "${project_dir}/src/resources/stylesheets/kryvos.qss" "themes/kryvos.qss"
 
 echo "Packaging zip archive..."
-7z a kryvos_${TRAVIS_TAG}_macos.zip "Kryvos_${TRAVIS_TAG}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
+7z a kryvos_${TAG_NAME}_macos.zip "Kryvos_${TAG_NAME}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
 
 echo "Done!"
 
