@@ -4,6 +4,9 @@
 #include <QJsonObject>
 #include <QSaveFile>
 #include <QFile>
+#include <QDir>
+#include <QStringBuilder>
+#include <QCoreApplication>
 
 class Settings::SettingsPrivate {
  public:
@@ -125,7 +128,10 @@ Settings::SettingsPrivate::SettingsPrivate()
 
 void Settings::SettingsPrivate::importSettings()
 {
-  QFile settingsFile{QStringLiteral("settings.json")};
+  const auto settingsPath = QCoreApplication::applicationDirPath() %
+                            QDir::separator() %
+                            "settings.json";
+  QFile settingsFile{settingsPath};
   auto fileOpen = settingsFile.open(QIODevice::ReadOnly);
 
   if (fileOpen)
@@ -184,7 +190,10 @@ void Settings::SettingsPrivate::importSettings()
 
 void Settings::SettingsPrivate::exportSettings() const
 {
-  QSaveFile settingsFile{QStringLiteral("settings.json")};
+  const auto settingsPath = QCoreApplication::applicationDirPath() %
+                            QDir::separator() %
+                            "settings.json";
+  QSaveFile settingsFile{settingsPath};
   settingsFile.setDirectWriteFallback(true);
   auto fileOpen = settingsFile.open(QIODevice::WriteOnly);
 
