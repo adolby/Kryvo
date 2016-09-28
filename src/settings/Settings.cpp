@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QStringBuilder>
 #include <QCoreApplication>
+#include <QDebug>
 
 class Settings::SettingsPrivate {
  public:
@@ -128,9 +129,14 @@ Settings::SettingsPrivate::SettingsPrivate()
 
 void Settings::SettingsPrivate::importSettings()
 {
+#if defined(Q_OS_MAC)
   const auto settingsPath = QCoreApplication::applicationDirPath() %
                             QDir::separator() %
                             "settings.json";
+#else
+  const auto settingsPath = QStringLiteral("settings.json");
+#endif
+
   QFile settingsFile{settingsPath};
   auto fileOpen = settingsFile.open(QIODevice::ReadOnly);
 
