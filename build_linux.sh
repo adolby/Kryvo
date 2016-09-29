@@ -44,7 +44,7 @@ sudo wget https://github.com/randombit/botan/archive/1.11.32.zip
 sudo 7z x 1.11.32.zip &>/dev/null
 sudo chmod -R +x /usr/local/botan-1.11.32/
 cd /usr/local/botan-1.11.32/
-python configure.py --cc=clang --amalgamation --disable-shared --with-zlib
+./configure.py --cc=clang --amalgamation --disable-shared --with-zlib
 cp botan_all_aesni.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all_aesni.cpp
 cp botan_all_avx2.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all_avx2.cpp
 cp botan_all_internal.h ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all_internal.h
