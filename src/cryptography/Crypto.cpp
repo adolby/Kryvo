@@ -353,11 +353,11 @@ void Crypto::encryptFile(const QString& passphrase,
     const auto pbkdfKeySize = static_cast<std::size_t>(256);
     Botan::secure_vector<Botan::byte> pbkdfKey =
       pbkdf.derive_key(pbkdfKeySize, passphrase.toStdString(), &pbkdfSalt[0],
-        pbkdfSalt.size(), PBKDF2_ITERATIONS).bits_of();
+                       pbkdfSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
     const auto kdfHash = std::string{"KDF2(Keccak-1600)"};
-    std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf(kdfHash)};
+    std::unique_ptr<Botan::KDF> kdf{Botan::KDF::create(kdfHash)};
 
     // Set up key salt size
     const auto keySaltSize = static_cast<std::size_t>(64);
@@ -367,9 +367,11 @@ void Crypto::encryptFile(const QString& passphrase,
 
     // Key is constrained to sizes allowed by algorithm
     const auto keySizeInBytes = keySize / 8;
+    Botan::secure_vector<Botan::byte> keyLabel;
     Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes,
                                             pbkdfKey,
-                                            keySalt)};
+                                            keySalt,
+                                            keyLabel)};
 
     // Set up IV salt size
     const auto ivSaltSize = static_cast<std::size_t>(64);
@@ -378,7 +380,11 @@ void Crypto::encryptFile(const QString& passphrase,
     range.randomize(&ivSalt[0], ivSalt.size());
 
     const auto ivSize = static_cast<std::size_t>(256);
-    Botan::InitializationVector iv{kdf->derive_key(ivSize, pbkdfKey, ivSalt)};
+    Botan::secure_vector<Botan::byte> ivLabel;
+    Botan::InitializationVector iv{kdf->derive_key(ivSize,
+                                                   pbkdfKey,
+                                                   ivSalt,
+                                                   ivLabel)};
 
     std::ifstream in{inputFileName.toStdString(), std::ios::binary};
 
@@ -448,11 +454,11 @@ void Crypto::decryptFile(const QString& passphrase,
     const auto pbkdfKeySize = static_cast<std::size_t>(256);
     Botan::secure_vector<Botan::byte> pbkdfKey =
       pbkdf.derive_key(pbkdfKeySize, passphrase.toStdString(), &pbkdfSalt[0],
-        pbkdfSalt.size(), PBKDF2_ITERATIONS).bits_of();
+                       pbkdfSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
     const auto kdfHash = std::string{"KDF2(Keccak-1600)"};
-    std::unique_ptr<Botan::KDF> kdf{Botan::get_kdf(kdfHash)};
+    std::unique_ptr<Botan::KDF> kdf{Botan::KDF::create(kdfHash)};
 
     // Key salt
     Botan::secure_vector<Botan::byte> keySalt =
@@ -461,12 +467,20 @@ void Crypto::decryptFile(const QString& passphrase,
     const auto keySize = static_cast<std::size_t>
                          (std::stoll(keySizeString.c_str()));
     const auto keySizeInBytes = keySize / 8;
-    Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes, pbkdfKey, keySalt)};
+    Botan::secure_vector<Botan::byte> keyLabel;
+    Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes,
+                                            pbkdfKey,
+                                            keySalt,
+                                            keyLabel)};
 
     Botan::secure_vector<Botan::byte> ivSalt =
       Botan::base64_decode(ivSaltString);
     const auto ivSize = static_cast<std::size_t>(256);
-    Botan::InitializationVector iv{kdf->derive_key(ivSize, pbkdfKey, ivSalt)};
+    Botan::secure_vector<Botan::byte> ivLabel;
+    Botan::InitializationVector iv{kdf->derive_key(ivSize,
+                                                   pbkdfKey,
+                                                   ivSalt,
+                                                   ivLabel)};
 
     // Remove the .enc extension if it's in the file name
     const auto outputFileName = removeExtension(inputFileName,

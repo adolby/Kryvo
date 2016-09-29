@@ -46,10 +46,10 @@ python configure.py --cc=gcc --amalgamation --disable-shared
 python configure.py --cc=clang --amalgamation --disable-shared
 
 ###Mac OS X Clang x86_64
-python configure.py --cc=clang --amalgamation --disable-shared
+python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom
 
 ###iOS Clang
-python configure.py --cpu=armv7 --cc=clang --amalgamation --disable-shared
+python configure.py --cpu=armv7 --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom
 
 ###Windows Visual Studio x86_64
 python configure.py --cpu=x64 --cc=msvc --via-amalgamation --disable-shared
