@@ -32,36 +32,27 @@ Qt source code is available at https://code.qt.io.
 
 ##Developers
 
-If you'd like to contribute to Kryvos, you can fork the project on GitHub and submit a pull request. To build Kryvos, you'll need Qt 5.2 (or later), Botan 1.11.24, and a C++14 capable compiler.
+If you'd like to contribute to Kryvos, you can fork the project on GitHub and submit a pull request. To build Kryvos, you'll need Qt 5.2 (or later), Botan 1.11.32, and a C++14 capable compiler.
 
 Amalgamation configurations of Botan are included in the source tree to simplify the build setup. Android requires a small patch that implements std::string to_string(), which is missing from the NDK STL. The patch, android_to_string.hpp, is included by botan_all.h. Both files are located at src/cryptography/botan/android/. The configuration commands used to generate minimal Botan amalgamation files follows for each platform:
 
 ###Android (ARM)
-python configure.py --cpu=armv5te --os=linux --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,dev_random,eax,filters,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd
+python configure.py --cpu=armv5te --os=linux --amalgamation --disable-shared
 
 ###Linux GCC x86_64
-python configure.py --cc=gcc --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,dev_random,eax,filters,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd
+python configure.py --cc=gcc --amalgamation --disable-shared
 
 ###Linux Clang x86_64
-python configure.py --cc=clang --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,dev_random,eax,filters,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd
+python configure.py --cc=clang --amalgamation --disable-shared
 
 ###Mac OS X Clang x86_64
-python configure.py --cc=clang --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,dev_random,eax,filters,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd
+python configure.py --cc=clang --amalgamation --disable-shared
 
 ###iOS Clang
-python configure.py --cpu=armv7 --cc=clang --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,dev_random,eax,filters,gcm,kdf2,keccak,locking_allocator,pbkdf2,serpent,serpent_simd
+python configure.py --cpu=armv7 --cc=clang --amalgamation --disable-shared
 
 ###Windows Visual Studio x86_64
-python configure.py --cpu=x64 --cc=msvc --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,eax,filters,gcm,kdf2,keccak,pbkdf2,serpent,serpent_simd,win32_stats
-
-###Windows Visual Studio x86
-python configure.py --cpu=x86 --cc=msvc --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,eax,filters,gcm,kdf2,keccak,pbkdf2,serpent,serpent_simd,win32_stats
-
-###Windows MinGW-w64 GCC x86_64
-python configure.py --cpu=x64 --cc=gcc --os=mingw --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,eax,filters,gcm,kdf2,keccak,pbkdf2,serpent,serpent_simd,win32_stats
-
-###Windows MinGW GCC x86
-python configure.py --cpu=x86 --cc=gcc --os=mingw --via-amalgamation --minimized-build --disable-shared --enable-modules=aes,base,base64,eax,filters,gcm,kdf2,keccak,pbkdf2,serpent,win32_stats
+python configure.py --cpu=x64 --cc=msvc --via-amalgamation --disable-shared
 
 ##Contact
 

@@ -38,7 +38,23 @@ sudo wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-2.0.
 sudo 7z x qt-installer-framework-opensource-2.0.3.zip &>/dev/null
 sudo chmod -R +x /usr/local/QtIFW2.0.3/bin/
 
-# Build
+# Get Botan
+echo "Installing Botan..."
+sudo wget https://github.com/randombit/botan/archive/1.11.32.zip
+sudo 7z x 1.11.32.zip &>/dev/null
+sudo chmod -R +x /usr/local/botan-1.11.32/
+cd /usr/local/botan-1.11.32/
+python configure.py --cc=clang --amalgamation --disable-shared --with-zlib
+cp botan_all_aesni.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all_aesni.cpp
+cp botan_all_avx2.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all_avx2.cpp
+cp botan_all_internal.h ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all_internal.h
+cp botan_all_rdrand.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all_rdrand.cpp
+cp botan_all_rdseed.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all_rdseed.cpp
+cp botan_all_ssse3.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all_ssse3.cpp
+cp botan_all.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all.cpp
+cp botan_all.h ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all.h
+
+# Build Kryvos
 echo "Building Kryvos..."
 echo ${project_dir}
 cd ${project_dir}/src/
@@ -57,7 +73,7 @@ cd ${project_dir}/build/linux/gcc/x86_64/release/test/
 sudo chmod +x CryptoTests
 ./CryptoTests
 
-# Package
+# Package Kryvos
 echo "Packaging..."
 cd ${project_dir}/build/linux/gcc/x86_64/release/Kryvos/
 rm -rf moc
