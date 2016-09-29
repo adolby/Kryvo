@@ -1,13 +1,13 @@
-;; Setup environment
+rem Setup environment
 set PATH=%QT%\bin\;C:\Qt\Tools\QtCreator\bin\;C:\Qt\QtIFW2.0.1\bin\;%PATH%
 call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
 
-;; Build Kryvos
+rem Build Kryvos
 cd src
 qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
 nmake
 
-;; Package Kryvos
+rem Package Kryvos
 cd ..
 mkdir installer\windows\x64\packages\com.kryvosproject.kryvos\data\
 cd build\win\msvc\x86_64\release\
@@ -26,10 +26,3 @@ robocopy Kryvos\ ..\..\..\..\..\installer\windows\x64\packages\com.kryvosproject
 7z a kryvos_%TAG_NAME%_windows_x86_64_portable.zip Kryvos
 cd ..\..\..\..\..\installer\windows\x64\
 binarycreator.exe --offline-only -c config\config.xml -p packages kryvos_%TAG_NAME%_windows_x86_64_installer.exe
-
-;; Build and run tests
-;; cd ..\..\..\src\tests
-;; qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
-;; nmake
-;; cd ..\..\build\win\msvc\x86_64\release\test\
-;; CryptoTests
