@@ -107,7 +107,8 @@ android-g++ {
 
   linux {
     message(Linux)
-    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector -Wl -rpath "'\$$ORIGIN'"
 
     linux-clang {
       message(Linux Clang x86_64)
@@ -126,8 +127,6 @@ android-g++ {
 
     linux-g++-64 {
       message(Linux G++ x86_64)
-      QMAKE_CXXFLAGS += -fstack-protector
-      QMAKE_LFLAGS += -fstack-protector
 
       SOURCES += cryptography/botan/linux/gcc/x86_64/botan_all.cpp
       HEADERS += cryptography/botan/linux/gcc/x86_64/botan_all.h
@@ -144,8 +143,6 @@ android-g++ {
 
     linux-g++-32 {
       message(Linux G++ x86)
-      QMAKE_CXXFLAGS += -fstack-protector
-      QMAKE_LFLAGS += -fstack-protector
 
       SOURCES += cryptography/botan/linux/gcc/x86/botan_all.cpp
       HEADERS += cryptography/botan/linux/gcc/x86/botan_all.h
@@ -166,8 +163,20 @@ android-g++ {
 
     CONFIG += c++14
 
-    SOURCES += cryptography/botan/mac/clang/x86_64/botan_all.cpp
-    HEADERS += cryptography/botan/mac/clang/x86_64/botan_all.h
+    #QMAKE_MAC_SDK = macosx10.12
+
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
+
+    SOURCES += cryptography/botan/mac/clang/x86_64/botan_all.cpp \
+               cryptography/botan/mac/clang/x86_64/botan_all_aesni.cpp \
+               cryptography/botan/mac/clang/x86_64/botan_all_avx2.cpp \
+               cryptography/botan/mac/clang/x86_64/botan_all_rdrand.cpp \
+               cryptography/botan/mac/clang/x86_64/botan_all_rdseed.cpp \
+               cryptography/botan/mac/clang/x86_64/botan_all_ssse3.cpp
+
+    HEADERS += cryptography/botan/mac/clang/x86_64/botan_all.h \
+               cryptography/botan/mac/clang/x86_64/botan_all_internal.h
 
     ICON = resources/mac/icon/Kryvos.icns
 
