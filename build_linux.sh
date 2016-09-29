@@ -62,16 +62,16 @@ cd ${project_dir}/src/
 make -j2
 
 # Build tests
-echo "Building tests..."
-cd ${project_dir}/src/tests/
-/usr/local/Qt-5.7.0/bin/qmake -config release
-make -j2
+# echo "Building tests..."
+# cd ${project_dir}/src/tests/
+# /usr/local/Qt-5.7.0/bin/qmake -config release
+# make -j2
 
 # Run tests
-echo "Running tests..."
-cd ${project_dir}/build/linux/gcc/x86_64/release/test/
-sudo chmod +x CryptoTests
-./CryptoTests
+# echo "Running tests..."
+# cd ${project_dir}/build/linux/gcc/x86_64/release/test/
+# sudo chmod +x CryptoTests
+# ./CryptoTests
 
 # Package Kryvos
 echo "Packaging..."

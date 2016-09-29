@@ -44,15 +44,15 @@ cd ${project_dir}/src/
 make
 
 # Build tests
-echo "Building tests..."
-cd ${project_dir}/src/tests/
-/usr/local/Qt-5.7.0/bin/qmake -config release
-make
+# echo "Building tests..."
+# cd ${project_dir}/src/tests/
+# /usr/local/Qt-5.7.0/bin/qmake -config release
+# make
 
-# Run tests
-echo "Running tests..."
-cd ${project_dir}/build/macx/clang/x86_64/release/test/
-open CryptoTests.app
+# # Run tests
+# echo "Running tests..."
+# cd ${project_dir}/build/macx/clang/x86_64/release/test/
+# open CryptoTests.app
 
 # Package Kryvos
 echo "Packaging..."
