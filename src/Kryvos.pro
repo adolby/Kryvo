@@ -112,8 +112,7 @@ android-g++ {
 
     linux-clang {
       message(Linux Clang x86_64)
-      SOURCES += cryptography/botan/linux/clang/x86_64/botan_all.cpp
-      SOURCES += cryptography/botan/linux/clang/x86_64/botan_all.cpp
+      SOURCES += cryptography/botan/linux/clang/x86_64/botan_all.cpp \
                  cryptography/botan/linux/clang/x86_64/botan_all_aesni.cpp \
                  cryptography/botan/linux/clang/x86_64/botan_all_avx2.cpp \
                  cryptography/botan/linux/clang/x86_64/botan_all_rdrand.cpp \
@@ -135,7 +134,7 @@ android-g++ {
     linux-g++-64 {
       message(Linux G++ x86_64)
 
-      SOURCES += cryptography/botan/linux/gcc/x86_64/botan_all.cpp
+      SOURCES += cryptography/botan/linux/gcc/x86_64/botan_all.cpp \
                  cryptography/botan/linux/gcc/x86_64/botan_all_aesni.cpp \
                  cryptography/botan/linux/gcc/x86_64/botan_all_avx2.cpp \
                  cryptography/botan/linux/gcc/x86_64/botan_all_rdrand.cpp \
@@ -157,7 +156,7 @@ android-g++ {
     linux-g++-32 {
       message(Linux G++ x86)
 
-      SOURCES += cryptography/botan/linux/gcc/x86/botan_all.cpp
+      SOURCES += cryptography/botan/linux/gcc/x86/botan_all.cpp \
                  cryptography/botan/linux/gcc/x86/botan_all_aesni.cpp \
                  cryptography/botan/linux/gcc/x86/botan_all_avx2.cpp \
                  cryptography/botan/linux/gcc/x86/botan_all_rdrand.cpp \
