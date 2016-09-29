@@ -28,8 +28,8 @@ cd ..\..\..\..\..\installer\windows\x64\
 binarycreator.exe --offline-only -c config\config.xml -p packages kryvos_%TAG_NAME%_windows_x86_64_installer.exe
 
 ;; Build and run tests
-cd ..\..\..\src\tests
-qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
-nmake
-cd ..\..\build\win\msvc\x86_64\release\test\
-CryptoTests
+;; cd ..\..\..\src\tests
+;; qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
+;; nmake
+;; cd ..\..\build\win\msvc\x86_64\release\test\
+;; CryptoTests
