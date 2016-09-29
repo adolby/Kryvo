@@ -113,7 +113,14 @@ android-g++ {
     linux-clang {
       message(Linux Clang x86_64)
       SOURCES += cryptography/botan/linux/clang/x86_64/botan_all.cpp
-      HEADERS += cryptography/botan/linux/clang/x86_64/botan_all.h
+      SOURCES += cryptography/botan/linux/clang/x86_64/botan_all.cpp
+                 cryptography/botan/linux/clang/x86_64/botan_all_aesni.cpp \
+                 cryptography/botan/linux/clang/x86_64/botan_all_avx2.cpp \
+                 cryptography/botan/linux/clang/x86_64/botan_all_rdrand.cpp \
+                 cryptography/botan/linux/clang/x86_64/botan_all_rdseed.cpp \
+                 cryptography/botan/linux/clang/x86_64/botan_all_ssse3.cpp
+      HEADERS += cryptography/botan/linux/clang/x86_64/botan_all.h \
+                 cryptography/botan/linux/clang/x86_64/botan_all_internal.h
 
       debug {
         message(Debug)
@@ -129,7 +136,13 @@ android-g++ {
       message(Linux G++ x86_64)
 
       SOURCES += cryptography/botan/linux/gcc/x86_64/botan_all.cpp
-      HEADERS += cryptography/botan/linux/gcc/x86_64/botan_all.h
+                 cryptography/botan/linux/gcc/x86_64/botan_all_aesni.cpp \
+                 cryptography/botan/linux/gcc/x86_64/botan_all_avx2.cpp \
+                 cryptography/botan/linux/gcc/x86_64/botan_all_rdrand.cpp \
+                 cryptography/botan/linux/gcc/x86_64/botan_all_rdseed.cpp \
+                 cryptography/botan/linux/gcc/x86_64/botan_all_ssse3.cpp
+      HEADERS += cryptography/botan/linux/gcc/x86_64/botan_all.h \
+                 cryptography/botan/linux/gcc/x86_64/botan_all_internal.h
 
       debug {
         message(Debug)
@@ -145,7 +158,13 @@ android-g++ {
       message(Linux G++ x86)
 
       SOURCES += cryptography/botan/linux/gcc/x86/botan_all.cpp
-      HEADERS += cryptography/botan/linux/gcc/x86/botan_all.h
+                 cryptography/botan/linux/gcc/x86/botan_all_aesni.cpp \
+                 cryptography/botan/linux/gcc/x86/botan_all_avx2.cpp \
+                 cryptography/botan/linux/gcc/x86/botan_all_rdrand.cpp \
+                 cryptography/botan/linux/gcc/x86/botan_all_rdseed.cpp \
+                 cryptography/botan/linux/gcc/x86/botan_all_ssse3.cpp
+      HEADERS += cryptography/botan/linux/gcc/x86/botan_all.h \
+                 cryptography/botan/linux/gcc/x86/botan_all_internal.h
 
       debug {
         message(Debug)
