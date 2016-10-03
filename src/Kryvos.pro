@@ -247,6 +247,8 @@ android-g++ {
     }
 
     win32-msvc2015 {
+      QMAKE_CXXFLAGS += -bigobj
+
       contains(QT_ARCH, x86_64) {
         message(Windows x86_64 MSVC)
 
