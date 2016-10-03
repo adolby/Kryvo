@@ -247,7 +247,7 @@ android-g++ {
     }
 
     win32-msvc2015 {
-      QMAKE_CXXFLAGS += -bigobj -arch:AVX2
+      QMAKE_CXXFLAGS += -bigobj -arch:AVX2 -DBOTAN_DLL=__declspec(dllexport)
 
       contains(QT_ARCH, x86_64) {
         message(Windows x86_64 MSVC)
