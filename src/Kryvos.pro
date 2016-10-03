@@ -210,49 +210,55 @@ android-g++ {
   }
 
   win32 {
-    win32-g++ {
-      QMAKE_CXXFLAGS += -fstack-protector
-      QMAKE_LFLAGS += -fstack-protector
+# TODO: GCC from MinGW (and w64) build needs to be updated
+#    win32-g++ {
+#      QMAKE_CXXFLAGS += -fstack-protector
+#      QMAKE_LFLAGS += -fstack-protector
 
-      contains(QT_ARCH, x86_64) {
-        message(Windows x86_64 G++)
+#      contains(QT_ARCH, x86_64) {
+#        message(Windows x86_64 G++)
 
-        SOURCES += cryptography/botan/windows/mingw/x86_64/botan_all.cpp
-        HEADERS += cryptography/botan/windows/mingw/x86_64/botan_all.h \
-                   cryptography/botan/windows/mingw/x86_64/botan_all_internal.h
+#        SOURCES += cryptography/botan/windows/mingw/x86_64/botan_all.cpp
+#        HEADERS += cryptography/botan/windows/mingw/x86_64/botan_all.h \
+#                   cryptography/botan/windows/mingw/x86_64/botan_all_internal.h
 
-        debug {
-          message(Debug)
-          DESTDIR = ../build/win/mingw/x86_64/debug/Kryvos/
-        }
-        release {
-          message(Release)
-          DESTDIR = ../build/win/mingw/x86_64/release/Kryvos/
-        }
-      } else {
-        message(Windows x86 G++)
-        SOURCES += cryptography/botan/windows/mingw/x86/botan_all.cpp
-        HEADERS += cryptography/botan/windows/mingw/x86/botan_all.h \
-                   cryptography/botan/windows/mingw/x86/botan_all_internal.h
+#        debug {
+#          message(Debug)
+#          DESTDIR = ../build/win/mingw/x86_64/debug/Kryvos/
+#        }
+#        release {
+#          message(Release)
+#          DESTDIR = ../build/win/mingw/x86_64/release/Kryvos/
+#        }
+#      } else {
+#        message(Windows x86 G++)
+#        SOURCES += cryptography/botan/windows/mingw/x86/botan_all.cpp
+#        HEADERS += cryptography/botan/windows/mingw/x86/botan_all.h \
+#                   cryptography/botan/windows/mingw/x86/botan_all_internal.h
 
-        debug {
-          message(Debug)
-          DESTDIR = ../build/win/mingw/x86/debug/Kryvos/
-        }
-        release {
-          message(Release)
-          DESTDIR = ../build/win/mingw/x86/release/Kryvos/
-        }
-      }
-    }
+#        debug {
+#          message(Debug)
+#          DESTDIR = ../build/win/mingw/x86/debug/Kryvos/
+#        }
+#        release {
+#          message(Release)
+#          DESTDIR = ../build/win/mingw/x86/release/Kryvos/
+#        }
+#      }
+#    }
 
     win32-msvc2015 {
-      QMAKE_CXXFLAGS += -bigobj -arch:AVX2 -DBOTAN_DLL=__declspec(dllexport)
+      QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
       contains(QT_ARCH, x86_64) {
         message(Windows x86_64 MSVC)
 
-        SOURCES += cryptography/botan/windows/msvc/x86_64/botan_all.cpp
+        SOURCES += cryptography/botan/windows/msvc/x86_64/botan_all.cpp \
+                   cryptography/botan/windows/msvc/x86_64/botan_all_aesni.cpp \
+                   cryptography/botan/windows/msvc/x86_64/botan_all_avx2.cpp \
+                   cryptography/botan/windows/msvc/x86_64/botan_all_rdrand.cpp \
+                   cryptography/botan/windows/msvc/x86_64/botan_all_rdseed.cpp \
+                   cryptography/botan/windows/msvc/x86_64/botan_all_ssse3.cpp
         HEADERS += cryptography/botan/windows/msvc/x86_64/botan_all.h \
                    cryptography/botan/windows/msvc/x86_64/botan_all_internal.h
 
@@ -266,7 +272,13 @@ android-g++ {
         }
       } else {
         message(Windows x86 MSVC)
-        SOURCES += cryptography/botan/windows/msvc/x86/botan_all.cpp
+        SOURCES += cryptography/botan/windows/msvc/x86/botan_all.cpp \
+                   cryptography/botan/windows/msvc/x86/botan_all_aesni.cpp \
+                   cryptography/botan/windows/msvc/x86/botan_all_avx2.cpp \
+                   cryptography/botan/windows/msvc/x86/botan_all_rdrand.cpp \
+                   cryptography/botan/windows/msvc/x86/botan_all_rdseed.cpp \
+                   cryptography/botan/windows/msvc/x86/botan_all_ssse3.cpp
+
         HEADERS += cryptography/botan/windows/msvc/x86/botan_all.h \
                    cryptography/botan/windows/msvc/x86/botan_all_internal.h
 
