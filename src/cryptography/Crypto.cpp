@@ -230,7 +230,7 @@ void Crypto::encrypt(const QString& passphrase,
     }
     catch (const Botan::Stream_IO_Error&)
     {
-      emit errorMessage(inputFileName, m->messages[8].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[7].arg(inputFileName));
     }
     catch (const std::exception& e)
     {
@@ -279,9 +279,13 @@ void Crypto::decrypt(const QString& passphrase,
     {
       emit errorMessage(inputFileName, m->messages[5].arg(inputFileName));
     }
+    catch (const Botan::Invalid_Argument&)
+    {
+      emit errorMessage(inputFileName, m->messages[6].arg(inputFileName));
+    }
     catch (const std::invalid_argument&)
     {
-      emit errorMessage(inputFileName, m->messages[7].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[6].arg(inputFileName));
     }
     catch (const std::runtime_error&)
     {
@@ -367,11 +371,16 @@ void Crypto::encryptFile(const QString& passphrase,
 
     // Key is constrained to sizes allowed by algorithm
     const auto keySizeInBytes = keySize / 8;
-    Botan::secure_vector<Botan::byte> keyLabel;
+    const std::string keyLabel = "user secret";
+    const auto keyLabelVector =
+        reinterpret_cast<const Botan::byte*>(keyLabel.data());
     Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes,
-                                            pbkdfKey,
-                                            keySalt,
-                                            keyLabel)};
+                                            pbkdfKey.data(),
+                                            pbkdfKey.size(),
+                                            keySalt.data(),
+                                            keySalt.size(),
+                                            keyLabelVector,
+                                            keyLabel.size())};
 
     // Set up IV salt size
     const auto ivSaltSize = static_cast<std::size_t>(64);
@@ -380,11 +389,16 @@ void Crypto::encryptFile(const QString& passphrase,
     range.randomize(&ivSalt[0], ivSalt.size());
 
     const auto ivSize = static_cast<std::size_t>(256);
-    Botan::secure_vector<Botan::byte> ivLabel;
+    const std::string ivLabel = "initialization vector";
+    const auto ivLabelVector =
+        reinterpret_cast<const Botan::byte*>(ivLabel.data());
     Botan::InitializationVector iv{kdf->derive_key(ivSize,
-                                                   pbkdfKey,
-                                                   ivSalt,
-                                                   ivLabel)};
+                                                   pbkdfKey.data(),
+                                                   pbkdfKey.size(),
+                                                   ivSalt.data(),
+                                                   ivSalt.size(),
+                                                   ivLabelVector,
+                                                   ivLabel.size())};
 
     std::ifstream in{inputFileName.toStdString(), std::ios::binary};
 
@@ -463,24 +477,33 @@ void Crypto::decryptFile(const QString& passphrase,
     // Key salt
     Botan::secure_vector<Botan::byte> keySalt =
         Botan::base64_decode(keySaltString);
-
-    const auto keySize = static_cast<std::size_t>
-                         (std::stoll(keySizeString.c_str()));
+    const auto keySize =
+        static_cast<std::size_t> (std::stoll(keySizeString.c_str()));
     const auto keySizeInBytes = keySize / 8;
-    Botan::secure_vector<Botan::byte> keyLabel;
+    const std::string keyLabel = "user secret";
+    const auto keyLabelVector =
+        reinterpret_cast<const Botan::byte*>(keyLabel.data());
     Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes,
-                                            pbkdfKey,
-                                            keySalt,
-                                            keyLabel)};
+                                            pbkdfKey.data(),
+                                            pbkdfKey.size(),
+                                            keySalt.data(),
+                                            keySalt.size(),
+                                            keyLabelVector,
+                                            keyLabel.size())};
 
     Botan::secure_vector<Botan::byte> ivSalt =
       Botan::base64_decode(ivSaltString);
     const auto ivSize = static_cast<std::size_t>(256);
-    Botan::secure_vector<Botan::byte> ivLabel;
+    const std::string ivLabel = "initialization vector";
+    const auto ivLabelVector =
+        reinterpret_cast<const Botan::byte*>(ivLabel.data());
     Botan::InitializationVector iv{kdf->derive_key(ivSize,
-                                                   pbkdfKey,
-                                                   ivSalt,
-                                                   ivLabel)};
+                                                   pbkdfKey.data(),
+                                                   pbkdfKey.size(),
+                                                   ivSalt.data(),
+                                                   ivSalt.size(),
+                                                   ivLabelVector,
+                                                   ivLabel.size())};
 
     // Remove the .enc extension if it's in the file name
     const auto outputFileName = removeExtension(inputFileName,
@@ -576,18 +599,12 @@ Crypto::CryptoPrivate::CryptoPrivate()
              tr("File %1 decrypted."),
              tr("Encryption stopped. File %1 is incomplete."),
              tr("Decryption stopped. File %1 is incomplete."),
-             tr("Error: File %1 couldn't be read."),
-             tr("Error: Decryption failed. Wrong password entered or file %1 "
-                "has changed since it was created. This could mean someone "
-                "has tampered with the file. It also could mean the file has "
-                "become corrupted. You'll need to encrypt the source file "
-                "again."),
-             tr("Error: File %1's header is not recognized."),
-             tr("Error: Decryption failed. File %1's header couldn't be "
-                "read."),
-             tr("Error: Encryption failed. Can't encrypt file %1. Check that "
-                "this file exists and that you have permission to access it "
-                "and try again.")},
+             tr("Error: Can't read file %1."),
+             tr("Error: Can't decrypt file %1. Wrong password entered or the "
+                "file has been corrupted."),
+             tr("Error: Can't decrypt file %1. Is it an encrypted file?"),
+             tr("Error: Can't encrypt file %1. Check that this file exists and "
+                "that you have permission to access it and try again.")},
     aborted{false}, paused{false}, busyStatus{false}
 {
   // Reserve elements to improve dictionary performance
