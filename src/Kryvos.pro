@@ -210,44 +210,8 @@ android-g++ {
   }
 
   win32 {
-# TODO: GCC from MinGW (and w64) build needs to be updated
-#    win32-g++ {
-#      QMAKE_CXXFLAGS += -fstack-protector
-#      QMAKE_LFLAGS += -fstack-protector
-
-#      contains(QT_ARCH, x86_64) {
-#        message(Windows x86_64 G++)
-
-#        SOURCES += cryptography/botan/windows/mingw/x86_64/botan_all.cpp
-#        HEADERS += cryptography/botan/windows/mingw/x86_64/botan_all.h \
-#                   cryptography/botan/windows/mingw/x86_64/botan_all_internal.h
-
-#        debug {
-#          message(Debug)
-#          DESTDIR = ../build/win/mingw/x86_64/debug/Kryvos/
-#        }
-#        release {
-#          message(Release)
-#          DESTDIR = ../build/win/mingw/x86_64/release/Kryvos/
-#        }
-#      } else {
-#        message(Windows x86 G++)
-#        SOURCES += cryptography/botan/windows/mingw/x86/botan_all.cpp
-#        HEADERS += cryptography/botan/windows/mingw/x86/botan_all.h \
-#                   cryptography/botan/windows/mingw/x86/botan_all_internal.h
-
-#        debug {
-#          message(Debug)
-#          DESTDIR = ../build/win/mingw/x86/debug/Kryvos/
-#        }
-#        release {
-#          message(Release)
-#          DESTDIR = ../build/win/mingw/x86/release/Kryvos/
-#        }
-#      }
-#    }
-
     win32-msvc2015 {
+      LIBS += advapi32.lib user32.lib
       QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
       contains(QT_ARCH, x86_64) {
