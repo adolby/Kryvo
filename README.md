@@ -6,9 +6,9 @@ Kryvos is an open-source file encryptor and decryptor. It encrypts files with AE
 
 ##Getting Started
 
-To install Krvyos, run the installer executable or extract the files from the Kryvos archive. Once the install files are copied, run the Kryvos executable.
+To install Krvyos on Windows or Linux, run the installer executable or extract the files from the Kryvos archive. To install Kryvos on macOS, extract the disk image archive, then mount the disk image. Drag Kryvos.app to your Applications folder. Once the install files are copied, run the Kryvos executable.
 
-Add files by clicking/tapping the Add Files button and selecting them in the dialog or by dragging and dropping files to the Kryvos window. Click encrypt or decrypt to process the entire list.
+Add files by clicking/tapping the Add Files button and selecting them in the dialog or by dragging and dropping files to the Kryvos window. Press encrypt or decrypt to process the entire list.
 
 Files are encrypted/decrypted one-to-one, meaning that encryption of a "file.txt" will yield an encrypted "file.txt.enc" and decryption of "file.txt.enc" will yield a decrypted "file (2).txt".
 
@@ -52,7 +52,7 @@ python configure.py --cc=clang --amalgamation --disable-shared --disable-modules
 python configure.py --cpu=armv7 --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom
 
 ###Windows Visual Studio x86_64
-python configure.py --cpu=x64 --cc=msvc --via-amalgamation --disable-shared
+python configure.py --cpu=x64 --cc=msvc --os=windows --amalgamation --disable-shared
 
 ##Contact
 

@@ -35,7 +35,7 @@
 
 /*
 * This file was automatically generated running
-* 'configure.py --cpu=x64 --cc=msvc --via-amalgamation --disable-shared'
+* 'configure.py --cpu=x64 --cc=msvc --os=windows --amalgamation --disable-shared'
 *
 * Target
 *  - Compiler: cl  /MD /bigobj /EHs /GR /O2
