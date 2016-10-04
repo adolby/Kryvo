@@ -1,5 +1,7 @@
 echo on
 
+SET project_dir="%cd%"
+
 echo Set up environment...
 set PATH=%QT%\bin\;C:\Qt\Tools\QtCreator\bin\;C:\Qt\QtIFW2.0.1\bin\;%PATH%
 call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
@@ -9,21 +11,25 @@ qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
 nmake
 
 echo Packaging...
-cd ..
-mkdir installer\windows\x86_64\packages\com.kryvosproject.kryvos\data\
-cd build\windows\msvc\x86_64\release\
+cd %project_dir%\build\windows\msvc\x86_64\release\
 windeployqt Kryvos\Kryvos.exe
-rd /s /q Kryvos\moc
-rd /s /q Kryvos\obj
-rd /s /q Kryvos\qrc
-copy "..\..\..\..\..\Release Notes" "Kryvos\Release Notes.txt"
-copy "..\..\..\..\..\README.md" "Kryvos\README.md"
-copy "..\..\..\..\..\LICENSE" "Kryvos\LICENSE.txt"
-copy "..\..\..\..\..\Botan License" "Kryvos\Botan License.txt"
-copy "..\..\..\..\..\Qt License" "Kryvos\Qt License.txt"
-mkdir Kryvos\themes
-copy "..\..\..\..\..\src\resources\stylesheets\kryvos.qss" "Kryvos\themes\kryvos.qss"
-robocopy Kryvos\ ..\..\..\..\..\installer\windows\x86_64\packages\com.kryvosproject.kryvos\data\ /E
+
+rd /s /q Kryvos\moc\
+rd /s /q Kryvos\obj\
+rd /s /q Kryvos\qrc\
+
+copy "%project_dir%\Release Notes" "Kryvos\Release Notes.txt"
+copy "%project_dir%\README.md" "Kryvos\README.md"
+copy "%project_dir%\LICENSE" "Kryvos\LICENSE.txt"
+copy "%project_dir%\Botan License" "Kryvos\Botan License.txt"
+copy ".%project_dir%\Qt License" "Kryvos\Qt License.txt"
+mkdir %project_dir%\Kryvos\themes\
+copy "%project_dir%\resources\stylesheets\kryvos.qss" "Kryvos\themes\kryvos.qss"
+
+mkdir %project_dir%\installer\windows\x86_64\packages\com.kryvosproject.kryvos\data\
+robocopy Kryvos\ %project_dir%\installer\windows\x86_64\packages\com.kryvosproject.kryvos\data\ /E
+
 7z a kryvos_%TAG_NAME%_windows_x86_64_portable.zip Kryvos
-cd ..\..\..\..\..\installer\windows\x86_64\
+
+cd %project_dir%\installer\windows\x86_64\
 binarycreator.exe --offline-only -c config\config.xml -p packages kryvos_%TAG_NAME%_windows_x86_64_installer.exe
