@@ -210,7 +210,7 @@ android-g++ {
       src/cryptography/botan/macOS/clang/x86_64/botan_all.h \
       src/cryptography/botan/macOS/clang/x86_64/botan_all_internal.h
 
-    ICON = resources/macOS/icon/Kryvos.icns
+    ICON = resources/icons/kryvos.icns
 
     debug {
       message(Debug)
@@ -276,7 +276,7 @@ android-g++ {
       }
     }
 
-    RC_ICONS += resources/windows/icon/kryvos.ico
+    RC_ICONS += resources/icons/kryvos.ico
   } # End win32
 } # End desktop
 
