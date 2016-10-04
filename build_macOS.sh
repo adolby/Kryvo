@@ -72,7 +72,7 @@ cp "${project_dir}/LICENSE" "LICENSE"
 cp "${project_dir}/Botan License" "Botan License"
 cp "${project_dir}/Qt License" "Qt License"
 # mkdir themes
-# cp "${project_dir}/src/resources/stylesheets/kryvos.qss" "themes/kryvos.qss"
+# cp "${project_dir}/resources/stylesheets/kryvos.qss" "themes/kryvos.qss"
 
 echo "Packaging zip archive..."
 7z a kryvos_${TAG_NAME}_macos.zip "Kryvos_${TAG_NAME}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"

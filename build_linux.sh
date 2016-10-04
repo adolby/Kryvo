@@ -88,7 +88,7 @@ cp "${project_dir}/LICENSE" "LICENSE"
 cp "${project_dir}/Botan License" "Botan License"
 cp "${project_dir}/Qt License" "Qt License"
 mkdir themes
-cp "${project_dir}/src/resources/stylesheets/kryvos.qss" "themes/kryvos.qss"
+cp "${project_dir}/resources/stylesheets/kryvos.qss" "themes/kryvos.qss"
 
 echo "Packaging portable archive..."
 cp -R * "${project_dir}/installer/linux/packages/com.kryvosproject.kryvos/data/"
