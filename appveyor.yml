@@ -16,9 +16,9 @@ build_script:
   - call "build_windows.cmd"
 
 artifacts:
-  - path: build\win\msvc\x86_64\release\kryvos_$(appveyor_repo_tag_name)_windows_x86_64_portable.zip
+  - path: build\windows\msvc\x86_64\release\kryvos_$(appveyor_repo_tag_name)_windows_x86_64_portable.zip
     name: portable
-  - path: installer\windows\x64\kryvos_$(appveyor_repo_tag_name)_windows_x86_64_installer.exe
+  - path: installer\windows\x86_64\kryvos_$(appveyor_repo_tag_name)_windows_x86_64_installer.exe
     name: installer
 
 deploy:

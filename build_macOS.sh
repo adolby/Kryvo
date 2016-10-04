@@ -24,14 +24,14 @@ sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
 # sudo chmod -R +x /usr/local/botan-1.11.32/
 # cd /usr/local/botan-1.11.32/
 # ./configure.py --cc=clang --amalgamation --disable-shared --with-zlib
-# cp botan_all_aesni.cpp ${project_dir}/src/cryptography/botan/mac/clang/x86_64/botan_all_aesni.cpp
-# cp botan_all_avx2.cpp ${project_dir}/src/cryptography/botan/mac/clang/x86_64/botan_all_avx2.cpp
-# cp botan_all_internal.h ${project_dir}/src/cryptography/botan/mac/clang/x86_64/botan_all_internal.h
-# cp botan_all_rdrand.cpp ${project_dir}/src/cryptography/botan/mac/clang/x86_64/botan_all_rdrand.cpp
-# cp botan_all_rdseed.cpp ${project_dir}/src/cryptography/botan/mac/clang/x86_64/botan_all_rdseed.cpp
-# cp botan_all_ssse3.cpp ${project_dir}/src/cryptography/botan/mac/clang/x86_64/botan_all_ssse3.cpp
-# cp botan_all.cpp ${project_dir}/src/cryptography/botan/mac/clang/x86_64/botan_all.cpp
-# cp botan_all.h ${project_dir}/src/cryptography/botan/mac/clang/x86_64/botan_all.h
+# cp botan_all_aesni.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all_aesni.cpp
+# cp botan_all_avx2.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all_avx2.cpp
+# cp botan_all_internal.h ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all_internal.h
+# cp botan_all_rdrand.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all_rdrand.cpp
+# cp botan_all_rdseed.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all_rdseed.cpp
+# cp botan_all_ssse3.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all_ssse3.cpp
+# cp botan_all.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all.cpp
+# cp botan_all.h ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all.h
 
 # Create temporary symlink for Xcode8 compatibility
 cd /Applications/Xcode.app/Contents/Developer/usr/bin/
@@ -51,12 +51,12 @@ make
 
 # # Run tests
 # echo "Running tests..."
-# cd ${project_dir}/build/macx/clang/x86_64/release/test/
+# cd ${project_dir}/build/macOS/clang/x86_64/release/test/
 # open CryptoTests.app
 
 # Package Kryvos
 echo "Packaging..."
-cd ${project_dir}/build/macx/clang/x86_64/release/
+cd ${project_dir}/build/macOS/clang/x86_64/release/
 rm -rf moc
 rm -rf obj
 rm -rf qrc
@@ -71,8 +71,8 @@ cp "${project_dir}/README.md" "README.md"
 cp "${project_dir}/LICENSE" "LICENSE"
 cp "${project_dir}/Botan License" "Botan License"
 cp "${project_dir}/Qt License" "Qt License"
-mkdir themes
-cp "${project_dir}/src/resources/stylesheets/kryvos.qss" "themes/kryvos.qss"
+# mkdir themes
+# cp "${project_dir}/src/resources/stylesheets/kryvos.qss" "themes/kryvos.qss"
 
 echo "Packaging zip archive..."
 7z a kryvos_${TAG_NAME}_macos.zip "Kryvos_${TAG_NAME}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"

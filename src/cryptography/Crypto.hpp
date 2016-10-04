@@ -6,9 +6,9 @@
 #if defined(Q_OS_ANDROID)
 #include "cryptography/botan/android/botan_all.h"
 #elif defined(Q_OS_IOS)
-#include "cryptography/botan/ios/botan_all.h"
+#include "cryptography/botan/iOS/botan_all.h"
 #elif defined(Q_OS_MACX)
-#include "cryptography/botan/mac/clang/x86_64/botan_all.h"
+#include "cryptography/botan/macOS/clang/x86_64/botan_all.h"
 #elif defined(Q_OS_LINUX)
   #if defined(__clang__)
 #include "cryptography/botan/linux/clang/x86_64/botan_all.h"

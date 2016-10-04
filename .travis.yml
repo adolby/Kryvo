@@ -21,8 +21,8 @@ matrix:
             - g++-6
 
 script:
-  - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_mac.sh ; fi
-  - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_mac.sh ; fi
+  - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_macOS.sh ; fi
+  - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_macOS.sh ; fi
   - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 100 ; fi
   - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 100 ; fi
   - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then chmod +x build_linux.sh ; fi
@@ -33,7 +33,7 @@ deploy:
     api_key:
       secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
     file:
-      - build/macx/clang/x86_64/release/kryvos_${TRAVIS_TAG}_macos.zip
+      - build/macOS/clang/x86_64/release/kryvos_${TRAVIS_TAG}_macos.zip
     overwrite: true
     skip_cleanup: true
     on:

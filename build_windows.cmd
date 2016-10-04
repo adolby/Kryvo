@@ -9,8 +9,8 @@ nmake
 
 rem Package Kryvos
 cd ..
-mkdir installer\windows\x64\packages\com.kryvosproject.kryvos\data\
-cd build\win\msvc\x86_64\release\
+mkdir installer\windows\x86_64\packages\com.kryvosproject.kryvos\data\
+cd build\windows\msvc\x86_64\release\
 windeployqt Kryvos\Kryvos.exe
 rd /s /q Kryvos\moc
 rd /s /q Kryvos\obj
@@ -22,7 +22,7 @@ copy "..\..\..\..\..\Botan License" "Kryvos\Botan License.txt"
 copy "..\..\..\..\..\Qt License" "Kryvos\Qt License.txt"
 mkdir Kryvos\themes
 copy "..\..\..\..\..\src\resources\stylesheets\kryvos.qss" "Kryvos\themes\kryvos.qss"
-robocopy Kryvos\ ..\..\..\..\..\installer\windows\x64\packages\com.kryvosproject.kryvos\data\ /E
+robocopy Kryvos\ ..\..\..\..\..\installer\windows\x86_64\packages\com.kryvosproject.kryvos\data\ /E
 7z a kryvos_%TAG_NAME%_windows_x86_64_portable.zip Kryvos
-cd ..\..\..\..\..\installer\windows\x64\
+cd ..\..\..\..\..\installer\windows\x86_64\
 binarycreator.exe --offline-only -c config\config.xml -p packages kryvos_%TAG_NAME%_windows_x86_64_installer.exe
