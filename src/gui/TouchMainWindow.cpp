@@ -1,4 +1,4 @@
-#include "gui/TouchMainWindow.hpp"
+#include "src/gui/TouchMainWindow.hpp"
 #include <QApplication>
 
 TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)

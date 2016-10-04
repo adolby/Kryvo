@@ -1,8 +1,8 @@
 #ifndef KRYVOS_GUI_DESKTOPMAINWINDOW_HPP_
 #define KRYVOS_GUI_DESKTOPMAINWINDOW_HPP_
 
-#include "gui/MainWindow.hpp"
-#include "settings/Settings.hpp"
+#include "src/gui/MainWindow.hpp"
+#include "src/settings/Settings.hpp"
 #include <QCloseEvent>
 #include <QDragEnterEvent>
 #include <QDropEvent>

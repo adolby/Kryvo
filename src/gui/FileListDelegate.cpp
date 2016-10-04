@@ -1,4 +1,4 @@
-#include "gui/FileListDelegate.hpp"
+#include "src/gui/FileListDelegate.hpp"
 #include <QApplication>
 #include <QMouseEvent>
 #include <QEvent>

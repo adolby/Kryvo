@@ -1,8 +1,8 @@
 #ifndef KRYVOS_GUI_TOUCHMAINWINDOW_HPP_
 #define KRYVOS_GUI_TOUCHMAINWINDOW_HPP_
 
-#include "gui/MainWindow.hpp"
-#include "settings/Settings.hpp"
+#include "src/gui/MainWindow.hpp"
+#include "src/settings/Settings.hpp"
 
 /*!
  * \brief The TouchMainWindow class is used as the main window for the

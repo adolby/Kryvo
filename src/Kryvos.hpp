@@ -1,7 +1,7 @@
 #ifndef KRYVOS_KRYVOS_HPP_
 #define KRYVOS_KRYVOS_HPP_
 
-#include "utility/pimpl.h"
+#include "src/utility/pimpl.h"
 #include <QObject>
 #include <QMetaType>
 

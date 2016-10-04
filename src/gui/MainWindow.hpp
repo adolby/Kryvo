@@ -1,14 +1,14 @@
 #ifndef KRYVOS_GUI_MAINWINDOW_HPP_
 #define KRYVOS_GUI_MAINWINDOW_HPP_
 
-#include "settings/Settings.hpp"
-#include "gui/SettingsFrame.hpp"
-#include "gui/HeaderFrame.hpp"
-#include "gui/FileListFrame.hpp"
-#include "gui/MessageFrame.hpp"
-#include "gui/PasswordFrame.hpp"
-#include "gui/ControlButtonFrame.hpp"
-#include "utility/pimpl.h"
+#include "src/settings/Settings.hpp"
+#include "src/gui/SettingsFrame.hpp"
+#include "src/gui/HeaderFrame.hpp"
+#include "src/gui/FileListFrame.hpp"
+#include "src/gui/MessageFrame.hpp"
+#include "src/gui/PasswordFrame.hpp"
+#include "src/gui/ControlButtonFrame.hpp"
+#include "src/utility/pimpl.h"
 #include <QMainWindow>
 #include <QVBoxLayout>
 

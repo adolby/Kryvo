@@ -1,7 +1,7 @@
 #ifndef KRYVOS_SETTINGS_SETTINGS_HPP_
 #define KRYVOS_SETTINGS_SETTINGS_HPP_
 
-#include "utility/pimpl.h"
+#include "src/utility/pimpl.h"
 #include <QPoint>
 #include <QSize>
 #include <QString>

@@ -1,5 +1,5 @@
-#include "settings/Settings.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/settings/Settings.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>

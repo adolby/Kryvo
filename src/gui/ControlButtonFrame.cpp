@@ -1,5 +1,5 @@
-#include "gui/ControlButtonFrame.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/gui/ControlButtonFrame.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QIcon>

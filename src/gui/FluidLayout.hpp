@@ -1,7 +1,7 @@
 #ifndef KRYVOS_GUI_FLUIDLAYOUT_HPP_
 #define KRYVOS_GUI_FLUIDLAYOUT_HPP_
 
-#include "gui/flowlayout.h"
+#include "src/gui/flowlayout.h"
 #include <QWidget>
 
 /*!

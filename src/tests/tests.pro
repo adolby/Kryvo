@@ -115,8 +115,6 @@ android-g++ {
   macx {
     message(macOS)
 
-    CONFIG += c++14
-
     #QMAKE_MAC_SDK = macosx10.12
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2

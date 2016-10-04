@@ -1,7 +1,7 @@
-#include "gui/SettingsFrame.hpp"
-#include "gui/SlideSwitch.hpp"
-#include "gui/FluidLayout.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/gui/SettingsFrame.hpp"
+#include "src/gui/SlideSwitch.hpp"
+#include "src/gui/FluidLayout.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QComboBox>
 #include <QGroupBox>
 #include <QPushButton>

@@ -1,18 +1,18 @@
-#include "Kryvos.hpp"
-#include "gui/MainWindow.hpp"
+#include "src/Kryvos.hpp"
+#include "src/gui/MainWindow.hpp"
 #if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
-#include "gui/TouchMainWindow.hpp"
+#include "src/gui/TouchMainWindow.hpp"
 #else
-#include "gui/DesktopMainWindow.hpp"
+#include "src/gui/DesktopMainWindow.hpp"
 #endif
-#include "cryptography/Crypto.hpp"
-#include "settings/Settings.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/cryptography/Crypto.hpp"
+#include "src/settings/Settings.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QThread>
 #include <memory>
 
 #if defined(_MSC_VER)
-#include "utility/make_unique.h"
+#include "src/utility/make_unique.h"
 #endif
 
 /*!

@@ -1,5 +1,5 @@
-#include "gui/SlidingStackedWidget.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/gui/SlidingStackedWidget.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QPushButton>
 #include <QParallelAnimationGroup>
 #include <QPropertyAnimation>

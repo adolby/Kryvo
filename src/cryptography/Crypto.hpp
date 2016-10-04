@@ -4,35 +4,35 @@
 #include <QtGlobal>
 
 #if defined(Q_OS_ANDROID)
-#include "cryptography/botan/android/botan_all.h"
+#include "src/cryptography/botan/android/botan_all.h"
 #elif defined(Q_OS_IOS)
-#include "cryptography/botan/iOS/botan_all.h"
+#include "src/cryptography/botan/iOS/botan_all.h"
 #elif defined(Q_OS_MACX)
-#include "cryptography/botan/macOS/clang/x86_64/botan_all.h"
+#include "src/cryptography/botan/macOS/clang/x86_64/botan_all.h"
 #elif defined(Q_OS_LINUX)
   #if defined(__clang__)
-#include "cryptography/botan/linux/clang/x86_64/botan_all.h"
+#include "src/cryptography/botan/linux/clang/x86_64/botan_all.h"
   #elif defined(__GNUC__) || defined(__GNUG__)
-#include "cryptography/botan/linux/gcc/x86_64/botan_all.h"
+#include "src/cryptography/botan/linux/gcc/x86_64/botan_all.h"
   #endif
 #elif defined(Q_OS_WIN)
   #if defined(Q_OS_WIN64)
     #if defined(__GNUC__) || defined(__GNUG__)
-#include "cryptography/botan/windows/mingw/x86_64/botan_all.h"
+#include "src/cryptography/botan/windows/mingw/x86_64/botan_all.h"
     #elif defined(_MSC_VER)
-#include "cryptography/botan/windows/msvc/x86_64/botan_all.h"
+#include "src/cryptography/botan/windows/msvc/x86_64/botan_all.h"
     #endif
   #else
     #if defined(__GNUC__) || defined(__GNUG__)
-#include "cryptography/botan/windows/mingw/x86/botan_all.h"
+#include "src/cryptography/botan/windows/mingw/x86/botan_all.h"
     #elif defined(_MSC_VER)
-#include "cryptography/botan/windows/msvc/x86/botan_all.h"
+#include "src/cryptography/botan/windows/msvc/x86/botan_all.h"
     #endif
   #endif
 #endif
 
-#include "settings/Settings.hpp"
-#include "utility/pimpl.h"
+#include "src/settings/Settings.hpp"
+#include "src/utility/pimpl.h"
 #include <QObject>
 #include <QStringList>
 #include <QString>

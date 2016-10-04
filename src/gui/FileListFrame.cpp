@@ -1,6 +1,6 @@
-#include "gui/FileListFrame.hpp"
-#include "gui/FileListDelegate.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/gui/FileListFrame.hpp"
+#include "src/gui/FileListDelegate.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QScroller>
 #include <QHeaderView>
 #include <QTableView>
@@ -13,7 +13,7 @@
 #include <QString>
 
 #if defined(_MSC_VER)
-#include "utility/make_unique.h"
+#include "src/utility/make_unique.h"
 #endif
 
 class FileListFrame::FileListFramePrivate {

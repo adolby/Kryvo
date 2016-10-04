@@ -1,5 +1,5 @@
-#include "SlideSwitch.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/gui/SlideSwitch.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QMouseEvent>
 #include <QPainter>
 #include <QTimeLine>
