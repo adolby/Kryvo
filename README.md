@@ -45,7 +45,7 @@ python configure.py --cc=gcc --amalgamation --disable-shared
 ###Linux Clang x86_64
 python configure.py --cc=clang --amalgamation --disable-shared
 
-###Mac OS X Clang x86_64
+###macOS Clang x86_64
 python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom
 
 ###iOS Clang

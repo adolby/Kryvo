@@ -25,8 +25,9 @@ android-g++ {
   INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
 
   SOURCES += ../cryptography/botan/android/botan_all.cpp
-  HEADERS += ../cryptography/botan/android/botan_all.h \
-             ../cryptography/botan/android/android_to_string.h
+  HEADERS += \
+    ../cryptography/botan/android/botan_all.h \
+    ../cryptography/botan/android/android_to_string.h
 
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
 
@@ -43,16 +44,16 @@ android-g++ {
 } else:ios {
   message(iOS)
 
-  SOURCES += ../cryptography/botan/ios/botan_all.cpp
-  HEADERS += ../cryptography/botan/ios/botan_all.h
+  SOURCES += ../cryptography/botan/iOS/botan_all.cpp
+  HEADERS += ../cryptography/botan/iOS/botan_all.h
 
   debug {
     message(Debug)
-    DESTDIR = ../../build/ios/debug/test
+    DESTDIR = ../../build/iOS/debug/test
   }
   release {
     message(Release)
-    DESTDIR = ../../build/ios/release/test
+    DESTDIR = ../../build/iOS/release/test
   }
 } else { # Desktop OS
   linux {
@@ -112,23 +113,34 @@ android-g++ {
   } # End Linux
 
   macx {
-    message(Mac OS X)
+    message(macOS)
 
-    # Manually set c++1y until config += c++14 is fixed for OS X
-    #QMAKE_CXXFLAGS += -std=c++1y
+    CONFIG += c++14
 
-    CONFIG += c++11
+    #QMAKE_MAC_SDK = macosx10.12
 
-    SOURCES += ../cryptography/botan/mac/clang/x86_64/botan_all.cpp
-    HEADERS += ../cryptography/botan/mac/clang/x86_64/botan_all.h
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
+
+    SOURCES += \
+      ../cryptography/botan/macOS/clang/x86_64/botan_all.cpp \
+      ../cryptography/botan/macOS/clang/x86_64/botan_all_aesni.cpp \
+      ../cryptography/botan/macOS/clang/x86_64/botan_all_avx2.cpp \
+      ../cryptography/botan/macOS/clang/x86_64/botan_all_rdrand.cpp \
+      ../cryptography/botan/macOS/clang/x86_64/botan_all_rdseed.cpp \
+      ../cryptography/botan/macOS/clang/x86_64/botan_all_ssse3.cpp
+
+    HEADERS += \
+      ../cryptography/botan/macOS/clang/x86_64/botan_all.h \
+      ../cryptography/botan/macOS/clang/x86_64/botan_all_internal.h
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/macx/clang/x86_64/debug/test
+      DESTDIR = ../../build/macOS/clang/x86_64/debug/test
     }
     release {
       message(Release)
-      DESTDIR = ../../build/macx/clang/x86_64/release/test
+      DESTDIR = ../../build/macOS/clang/x86_64/release/test
     }
   }
 
@@ -146,11 +158,11 @@ android-g++ {
 
         debug {
           message(Debug)
-          DESTDIR = ../../build/win/mingw/x86_64/debug/test
+          DESTDIR = ../../build/windows/mingw/x86_64/debug/test
         }
         release {
           message(Release)
-          DESTDIR = ../../build/win/mingw/x86_64/release/test
+          DESTDIR = ../../build/windows/mingw/x86_64/release/test
         }
       } else {
         message(Windows x86 G++)
@@ -160,11 +172,11 @@ android-g++ {
 
         debug {
           message(Debug)
-          DESTDIR = ../../build/win/mingw/x86/debug/test
+          DESTDIR = ../../build/windows/mingw/x86/debug/test
         }
         release {
           message(Release)
-          DESTDIR = ../../build/win/mingw/x86/release/test
+          DESTDIR = ../../build/windows/mingw/x86/release/test
         }
       }
     }
@@ -179,11 +191,11 @@ android-g++ {
 
         debug {
           message(Debug)
-          DESTDIR = ../../build/win/msvc/x86_64/debug/test
+          DESTDIR = ../../build/windows/msvc/x86_64/debug/test
         }
         release {
           message(Release)
-          DESTDIR = ../../build/win/msvc/x86_64/release/test
+          DESTDIR = ../../build/windows/msvc/x86_64/release/test
         }
       } else {
         message(Windows x86 MSVC)
@@ -193,11 +205,11 @@ android-g++ {
 
         debug {
           message(Debug)
-          DESTDIR = ../../build/win/msvc/x86/debug/test
+          DESTDIR = ../../build/windows/msvc/x86/debug/test
         }
         release {
           message(Release)
-          DESTDIR = ../../build/win/msvc/x86/release/test
+          DESTDIR = ../../build/windows/msvc/x86/release/test
         }
       }
     }

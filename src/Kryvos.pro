@@ -67,11 +67,13 @@ android-g++ {
   # You'll need to place your Boost path here.
   INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
 
-  SOURCES += cryptography/botan/android/botan_all.cpp \
-             gui/TouchMainWindow.cpp
-  HEADERS += cryptography/botan/android/botan_all.h \
-             cryptography/botan/android/android_to_string.h \
-             gui/TouchMainWindow.hpp
+  SOURCES += \
+    cryptography/botan/android/botan_all.cpp \
+    gui/TouchMainWindow.cpp
+  HEADERS += \
+    cryptography/botan/android/botan_all.h \
+    cryptography/botan/android/android_to_string.h \
+    gui/TouchMainWindow.hpp
 
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
 
@@ -88,18 +90,20 @@ android-g++ {
 } else:ios {
   message(iOS)
 
-  SOURCES += cryptography/botan/ios/botan_all.cpp \
-             gui/TouchMainWindow.cpp
-  HEADERS += cryptography/botan/ios/botan_all.h \
-             gui/TouchMainWindow.hpp
+  SOURCES += \
+    cryptography/botan/iOS/botan_all.cpp \
+    gui/TouchMainWindow.cpp
+  HEADERS += \
+    cryptography/botan/iOS/botan_all.h \
+    gui/TouchMainWindow.hpp
 
   debug {
     message(Debug)
-    DESTDIR = ../build/ios/debug/
+    DESTDIR = ../build/iOS/debug/
   }
   release {
     message(Release)
-    DESTDIR = ../build/ios/release/
+    DESTDIR = ../build/iOS/release/
   }
 } else { # Desktop OS
   SOURCES += gui/DesktopMainWindow.cpp
@@ -112,15 +116,17 @@ android-g++ {
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
     linux-clang {
-      message(Linux Clang x86_64)
-      SOURCES += cryptography/botan/linux/clang/x86_64/botan_all.cpp \
-                 cryptography/botan/linux/clang/x86_64/botan_all_aesni.cpp \
-                 cryptography/botan/linux/clang/x86_64/botan_all_avx2.cpp \
-                 cryptography/botan/linux/clang/x86_64/botan_all_rdrand.cpp \
-                 cryptography/botan/linux/clang/x86_64/botan_all_rdseed.cpp \
-                 cryptography/botan/linux/clang/x86_64/botan_all_ssse3.cpp
-      HEADERS += cryptography/botan/linux/clang/x86_64/botan_all.h \
-                 cryptography/botan/linux/clang/x86_64/botan_all_internal.h
+      message(Linux clang x86_64)
+      SOURCES += \
+        cryptography/botan/linux/clang/x86_64/botan_all.cpp \
+        cryptography/botan/linux/clang/x86_64/botan_all_aesni.cpp \
+        cryptography/botan/linux/clang/x86_64/botan_all_avx2.cpp \
+        cryptography/botan/linux/clang/x86_64/botan_all_rdrand.cpp \
+        cryptography/botan/linux/clang/x86_64/botan_all_rdseed.cpp \
+        cryptography/botan/linux/clang/x86_64/botan_all_ssse3.cpp
+      HEADERS += \
+        cryptography/botan/linux/clang/x86_64/botan_all.h \
+        cryptography/botan/linux/clang/x86_64/botan_all_internal.h
 
       debug {
         message(Debug)
@@ -133,16 +139,18 @@ android-g++ {
     }
 
     linux-g++-64 {
-      message(Linux G++ x86_64)
+      message(Linux g++ x86_64)
 
-      SOURCES += cryptography/botan/linux/gcc/x86_64/botan_all.cpp \
-                 cryptography/botan/linux/gcc/x86_64/botan_all_aesni.cpp \
-                 cryptography/botan/linux/gcc/x86_64/botan_all_avx2.cpp \
-                 cryptography/botan/linux/gcc/x86_64/botan_all_rdrand.cpp \
-                 cryptography/botan/linux/gcc/x86_64/botan_all_rdseed.cpp \
-                 cryptography/botan/linux/gcc/x86_64/botan_all_ssse3.cpp
-      HEADERS += cryptography/botan/linux/gcc/x86_64/botan_all.h \
-                 cryptography/botan/linux/gcc/x86_64/botan_all_internal.h
+      SOURCES += \
+        cryptography/botan/linux/gcc/x86_64/botan_all.cpp \
+        cryptography/botan/linux/gcc/x86_64/botan_all_aesni.cpp \
+        cryptography/botan/linux/gcc/x86_64/botan_all_avx2.cpp \
+        cryptography/botan/linux/gcc/x86_64/botan_all_rdrand.cpp \
+        cryptography/botan/linux/gcc/x86_64/botan_all_rdseed.cpp \
+        cryptography/botan/linux/gcc/x86_64/botan_all_ssse3.cpp
+      HEADERS += \
+        cryptography/botan/linux/gcc/x86_64/botan_all.h \
+        cryptography/botan/linux/gcc/x86_64/botan_all_internal.h
 
       debug {
         message(Debug)
@@ -155,16 +163,18 @@ android-g++ {
     }
 
     linux-g++-32 {
-      message(Linux G++ x86)
+      message(Linux g++ x86)
 
-      SOURCES += cryptography/botan/linux/gcc/x86/botan_all.cpp \
-                 cryptography/botan/linux/gcc/x86/botan_all_aesni.cpp \
-                 cryptography/botan/linux/gcc/x86/botan_all_avx2.cpp \
-                 cryptography/botan/linux/gcc/x86/botan_all_rdrand.cpp \
-                 cryptography/botan/linux/gcc/x86/botan_all_rdseed.cpp \
-                 cryptography/botan/linux/gcc/x86/botan_all_ssse3.cpp
-      HEADERS += cryptography/botan/linux/gcc/x86/botan_all.h \
-                 cryptography/botan/linux/gcc/x86/botan_all_internal.h
+      SOURCES += \
+        cryptography/botan/linux/gcc/x86/botan_all.cpp \
+        cryptography/botan/linux/gcc/x86/botan_all_aesni.cpp \
+        cryptography/botan/linux/gcc/x86/botan_all_avx2.cpp \
+        cryptography/botan/linux/gcc/x86/botan_all_rdrand.cpp \
+        cryptography/botan/linux/gcc/x86/botan_all_rdseed.cpp \
+        cryptography/botan/linux/gcc/x86/botan_all_ssse3.cpp
+      HEADERS += \
+        cryptography/botan/linux/gcc/x86/botan_all.h \
+        cryptography/botan/linux/gcc/x86/botan_all_internal.h
 
       debug {
         message(Debug)
@@ -178,34 +188,36 @@ android-g++ {
   } # End Linux
 
   macx {
-    message(macOS)
+    message(macOS clang x86_64)
 
     CONFIG += c++14
 
-    #QMAKE_MAC_SDK = macosx10.12
+    QMAKE_MAC_SDK = macosx10.12
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
 
-    SOURCES += cryptography/botan/mac/clang/x86_64/botan_all.cpp \
-               cryptography/botan/mac/clang/x86_64/botan_all_aesni.cpp \
-               cryptography/botan/mac/clang/x86_64/botan_all_avx2.cpp \
-               cryptography/botan/mac/clang/x86_64/botan_all_rdrand.cpp \
-               cryptography/botan/mac/clang/x86_64/botan_all_rdseed.cpp \
-               cryptography/botan/mac/clang/x86_64/botan_all_ssse3.cpp
+    SOURCES += \
+      cryptography/botan/macOS/clang/x86_64/botan_all.cpp \
+      cryptography/botan/macOS/clang/x86_64/botan_all_aesni.cpp \
+      cryptography/botan/macOS/clang/x86_64/botan_all_avx2.cpp \
+      cryptography/botan/macOS/clang/x86_64/botan_all_rdrand.cpp \
+      cryptography/botan/macOS/clang/x86_64/botan_all_rdseed.cpp \
+      cryptography/botan/macOS/clang/x86_64/botan_all_ssse3.cpp
 
-    HEADERS += cryptography/botan/mac/clang/x86_64/botan_all.h \
-               cryptography/botan/mac/clang/x86_64/botan_all_internal.h
+    HEADERS += \
+      cryptography/botan/macOS/clang/x86_64/botan_all.h \
+      cryptography/botan/macOS/clang/x86_64/botan_all_internal.h
 
-    ICON = resources/mac/icon/Kryvos.icns
+    ICON = resources/macOS/icon/Kryvos.icns
 
     debug {
       message(Debug)
-      DESTDIR = ../build/macx/clang/x86_64/debug/
+      DESTDIR = ../build/macOS/clang/x86_64/debug/
     }
     release {
       message(Release)
-      DESTDIR = ../build/macx/clang/x86_64/release/
+      DESTDIR = ../build/macOS/clang/x86_64/release/
     }
   }
 
@@ -215,44 +227,48 @@ android-g++ {
       QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
       contains(QT_ARCH, x86_64) {
-        message(Windows x86_64 MSVC)
+        message(Windows MSVC x86_64)
 
-        SOURCES += cryptography/botan/windows/msvc/x86_64/botan_all.cpp \
-                   cryptography/botan/windows/msvc/x86_64/botan_all_aesni.cpp \
-                   cryptography/botan/windows/msvc/x86_64/botan_all_avx2.cpp \
-                   cryptography/botan/windows/msvc/x86_64/botan_all_rdrand.cpp \
-                   cryptography/botan/windows/msvc/x86_64/botan_all_rdseed.cpp \
-                   cryptography/botan/windows/msvc/x86_64/botan_all_ssse3.cpp
-        HEADERS += cryptography/botan/windows/msvc/x86_64/botan_all.h \
-                   cryptography/botan/windows/msvc/x86_64/botan_all_internal.h
+        SOURCES += \
+          cryptography/botan/windows/msvc/x86_64/botan_all.cpp \
+          cryptography/botan/windows/msvc/x86_64/botan_all_aesni.cpp \
+          cryptography/botan/windows/msvc/x86_64/botan_all_avx2.cpp \
+          cryptography/botan/windows/msvc/x86_64/botan_all_rdrand.cpp \
+          cryptography/botan/windows/msvc/x86_64/botan_all_rdseed.cpp \
+          cryptography/botan/windows/msvc/x86_64/botan_all_ssse3.cpp
+        HEADERS += \
+          cryptography/botan/windows/msvc/x86_64/botan_all.h \
+          cryptography/botan/windows/msvc/x86_64/botan_all_internal.h
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/msvc/x86_64/debug/Kryvos/
+          DESTDIR = ../build/windows/msvc/x86_64/debug/Kryvos/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/msvc/x86_64/release/Kryvos/
+          DESTDIR = ../build/windows/msvc/x86_64/release/Kryvos/
         }
       } else {
-        message(Windows x86 MSVC)
-        SOURCES += cryptography/botan/windows/msvc/x86/botan_all.cpp \
-                   cryptography/botan/windows/msvc/x86/botan_all_aesni.cpp \
-                   cryptography/botan/windows/msvc/x86/botan_all_avx2.cpp \
-                   cryptography/botan/windows/msvc/x86/botan_all_rdrand.cpp \
-                   cryptography/botan/windows/msvc/x86/botan_all_rdseed.cpp \
-                   cryptography/botan/windows/msvc/x86/botan_all_ssse3.cpp
+        message(Windows MSVC x86)
+        SOURCES += \
+          cryptography/botan/windows/msvc/x86/botan_all.cpp \
+          cryptography/botan/windows/msvc/x86/botan_all_aesni.cpp \
+          cryptography/botan/windows/msvc/x86/botan_all_avx2.cpp \
+          cryptography/botan/windows/msvc/x86/botan_all_rdrand.cpp \
+          cryptography/botan/windows/msvc/x86/botan_all_rdseed.cpp \
+          cryptography/botan/windows/msvc/x86/botan_all_ssse3.cpp
 
-        HEADERS += cryptography/botan/windows/msvc/x86/botan_all.h \
-                   cryptography/botan/windows/msvc/x86/botan_all_internal.h
+        HEADERS += \
+          cryptography/botan/windows/msvc/x86/botan_all.h \
+          cryptography/botan/windows/msvc/x86/botan_all_internal.h
 
         debug {
           message(Debug)
-          DESTDIR = ../build/win/msvc/x86/debug/Kryvos/
+          DESTDIR = ../build/windows/msvc/x86/debug/Kryvos/
         }
         release {
           message(Release)
-          DESTDIR = ../build/win/msvc/x86/release/Kryvos/
+          DESTDIR = ../build/windows/msvc/x86/release/Kryvos/
         }
       }
     }
