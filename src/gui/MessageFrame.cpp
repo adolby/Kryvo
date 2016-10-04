@@ -1,5 +1,5 @@
-#include "gui/MessageFrame.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/gui/MessageFrame.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QToolButton>
 #include <QLabel>
 #include <QHBoxLayout>

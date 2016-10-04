@@ -1,5 +1,5 @@
-#include "cryptography/Crypto.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/cryptography/Crypto.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QFileInfo>
 #include <QDir>
 #include <QHash>

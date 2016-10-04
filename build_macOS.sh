@@ -39,7 +39,6 @@ sudo ln -s xcodebuild xcrun
 
 # Build Kryvos
 echo "Building Kryvos..."
-cd ${project_dir}/src/
 /usr/local/Qt-5.7.0/bin/qmake -config release
 make
 

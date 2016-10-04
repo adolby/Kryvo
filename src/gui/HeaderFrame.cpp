@@ -1,6 +1,6 @@
-#include "gui/HeaderFrame.hpp"
-#include "gui/FluidLayout.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/gui/HeaderFrame.hpp"
+#include "src/gui/FluidLayout.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QPushButton>
 #include <QLabel>
 #include <QHBoxLayout>

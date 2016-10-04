@@ -1,4 +1,4 @@
-#include "gui/DesktopMainWindow.hpp"
+#include "src/gui/DesktopMainWindow.hpp"
 #include <QAction>
 #include <QDropEvent>
 #include <QMimeData>

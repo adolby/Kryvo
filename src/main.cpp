@@ -1,4 +1,4 @@
-#include "Kryvos.hpp"
+#include "src/Kryvos.hpp"
 #include <QApplication>
 
 /*!

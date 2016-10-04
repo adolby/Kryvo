@@ -1,7 +1,7 @@
 #ifndef KRYVOS_GUI_HEADERFRAME_HPP_
 #define KRYVOS_GUI_HEADERFRAME_HPP_
 
-#include "utility/pimpl.h"
+#include "src/utility/pimpl.h"
 #include <QFrame>
 
 /*!

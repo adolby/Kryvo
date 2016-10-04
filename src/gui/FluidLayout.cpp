@@ -1,4 +1,4 @@
-#include "gui/FluidLayout.hpp"
+#include "src/gui/FluidLayout.hpp"
 
 FluidLayout::FluidLayout(QWidget* parent, int margin,
                          int hSpacing, int vSpacing)

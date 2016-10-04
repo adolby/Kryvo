@@ -1,6 +1,6 @@
-#include "gui/MainWindow.hpp"
-#include "gui/SlidingStackedWidget.hpp"
-#include "utility/pimpl_impl.h"
+#include "src/gui/MainWindow.hpp"
+#include "src/gui/SlidingStackedWidget.hpp"
+#include "src/utility/pimpl_impl.h"
 #include <QFrame>
 #include <QLabel>
 #include <QLineEdit>
