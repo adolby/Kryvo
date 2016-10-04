@@ -56,6 +56,7 @@ sudo chmod -R +x /usr/local/QtIFW2.0.3/bin/
 
 # Build Kryvos
 echo "Building Kryvos..."
+cd ${project_dir}
 /usr/local/Qt-5.7.0/bin/qmake -config release
 make -j2
 
