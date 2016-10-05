@@ -48,8 +48,8 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   auto headerFrame = new QFrame{this};
   headerFrame->setObjectName(QStringLiteral("coloredFrame"));
 
-  auto headerLabel = new QLabel{tr("Settings"), headerFrame};
-  headerLabel->setObjectName(QStringLiteral("headerText"));
+  auto gearImageLabel = new QLabel{this};
+  gearImageLabel->setPixmap(QPixmap{":/images/gearIcon.png"});
 
   const auto backIcon = QIcon{QStringLiteral(":/images/backIcon.png")};
   auto backButton = new QPushButton{backIcon, tr(" Back"), this};
@@ -57,7 +57,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   backButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   auto headerLayout = new QHBoxLayout{headerFrame};
-  headerLayout->addWidget(headerLabel);
+  headerLayout->addWidget(gearImageLabel);
   headerLayout->addStretch();
   headerLayout->addWidget(backButton);
 

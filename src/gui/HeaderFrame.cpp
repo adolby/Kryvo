@@ -27,6 +27,9 @@ HeaderFrame::HeaderFrame(QWidget* parent)
 {
   auto buttonFrame = new QFrame{this};
 
+  auto lockImageLabel = new QLabel{this};
+  lockImageLabel->setPixmap(QPixmap{":/images/kryvos.png"});
+
   const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
   m->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), this};
   m->pauseButton->setObjectName(QStringLiteral("pauseButton"));
@@ -49,16 +52,17 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   const auto settingsIcon = QIcon{QStringLiteral(":/images/gearIcon.png")};
   m->settingsButton = new QPushButton{settingsIcon, tr(" Settings"), this};
   m->settingsButton->setObjectName(QStringLiteral("settingsButton"));
-  m->settingsButton->setSizePolicy(QSizePolicy::Fixed,
-                                   QSizePolicy::Fixed);
+  m->settingsButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   auto buttonLayout = new FluidLayout{buttonFrame};
   buttonLayout->addWidget(m->pauseButton);
   buttonLayout->addWidget(m->addFilesButton);
   buttonLayout->addWidget(m->clearFilesButton);
   buttonLayout->addWidget(m->settingsButton);
+  buttonLayout->setContentsMargins(15, 0, 0, 0);
 
   auto headerLayout = new QHBoxLayout{this};
+  headerLayout->addWidget(lockImageLabel, 0);
   headerLayout->addWidget(buttonFrame, 1);
   headerLayout->setContentsMargins(10, 0, 0, 0);
 
