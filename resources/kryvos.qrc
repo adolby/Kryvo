@@ -16,5 +16,8 @@
         <file>images/backIcon.png</file>
         <file>images/leftArrowIcon.png</file>
         <file>images/rightArrowIcon.png</file>
+        <file>images/kryvos@2x.png</file>
+        <file>images/kryvos.png</file>
+        <file>images/gearIcon@2x.png</file>
     </qresource>
 </RCC>
