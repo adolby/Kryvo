@@ -46,7 +46,6 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   //                            QStringLiteral(":/images/sliderKnobDisable.png"));
 
   auto headerFrame = new QFrame{this};
-  headerFrame->setObjectName(QStringLiteral("coloredFrame"));
 
   auto gearImageLabel = new QLabel{this};
   gearImageLabel->setPixmap(QPixmap{":/images/gearIcon.png"});
@@ -58,14 +57,14 @@ SettingsFrame::SettingsFrame(const QString& cipher,
 
   auto headerLayout = new QHBoxLayout{headerFrame};
   headerLayout->addWidget(gearImageLabel);
-  headerLayout->addStretch();
+  headerLayout->addStretch(5);
   headerLayout->addWidget(backButton);
+  headerLayout->addStretch(1);
+  headerLayout->setContentsMargins(10, 0, 0, 0);
 
   auto contentFrame = new QFrame{this};
-  contentFrame->setObjectName(QStringLiteral("coloredFrame"));
 
   auto cryptoFrame = new QFrame{contentFrame};
-  cryptoFrame->setObjectName(QStringLiteral("coloredFrame"));
 
   auto cryptoSettingsLabel = new QLabel{tr("Cryptography"),
                                         cryptoFrame};
@@ -75,7 +74,6 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   cryptoSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
 
   auto cipherFrame = new QFrame{cryptoSettingsFrame};
-  cipherFrame->setObjectName(QStringLiteral("coloredFrame"));
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   auto cipherLabel = new QLabel{tr("Cipher: "), cipherFrame};
@@ -92,7 +90,6 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   cipherLayout->addWidget(m->cipherComboBox);
 
   auto keySizeFrame = new QFrame{cryptoSettingsFrame};
-  keySizeFrame->setObjectName(QStringLiteral("coloredFrame"));
   keySizeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   const auto keySizeToolTip = QString{tr("The cipher key size is the number of "
@@ -123,7 +120,6 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   keySizeLayout->addWidget(m->keySizeComboBox);
 
   auto modeFrame = new QFrame{cryptoSettingsFrame};
-  modeFrame->setObjectName(QStringLiteral("coloredFrame"));
   modeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   const auto modeToolTip = QString{tr("The mode of operation is the algorithm "
@@ -164,14 +160,13 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   contentLayout->addStretch();
 
   auto centerFrame = new QFrame{this};
-  centerFrame->setObjectName("coloredFrame");
   auto centerLayout = new QHBoxLayout{centerFrame};
   centerLayout->addWidget(contentFrame);
   centerLayout->addStretch();
 
-  auto layout = new QVBoxLayout{this};
-  layout->addWidget(headerFrame, 0);
-  layout->addWidget(centerFrame, 1);
+  auto settingsLayout = new QVBoxLayout{this};
+  settingsLayout->addWidget(headerFrame, 0);
+  settingsLayout->addWidget(centerFrame, 1);
 
   // Capture function pointer to specific QComboBox signal overload
   void (QComboBox::*indexChangedSignal)(const QString&) =
@@ -192,13 +187,12 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   // Return to previous GUI state
   auto returnAction = new QAction{this};
   returnAction->setShortcut(Qt::Key_Escape);
-  connect(returnAction, &QAction::triggered,
-          this, &SettingsFrame::switchFrame);
-  this->addAction(returnAction);
+  connect(returnAction, &QAction::triggered, this, &SettingsFrame::switchFrame);
 
   // Connect back button to return action
-  connect(backButton, &QPushButton::clicked,
-          returnAction, &QAction::trigger);
+  connect(backButton, &QPushButton::clicked, returnAction, &QAction::trigger);
+
+  this->addAction(returnAction);
 }
 
 SettingsFrame::~SettingsFrame() {}

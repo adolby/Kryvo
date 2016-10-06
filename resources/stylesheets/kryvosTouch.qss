@@ -58,10 +58,6 @@ QFrame#settingsSubFrame {
   border-radius: 5px;
 }
 
-QFrame#coloredFrame {
-  background-color: #2c3e50;
-}
-
 /*--------- Buttons ---------*/
 #pauseButton {
   color: white;

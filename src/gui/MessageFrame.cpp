@@ -49,8 +49,8 @@ MessageFrame::MessageFrame(QWidget* parent)
   messageLayout->addWidget(leftButton, 1);
   messageLayout->addWidget(m->messageLabel, 20);
   messageLayout->addWidget(rightButton, 1);
-  messageLayout->setContentsMargins(10, 2, 10, 2);
-  messageLayout->setSpacing(5);
+  messageLayout->setContentsMargins(6, 5, 6, 5);
+  messageLayout->setSpacing(8);
 }
 
 MessageFrame::~MessageFrame() {}

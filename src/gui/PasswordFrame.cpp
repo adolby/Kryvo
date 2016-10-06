@@ -28,6 +28,7 @@ PasswordFrame::PasswordFrame(QWidget* parent)
   auto passwordLayout = new QHBoxLayout{this};
   passwordLayout->addWidget(passwordLabel);
   passwordLayout->addWidget(m->passwordLineEdit);
+  passwordLayout->setContentsMargins(0, 0, 0, 0);
 }
 
 PasswordFrame::~PasswordFrame() {}
