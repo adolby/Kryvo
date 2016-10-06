@@ -103,6 +103,7 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   contentLayout->addWidget(messageFrame);
   contentLayout->addWidget(passwordFrame);
   contentLayout->addWidget(controlButtonFrame);
+  contentLayout->setSpacing(0);
 
   slidingStackedWidget->addWidget(contentFrame);
 
