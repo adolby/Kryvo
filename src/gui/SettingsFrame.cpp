@@ -46,6 +46,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   //                            QStringLiteral(":/images/sliderKnobDisable.png"));
 
   auto headerFrame = new QFrame{this};
+  headerFrame->setObjectName("headerFrame");
 
   auto gearImageLabel = new QLabel{this};
   gearImageLabel->setPixmap(QPixmap{":/images/gearIcon.png"});
@@ -57,10 +58,10 @@ SettingsFrame::SettingsFrame(const QString& cipher,
 
   auto headerLayout = new QHBoxLayout{headerFrame};
   headerLayout->addWidget(gearImageLabel);
-  headerLayout->addStretch(5);
+  headerLayout->addStretch(10);
   headerLayout->addWidget(backButton);
   headerLayout->addStretch(1);
-  headerLayout->setContentsMargins(10, 0, 0, 0);
+  headerLayout->setContentsMargins(0, 0, 0, 0);
 
   auto contentFrame = new QFrame{this};
 
