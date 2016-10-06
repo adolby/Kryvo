@@ -88,7 +88,6 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   messageFrame->setObjectName(QStringLiteral("messageFrame"));
   messageFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   messageFrame->setMinimumHeight(36);
-  messageFrame->setContentsMargins(0, 0, 0, 0);
 
   // Password entry frame
   passwordFrame = new PasswordFrame{contentFrame};

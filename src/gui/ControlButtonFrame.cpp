@@ -19,20 +19,16 @@ class ControlButtonFrame::ControlButtonFramePrivate {
 ControlButtonFrame::ControlButtonFrame(QWidget* parent)
   : QFrame{parent}
 {
-  const QSize iconSize{19, 19};
+  const auto iconSize = QSize{19, 19};
 
   const auto lockIcon = QIcon{QStringLiteral(":/images/lockIcon.png")};
-  m->encryptButton = new QPushButton{lockIcon,
-                                         tr(" Encrypt"),
-                                         this};
+  m->encryptButton = new QPushButton{lockIcon, tr(" Encrypt"), this};
   m->encryptButton->setIconSize(iconSize);
   m->encryptButton->setObjectName(QStringLiteral("cryptButton"));
   m->encryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const auto unlockedIcon = QIcon{QStringLiteral(":/images/unlockIcon.png")};
-  m->decryptButton = new QPushButton{unlockedIcon,
-                                     tr(" Decrypt"),
-                                     this};
+  m->decryptButton = new QPushButton{unlockedIcon, tr(" Decrypt"), this};
   m->decryptButton->setIconSize(iconSize);
   m->decryptButton->setObjectName(QStringLiteral("cryptButton"));
   m->decryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -40,6 +36,7 @@ ControlButtonFrame::ControlButtonFrame(QWidget* parent)
   auto buttonLayout = new QHBoxLayout{this};
   buttonLayout->addWidget(m->encryptButton);
   buttonLayout->addWidget(m->decryptButton);
+  buttonLayout->setContentsMargins(0, 0, 0, 0);
 
   connect(m->encryptButton, &QPushButton::clicked,
           this, &ControlButtonFrame::encryptFiles);

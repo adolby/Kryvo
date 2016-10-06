@@ -1,7 +1,6 @@
 #include "src/gui/FileListFrame.hpp"
 #include "src/gui/FileListDelegate.hpp"
 #include "src/utility/pimpl_impl.h"
-#include <QScroller>
 #include <QHeaderView>
 #include <QTableView>
 #include <QVBoxLayout>
@@ -59,29 +58,9 @@ FileListFrame::FileListFrame(QWidget* parent)
 
   m->fileListView->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 
-  // Attach a scroller to the file list for mobile devices
-  QScroller::grabGesture(m->fileListView, QScroller::TouchGesture);
-
-  // Disable overshoot; it makes interacting with small widgets harder
-  auto scroller = QScroller::scroller(m->fileListView);
-
-  QScrollerProperties properties = scroller->scrollerProperties();
-
-  QVariant overshootPolicy = QVariant::fromValue
-                              <QScrollerProperties::OvershootPolicy>
-                              (QScrollerProperties::OvershootAlwaysOff);
-
-  properties.setScrollMetric(QScrollerProperties::HorizontalOvershootPolicy,
-                             overshootPolicy);
-  properties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy,
-                             overshootPolicy);
-
-  scroller->setScrollerProperties(properties);
-
   auto fileListLayout = new QVBoxLayout{this};
   fileListLayout->addWidget(m->fileListView);
   fileListLayout->setContentsMargins(0, 0, 0, 0);
-  fileListLayout->setSpacing(0);
 
   connect(delegate, &FileListDelegate::removeRow,
           this, &FileListFrame::removeFileFromModel);
@@ -116,9 +95,9 @@ void FileListFrame::clear()
   QHeaderView* header = m->fileListView->horizontalHeader();
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(130);
-  m->fileListView->setColumnWidth(0, this->width() * 0.70);
+  m->fileListView->setColumnWidth(0, this->width() * 0.7);
   m->fileListView->setColumnWidth(1, this->width() * 0.2);
-  m->fileListView->setColumnWidth(2, this->width() * 0.1 - 1);
+  m->fileListView->setColumnWidth(2, this->width() * 0.05);
 }
 
 void FileListFrame::addFileToModel(const QString& path)
@@ -217,7 +196,7 @@ void FileListFrame::resizeEvent(QResizeEvent* event)
 
   m->fileListView->setColumnWidth(0, width * 0.7);
   m->fileListView->setColumnWidth(1, width * 0.2);
-  m->fileListView->setColumnWidth(2, width * 0.1 - 1);
+  m->fileListView->setColumnWidth(2, width * 0.05);
 }
 
 FileListFrame::FileListFramePrivate::FileListFramePrivate()
