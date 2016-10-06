@@ -65,14 +65,12 @@ SettingsFrame::SettingsFrame(const QString& cipher,
 
   auto contentFrame = new QFrame{this};
 
-  auto cryptoFrame = new QFrame{contentFrame};
-
-  auto cryptoSettingsLabel = new QLabel{tr("Cryptography"),
-                                        cryptoFrame};
-  cryptoSettingsLabel->setObjectName(QStringLiteral("text"));
-
-  auto cryptoSettingsFrame = new QFrame{cryptoFrame};
+  auto cryptoSettingsFrame = new QFrame{contentFrame};
   cryptoSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
+
+  auto cryptoSettingsLabel = new QLabel{tr("Cryptography Settings"),
+                                        cryptoSettingsFrame};
+  cryptoSettingsLabel->setObjectName(QStringLiteral("text"));
 
   auto cipherFrame = new QFrame{cryptoSettingsFrame};
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
@@ -148,16 +146,13 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   modeLayout->addWidget(m->modeComboBox);
 
   auto cryptoSettingsLayout = new QVBoxLayout{cryptoSettingsFrame};
+  cryptoSettingsLayout->addWidget(cryptoSettingsLabel);
   cryptoSettingsLayout->addWidget(cipherFrame);
   cryptoSettingsLayout->addWidget(keySizeFrame);
   cryptoSettingsLayout->addWidget(modeFrame);
 
-  auto cryptoLayout = new QVBoxLayout{cryptoFrame};
-  cryptoLayout->addWidget(cryptoSettingsLabel, 0, Qt::AlignHCenter);
-  cryptoLayout->addWidget(cryptoSettingsFrame);
-
   auto contentLayout = new QVBoxLayout{contentFrame};
-  contentLayout->addWidget(cryptoFrame);
+  contentLayout->addWidget(cryptoSettingsFrame);
   contentLayout->addStretch();
 
   auto centerFrame = new QFrame{this};
