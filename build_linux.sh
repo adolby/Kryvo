@@ -61,23 +61,31 @@ cd ${project_dir}
 make -j2
 
 # Build tests
-# echo "Building tests..."
-# cd ${project_dir}/src/tests/
-# /usr/local/Qt-5.7.0/bin/qmake -config release
-# make -j2
+echo "Building tests..."
+cd ${project_dir}/tests/
+/usr/local/Qt-5.7.0/bin/qmake -config release
+make -j2
+
+# Copy test data
+echo "Copying test data..."
+cd ${project_dir}/build/linux/gcc/x86_64/release/test/
+cp ${project_dir}/tests/data/test-data.zip test-data.zip
+7z x kryvos-test.zip &>/dev/null
 
 # Run tests
-# echo "Running tests..."
-# cd ${project_dir}/build/linux/gcc/x86_64/release/test/
-# sudo chmod +x CryptoTests
-# ./CryptoTests
+echo "Running tests..."
+sudo chmod +x CryptoTests
+./CryptoTests
 
 # Package Kryvos
 echo "Packaging..."
 cd ${project_dir}/build/linux/gcc/x86_64/release/Kryvos/
+
 rm -rf moc
 rm -rf obj
 rm -rf qrc
+
+echo "Copying files for archival..."
 cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "libQt5Core.so"
 cp "/usr/local/Qt-5.7.0/lib/libQt5Gui.so.5.7.0" "libQt5Gui.so"
 cp "/usr/local/Qt-5.7.0/lib/libQt5Svg.so.5.7.0" "libQt5Svg.so"
@@ -90,12 +98,14 @@ cp "${project_dir}/Qt License" "Qt License"
 mkdir themes
 cp "${project_dir}/resources/stylesheets/kryvos.qss" "themes/kryvos.qss"
 
-echo "Packaging portable archive..."
+echo "Copying files for installer..."
 cp -R * "${project_dir}/installer/linux/packages/com.kryvosproject.kryvos/data/"
+
+echo "Packaging portable archive..."
 cd ..
 7z a kryvos_${TAG_NAME}_linux_x86_64_portable.zip Kryvos
 
-echo "Building installer..."
+echo "Creating installer..."
 cd "${project_dir}/installer/linux/"
 /usr/local/QtIFW2.0.3/bin/binarycreator --offline-only -c config/config.xml -p packages kryvos_${TAG_NAME}_linux_x86_64_installer
 

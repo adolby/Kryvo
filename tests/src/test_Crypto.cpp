@@ -1,10 +1,10 @@
 #include "test_Crypto.hpp"
-#include "cryptography/Crypto.hpp"
-#include "utility/make_unique.h"
-#include <QtTest/QTest>
-#include <QtCore/QFile>
-#include <QtCore/QThread>
-#include <QtCore/QString>
+#include "src/cryptography/Crypto.hpp"
+#include "src/utility/make_unique.h"
+#include <QTest>
+#include <QFile>
+#include <QThread>
+#include <QString>
 #include <memory>
 
 template <class InputIterator1, class InputIterator2>
