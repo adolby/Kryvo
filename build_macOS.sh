@@ -54,16 +54,14 @@ make
 
 # Copy test data
 echo "Copying test data..."
-cd ${project_dir}/build/macOS/clang/x86_64/release/test/
+cd ${project_dir}/build/macOS/clang/x86_64/release/test/CryptoTests.app/Contents/MacOS/
 cp ${project_dir}/tests/data/test-data.zip test-data.zip
 7z x test-data.zip &>/dev/null
 
 # Run tests
 echo "Running tests..."
-sudo chmod -R +x CryptoTests.app
-macdeployqt CryptoTests.app
-otool -L CryptoTests.app
-open CryptoTests.app
+sudo chmod +x CryptoTests
+./CryptoTests
 
 # Package Kryvos
 echo "Packaging..."
