@@ -57,6 +57,7 @@ cp ${project_dir}/tests/data/test-data.zip test-data.zip
 
 # Run tests
 echo "Running tests..."
+sudo chmod -R +x CryptoTests.app
 open CryptoTests.app
 
 # Package Kryvos
