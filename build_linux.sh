@@ -68,7 +68,6 @@ make -j2
 
 # Copy test data
 echo "Copying test data..."
-mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/test/
 cd ${project_dir}/build/linux/gcc/x86_64/release/test/
 cp ${project_dir}/tests/data/test-data.zip test-data.zip
 7z x kryvos-test.zip &>/dev/null

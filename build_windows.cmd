@@ -16,8 +16,7 @@ qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
 nmake
 
 echo Copying test data...
-mkdir %project_dir%\build\win\msvc\x86_64\release\test\
-cd %project_dir%\build\win\msvc\x86_64\release\test\
+cd %project_dir%\build\windows\msvc\x86_64\release\test\
 dir
 cp %project_dir%\tests\data\test-data.zip test-data.zip
 7z x test-data.zip
