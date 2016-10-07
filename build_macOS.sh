@@ -53,7 +53,7 @@ make
 echo "Copying test data..."
 cd ${project_dir}/build/macOS/clang/x86_64/release/test/
 cp ${project_dir}/tests/data/test-data.zip test-data.zip
-7z x kryvos-test.zip &>/dev/null
+7z x test-data.zip &>/dev/null
 
 # Run tests
 echo "Running tests..."

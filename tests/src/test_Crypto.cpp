@@ -117,17 +117,17 @@ void TestCrypto::testEncryptDecrypt_data()
   QTest::addColumn<QString>("encryptedFileName");
   QTest::addColumn<QString>("decryptedFileName");
 
-  QTest::newRow("Small text file") << "password" << "AES-128/GCM"
-                                   << "test.txt" << "test.txt.enc"
-                                   << "test (2).txt";
+  QTest::newRow("Text file") << "password" << "AES-128/GCM"
+                             << "test.txt" << "test.txt.enc"
+                             << "test (2).txt";
 
-  QTest::newRow("Medium exe file") << "password2" << "AES-128/GCM"
+  QTest::newRow("Executable file") << "password2" << "AES-128/GCM"
                                    << "test.exe" << "test.exe.enc"
                                    << "test (2).exe";
 
-  QTest::newRow("Large zip file") << "password3" << "AES-128/GCM"
-                                  << "test.zip" << "test.zip.enc"
-                                  << "test (2).zip";
+  QTest::newRow("Zip file") << "password3" << "AES-128/GCM"
+                            << "test.zip" << "test.zip.enc"
+                            << "test (2).zip";
 }
 
 void TestCrypto::testEncryptDecrypt()
