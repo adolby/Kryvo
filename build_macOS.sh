@@ -17,6 +17,9 @@ sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-open
 sudo 7z x qt-opensource-5.7.0-x86_64-macos-clang.zip &>/dev/null
 sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
 
+# Add Qt binaries to path
+PATH=/usr/local/Qt-5.7.0/bin/:${PATH}
+
 # Get Botan
 # echo "Installing Botan..."
 # sudo wget https://github.com/randombit/botan/archive/1.11.32.zip
@@ -40,13 +43,13 @@ sudo ln -s xcodebuild xcrun
 # Build Kryvos
 echo "Building Kryvos..."
 cd ${project_dir}
-/usr/local/Qt-5.7.0/bin/qmake -config release
+qmake -config release
 make
 
 # Build tests
 echo "Building tests..."
 cd ${project_dir}/tests/
-/usr/local/Qt-5.7.0/bin/qmake -config release
+qmake -config release
 make
 
 # Copy test data
@@ -58,17 +61,19 @@ cp ${project_dir}/tests/data/test-data.zip test-data.zip
 # Run tests
 echo "Running tests..."
 sudo chmod -R +x CryptoTests.app
+macdeployqt CryptoTests.app
 open CryptoTests.app
 
 # Package Kryvos
 echo "Packaging..."
 cd ${project_dir}/build/macOS/clang/x86_64/release/
+
 rm -rf moc
 rm -rf obj
 rm -rf qrc
 
 echo "Creating dmg archive..."
-/usr/local/Qt-5.7.0/bin/macdeployqt Kryvos.app -dmg
+macdeployqt Kryvos.app -dmg
 mv Kryvos.dmg "Kryvos_${TAG_NAME}.dmg"
 # appdmg json-path Kryvos_${TRAVIS_TAG}.dmg
 

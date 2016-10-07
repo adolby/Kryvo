@@ -21,6 +21,7 @@ cp %project_dir%\tests\data\test-data.zip test-data.zip
 7z x test-data.zip
 
 echo Running tests...
+windeployqt CryptoTests.exe
 CryptoTests
 
 echo Packaging...
