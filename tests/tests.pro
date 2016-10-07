@@ -1,4 +1,5 @@
 QT += core testlib
+QT -= gui
 
 TARGET = CryptoTests
 
