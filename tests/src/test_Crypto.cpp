@@ -50,8 +50,8 @@ bool filesEqual(const QString& filePath1, const QString& filePath2)
 void TestCrypto::testComparatorSameFile()
 {
   // Test data
-  const QString fileName1 = QStringLiteral("file1.jpg");
-  const QString fileName2 = QStringLiteral("file2.jpg");
+  const QString fileName1 = QStringLiteral("file1.png");
+  const QString fileName2 = QStringLiteral("file2.png");
 
   QFile file1{fileName1};
   QFile file2{fileName2};
@@ -81,8 +81,8 @@ void TestCrypto::testComparatorSameFile()
 void TestCrypto::testComparatorDifferentFile()
 {
   // Test data
-  const QString fileName1 = QStringLiteral("file1.jpg");
-  const QString fileName2 = QStringLiteral("file3.jpg");
+  const QString fileName1 = QStringLiteral("file1.png");
+  const QString fileName2 = QStringLiteral("file3.png");
 
   QFile file1{fileName1};
   QFile file2{fileName2};
