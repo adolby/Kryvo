@@ -62,6 +62,7 @@ cp ${project_dir}/tests/data/test-data.zip test-data.zip
 echo "Running tests..."
 sudo chmod -R +x CryptoTests.app
 macdeployqt CryptoTests.app
+otool -L CryptoTests.app
 open CryptoTests.app
 
 # Package Kryvos
