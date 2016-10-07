@@ -32,6 +32,9 @@ sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-open
 sudo 7z x qt-opensource-5.7.0-x86_64-linux-gcc6.zip &>/dev/null
 sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
 
+# Add Qt binaries to path
+PATH=/usr/local/Qt-5.7.0/bin/:/usr/local/QtIFW2.0.3/bin/:${PATH}
+
 # Install Qt Installer Framework
 echo "Installing Qt Installer Framework..."
 sudo wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-2.0.3/qt-installer-framework-opensource-2.0.3.zip
@@ -57,14 +60,19 @@ sudo chmod -R +x /usr/local/QtIFW2.0.3/bin/
 # Build Kryvos
 echo "Building Kryvos..."
 cd ${project_dir}
-/usr/local/Qt-5.7.0/bin/qmake -config release
+qmake -config release
 make -j2
 
 # Build tests
 echo "Building tests..."
 cd ${project_dir}/tests/
-/usr/local/Qt-5.7.0/bin/qmake -config release
+qmake -config release
 make -j2
+
+# Copy test dependencies
+echo "Copying test dependencies..."
+cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "libQt5Core.so"
+cp "/usr/local/Qt-5.7.0/lib/libQt5Test.so.5.7.0" "libQt5Test.so"
 
 # Copy test data
 echo "Copying test data..."
@@ -107,7 +115,7 @@ cd ..
 
 echo "Creating installer..."
 cd "${project_dir}/installer/linux/"
-/usr/local/QtIFW2.0.3/bin/binarycreator --offline-only -c config/config.xml -p packages kryvos_${TAG_NAME}_linux_x86_64_installer
+binarycreator --offline-only -c config/config.xml -p packages kryvos_${TAG_NAME}_linux_x86_64_installer
 
 echo "Done!"
 
