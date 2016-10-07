@@ -44,15 +44,20 @@ cd ${project_dir}
 make
 
 # Build tests
-# echo "Building tests..."
-# cd ${project_dir}/src/tests/
-# /usr/local/Qt-5.7.0/bin/qmake -config release
-# make
+echo "Building tests..."
+cd ${project_dir}/tests/
+/usr/local/Qt-5.7.0/bin/qmake -config release
+make
 
-# # Run tests
-# echo "Running tests..."
-# cd ${project_dir}/build/macOS/clang/x86_64/release/test/
-# open CryptoTests.app
+# Copy test data
+echo "Copying test data..."
+cd ${project_dir}/build/macOS/clang/x86_64/release/test/
+cp ${project_dir}/tests/data/test-data.zip test-data.zip
+7z x kryvos-test.zip &>/dev/null
+
+# Run tests
+echo "Running tests..."
+open CryptoTests.app
 
 # Package Kryvos
 echo "Packaging..."

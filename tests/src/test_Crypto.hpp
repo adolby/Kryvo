@@ -1,7 +1,7 @@
 #ifndef KRYVOS_TESTS_TEST_CRYPTO_HPP_
 #define KRYVOS_TESTS_TEST_CRYPTO_HPP_
 
-#include <QtCore/QObject>
+#include <QObject>
 
 class TestCrypto : public QObject {
   Q_OBJECT

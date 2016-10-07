@@ -71,6 +71,7 @@ android-g++ {
   SOURCES += \
     src/cryptography/botan/android/botan_all.cpp \
     src/gui/TouchMainWindow.cpp
+
   HEADERS += \
     src/cryptography/botan/android/botan_all.h \
     src/cryptography/botan/android/android_to_string.h \
@@ -90,10 +91,12 @@ android-g++ {
   }
 } else:ios {
   message(iOS)
+  message(clang)
 
   SOURCES += \
     src/cryptography/botan/iOS/botan_all.cpp \
     src/gui/TouchMainWindow.cpp
+
   HEADERS += \
     src/cryptography/botan/iOS/botan_all.h \
     src/gui/TouchMainWindow.hpp
@@ -119,6 +122,7 @@ android-g++ {
 
     linux-clang {
       message(clang x86_64)
+
       SOURCES += \
         src/cryptography/botan/linux/clang/x86_64/botan_all.cpp \
         src/cryptography/botan/linux/clang/x86_64/botan_all_aesni.cpp \
@@ -126,6 +130,7 @@ android-g++ {
         src/cryptography/botan/linux/clang/x86_64/botan_all_rdrand.cpp \
         src/cryptography/botan/linux/clang/x86_64/botan_all_rdseed.cpp \
         src/cryptography/botan/linux/clang/x86_64/botan_all_ssse3.cpp
+
       HEADERS += \
         src/cryptography/botan/linux/clang/x86_64/botan_all.h \
         src/cryptography/botan/linux/clang/x86_64/botan_all_internal.h
@@ -150,6 +155,7 @@ android-g++ {
         src/cryptography/botan/linux/gcc/x86_64/botan_all_rdrand.cpp \
         src/cryptography/botan/linux/gcc/x86_64/botan_all_rdseed.cpp \
         src/cryptography/botan/linux/gcc/x86_64/botan_all_ssse3.cpp
+
       HEADERS += \
         src/cryptography/botan/linux/gcc/x86_64/botan_all.h \
         src/cryptography/botan/linux/gcc/x86_64/botan_all_internal.h
@@ -163,30 +169,6 @@ android-g++ {
         DESTDIR = build/linux/gcc/x86_64/release/Kryvos/
       }
     }
-
-    linux-g++-32 {
-      message(g++ x86)
-
-      SOURCES += \
-        src/cryptography/botan/linux/gcc/x86/botan_all.cpp \
-        src/cryptography/botan/linux/gcc/x86/botan_all_aesni.cpp \
-        src/cryptography/botan/linux/gcc/x86/botan_all_avx2.cpp \
-        src/cryptography/botan/linux/gcc/x86/botan_all_rdrand.cpp \
-        src/cryptography/botan/linux/gcc/x86/botan_all_rdseed.cpp \
-        src/cryptography/botan/linux/gcc/x86/botan_all_ssse3.cpp
-      HEADERS += \
-        src/cryptography/botan/linux/gcc/x86/botan_all.h \
-        src/cryptography/botan/linux/gcc/x86/botan_all_internal.h
-
-      debug {
-        message(Debug)
-        DESTDIR = build/linux/gcc/x86/debug/Kryvos/
-      }
-      release {
-        message(Release)
-        DESTDIR = build/linux/gcc/x86/release/Kryvos/
-      }
-    } # End linux-g++-32
   } # End Linux
 
   macx {
@@ -224,6 +206,7 @@ android-g++ {
     message(Windows)
 
     win32-msvc2015 {
+
       QMAKE_CXXFLAGS += -bigobj -arch:AVX2
       LIBS += advapi32.lib user32.lib
 
@@ -237,6 +220,7 @@ android-g++ {
           src/cryptography/botan/windows/msvc/x86_64/botan_all_rdrand.cpp \
           src/cryptography/botan/windows/msvc/x86_64/botan_all_rdseed.cpp \
           src/cryptography/botan/windows/msvc/x86_64/botan_all_ssse3.cpp
+
         HEADERS += \
           src/cryptography/botan/windows/msvc/x86_64/botan_all.h \
           src/cryptography/botan/windows/msvc/x86_64/botan_all_internal.h
@@ -251,6 +235,7 @@ android-g++ {
         }
       } else {
         message(MSVC x86)
+
         SOURCES += \
           src/cryptography/botan/windows/msvc/x86/botan_all.cpp \
           src/cryptography/botan/windows/msvc/x86/botan_all_aesni.cpp \

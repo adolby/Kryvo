@@ -67,17 +67,10 @@ Makefile*
 ## OS detritus
 ####################
 
-# Windows image file caches
 Thumbs.db
 ehthumbs.db
-
-# Folder config file
 [Dd]esktop.ini
-
-# Recycle Bin used on file shares
 $RECYCLE.BIN/
-
-# Mac crap
 .DS_Store
 
 #################
@@ -92,10 +85,6 @@ $RECYCLE.BIN/
 *.user
 *.user.*
 *.sln.docstates
-
-# MSTest test Results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
 
 *_resource.rc
 *_i.c
@@ -133,24 +122,8 @@ ipch/
 *.vsp
 *.vspx
 
-# Installshield output folder
-[Ee]xpress/
-
 # Windows Store app package directory
 AppPackages/
-
-#################
-## Packages
-#################
-
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
 
 # Others
 *.Cache
