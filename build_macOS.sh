@@ -4,6 +4,9 @@ set -o errexit -o nounset
 
 project_dir=$(pwd)
 
+# Output macOS version
+sw_vers
+
 # Update platform
 echo "Updating platform..."
 brew update
@@ -43,13 +46,13 @@ sudo ln -s xcodebuild xcrun
 # Build Kryvos
 echo "Building Kryvos..."
 cd ${project_dir}
-qmake -config release
+qmake -config release QMAKE_MAC_SDK=macosx10.11
 make
 
 # Build tests
 echo "Building tests..."
 cd ${project_dir}/tests/
-qmake -config release
+qmake -config release QMAKE_MAC_SDK=macosx10.11
 make
 
 # Copy test data
