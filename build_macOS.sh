@@ -46,13 +46,13 @@ sudo ln -s xcodebuild xcrun
 # Build Kryvos
 echo "Building Kryvos..."
 cd ${project_dir}
-qmake -config release QMAKE_MAC_SDK=macosx10.11
+qmake -config release
 make
 
 # Build tests
 echo "Building tests..."
 cd ${project_dir}/tests/
-qmake -config release QMAKE_MAC_SDK=macosx10.11
+qmake -config release
 make
 
 # Copy test data
