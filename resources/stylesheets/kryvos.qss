@@ -156,6 +156,7 @@ QFrame#settingsSubFrame {
 /*--------- Password Line Edit ---------*/
 QLineEdit#passwordLineEdit {
   font-size: 20px;
+  padding: 6px;
 }
 
 /*--------- Text ---------*/
