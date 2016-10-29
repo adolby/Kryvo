@@ -18,15 +18,6 @@ class FileListDelegate : public QStyledItemDelegate {
    */
   explicit FileListDelegate(QObject* parent = nullptr);
 
- signals:
-  /*!
-   * \brief removeRow Emitted when the delegate needs to remove a row from its
-   * model.
-   * \param index Index of the row to remove
-   */
-  void removeRow(const QModelIndex& index);
-
- public:
   /*!
    * \brief setFocusBorderEnabled Enables/disables the focus dotted line border
    * that appears on click.
@@ -34,6 +25,14 @@ class FileListDelegate : public QStyledItemDelegate {
    * focus border. True represents the enabled state.
    */
   void setFocusBorderEnabled(bool enabled);
+
+ signals:
+  /*!
+   * \brief removeRow Emitted when the delegate needs to remove a row from its
+   * model.
+   * \param index Index of the row to remove
+   */
+  void removeRow(const QModelIndex& index);
 
  protected:
   /*!

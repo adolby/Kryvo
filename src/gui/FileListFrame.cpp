@@ -100,6 +100,30 @@ void FileListFrame::clear()
   m->fileListView->setColumnWidth(2, this->width() * 0.05);
 }
 
+void FileListFrame::updateProgress(const QString& path, const qint64 percent)
+{
+  Q_ASSERT(m->fileListModel);
+
+  const auto items = m->fileListModel->findItems(path);
+
+  if (items.size() > 0)
+  {
+    auto item = items[0];
+
+    if (item != nullptr)
+    {
+      const auto index = item->row();
+
+      auto progressItem = m->fileListModel->item(index, 1);
+
+      if (progressItem != nullptr)
+      {
+        progressItem->setData(percent, Qt::DisplayRole);
+      }
+    }
+  }
+}
+
 void FileListFrame::addFileToModel(const QString& path)
 {
   QFileInfo fileInfo{path};
@@ -161,30 +185,6 @@ void FileListFrame::removeFileFromModel(const QModelIndex& index)
 
   // Remove row from model
   m->fileListModel->removeRow(index.row());
-}
-
-void FileListFrame::updateProgress(const QString& path, const qint64 percent)
-{
-  Q_ASSERT(m->fileListModel);
-
-  const auto items = m->fileListModel->findItems(path);
-
-  if (items.size() > 0)
-  {
-    auto item = items[0];
-
-    if (item != nullptr)
-    {
-      const auto index = item->row();
-
-      auto progressItem = m->fileListModel->item(index, 1);
-
-      if (progressItem != nullptr)
-      {
-        progressItem->setData(percent, Qt::DisplayRole);
-      }
-    }
-  }
 }
 
 void FileListFrame::resizeEvent(QResizeEvent* event)

@@ -85,6 +85,19 @@ HeaderFrame::HeaderFrame(QWidget* parent)
 
 HeaderFrame::~HeaderFrame() {}
 
+void HeaderFrame::setIconSize(const QSize& iconSize)
+{
+  Q_ASSERT(m->pauseButton);
+  Q_ASSERT(m->addFilesButton);
+  Q_ASSERT(m->clearFilesButton);
+
+  m->iconSize = iconSize;
+
+  m->pauseButton->setIconSize(m->iconSize);
+  m->addFilesButton->setIconSize(m->iconSize);
+  m->clearFilesButton->setIconSize(m->iconSize);
+}
+
 void HeaderFrame::togglePauseIcon(const bool toggle)
 {
   Q_ASSERT(m->pauseButton);
@@ -101,19 +114,6 @@ void HeaderFrame::togglePauseIcon(const bool toggle)
     m->pauseButton->setIcon(pauseIcon);
     m->pauseButton->setText(tr(" Pause"));
   }
-}
-
-void HeaderFrame::setIconSize(const QSize& iconSize)
-{
-  Q_ASSERT(m->pauseButton);
-  Q_ASSERT(m->addFilesButton);
-  Q_ASSERT(m->clearFilesButton);
-
-  m->iconSize = iconSize;
-
-  m->pauseButton->setIconSize(m->iconSize);
-  m->addFilesButton->setIconSize(m->iconSize);
-  m->clearFilesButton->setIconSize(m->iconSize);
 }
 
 HeaderFrame::HeaderFramePrivate::HeaderFramePrivate()

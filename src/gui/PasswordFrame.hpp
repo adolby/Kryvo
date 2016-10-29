@@ -25,20 +25,19 @@ class PasswordFrame : public QFrame {
    */
   virtual ~PasswordFrame();
 
- signals:
-  /*!
-   * \brief editingFinished Emitted when the line edit focus changes or the user
-   * indicates they are finished editing with the virtual keyboard.
-   */
-  void editingFinished();
-
- public:
   /*!
    * \brief passwordLineEdit Returns the password string from the password line
    * edit.
    * \return Password string.
    */
   QString password() const;
+
+ signals:
+  /*!
+   * \brief editingFinished Emitted when the line edit focus changes or the user
+   * indicates they are finished editing with the virtual keyboard.
+   */
+  void editingFinished();
 
  private:
   class PasswordFramePrivate;
