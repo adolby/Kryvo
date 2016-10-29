@@ -11,11 +11,11 @@ int main(int argc, char* argv[])
 {
   QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-  QApplication a{argc, argv};
+  QApplication app{argc, argv};
 
   Kryvos kryvos{};
 
-  auto retval = a.exec();
+  auto retval = app.exec();
 
   return retval;
 }
