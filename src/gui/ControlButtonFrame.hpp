@@ -23,6 +23,12 @@ class ControlButtonFrame : public QFrame {
    */
   virtual ~ControlButtonFrame();
 
+  /*!
+   * \brief setIconSize Sets the icon size for buttons.
+   * \param iconSize Icon size
+   */
+  void setIconSize(const QSize& iconSize);
+
  signals:
   /*!
    * \brief processFiles Emitted when the encrypt or decrypt push buttons are
@@ -41,13 +47,6 @@ class ControlButtonFrame : public QFrame {
    * \brief decryptFiles Executed when the decrypt push button is clicked.
    */
   void decryptFiles();
-
- public:
-  /*!
-   * \brief setIconSize Sets the icon size for buttons.
-   * \param iconSize Icon size
-   */
-  void setIconSize(const QSize& iconSize);
 
  private:
   class ControlButtonFramePrivate;

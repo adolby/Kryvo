@@ -25,28 +25,6 @@ class FileListFrame : public QFrame {
    */
   virtual ~FileListFrame();
 
- signals:
-  /*!
-   * \brief stopFile Emitted when the user clicks a remove file button.
-   */
-  void stopFile(const QString& fileName);
-
- public slots:
-  /*!
-   * \brief addFileToModel Adds a file to the model that represents the list
-   * to be encrypted/decrypted.
-   * \param path String representing the path to a file
-   */
-  void addFileToModel(const QString& path);
-
-  /*!
-   * \brief removeFileFromModel Removes the file name at the input index in the
-   * model.
-   * \param index The index of the file name to remove from the model
-   */
-  void removeFileFromModel(const QModelIndex& index);
-
- public:
   /*!
    * \brief item Returns a standard item at the input index in the file list
    * model.
@@ -73,6 +51,27 @@ class FileListFrame : public QFrame {
    * \param percent Current progress as an integer percentage
    */
   void updateProgress(const QString& path, const qint64 percent);
+
+ signals:
+  /*!
+   * \brief stopFile Emitted when the user clicks a remove file button.
+   */
+  void stopFile(const QString& fileName);
+
+ public slots:
+  /*!
+   * \brief addFileToModel Adds a file to the model that represents the list
+   * to be encrypted/decrypted.
+   * \param path String representing the path to a file
+   */
+  void addFileToModel(const QString& path);
+
+  /*!
+   * \brief removeFileFromModel Removes the file name at the input index in the
+   * model.
+   * \param index The index of the file name to remove from the model
+   */
+  void removeFileFromModel(const QModelIndex& index);
 
  protected:
   void resizeEvent(QResizeEvent* event);

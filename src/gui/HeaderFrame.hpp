@@ -23,6 +23,12 @@ class HeaderFrame : public QFrame {
    */
   virtual ~HeaderFrame();
 
+  /*!
+   * \brief setIconSize Sets the icon size for buttons.
+   * \param iconSize Icon size
+   */
+  void setIconSize(const QSize& iconSize);
+
  signals:
   /*!
    * \brief addFiles Emitted when the add files button is clicked.
@@ -45,13 +51,6 @@ class HeaderFrame : public QFrame {
    * \brief switchFrame Emitted when the settings button is clicked.
    */
   void switchFrame();
-
- public:
-  /*!
-   * \brief setIconSize Sets the icon size for buttons.
-   * \param iconSize Icon size
-   */
-  void setIconSize(const QSize& iconSize);
 
  private slots:
   /*!

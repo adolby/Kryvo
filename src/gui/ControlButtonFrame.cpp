@@ -46,6 +46,15 @@ ControlButtonFrame::ControlButtonFrame(QWidget* parent)
 
 ControlButtonFrame::~ControlButtonFrame() {}
 
+void ControlButtonFrame::setIconSize(const QSize& iconSize)
+{
+  Q_ASSERT(m->encryptButton);
+  Q_ASSERT(m->decryptButton);
+
+  m->encryptButton->setIconSize(iconSize);
+  m->decryptButton->setIconSize(iconSize);
+}
+
 void ControlButtonFrame::encryptFiles()
 {
   emit processFiles(true);
@@ -54,15 +63,6 @@ void ControlButtonFrame::encryptFiles()
 void ControlButtonFrame::decryptFiles()
 {
   emit processFiles(false);
-}
-
-void ControlButtonFrame::setIconSize(const QSize& iconSize)
-{
-  Q_ASSERT(m->encryptButton);
-  Q_ASSERT(m->decryptButton);
-
-  m->encryptButton->setIconSize(iconSize);
-  m->decryptButton->setIconSize(iconSize);
 }
 
 ControlButtonFrame::ControlButtonFramePrivate::ControlButtonFramePrivate()
