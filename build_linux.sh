@@ -11,8 +11,6 @@ echo "Downloading Qt files..."
 sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-x86_64-linux-gcc6.zip
 echo "Extracting Qt files..."
 sudo 7z x qt-opensource-5.7.0-x86_64-linux-gcc6.zip &>/dev/null
-echo "Applying executable permissions to Qt bin directory..."
-sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
@@ -22,7 +20,6 @@ PATH=/usr/local/Qt-5.7.0/bin/:/usr/local/QtIFW2.0.3/bin/:${PATH}
 echo "Installing Qt Installer Framework..."
 sudo wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-2.0.3/qt-installer-framework-opensource-2.0.3.zip
 sudo 7z x qt-installer-framework-opensource-2.0.3.zip &>/dev/null
-sudo chmod -R +x /usr/local/QtIFW2.0.3/bin/
 
 # Get Botan
 # echo "Installing Botan..."
