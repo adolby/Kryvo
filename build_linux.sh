@@ -2,9 +2,6 @@
 
 set -o errexit -o nounset
 
-echo gcc --version
-echo g++ --version
-
 project_dir=$(pwd)
 
 # Get Qt
