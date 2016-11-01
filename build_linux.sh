@@ -4,6 +4,8 @@ set -o errexit -o nounset
 
 # Update platform
 echo "Updating platform..."
+# Stop postgres before updating
+sudo /etc/init.d/postgresql stop
 sudo apt-get update
 gcc --version
 g++ --version
