@@ -37,7 +37,7 @@ copy "%project_dir%\Release Notes" "Kryvos\Release Notes.txt"
 copy "%project_dir%\README.md" "Kryvos\README.md"
 copy "%project_dir%\LICENSE" "Kryvos\LICENSE.txt"
 copy "%project_dir%\Botan License" "Kryvos\Botan License.txt"
-copy ".%project_dir%\Qt License" "Kryvos\Qt License.txt"
+copy "%project_dir%\Qt License" "Kryvos\Qt License.txt"
 mkdir %project_dir%\Kryvos\themes\
 copy "%project_dir%\resources\stylesheets\kryvos.qss" "Kryvos\themes\kryvos.qss"
 
