@@ -61,20 +61,19 @@ HEADERS += \
   src/utility/pimpl.h
 
 # Platform-specific configuration
-android-g++ {
+android {
   message(Android)
-  message(g++)
 
   # You'll need to place your Boost path here.
   INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
 
   SOURCES += \
-    src/cryptography/botan/android/botan_all.cpp \
+    # src/cryptography/botan/android/botan_all.cpp \
     src/gui/TouchMainWindow.cpp
 
   HEADERS += \
-    src/cryptography/botan/android/botan_all.h \
-    src/cryptography/botan/android/android_to_string.h \
+    # src/cryptography/botan/android/botan_all.h \
+    # src/cryptography/botan/android/android_to_string.h \
     src/gui/TouchMainWindow.hpp
 
   ANDROID_PACKAGE_SOURCE_DIR = resources/android/
