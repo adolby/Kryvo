@@ -81,8 +81,8 @@ rm -rf qrc
 
 echo "Copying files for archival..."
 mkdir platforms
-cp "/usr/local/Qt-5.7.0/plugins/platforms/libqxcb.so" "libqxcb.so"
-cp "/usr/local/Qt-5.7.0/plugins/platforms/libqminimal.so" "libqminimal.so"
+cp "/usr/local/Qt-5.7.0/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
+cp "/usr/local/Qt-5.7.0/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
 cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "libQt5Core.so.5"
 cp "/usr/local/Qt-5.7.0/lib/libQt5Gui.so.5.7.0" "libQt5Gui.so.5"
 cp "/usr/local/Qt-5.7.0/lib/libQt5Svg.so.5.7.0" "libQt5Svg.so.5"
