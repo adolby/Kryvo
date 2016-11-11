@@ -57,8 +57,8 @@ make -j2
 
 # Copy test dependencies
 echo "Copying test dependencies..."
-cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "libQt5Core.so"
-cp "/usr/local/Qt-5.7.0/lib/libQt5Test.so.5.7.0" "libQt5Test.so"
+cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "libQt5Core.so.5"
+cp "/usr/local/Qt-5.7.0/lib/libQt5Test.so.5.7.0" "libQt5Test.so.5"
 
 # Copy test data
 echo "Copying test data..."
