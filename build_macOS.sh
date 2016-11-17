@@ -16,8 +16,8 @@ npm install -g appdmg
 # Get Qt
 echo "Installing Qt..."
 cd /usr/local/
-sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-x86_64-macos-clang.zip
-sudo 7z x qt-opensource-5.7.0-x86_64-macos-clang.zip &>/dev/null
+sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-macos-x86_64-clang.zip
+sudo 7z x qt-opensource-5.7.0-macos-x86_64-clang.zip &>/dev/null
 sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
 
 # Add Qt binaries to path
