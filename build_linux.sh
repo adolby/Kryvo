@@ -9,23 +9,24 @@ sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes in
 
 # Hold on to current directory
 project_dir=$(pwd)
+qt_install_dir=/usr/local
 
 # Get Qt
 echo "Installing Qt..."
-cd /usr/local/
+cd ${qt_install_dir}
 echo "Downloading Qt files..."
-sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-x86_64-linux-gcc6.zip
+sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-linux-x86_64-gcc6.7z
 echo "Extracting Qt files..."
-sudo 7z x qt-opensource-5.7.0-x86_64-linux-gcc6.zip &> /dev/null
+sudo 7z x qt-opensource-5.7.0-linux-x86_64-gcc6.7z &> /dev/null
 
 # Install Qt Installer Framework
 echo "Installing Qt Installer Framework..."
-sudo wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-2.0.3/qt-installer-framework-opensource-2.0.3.zip
-sudo 7z x qt-installer-framework-opensource-2.0.3.zip &> /dev/null
+sudo wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-2.0.3/qt-installer-framework-opensource-2.0.3-linux.7z
+sudo 7z x qt-installer-framework-opensource-2.0.3-linux.7z &> /dev/null
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
-PATH=/usr/local/Qt-5.7.0/bin/:/usr/local/QtIFW2.0.3/bin/:${PATH}
+PATH=${qt_install_dir}/Qt/5.7/gcc_64/bin/:${qt_install_dir}/Qt/QtIFW2.0.3/bin/:${PATH}
 
 # Get Botan
 # echo "Installing Botan..."
@@ -46,19 +47,20 @@ PATH=/usr/local/Qt-5.7.0/bin/:/usr/local/QtIFW2.0.3/bin/:${PATH}
 # Build Kryvos
 echo "Building Kryvos..."
 cd ${project_dir}
-qmake -config release
-make -j2
+qmake -v
+qmake -config release -spec linux-g++-64
+make
 
 # Build tests
 echo "Building tests..."
 cd ${project_dir}/tests/
-qmake -config release
-make -j2
+qmake -config release -spec linux-g++-64
+make
 
 # Copy test dependencies
 echo "Copying test dependencies..."
-cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "libQt5Core.so.5"
-cp "/usr/local/Qt-5.7.0/lib/libQt5Test.so.5.7.0" "libQt5Test.so.5"
+cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Core.so.5.7.0" "libQt5Core.so.5"
+cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Test.so.5.7.0" "libQt5Test.so.5"
 
 # Copy test data
 echo "Copying test data..."
@@ -80,15 +82,17 @@ rm -rf obj
 rm -rf qrc
 
 echo "Copying files for archival..."
+
 mkdir platforms
-cp "/usr/local/Qt-5.7.0/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
-cp "/usr/local/Qt-5.7.0/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
-cp "/usr/local/Qt-5.7.0/lib/libQt5Core.so.5.7.0" "libQt5Core.so.5"
-cp "/usr/local/Qt-5.7.0/lib/libQt5Gui.so.5.7.0" "libQt5Gui.so.5"
-cp "/usr/local/Qt-5.7.0/lib/libQt5Svg.so.5.7.0" "libQt5Svg.so.5"
-cp "/usr/local/Qt-5.7.0/lib/libQt5DBus.so.5.7.0" "libQt5DBus.so.5"
-cp "/usr/local/Qt-5.7.0/lib/libQt5XcbQpa.so.5.7.0" "libQt5XcbQpa.so.5"
-cp "/usr/local/Qt-5.7.0/lib/libQt5Widgets.so.5.7.0" "libQt5Widgets.so.5"
+cp "${qt_install_dir}/Qt/5.7/gcc_64/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
+cp "${qt_install_dir}/Qt/5.7/gcc_64/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
+
+cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Core.so.5.7.0" "libQt5Core.so.5"
+cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Gui.so.5.7.0" "libQt5Gui.so.5"
+cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Svg.so.5.7.0" "libQt5Svg.so.5"
+cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5DBus.so.5.7.0" "libQt5DBus.so.5"
+cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5XcbQpa.so.5.7.0" "libQt5XcbQpa.so.5"
+cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Widgets.so.5.7.0" "libQt5Widgets.so.5"
 
 chrpath -r \$ORIGIN/.. platforms/libqxcb.so
 chrpath -r \$ORIGIN/.. platforms/libqminimal.so
