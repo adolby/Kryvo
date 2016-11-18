@@ -115,6 +115,7 @@ android {
   linux {
     message(Linux)
 
+    LIBS += -lz
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
