@@ -10,13 +10,11 @@ Kryvos is an open-source file encryptor and decryptor. It encrypts files with AE
 To install Kryvos on Windows or Linux, run the installer executable or extract the files from the Kryvos archive. To install Kryvos on macOS, extract the disk image archive, then mount the disk image. Drag Kryvos.app to your Applications folder. Once the install files are copied, run the Kryvos executable.
 
 ###Solving Windows missing DLL error
-If you receive an error indicating a missing msvcp140.dll or vcruntime140.dll, you'll need to install the Visual C++ 2015 Redistributable (x64).
+If you receive an error indicating a missing msvcp140.dll, vcruntime140.dll, or other DLL files when you run Kryvos, you'll need to install the Visual C++ 2015 Redistributable (x64).
 
-If you are using the Kryvos installer, it is located in your install folder (default is C:\Program Files\Kryvos\). Its file name is vcredist_x64.exe.
+The Visual C++ Redistributable installer is located where you installed Kryvos (default directory for the installer is C:\Program Files\Kryvos\). Its file name is vcredist_x64.exe.
 
-If you are using the Kryvos portable version, you can download it from https://www.microsoft.com/en-us/download/details.aspx?id=48145. Choose file vc_redist.x64.exe.
-
-Run the redistributable installer, and you should then be able to start Kryvos.
+Run the Visual C++ Redistributable installer, and you should then be able to start Kryvos.
 
 ###Using Kryvos
 Add files by clicking/tapping the Add Files button and selecting them in the dialog or by dragging and dropping files to the Kryvos window. Press encrypt or decrypt to process the entire list.
