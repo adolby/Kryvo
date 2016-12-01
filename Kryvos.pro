@@ -175,6 +175,8 @@ android {
     message(macOS)
     message(clang x86_64)
 
+    QMAKE_MAC_SDK = macosx10.12
+
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
 
@@ -206,7 +208,6 @@ android {
     message(Windows)
 
     win32-msvc2015 {
-
       QMAKE_CXXFLAGS += -bigobj -arch:AVX2
       LIBS += advapi32.lib user32.lib
 
