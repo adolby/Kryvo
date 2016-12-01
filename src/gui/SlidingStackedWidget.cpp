@@ -215,7 +215,7 @@ void SlidingStackedWidget::stopAnimation()
 }
 
 SlidingStackedWidget::SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate()
-  : speed{1000}, animationType{QEasingCurve::Linear}, vertical{false},
+  : speed{500}, animationType{QEasingCurve::InOutSine}, vertical{false},
     currentIndex{0}, nextIndex{0}, wrap{false}
 {
   currentWidgetAnimation = new QPropertyAnimation{};
