@@ -46,13 +46,15 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   //                            QStringLiteral(":/images/sliderKnobDisable.png"));
 
   auto headerFrame = new QFrame{this};
-  headerFrame->setObjectName("headerFrame");
+  headerFrame->setObjectName(QStringLiteral("headerFrame"));
+  headerFrame->setContentsMargins(0, 0, 0, 0);
+  headerFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-  auto gearImageLabel = new QLabel{this};
-  gearImageLabel->setPixmap(QPixmap{":/images/gearIcon.png"});
+  auto gearImageLabel = new QLabel{headerFrame};
+  gearImageLabel->setPixmap(QPixmap{QStringLiteral(":/images/gearIcon.png")});
 
   const auto backIcon = QIcon{QStringLiteral(":/images/backIcon.png")};
-  auto backButton = new QPushButton{backIcon, tr(" Back"), this};
+  auto backButton = new QPushButton{backIcon, tr(" Back"), headerFrame};
   backButton->setObjectName(QStringLiteral("backButton"));
   backButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
@@ -62,8 +64,10 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   headerLayout->addWidget(backButton);
   headerLayout->addStretch(1);
   headerLayout->setContentsMargins(0, 0, 0, 0);
+  headerLayout->setSpacing(0);
 
   auto contentFrame = new QFrame{this};
+  contentFrame->setContentsMargins(0, 0, 0, 0);
 
   auto cryptoSettingsFrame = new QFrame{contentFrame};
   cryptoSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
@@ -154,15 +158,21 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   auto contentLayout = new QVBoxLayout{contentFrame};
   contentLayout->addWidget(cryptoSettingsFrame);
   contentLayout->addStretch();
+  contentLayout->setSpacing(0);
 
   auto centerFrame = new QFrame{this};
+  centerFrame->setContentsMargins(0, 0, 0, 0);
+
   auto centerLayout = new QHBoxLayout{centerFrame};
   centerLayout->addWidget(contentFrame);
   centerLayout->addStretch();
+  centerLayout->setContentsMargins(0, 0, 0, 0);
+  centerLayout->setSpacing(0);
 
   auto settingsLayout = new QVBoxLayout{this};
   settingsLayout->addWidget(headerFrame, 0);
   settingsLayout->addWidget(centerFrame, 1);
+  settingsLayout->setSpacing(0);
 
   // Capture function pointer to specific QComboBox signal overload
   void (QComboBox::*indexChangedSignal)(const QString&) =

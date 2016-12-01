@@ -62,7 +62,7 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
     contentLayout{nullptr}
 {
   // Set object name
-  this->setObjectName(QStringLiteral("MainWindow"));
+  this->setObjectName(QStringLiteral("mainWindow"));
 
   // Title
   this->setWindowTitle(tr("Kryvos"));
