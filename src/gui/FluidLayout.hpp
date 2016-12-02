@@ -13,7 +13,7 @@ class FluidLayout : public FlowLayout
 {
  public:
   /*!
-   * \brief FluidLayout Constructs a fluid layout with a parent.
+   * \brief FluidLayout Constructs a fluid layout with a parent
    * \param parent Widget parent
    * \param margin Integer representing margin
    * \param hSpacing Integer representing horizontal spacing
@@ -23,7 +23,7 @@ class FluidLayout : public FlowLayout
                        int hSpacing = -1, int vSpacing = -1);
 
   /*!
-   * \brief FluidLayout Constructs a fluid layout.
+   * \brief FluidLayout Constructs a fluid layout
    * \param margin Integer representing margin
    * \param hSpacing Integer representing horizontal spacing
    * \param vSpacing Integer representing vertical spacing
@@ -32,21 +32,21 @@ class FluidLayout : public FlowLayout
 
   /*!
    * \brief heightForWidth Calculates the height for width accounting for line
-   * count.
+   * count
    * \return Width
    */
   int heightForWidth(int width) const;
 
   /*!
    * \brief minimumSize Calculates the minimum size accounting for the line
-   * count.
+   * count
    * \return Minimum size for the fluid layout
    */
   QSize minimumSize() const;
 
   /*!
    * \brief setGeometry Sets the geometry for this layout manager to the
-   * parameter rectangle rect.
+   * parameter rectangle rect
    * \param rect New geometry rectangle
    */
   void setGeometry(const QRect& rect);
@@ -55,14 +55,14 @@ class FluidLayout : public FlowLayout
   /*!
    * \brief doLayout Calculates the layout geometry and updates the line count
    * accordingly, which allows the layout manager to return an accurate size
-   * of its children.
+   * of its children
    * \param rect New geometry rectangle
    */
   void doLayout(const QRect& rect);
 
   /*!
    * \brief checkLayout Returns the vertical height of the layout, calculated
-   * from its children.
+   * from its children
    * \param rect New geometry rectangle
    * \return Vertical layout height
    */

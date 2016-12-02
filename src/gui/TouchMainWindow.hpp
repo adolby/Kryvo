@@ -14,7 +14,7 @@ class TouchMainWindow : public MainWindow
  public:
   /*!
    * \brief TouchMainWindow Constructs the application's main window for
-   * touch-based displays.
+   * touch-based displays
    * \param settings Settings object
    * \param parent Widget parent
    */
@@ -23,7 +23,7 @@ class TouchMainWindow : public MainWindow
 
   /*!
    * \brief ~TouchMainWindow Destroys the application's main window for
-   * touch-based displays.
+   * touch-based displays
    */
   ~TouchMainWindow();
 };

@@ -15,27 +15,27 @@ class PasswordFrame : public QFrame {
  public:
   /*!
    * \brief PasswordFrame Constructs a password frame, which allows a user to
-   * enter a password for encrypting/decrypting a file.
-   * \param parent The QWidget parent of this password frame.
+   * enter a password for encrypting/decrypting a file
+   * \param parent QWidget parent of this password frame
    */
   explicit PasswordFrame(QWidget* parent = nullptr);
 
   /*!
-   * \brief ~PasswordFrame Destroys a password frame.
+   * \brief ~PasswordFrame Destroys a password frame
    */
   virtual ~PasswordFrame();
 
   /*!
    * \brief passwordLineEdit Returns the password string from the password line
-   * edit.
-   * \return Password string.
+   * edit
+   * \return Password string
    */
   QString password() const;
 
  signals:
   /*!
    * \brief editingFinished Emitted when the line edit focus changes or the user
-   * indicates they are finished editing with the virtual keyboard.
+   * indicates they are finished editing with the virtual keyboard
    */
   void editingFinished();
 

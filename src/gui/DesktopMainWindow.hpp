@@ -17,7 +17,7 @@ class DesktopMainWindow : public MainWindow {
  public:
   /*!
    * \brief DesktopMainWindow Constructs the application's main window for
-   * desktop displays.
+   * desktop displays
    * \param settings Settings object
    * \param parent Parent widget
    */
@@ -26,39 +26,39 @@ class DesktopMainWindow : public MainWindow {
 
   /*!
    * \brief ~DesktopMainWindow Destroys the application's main window for
-   * desktop displays.
+   * desktop displays
    */
   virtual ~DesktopMainWindow();
 
  protected:
   /*!
-  * \brief closeEvent Executed when the main window is closed.
-  * \param event Close event.
+  * \brief closeEvent Executed when the main window is closed
+  * \param event Close event
   */
   virtual void closeEvent(QCloseEvent* event);
 
   /*!
   * \brief dragEnterEvent Executed when a drag enter event occurs on the main
-  * window.
-  * \param event Drag enter event.
+  * window
+  * \param event Drag enter event
   */
   virtual void dragEnterEvent(QDragEnterEvent* event);
 
   /*!
-  * \brief dropEvent Executed when a drop event occurs on the main window.
-  * \param event Drop event.
+  * \brief dropEvent Executed when a drop event occurs on the main window
+  * \param event Drop event
   */
   virtual void dropEvent(QDropEvent* event);
 
   /*!
-   * \brief sizeHint Returns the preferred size of the main window.
-   * \return Preferred size.
+   * \brief sizeHint Returns the preferred size of the main window
+   * \return Preferred size
    */
   virtual QSize sizeHint() const;
 
   /*!
-   * \brief minimumSizeHint Returns the minimum size of the main window.
-   * \return Maximum size.
+   * \brief minimumSizeHint Returns the minimum size of the main window
+   * \return Maximum size
    */
   virtual QSize minimumSizeHint() const;
 

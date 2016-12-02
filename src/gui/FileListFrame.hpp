@@ -15,65 +15,69 @@ class FileListFrame : public QFrame {
  public:
   /*!
    * \brief FileListFrame Constructs a file list frame, which displays file
-   * information and allows users to remove file entries.
-   * \param parent Widget parent of this file list frame.
+   * information and allows users to remove file entries
+   * \param parent Widget parent of this file list frame
    */
   explicit FileListFrame(QWidget* parent = nullptr);
 
   /*!
-   * \brief ~FileListFrame Destroys a file list frame.
+   * \brief ~FileListFrame Destroys a file list frame
    */
   virtual ~FileListFrame();
 
   /*!
    * \brief item Returns a standard item at the input index in the file list
-   * model.
+   * model
    * \param row Integer representing the file list model row
    * \return Standard item taken from specified index in the file list model
    */
   QStandardItem* item(const int row);
 
   /*!
-   * \brief rowCount Returns the number of rows in the file list model.
+   * \brief rowCount Returns the number of rows in the file list model
    * \return Number of rows as an integer in the file list model
    */
   int rowCount() const;
 
   /*!
-   * \brief clear Clears the file list model.
+   * \brief clear Clears the file list model
    */
   void clear();
 
   /*!
    * \brief updateProgress Executed when the cipher operation progress is
    * updated. Updates the progress bar for the item at the specified index.
-   * \param index Index as an integer in the file list toupdate
+   * \param index Index as an integer in the file list to update
    * \param percent Current progress as an integer percentage
    */
   void updateProgress(const QString& path, const qint64 percent);
 
  signals:
   /*!
-   * \brief stopFile Emitted when the user clicks a remove file button.
+   * \brief stopFile Emitted when the user clicks a remove file button
    */
   void stopFile(const QString& fileName);
 
  public slots:
   /*!
    * \brief addFileToModel Adds a file to the model that represents the list
-   * to be encrypted/decrypted.
+   * to be encrypted/decrypted
    * \param path String representing the path to a file
    */
   void addFileToModel(const QString& path);
 
   /*!
    * \brief removeFileFromModel Removes the file name at the input index in the
-   * model.
+   * model
    * \param index The index of the file name to remove from the model
    */
   void removeFileFromModel(const QModelIndex& index);
 
  protected:
+  /*!
+   * \brief resizeEvent Executed after this widget resizes
+   * \param event Event data
+   */
   void resizeEvent(QResizeEvent* event);
 
  private:

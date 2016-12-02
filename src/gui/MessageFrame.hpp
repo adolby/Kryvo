@@ -14,25 +14,25 @@ class MessageFrame : public QFrame {
  public:
   /*!
    * \brief MessageFrame Constructs a message frame, which is used to inform a
-   * user about the status of encryption and decryption operations.
+   * user about the status of encryption and decryption operations
    * \param parent Widget parent of this message frame
    */
   explicit MessageFrame(QWidget* parent = nullptr);
 
   /*!
-   * \brief ~MessageFrame Destroys a message frame.
+   * \brief ~MessageFrame Destroys a message frame
    */
   virtual ~MessageFrame();
 
   /*!
-   * \brief appendText Appends text to the message frame.
+   * \brief appendText Appends text to the message frame
    * \param message Message string
    */
   void appendText(const QString& message);
 
  public slots:
   /*!
-   * \brief pageLeft Switches to the previous message in the message vector.
+   * \brief pageLeft Switches to the previous message in the message vector
    */
   void pageLeft();
 
