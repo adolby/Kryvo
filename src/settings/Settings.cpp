@@ -32,7 +32,8 @@ class Settings::SettingsPrivate {
   QSize size;
   QString cipher;
   std::size_t keySize;
-  QString mode;
+  QString modeOfOperation;
+  bool compressionMode;
   QString lastDirectory;
   QString styleSheetPath;
 };
@@ -99,12 +100,22 @@ std::size_t Settings::keySize() const
 
 void Settings::modeOfOperation(const QString& modeOfOperation)
 {
-  m->mode = modeOfOperation;
+  m->modeOfOperation = modeOfOperation;
 }
 
 QString Settings::modeOfOperation() const
 {
-  return m->mode;
+  return m->modeOfOperation;
+}
+
+void Settings::compressionMode(const bool compress)
+{
+  m->compressionMode = compress;
+}
+
+bool Settings::compressionMode() const
+{
+  return m->compressionMode;
 }
 
 void Settings::lastDirectory(const QString& directory)
@@ -123,7 +134,7 @@ QString Settings::styleSheetPath() const
 }
 
 Settings::SettingsPrivate::SettingsPrivate()
-  : maximized{false}, keySize{128}
+  : maximized{false}, keySize{128}, compressionMode{true}
 {}
 
 void Settings::SettingsPrivate::importSettings()
@@ -152,35 +163,39 @@ void Settings::SettingsPrivate::importSettings()
     position = QPoint{xObject.toInt(200), yObject.toInt(200)};
 
     auto maximizedObject =
-        static_cast<QJsonValue>(settings[QStringLiteral("maximized")]);
+      static_cast<QJsonValue>(settings[QStringLiteral("maximized")]);
     maximized = maximizedObject.toBool(false);
     if (!maximized)
     {
       auto sizeObject = settings["size"].toObject();
       auto widthObject =
-          static_cast<QJsonValue>(sizeObject[QStringLiteral("width")]);
+        static_cast<QJsonValue>(sizeObject[QStringLiteral("width")]);
       auto heightObject =
-          static_cast<QJsonValue>(sizeObject[QStringLiteral("height")]);
+        static_cast<QJsonValue>(sizeObject[QStringLiteral("height")]);
       size = QSize{widthObject.toInt(800), heightObject.toInt(600)};
     }
 
     lastDirectory = settings[QStringLiteral("lastDirectory")].toString();
 
     auto cipherObject =
-        static_cast<QJsonValue>(settings[QStringLiteral("cipher")]);
+      static_cast<QJsonValue>(settings[QStringLiteral("cipher")]);
     cipher = cipherObject.toString(QStringLiteral("AES"));
 
     auto keySizeObject =
-        static_cast<QJsonValue>(settings[QStringLiteral("keySize")]);
+      static_cast<QJsonValue>(settings[QStringLiteral("keySize")]);
     keySize = static_cast<std::size_t>(keySizeObject.toInt(128));
 
-    auto modeObject =
-        static_cast<QJsonValue>(settings[QStringLiteral("modeOfOperation")]);
-    mode = modeObject.toString(QStringLiteral("GCM"));
+    auto modeOfOperationObject =
+      static_cast<QJsonValue>(settings[QStringLiteral("modeOfOperation")]);
+    modeOfOperation = modeOfOperationObject.toString(QStringLiteral("GCM"));
+
+    auto compressionMode =
+        static_cast<QJsonValue>(settings[QStringLiteral("compressionMode")]);
+    compressionMode = modeOfOperationObject.toBool(true);
 
     auto styleObject =
         static_cast<QJsonValue>(settings[QStringLiteral("styleSheetPath")]);
-    styleSheetPath = styleObject.toString(QStringLiteral("default/kryvos.qss"));
+    styleSheetPath = styleObject.toString(QStringLiteral("kryvos.qss"));
   }
   else
   { // Settings file couldn't be opened, so use defaults
@@ -188,8 +203,9 @@ void Settings::SettingsPrivate::importSettings()
     size = QSize{800, 600};
     cipher = QStringLiteral("AES");
     keySize = 128;
-    mode = QStringLiteral("GCM");
-    styleSheetPath = QStringLiteral("default/kryvos.qss");
+    modeOfOperation = QStringLiteral("GCM");
+    compressionMode = true;
+    styleSheetPath = QStringLiteral("kryvos.qss");
   }
 }
 
@@ -229,7 +245,8 @@ void Settings::SettingsPrivate::exportSettings() const
     settings[QStringLiteral("lastDirectory")] = lastDirectory;
     settings[QStringLiteral("cipher")] = cipher;
     settings[QStringLiteral("keySize")] = static_cast<int>(keySize);
-    settings[QStringLiteral("modeOfOperation")] = mode;
+    settings[QStringLiteral("modeOfOperation")] = modeOfOperation;
+    settings[QStringLiteral("compressionMode")] = compressionMode;
     settings[QStringLiteral("styleSheetPath")] = styleSheetPath;
 
     auto settingsDoc = QJsonDocument{settings};

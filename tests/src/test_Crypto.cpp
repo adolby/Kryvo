@@ -112,28 +112,46 @@ void TestCrypto::testComparatorDifferentFile()
 void TestCrypto::testEncryptDecrypt_data()
 {
   QTest::addColumn<QString>("passphrase");
-  QTest::addColumn<QString>("algorithmName");
+  QTest::addColumn<QString>("cipher");
+  QTest::addColumn<int>("keySize");
+  QTest::addColumn<QString>("modeOfOperation");
+  QTest::addColumn<bool>("compress");
   QTest::addColumn<QString>("inputFileName");
   QTest::addColumn<QString>("encryptedFileName");
   QTest::addColumn<QString>("decryptedFileName");
 
-  QTest::newRow("Text file") << "password" << "AES-128/GCM"
-                             << "test.txt" << "test.txt.enc"
-                             << "test (2).txt";
+  QTest::newRow("Text file with compression")
+    << "password" << "AES" << 128 << "GCM" << true << "test.txt"
+    << "test.txt.enc" << "test (2).txt";
 
-  QTest::newRow("Executable file") << "password2" << "AES-128/GCM"
-                                   << "test.exe" << "test.exe.enc"
-                                   << "test (2).exe";
+  QTest::newRow("Executable file with compression")
+    << "password2" << "AES" << 128 << "GCM" << true << "test.exe"
+    << "test.exe.enc" << "test (2).exe";
 
-  QTest::newRow("Zip file") << "password3" << "AES-128/GCM"
-                            << "test.zip" << "test.zip.enc"
-                            << "test (2).zip";
+  QTest::newRow("Zip file with compression")
+    << "password3" << "AES" << 128 << "GCM" << true << "test.zip"
+    << "test.zip.enc" << "test (2).zip";
+
+  QTest::newRow("Text file without compression")
+    << "password" << "AES" << 128 << "GCM" << true << "test.txt"
+    << "test.txt.enc" << "test (2).txt";
+
+  QTest::newRow("Executable file without compression")
+    << "password2" << "AES" << 128 << "GCM" << true << "test.exe"
+    << "test.exe.enc" << "test (2).exe";
+
+  QTest::newRow("Zip file without compression")
+    << "password3" << "AES" << 128 << "GCM" << true << "test.zip"
+    << "test.zip.enc" << "test (2).zip";
 }
 
 void TestCrypto::testEncryptDecrypt()
 {
   QFETCH(QString, passphrase);
-  QFETCH(QString, algorithmName);
+  QFETCH(QString, cipher);
+  QFETCH(int, keySize);
+  QFETCH(QString, modeOfOperation);
+  QFETCH(bool, compress);
   QFETCH(QString, inputFileName);
   QFETCH(QString, encryptedFileName);
   QFETCH(QString, decryptedFileName);
@@ -151,7 +169,8 @@ void TestCrypto::testEncryptDecrypt()
   std::unique_ptr<Crypto> cryptography = make_unique<Crypto>();
 
   // Test encryption and decryption
-  cryptography->encrypt(passphrase, inputFileNames, algorithmName);
+  cryptography->encrypt(passphrase, inputFileNames, cipher, keySize,
+                        modeOfOperation, compress);
   cryptography->decrypt(passphrase, encryptedFileNames);
 
   // Compare initial file to decrypted file
@@ -177,7 +196,10 @@ void TestCrypto::testEncryptDecryptAll()
 {
   // Test data
   const auto passphrase = QStringLiteral("password");
-  const auto algorithmName = QStringLiteral("AES-128/GCM");
+  const auto cipher = QStringLiteral("AES");
+  const auto keySize = std::size_t{128};
+  const auto modeOfOperation = QStringLiteral("GCM");
+  const auto compress = true;
 
   const QStringList inputFileNames = {"test.txt",
                                       "test.exe",
@@ -185,14 +207,13 @@ void TestCrypto::testEncryptDecryptAll()
 
   auto skip = false;
   QString message;
+
   for (const auto& inputFileName : inputFileNames)
   {
-    auto msg = QStringLiteral("Test file %1 is missing. ");
-
     QFile inputFile{inputFileName};
     if (!inputFile.exists())
     {
-      message += msg.arg(inputFileName);
+      message += QString{"\nTest file %1 is missing."}.arg(inputFileName);
       skip = true;
     }
   }
@@ -213,7 +234,8 @@ void TestCrypto::testEncryptDecryptAll()
   std::unique_ptr<Crypto> cryptography = make_unique<Crypto>();
 
   // Test encryption and decryption
-  cryptography->encrypt(passphrase, inputFileNames, algorithmName);
+  cryptography->encrypt(passphrase, inputFileNames, cipher, keySize,
+                        modeOfOperation, compress);
   cryptography->decrypt(passphrase, encryptedFileNames);
 
   auto equivalentTest = false;

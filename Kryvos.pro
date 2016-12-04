@@ -177,6 +177,7 @@ android {
 
     QMAKE_MAC_SDK = macosx10.12
 
+    LIBS += -lz
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
 
@@ -209,7 +210,40 @@ android {
 
     win32-msvc2015 {
       QMAKE_CXXFLAGS += -bigobj -arch:AVX2
+
       LIBS += advapi32.lib user32.lib
+
+      INCLUDEPATH += $$PWD/src/cryptography/botan/zlib/
+
+      SOURCES += \
+        src/cryptography/botan/zlib/adler32.c \
+        src/cryptography/botan/zlib/compress.c \
+        src/cryptography/botan/zlib/crc32.c \
+        src/cryptography/botan/zlib/deflate.c \
+        src/cryptography/botan/zlib/gzclose.c \
+        src/cryptography/botan/zlib/gzlib.c \
+        src/cryptography/botan/zlib/gzread.c \
+        src/cryptography/botan/zlib/gzwrite.c \
+        src/cryptography/botan/zlib/infback.c \
+        src/cryptography/botan/zlib/inffast.c \
+        src/cryptography/botan/zlib/inflate.c \
+        src/cryptography/botan/zlib/inftrees.c \
+        src/cryptography/botan/zlib/trees.c \
+        src/cryptography/botan/zlib/uncompr.c \
+        src/cryptography/botan/zlib/zutil.c
+
+      HEADERS += \
+        src/cryptography/botan/zlib/zlib.h \
+        src/cryptography/botan/zlib/crc32.h \
+        src/cryptography/botan/zlib/deflate.h \
+        src/cryptography/botan/zlib/gzguts.h \
+        src/cryptography/botan/zlib/inffast.h \
+        src/cryptography/botan/zlib/inffixed.h \
+        src/cryptography/botan/zlib/inflate.h \
+        src/cryptography/botan/zlib/inftrees.h \
+        src/cryptography/botan/zlib/trees.h \
+        src/cryptography/botan/zlib/zconf.h \
+        src/cryptography/botan/zlib/zutil.h
 
       contains(QT_ARCH, x86_64) {
         message(MSVC x86_64)

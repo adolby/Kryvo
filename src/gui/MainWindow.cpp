@@ -67,7 +67,7 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   // Title
   this->setWindowTitle(tr("Kryvos"));
 
-  // Store settings object
+  // Keep settings object
   m->settings = settings;
 
   auto slidingStackedWidget = new SlidingStackedWidget{this};
@@ -132,14 +132,17 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
           this, &MainWindow::removeFiles);
 
   // Settings frame connections
-  connect(settingsFrame, &SettingsFrame::newCipher,
+  connect(settingsFrame, &SettingsFrame::updateCipher,
           this, &MainWindow::updateCipher);
 
-  connect(settingsFrame, &SettingsFrame::newKeySize,
+  connect(settingsFrame, &SettingsFrame::updateKeySize,
           this, &MainWindow::updateKeySize);
 
-  connect(settingsFrame, &SettingsFrame::newModeOfOperation,
+  connect(settingsFrame, &SettingsFrame::updateModeOfOperation,
           this, &MainWindow::updateModeOfOperation);
+
+  connect(settingsFrame, &SettingsFrame::updateCompressionMode,
+          this, &MainWindow::updateCompressionMode);
 
   // Forwarded connections
   connect(fileListFrame, &FileListFrame::stopFile,
@@ -158,8 +161,7 @@ void MainWindow::addFiles()
   // Open a file dialog to get files
   const auto files = QFileDialog::getOpenFileNames(this,
                                                    tr("Add Files"),
-                                                   m->settings->
-                                                     lastDirectory(),
+                                                   m->settings->lastDirectory(),
                                                    tr("Any files (*)"));
 
   if (!files.isEmpty())
@@ -212,29 +214,15 @@ void MainWindow::processFiles(const bool cryptFlag)
 
         if (cryptFlag)
         {
-          QString cipherAlgorithm;
-          if (QStringLiteral("AES") == m->settings->cipher())
-          {
-            cipherAlgorithm = m->settings->cipher() % QStringLiteral("-") %
-                              QString::number(m->settings->keySize()) %
-                              QStringLiteral("/") %
-                              m->settings->modeOfOperation();
-          }
-          else
-          {
-            cipherAlgorithm = m->settings->cipher() % QStringLiteral("/") %
-                              m->settings->modeOfOperation();
-          }
-
-          // Start encrypting the file list
           emit encrypt(passphrase,
                        fileList,
-                       cipherAlgorithm,
-                       m->settings->keySize());
+                       m->settings->cipher(),
+                       m->settings->keySize(),
+                       m->settings->modeOfOperation(),
+                       m->settings->compressionMode());
         }
         else
         {
-          // Start decrypting the file list
           emit decrypt(passphrase, fileList);
         }
       }
@@ -264,10 +252,10 @@ void MainWindow::updateStatusMessage(const QString& message)
   messageFrame->appendText(message);
 }
 
-void MainWindow::updateError(const QString& path, const QString& message)
+void MainWindow::updateError(const QString& fileName, const QString& message)
 {
-  updateStatusMessage(message);
-  updateProgress(path, 0);
+  updateStatusMessage(message.arg(fileName));
+  updateProgress(fileName, 0);
 }
 
 void MainWindow::updateBusyStatus(const bool busy)
@@ -275,9 +263,9 @@ void MainWindow::updateBusyStatus(const bool busy)
   m->busy(busy);
 }
 
-void MainWindow::updateCipher(const QString& newCipher)
+void MainWindow::updateCipher(const QString& cipher)
 {
-  m->settings->cipher(newCipher);
+  m->settings->cipher(cipher);
 }
 
 void MainWindow::updateKeySize(const std::size_t& keySize)
@@ -285,9 +273,14 @@ void MainWindow::updateKeySize(const std::size_t& keySize)
   m->settings->keySize(keySize);
 }
 
-void MainWindow::updateModeOfOperation(const QString& newMode)
+void MainWindow::updateModeOfOperation(const QString& mode)
 {
-  m->settings->modeOfOperation(newMode);
+  m->settings->modeOfOperation(mode);
+}
+
+void MainWindow::updateCompressionMode(const bool compress)
+{
+  m->settings->compressionMode(compress);
 }
 
 QString MainWindow::loadStyleSheet(const QString& styleFile,

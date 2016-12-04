@@ -165,6 +165,7 @@ void SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
     }
 
     auto currentWidgetPos = currentWidget->pos();
+
     // Store current widget position for re-positioning later
     m->lastWidgetPos = currentWidgetPos;
 

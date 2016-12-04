@@ -20,66 +20,69 @@ class MainWindow : public QMainWindow {
 
  public:
   /*!
-   * \brief MainWindow Constructs the application's main window.
+   * \brief MainWindow Constructs the application's main window
+   * \param settings Application settings
    * \param parent Widget parent of this main window
    */
   explicit MainWindow(Settings* settings = nullptr, QWidget* parent = nullptr);
 
   /*!
-   * \brief ~MainWindow Destroys the application's main window.
+   * \brief ~MainWindow Destroys the application's main window
    */
   virtual ~MainWindow();
 
  signals:
   /*!
    * \brief encrypt Emitted when the user provides all required data for
-   * encryption and clicks the Encrypt push button.
+   * encryption and clicks the Encrypt push button
    * \param passphrase String representing the user supplied passphrase
    * \param inputFileNames List of input file strings
-   * \param algorithmName String representing the current algorithm.
-   * Example: "AES-128/GCM" will encrypt files with AES 128-bit key size in
-   * Gallois Counter Mode.
+   * \param cipher String representing the current cipher
    * \param keySize Key size
+   * \param modeOfOperation String representing mode of operation
+   * \param compress Boolean representing compression mode
    */
   void encrypt(const QString& passphrase,
                const QStringList& inputFileNames,
-               const QString& algorithmName,
-               const std::size_t& keySize);
+               const QString& cipher,
+               const std::size_t& keySize,
+               const QString& modeOfOperation,
+               const bool compress);
 
   /*!
    * \brief decrypt Emitted when the user provides all required data for
-   * decryption and clicks the Decrypt push button.
+   * decryption and clicks the Decrypt push button
    * \param passphrase String representing the user supplied passphrase
    * \param inputFileNames List of input file strings
    */
   void decrypt(const QString& passphrase, const QStringList& inputFileNames);
 
   /*!
-   * \brief pauseCipher Emitted when the user toggles the Pause push button.
+   * \brief pauseCipher Emitted when the user toggles the Pause push button
    * \param pause Boolean representing the pause status
    */
   void pauseCipher(const bool pause);
 
   /*!
    * \brief abortCipher Emitted when the user clicks the Clear Files push
-   * button.
+   * button
    */
   void abortCipher();
 
   /*!
-   * \brief stopFile Emitted when the user clicks a remove file button.
+   * \brief stopFile Emitted when the user clicks a remove file button
    */
   void stopFile(const QString& fileName);
 
  public slots:
   /*!
-   * \brief addFiles Executed when the Add Files toolbar push button is clicked.
+   * \brief addFiles Executed when the Add Files toolbar push button is clicked
    */
   void addFiles();
 
   /*!
    * \brief removeFiles Executed when the Remove All Files toolbar push
-   * button is clicked.
+   * button is clicked
    */
   void removeFiles();
 
@@ -108,7 +111,7 @@ class MainWindow : public QMainWindow {
   void updateStatusMessage(const QString& message);
 
   /*!
-   * \brief updateError Executed when a cipher operation fails.
+   * \brief updateError Executed when a cipher operation fails
    * \param index Integer representing the file list index to update
    * \param message String representing the error message
    */
@@ -124,24 +127,31 @@ class MainWindow : public QMainWindow {
 
   /*!
    * \brief updateCipher Executed when the cipher is updated by the user in the
-   * settings frame.
-   * \param newCipher String representing the new cipher
+   * settings frame
+   * \param cipher String representing the new cipher
    */
-  void updateCipher(const QString& newCipher);
+  void updateCipher(const QString& cipher);
 
   /*!
    * \brief updateKeySize Executed when the key size is updated by the user in
-   * the settings frame.
+   * the settings frame
    * \param keySize Key size in bits
    */
   void updateKeySize(const std::size_t& keySize);
 
   /*!
-   * \brief updateCipher Executed when the mode of operation is updated by the
-   * user in the settings frame.
-   * \param newCipher String representing the new mode of operation
+   * \brief updateModeOfOperation Executed when the mode of operation is updated
+   * by the user in the settings frame
+   * \param mode String representing the new mode of operation
    */
-  void updateModeOfOperation(const QString& newMode);
+  void updateModeOfOperation(const QString& mode);
+
+  /*!
+   * \brief updateCompressioMode Executed when the mode of operation is updated
+   * by the user in the settings frame
+   * \param compress Boolean representing the new compression mode
+   */
+  void updateCompressionMode(const bool compress);
 
  protected:
   /*!

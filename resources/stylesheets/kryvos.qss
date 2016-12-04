@@ -180,6 +180,17 @@ QComboBox#settingsComboBox {
   font-size: 20px;
 }
 
+QCheckBox#settingsCheckBox {
+  color: white;
+  font-size: 20px;
+  spacing: 5px;
+}
+
+QCheckBox#settingsCheckBox:indicator {
+  width: 20px;
+  height: 20px;
+}
+
 /*--------- File list view ---------*/
 QTableView {
   font-size: 20px;

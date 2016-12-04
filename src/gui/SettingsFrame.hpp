@@ -14,7 +14,7 @@ class SettingsFrame : public QFrame {
 
  public:
   /*!
-   * \brief SettingsFrame Constructs a settings frame.
+   * \brief SettingsFrame Constructs a settings frame
    * \param cipher String representing the cipher name
    * \param keySize String representing the key size
    * \param mode String representing the mode of operation
@@ -33,46 +33,58 @@ class SettingsFrame : public QFrame {
  signals:
   /*!
    * \brief switchFrame Emitted when the user requests that the main frame
-   * should be displayed.
+   * should be displayed
    */
   void switchFrame();
 
   /*!
-   * \brief newCipher Emitted when the user has changed the cipher algorithm via
-   * the combo box representing it.
-   * \param newCipher String containing the new cipher name
+   * \brief updateCipher Emitted when the user has changed the cipher algorithm
+   * via the combobox representing it
+   * \param cipher String containing the cipher name
    */
-  void newCipher(const QString& cipher);
+  void updateCipher(const QString& cipher);
 
   /*!
-   * \brief newKeySize Emitted when the user has changed the key size via the
-   * combo box representing it.
+   * \brief updateKeySize Emitted when the user has changed the key size via the
+   * combobox representing it
    * \param keySize Key size in bits
    */
-  void newKeySize(const std::size_t& keySize);
+  void updateKeySize(const std::size_t& keySize);
 
   /*!
-   * \brief newModeOfOperation Emitted when the user has changed the cipher
-   * mode of operation via the combo box representing it.
-   * \param modeOfOperation String containing the new mode of operation
+   * \brief updateModeOfOperation Emitted when the user has changed the cipher
+   * mode of operation via the combobox representing it
+   * \param modeOfOperation String containing the mode of operation
    */
-  void newModeOfOperation(const QString& modeOfOperation);
+  void updateModeOfOperation(const QString& modeOfOperation);
+
+  /*!
+   * \brief updateCompressionMode Emitted when the user has changed the
+   * compression mode via the checkbox representing it
+   * \param compress Boolean representing compression
+   */
+  void updateCompressionMode(const bool compress);
 
  public slots:
   /*!
-   * \brief changeCipher Executed when the cipher changes.
+   * \brief changeCipher Executed when the cipher changes
    */
   void changeCipher();
 
   /*!
-   * \brief changeKeySize Executed when the key size changes.
+   * \brief changeKeySize Executed when the key size changes
    */
   void changeKeySize();
 
   /*!
-   * \brief changeModeOfOperation Executed when the mode of operation changes.
+   * \brief changeModeOfOperation Executed when the mode of operation changes
    */
   void changeModeOfOperation();
+
+  /*!
+   * \brief changeCompressionMode Executed when the compression mode changes
+   */
+  void changeCompressionMode();
 
  private:
   class SettingsFramePrivate;

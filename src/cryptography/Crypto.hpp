@@ -31,7 +31,6 @@
   #endif
 #endif
 
-#include "src/settings/Settings.hpp"
 #include "src/utility/pimpl.h"
 #include <QObject>
 #include <QStringList>
@@ -51,65 +50,69 @@ class Crypto : public QObject {
    * \brief Crypto Constructs the Crypto class. Initializes Botan.
    * \param parent
    */
-  explicit Crypto(Settings* settings = nullptr, QObject* parent = nullptr);
+  explicit Crypto(QObject* parent = nullptr);
 
   /*!
-   * \brief ~Crypto Destroys the Crypto class.
+   * \brief ~Crypto Destroys the Crypto class
    */
   virtual ~Crypto();
 
  signals:
   /*!
-   * \brief progress Emitted when the cipher operation progress changes.
+   * \brief progress Emitted when the cipher operation progress changes
    * \param index Integer representing the index of the current file being
-   * encrypted or decrypted.
-   * \param percent Integer representing the current percent.
+   * encrypted or decrypted
+   * \param percent Integer representing the current percent
    */
   void progress(const QString& path, qint64 percent);
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher
-   * operation should be displayed to the user.
-   * \param message String containing the information message to display.
+   * operation should be displayed to the user
+   * \param message String containing the information message to display
    */
   void statusMessage(const QString& message);
 
   /*!
-   * \brief errorMessage Emitted when an error occurs.
+   * \brief errorMessage Emitted when an error occurs
    * \param index Integer representing the index of the current file being
-   * encrypted or decrypted.
-   * \param message String containing the error message to display.
+   * encrypted or decrypted
+   * \param message String containing the error message to display
    */
   void errorMessage(const QString& path, const QString& message);
 
   /*!
-   * \brief busyStatus Emitted when a cipher operation starts and ends.
-   * \param busyStatus Boolean representing the busy status.
+   * \brief busyStatus Emitted when a cipher operation starts and ends
+   * \param busyStatus Boolean representing the busy status
    */
   void busyStatus(bool busyStatus);
 
  public slots:
   /*!
    * \brief encrypt Executed when a signal is received for encryption with a
-   * passphrase, a list of input file names, and the algorithm name.
-   * \param passphrase String representing the user entered passphrase.
+   * passphrase, a list of input file names, and the algorithm name
+   * \param passphrase String representing the user-entered passphrase
    * \param inputFileNames List of strings representing the file paths of the
-   * files to encrypt.
-   * \param algorithmName String representing the name of the algorithm to use
-   * for encryption.
+   * files to encrypt
+   * \param cipher String representing name of the cipher
+   * \param inputKeySize Key size in bits
+   * \param modeOfOperation String representing mode of operation
+   * \param compress Boolean representing compression mode
    */
   void encrypt(const QString& passphrase,
                const QStringList& inputFileNames,
-               const QString& algorithm = QString{"AES-128/GCM"},
-               const std::size_t& keySize = std::size_t{128});
+               const QString& cipher = QString{"AES"},
+               const std::size_t& inputKeySize = 128,
+               const QString& modeOfOperation = QString{"GCM"},
+               const bool compress = true);
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
    * passphrase and a list of input file names. The algorithm is determined from
    * the file header.
-   * \param passphrase String representing the user entered passphrase.
+   * \param passphrase String representing the user-entered passphrase
    * \param inputFileNames List of strings representing the file paths of
-   * the files to decrypt.
+   * the files to decrypt
    */
   void decrypt(const QString& passphrase,
                const QStringList& inputFileNames);
@@ -130,7 +133,7 @@ class Crypto : public QObject {
    * it is reset to false. When the pause status is reset to false, the cipher
    * operation that was in progress when the pause was signaled will resume
    * execution.
-   * \param pause Boolean representing the pause state.
+   * \param pause Boolean representing the pause state
    */
   void pause(bool pause);
 
@@ -138,55 +141,49 @@ class Crypto : public QObject {
    * \brief stop Executed when a signal is received to set the stop status for
    * the file name input parameter. The stop status, if set, will skip the input
    * file name in the encrypt/decrypt process.
-   * \param fileName String representing a file name.
+   * \param fileName String representing a file name
    */
   void stop(const QString& fileName);
 
  private:
   /*!
    * \brief encryptFile Encrypts a single file with the input passphrase and
-   * algorithm name.
-   * \param passphrase String representing the user entered passphrase.
+   * algorithm name
+   * \param passphrase String representing the user-entered passphrase
    * \param inputFileName String representing the file path of the file to
-   * encrypt.
+   * encrypt
    * \param algorithmName String representing the name of the algorithm to use
-   * for encryption.
-   * \param keySize Size of the key.
+   * for encryption
+   * \param keySize Key size
+   * \param compress Boolean representing compression mode
    */
   void encryptFile(const QString& passphrase,
                    const QString& inputFileName,
                    const QString& algorithmName,
-                   const std::size_t& keySize);
+                   const std::size_t& keySize,
+                   const bool compress);
 
   /*!
    * \brief decryptFile Decrypts a single file with the input passphrase and
-   * algorithm name.
-   * \param passphrase String representing the user entered passphrase.
+   * algorithm name
+   * \param passphrase String representing the user-entered passphrase
    * \param inputFileName String representing the file path of the file to
-   * decrypt.
+   * decrypt
    */
   void decryptFile(const QString& passphrase,
                    const QString& inputFileName);
 
   /*!
    * \brief executeCipher Executes a cipher on a file with the a key,
-   * initialization vector, and cipher direction.
+   * initialization vector, and cipher direction
    * \param inputFileName String representing the file path of the file to
-   * encrypt/decrypt.
-   * \param algorithmName String representing the name of the algorithm to
-   * use for encryption/decryption.
-   * \param key Cipher key.
-   * \param iv Cipher initialization vector.
-   * \param cipherDirection Cipher direction. Valid values are:
-   * Botan::ENCRYPTION and Botan::DECRYPTION
-   * \param in Input file stream.
-   * \param out Output file stream.
+   * encrypt/decrypt
+   * \param pipe Botan pipe for encryption or decryption
+   * \param in Input file stream
+   * \param out Output file stream
    */
   void executeCipher(const QString& inputFileName,
-                     const std::string& algorithmName,
-                     const Botan::SymmetricKey& key,
-                     const Botan::InitializationVector& iv,
-                     const Botan::Cipher_Dir& cipherDirection,
+                     Botan::Pipe& pipe,
                      std::ifstream& in,
                      std::ofstream& out);
 

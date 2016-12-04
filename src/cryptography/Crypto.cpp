@@ -152,8 +152,6 @@ class Crypto::CryptoPrivate {
    */
   bool isBusy() const;
 
-  Settings* settings;
-
   // The list of status messages that can be displayed to the user
   const QStringList messages;
 
@@ -177,11 +175,9 @@ class Crypto::CryptoPrivate {
   std::atomic<bool> busyStatus;
 };
 
-Crypto::Crypto(Settings* settings, QObject* parent)
+Crypto::Crypto(QObject* parent)
   : QObject{parent}
 {
-  m->settings = settings;
-
   // Initialize Botan
   Botan::LibraryInitializer init{std::string{"thread_safe=true"}};
 }
@@ -190,36 +186,42 @@ Crypto::~Crypto() {}
 
 void Crypto::encrypt(const QString& passphrase,
                      const QStringList& inputFileNames,
-                     const QString& algorithm,
-                     const std::size_t& inputKeySize)
+                     const QString& cipher,
+                     const std::size_t& inputKeySize,
+                     const QString& modeOfOperation,
+                     const bool compress)
 {
   m->busy(true);
   emit busyStatus(m->isBusy());
 
-  m->resetFlags();
+  auto keySize = std::size_t{128};
 
-  QString algorithmName;
-  auto keySize = std::size_t{};
-  if (!algorithm.isEmpty())
+  if (inputKeySize > 0)
   {
-    algorithmName = algorithm;
     keySize = inputKeySize;
+  }
+
+  auto algorithm = QStringLiteral("AES-128/GCM");
+
+  if (QStringLiteral("AES") == cipher)
+  {
+    algorithm = cipher % QStringLiteral("-") % QString::number(keySize) %
+                QStringLiteral("/") % modeOfOperation;
   }
   else
   {
-    algorithmName = QStringLiteral("AES-128/GCM");
-    keySize = static_cast<std::size_t>(128);
+    algorithm = cipher % QStringLiteral("/") % modeOfOperation;
   }
 
   for (const auto& inputFileName : inputFileNames)
   {
     try
     {
-      encryptFile(passphrase, inputFileName, algorithmName, keySize);
+      encryptFile(passphrase, inputFileName, algorithm, keySize, compress);
 
       if (m->isAborted() || m->isStopped(inputFileName))
       {
-        emit errorMessage(inputFileName, m->messages[2].arg(inputFileName));
+        emit errorMessage(inputFileName, m->messages[2]);
 
         if (m->isAborted())
         {
@@ -230,7 +232,7 @@ void Crypto::encrypt(const QString& passphrase,
     }
     catch (const Botan::Stream_IO_Error&)
     {
-      emit errorMessage(inputFileName, m->messages[7].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[7]);
     }
     catch (const std::exception& e)
     {
@@ -251,8 +253,6 @@ void Crypto::decrypt(const QString& passphrase,
   m->busy(true);
   emit busyStatus(m->isBusy());
 
-  m->resetFlags();
-
   for (const auto& inputFileName : inputFileNames)
   {
     try
@@ -262,39 +262,47 @@ void Crypto::decrypt(const QString& passphrase,
       if (m->isAborted())
       { // Reset abort flag
         m->abort(false);
-        emit errorMessage(inputFileName, m->messages[3].arg(inputFileName));
+        emit errorMessage(inputFileName, m->messages[3]);
         break;
       }
 
       if (m->isStopped(inputFileName))
       {
-        emit errorMessage(inputFileName, m->messages[3].arg(inputFileName));
+        emit errorMessage(inputFileName, m->messages[3]);
       }
     }
     catch (const Botan::Decoding_Error&)
     {
-      emit errorMessage(inputFileName, m->messages[5].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[5]);
     }
     catch (const Botan::Integrity_Failure&)
     {
-      emit errorMessage(inputFileName, m->messages[5].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[5]);
     }
     catch (const Botan::Invalid_Argument&)
     {
-      emit errorMessage(inputFileName, m->messages[6].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[6]);
     }
     catch (const std::invalid_argument&)
     {
-      emit errorMessage(inputFileName, m->messages[6].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[6]);
     }
     catch (const std::runtime_error&)
     {
-      emit errorMessage(inputFileName, m->messages[4].arg(inputFileName));
+      emit errorMessage(inputFileName, m->messages[4]);
     }
     catch (const std::exception& e)
     {
       const auto error = QString{e.what()};
-      emit errorMessage(inputFileName, error);
+
+      if ("zlib inflate error -3" == error)
+      {
+        emit errorMessage(inputFileName, m->messages[5]);
+      }
+      else
+      {
+        emit errorMessage(inputFileName, error);
+      }
     }
   } // End file loop
 
@@ -328,14 +336,15 @@ void Crypto::stop(const QString& fileName)
 void Crypto::encryptFile(const QString& passphrase,
                          const QString& inputFileName,
                          const QString& algorithmName,
-                         const std::size_t& keySize)
+                         const std::size_t& keySize,
+                         const bool compress)
 {
   QFileInfo fileInfo{inputFileName};
 
   if (!m->isAborted() && fileInfo.exists() &&
       fileInfo.isFile() && fileInfo.isReadable())
   {
-    Botan::AutoSeeded_RNG range{};
+    Botan::AutoSeeded_RNG rng{};
 
     // Define a size for the PBKDF salt vector
     const auto pbkdfSaltSize = static_cast<std::size_t>(256);
@@ -343,7 +352,7 @@ void Crypto::encryptFile(const QString& passphrase,
     pbkdfSalt.resize(pbkdfSaltSize);
 
     // Create random PBKDF salt
-    range.randomize(&pbkdfSalt[0], pbkdfSalt.size());
+    rng.randomize(&pbkdfSalt[0], pbkdfSalt.size());
 
     // Set up the key derive functions
     const auto macSize = static_cast<std::size_t>(512);
@@ -367,13 +376,13 @@ void Crypto::encryptFile(const QString& passphrase,
     const auto keySaltSize = static_cast<std::size_t>(64);
     Botan::secure_vector<Botan::byte> keySalt;
     keySalt.resize(keySaltSize);
-    range.randomize(&keySalt[0], keySalt.size());
+    rng.randomize(&keySalt[0], keySalt.size());
 
     // Key is constrained to sizes allowed by algorithm
     const auto keySizeInBytes = keySize / 8;
     const std::string keyLabel = "user secret";
     const auto keyLabelVector =
-        reinterpret_cast<const Botan::byte*>(keyLabel.data());
+      reinterpret_cast<const Botan::byte*>(keyLabel.data());
     Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes,
                                             pbkdfKey.data(),
                                             pbkdfKey.size(),
@@ -386,12 +395,12 @@ void Crypto::encryptFile(const QString& passphrase,
     const auto ivSaltSize = static_cast<std::size_t>(64);
     Botan::secure_vector<Botan::byte> ivSalt;
     ivSalt.resize(ivSaltSize);
-    range.randomize(&ivSalt[0], ivSalt.size());
+    rng.randomize(&ivSalt[0], ivSalt.size());
 
     const auto ivSize = static_cast<std::size_t>(256);
     const std::string ivLabel = "initialization vector";
     const auto ivLabelVector =
-        reinterpret_cast<const Botan::byte*>(ivLabel.data());
+      reinterpret_cast<const Botan::byte*>(ivLabel.data());
     Botan::InitializationVector iv{kdf->derive_key(ivSize,
                                                    pbkdfKey.data(),
                                                    pbkdfKey.size(),
@@ -407,15 +416,39 @@ void Crypto::encryptFile(const QString& passphrase,
 
     const auto algorithmNameStd = algorithmName.toStdString();
 
-    out << std::string{"-------- ENCRYPTED FILE --------"} << std::endl;
+    auto headerText = tr("-------- ENCRYPTED FILE --------");
+
+    auto compressedText = tr("Not compressed");
+
+    if (compress)
+    {
+      compressedText = tr("Compressed");
+    }
+
+    out << headerText.toStdString() << std::endl;
     out << algorithmNameStd << std::endl;
     out << keySize << std::endl;
+    out << compressedText.toStdString() << std::endl;
     out << Botan::base64_encode(&pbkdfSalt[0], pbkdfSalt.size()) << std::endl;
     out << Botan::base64_encode(&keySalt[0], keySalt.size()) << std::endl;
     out << Botan::base64_encode(&ivSalt[0], ivSalt.size()) << std::endl;
 
-    executeCipher(inputFileName, algorithmNameStd, key, iv,
-                  Botan::ENCRYPTION, in, out);
+    Botan::Pipe pipe{};
+
+    if (compress)
+    {
+      pipe.append(new Botan::Compression_Filter{std::string{"zlib"},
+                  static_cast<std::size_t>(9)});
+    }
+
+    pipe.append(Botan::get_cipher(algorithmNameStd,
+                                  key,
+                                  iv,
+                                  Botan::ENCRYPTION));
+
+    pipe.append(new Botan::DataSink_Stream{out});
+
+    executeCipher(inputFileName, pipe, in, out);
 
     if (!m->isAborted() && !m->isStopped(inputFileName))
     {
@@ -439,17 +472,23 @@ void Crypto::decryptFile(const QString& passphrase,
     std::ifstream in{inputFileName.toStdString(), std::ios::binary};
 
     // Read the salts from file
-    std::string headerString, algorithmNameStd, keySizeString, pbkdfSaltString,
-        keySaltString, ivSaltString;
+    std::string headerStringStd, algorithmNameStd, keySizeString,
+                compressStringStd;
+    std::string pbkdfSaltString, keySaltString, ivSaltString;
 
-    std::getline(in, headerString);
+    std::getline(in, headerStringStd);
     std::getline(in, algorithmNameStd);
     std::getline(in, keySizeString);
+    std::getline(in, compressStringStd);
+
     std::getline(in, pbkdfSaltString);
     std::getline(in, keySaltString);
     std::getline(in, ivSaltString);
 
-    if (headerString != std::string{"-------- ENCRYPTED FILE --------"})
+    auto headerString = QString{headerStringStd.c_str()};
+    auto compressString = QString{compressStringStd.c_str()};
+
+    if (headerString != tr("-------- ENCRYPTED FILE --------"))
     {
       emit statusMessage(m->messages[6].arg(inputFileName));
     }
@@ -464,7 +503,7 @@ void Crypto::decryptFile(const QString& passphrase,
 
     // Create the PBKDF key
     Botan::secure_vector<Botan::byte> pbkdfSalt =
-        Botan::base64_decode(pbkdfSaltString);
+      Botan::base64_decode(pbkdfSaltString);
     const auto pbkdfKeySize = static_cast<std::size_t>(256);
     Botan::secure_vector<Botan::byte> pbkdfKey =
       pbkdf.derive_key(pbkdfKeySize, passphrase.toStdString(), &pbkdfSalt[0],
@@ -514,8 +553,22 @@ void Crypto::decryptFile(const QString& passphrase,
 
     std::ofstream out{uniqueOutputFileName.toStdString(), std::ios::binary};
 
-    executeCipher(inputFileName, algorithmNameStd, key, iv,
-                  Botan::DECRYPTION, in, out);
+    Botan::Pipe pipe{};
+
+    pipe.append(Botan::get_cipher(algorithmNameStd,
+                                  key,
+                                  iv,
+                                  Botan::DECRYPTION));
+
+    if (tr("Compressed") == compressString)
+    {
+      pipe.append(new Botan::Decompression_Filter{std::string{"zlib"},
+                  static_cast<std::size_t>(9)});
+    }
+
+    pipe.append(new Botan::DataSink_Stream{out});
+
+    executeCipher(inputFileName, pipe, in, out);
 
     if (!m->isAborted() && !m->isStopped(inputFileName))
     {
@@ -529,16 +582,10 @@ void Crypto::decryptFile(const QString& passphrase,
 }
 
 void Crypto::executeCipher(const QString& inputFileName,
-                           const std::string& algorithmName,
-                           const Botan::SymmetricKey& key,
-                           const Botan::InitializationVector& iv,
-                           const Botan::Cipher_Dir& cipherDirection,
+                           Botan::Pipe& pipe,
                            std::ifstream& in,
                            std::ofstream& out)
 {
-  Botan::Pipe pipe{Botan::get_cipher(algorithmName, key, iv, cipherDirection),
-                   new Botan::DataSink_Stream{out}};
-
   // Define a size for the buffer vector
   const auto bufferSize = static_cast<std::size_t>(4096);
   Botan::secure_vector<Botan::byte> buffer;
@@ -587,15 +634,14 @@ void Crypto::executeCipher(const QString& inputFileName,
 
   if (in.bad() || (in.fail() && !in.eof()))
   {
-    emit errorMessage(inputFileName, m->messages[4].arg(inputFileName));
+    emit errorMessage(inputFileName, m->messages[4]);
   }
 
   out.flush();
 }
 
 Crypto::CryptoPrivate::CryptoPrivate()
-  : settings{nullptr},
-    messages{tr("File %1 encrypted."),
+  : messages{tr("File %1 encrypted."),
              tr("File %1 decrypted."),
              tr("Encryption stopped. File %1 is incomplete."),
              tr("Decryption stopped. File %1 is incomplete."),
@@ -607,7 +653,7 @@ Crypto::CryptoPrivate::CryptoPrivate()
                 "that you have permission to access it and try again.")},
     aborted{false}, paused{false}, busyStatus{false}
 {
-  // Reserve elements to improve dictionary performance
+  // Reserve a small number of elements to improve dictionary performance
   stopped.reserve(100);
 }
 

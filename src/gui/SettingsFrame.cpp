@@ -2,6 +2,7 @@
 #include "src/gui/SlideSwitch.hpp"
 #include "src/gui/FluidLayout.hpp"
 #include "src/utility/pimpl_impl.h"
+#include <QCheckBox>
 #include <QComboBox>
 #include <QGroupBox>
 #include <QPushButton>
@@ -26,9 +27,13 @@ class SettingsFrame::SettingsFramePrivate {
 
   QString splitToolTip(const QString& text, const int width) const;
 
+  // Cryptography settings
   QComboBox* cipherComboBox;
   QComboBox* keySizeComboBox;
   QComboBox* modeComboBox;
+
+  // File settings
+  QCheckBox* compressionCheckBox;
 
   int toolTipWidth;
 };
@@ -69,6 +74,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   auto contentFrame = new QFrame{this};
   contentFrame->setContentsMargins(0, 0, 0, 0);
 
+  // Cryptography settings
   auto cryptoSettingsFrame = new QFrame{contentFrame};
   cryptoSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
 
@@ -155,8 +161,33 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   cryptoSettingsLayout->addWidget(keySizeFrame);
   cryptoSettingsLayout->addWidget(modeFrame);
 
+  // File settings
+  auto fileSettingsFrame = new QFrame{contentFrame};
+  fileSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
+
+  auto fileSettingsLabel = new QLabel{tr("File Settings"),
+                                        cryptoSettingsFrame};
+  fileSettingsLabel->setObjectName(QStringLiteral("text"));
+
+  auto compressionFrame = new QFrame{fileSettingsFrame};
+  compressionFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+
+  m->compressionCheckBox = new QCheckBox{"Compress files before encryption",
+                                         compressionFrame};
+  m->compressionCheckBox->setObjectName("settingsCheckBox");
+  m->compressionCheckBox->setChecked(true);
+
+  auto compressionLayout = new QHBoxLayout{compressionFrame};
+  compressionLayout->addWidget(m->compressionCheckBox);
+
+  auto fileSettingsLayout = new QVBoxLayout{fileSettingsFrame};
+  fileSettingsLayout->addWidget(fileSettingsLabel);
+  fileSettingsLayout->addWidget(compressionFrame);
+
   auto contentLayout = new QVBoxLayout{contentFrame};
   contentLayout->addWidget(cryptoSettingsFrame);
+  contentLayout->addStretch();
+  contentLayout->addWidget(fileSettingsFrame);
   contentLayout->addStretch();
   contentLayout->setSpacing(0);
 
@@ -190,6 +221,9 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   connect(m->modeComboBox, indexChangedSignal,
           this, &SettingsFrame::changeModeOfOperation);
 
+  connect(m->compressionCheckBox, &QCheckBox::stateChanged,
+          this, &SettingsFrame::changeCompressionMode);
+
   // Return to previous GUI state
   auto returnAction = new QAction{this};
   returnAction->setShortcut(Qt::Key_Escape);
@@ -207,7 +241,7 @@ void SettingsFrame::changeCipher()
 {
   Q_ASSERT(m->cipherComboBox);
 
-  emit newCipher(m->cipherComboBox->currentText());
+  emit updateCipher(m->cipherComboBox->currentText());
 }
 
 void SettingsFrame::changeKeySize()
@@ -219,14 +253,21 @@ void SettingsFrame::changeKeySize()
   const std::size_t keySize =
       static_cast<std::size_t>(keySizeString.toLongLong());
 
-  emit newKeySize(keySize);
+  emit updateKeySize(keySize);
 }
 
 void SettingsFrame::changeModeOfOperation()
 {
   Q_ASSERT(m->modeComboBox);
 
-  emit newModeOfOperation(m->modeComboBox->currentText());
+  emit updateModeOfOperation(m->modeComboBox->currentText());
+}
+
+void SettingsFrame::changeCompressionMode()
+{
+  Q_ASSERT(m->compressionCheckBox);
+
+  emit updateCompressionMode(m->compressionCheckBox->isChecked());
 }
 
 SettingsFrame::SettingsFramePrivate::SettingsFramePrivate()

@@ -46,22 +46,22 @@ If you'd like to contribute to Kryvos, you can fork the project on GitHub and su
 Amalgamation configurations of Botan are included in the source tree to simplify the build setup. Android requires a small patch that implements std::string to_string(), which is missing from the NDK STL. The patch, android_to_string.hpp, is included by botan_all.h. Both files are located at src/cryptography/botan/android/. The configuration commands used to generate minimal Botan amalgamation files follows for each platform:
 
 ### Android (ARM)
-python configure.py --cpu=armv5te --os=linux --amalgamation --disable-shared
+python configure.py --cpu=armv5te --os=linux --amalgamation --disable-shared --with-zlib
 
 ### Linux GCC x86_64
-python configure.py --cc=gcc --amalgamation --disable-shared
+python configure.py --cc=gcc --amalgamation --disable-shared --with-zlib
 
 ### Linux Clang x86_64
-python configure.py --cc=clang --amalgamation --disable-shared
+python configure.py --cc=clang --amalgamation --disable-shared --with-zlib
 
 ### macOS Clang x86_64
-python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom
+python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom --with-zlib
 
 ### iOS Clang
-python configure.py --cpu=armv7 --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom
+python configure.py --cpu=armv7 --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom --with-zlib
 
 ### Windows Visual Studio x86_64
-python configure.py --cpu=x64 --cc=msvc --os=windows --amalgamation --disable-shared
+python configure.py --cpu=x64 --cc=msvc --os=windows --amalgamation --disable-shared --with-zlib
 
 ## Contact
 
