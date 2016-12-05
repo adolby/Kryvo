@@ -34,6 +34,7 @@ class SettingsFrame::SettingsFramePrivate {
 
   // File settings
   QCheckBox* compressionCheckBox;
+  QCheckBox* containerCheckBox;
 
   int toolTipWidth;
 };
@@ -65,9 +66,8 @@ SettingsFrame::SettingsFrame(const QString& cipher,
 
   auto headerLayout = new QHBoxLayout{headerFrame};
   headerLayout->addWidget(gearImageLabel);
-  headerLayout->addStretch(10);
+  headerLayout->addStretch();
   headerLayout->addWidget(backButton);
-  headerLayout->addStretch(1);
   headerLayout->setContentsMargins(0, 0, 0, 0);
   headerLayout->setSpacing(0);
 
@@ -166,7 +166,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   fileSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
 
   auto fileSettingsLabel = new QLabel{tr("File Settings"),
-                                        cryptoSettingsFrame};
+                                      cryptoSettingsFrame};
   fileSettingsLabel->setObjectName(QStringLiteral("text"));
 
   auto compressionFrame = new QFrame{fileSettingsFrame};
@@ -180,9 +180,21 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   auto compressionLayout = new QHBoxLayout{compressionFrame};
   compressionLayout->addWidget(m->compressionCheckBox);
 
+  auto containerFrame = new QFrame{fileSettingsFrame};
+  compressionFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+
+  m->containerCheckBox = new QCheckBox{"Archive encrypted files",
+                                       containerFrame};
+  m->containerCheckBox->setObjectName("settingsCheckBox");
+  m->containerCheckBox->setChecked(true);
+
+  auto containerLayout = new QHBoxLayout{containerFrame};
+  containerLayout->addWidget(m->containerCheckBox);
+
   auto fileSettingsLayout = new QVBoxLayout{fileSettingsFrame};
   fileSettingsLayout->addWidget(fileSettingsLabel);
   fileSettingsLayout->addWidget(compressionFrame);
+  fileSettingsLayout->addWidget(containerFrame);
 
   auto contentLayout = new QVBoxLayout{contentFrame};
   contentLayout->addWidget(cryptoSettingsFrame);
@@ -207,7 +219,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
 
   // Capture function pointer to specific QComboBox signal overload
   void (QComboBox::*indexChangedSignal)(const QString&) =
-      &QComboBox::currentIndexChanged;
+    &QComboBox::currentIndexChanged;
 
   // Connect cipher combo box change signal to change cipher slot
   connect(m->cipherComboBox, indexChangedSignal,
@@ -251,7 +263,7 @@ void SettingsFrame::changeKeySize()
   const auto keySizeString = m->keySizeComboBox->currentText();
 
   const std::size_t keySize =
-      static_cast<std::size_t>(keySizeString.toLongLong());
+    static_cast<std::size_t>(keySizeString.toLongLong());
 
   emit updateKeySize(keySize);
 }
@@ -270,8 +282,16 @@ void SettingsFrame::changeCompressionMode()
   emit updateCompressionMode(m->compressionCheckBox->isChecked());
 }
 
+void SettingsFrame::changeContainerMode()
+{
+  Q_ASSERT(m->containerCheckBox);
+
+  emit updateContainerMode(m->containerCheckBox->isChecked());
+}
+
 SettingsFrame::SettingsFramePrivate::SettingsFramePrivate()
   : cipherComboBox{nullptr}, keySizeComboBox{nullptr}, modeComboBox{nullptr},
+    compressionCheckBox{nullptr}, containerCheckBox{nullptr},
     toolTipWidth{250}
 {}
 

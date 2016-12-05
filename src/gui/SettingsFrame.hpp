@@ -65,6 +65,13 @@ class SettingsFrame : public QFrame {
    */
   void updateCompressionMode(const bool compress);
 
+  /*!
+   * \brief updateContainerMode Emitted when the user has changed the container
+   * mode via the checkbox representing it
+   * \param container Boolean representing container
+   */
+  void updateContainerMode(const bool container);
+
  public slots:
   /*!
    * \brief changeCipher Executed when the cipher changes
@@ -85,6 +92,11 @@ class SettingsFrame : public QFrame {
    * \brief changeCompressionMode Executed when the compression mode changes
    */
   void changeCompressionMode();
+
+  /*!
+   * \brief changeContainerMode Executed when the container mode changes
+   */
+  void changeContainerMode();
 
  private:
   class SettingsFramePrivate;

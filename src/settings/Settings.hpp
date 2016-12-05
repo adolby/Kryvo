@@ -95,7 +95,7 @@ class Settings {
 
   /*!
    * \brief compressionMode Sets the compression mode
-   * \param modeOfOperation Boolean representing the compression mode
+   * \param compress Boolean representing the compression mode
    */
   void compressionMode(const bool compress);
 
@@ -104,6 +104,18 @@ class Settings {
    * \return Boolean representing the compression mode
    */
   bool compressionMode() const;
+
+  /*!
+   * \brief containerMode Sets the container mode
+   * \param container Boolean representing the container mode
+   */
+  void containerMode(const bool container);
+
+  /*!
+   * \brief containerMode Returns the container mode
+   * \return Boolean representing the container mode
+   */
+  bool containerMode() const;
 
   /*!
    * \brief lastDirectory Sets the last opened directory for later storage

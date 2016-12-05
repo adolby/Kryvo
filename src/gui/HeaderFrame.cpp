@@ -45,7 +45,7 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   m->addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const auto clearFilesIcon =
-        QIcon{QStringLiteral(":/images/clearFilesIcon.png")};
+    QIcon{QStringLiteral(":/images/clearFilesIcon.png")};
   m->clearFilesButton = new QPushButton{clearFilesIcon,
                                         tr(" Remove all files"),
                                         buttonFrame};
@@ -117,5 +117,6 @@ void HeaderFrame::togglePauseIcon(const bool toggle)
 }
 
 HeaderFrame::HeaderFramePrivate::HeaderFramePrivate()
-  : pauseButton{nullptr}, addFilesButton{nullptr}, clearFilesButton{nullptr}
+  : pauseButton{nullptr}, addFilesButton{nullptr}, clearFilesButton{nullptr},
+    settingsButton{nullptr}
 {}

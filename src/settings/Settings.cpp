@@ -34,6 +34,7 @@ class Settings::SettingsPrivate {
   std::size_t keySize;
   QString modeOfOperation;
   bool compressionMode;
+  bool containerMode;
   QString lastDirectory;
   QString styleSheetPath;
 };
@@ -118,6 +119,16 @@ bool Settings::compressionMode() const
   return m->compressionMode;
 }
 
+void Settings::containerMode(const bool container)
+{
+  m->containerMode = container;
+}
+
+bool Settings::containerMode() const
+{
+  return m->containerMode;
+}
+
 void Settings::lastDirectory(const QString& directory)
 {
   m->lastDirectory = directory;
@@ -189,9 +200,13 @@ void Settings::SettingsPrivate::importSettings()
       static_cast<QJsonValue>(settings[QStringLiteral("modeOfOperation")]);
     modeOfOperation = modeOfOperationObject.toString(QStringLiteral("GCM"));
 
-    auto compressionMode =
+    auto compressionModeObject =
         static_cast<QJsonValue>(settings[QStringLiteral("compressionMode")]);
-    compressionMode = modeOfOperationObject.toBool(true);
+    compressionMode = compressionModeObject.toBool(true);
+
+    auto containerModeObject =
+        static_cast<QJsonValue>(settings[QStringLiteral("containerMode")]);
+    containerMode = containerModeObject.toBool(true);
 
     auto styleObject =
         static_cast<QJsonValue>(settings[QStringLiteral("styleSheetPath")]);
@@ -205,6 +220,7 @@ void Settings::SettingsPrivate::importSettings()
     keySize = 128;
     modeOfOperation = QStringLiteral("GCM");
     compressionMode = true;
+    containerMode = true;
     styleSheetPath = QStringLiteral("kryvos.qss");
   }
 }

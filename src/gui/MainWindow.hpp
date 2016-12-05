@@ -147,11 +147,18 @@ class MainWindow : public QMainWindow {
   void updateModeOfOperation(const QString& mode);
 
   /*!
-   * \brief updateCompressioMode Executed when the mode of operation is updated
+   * \brief updateCompressionMode Executed when the compression mode is updated
    * by the user in the settings frame
    * \param compress Boolean representing the new compression mode
    */
   void updateCompressionMode(const bool compress);
+
+  /*!
+   * \brief updateContainerMode Executed when the container mode is updated
+   * by the user in the settings frame
+   * \param compress Boolean representing the new container mode
+   */
+  void updateContainerMode(const bool container);
 
  protected:
   /*!

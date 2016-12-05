@@ -144,6 +144,9 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   connect(settingsFrame, &SettingsFrame::updateCompressionMode,
           this, &MainWindow::updateCompressionMode);
 
+  connect(settingsFrame, &SettingsFrame::updateContainerMode,
+          this, &MainWindow::updateContainerMode);
+
   // Forwarded connections
   connect(fileListFrame, &FileListFrame::stopFile,
           this, &MainWindow::stopFile, Qt::DirectConnection);
@@ -281,6 +284,11 @@ void MainWindow::updateModeOfOperation(const QString& mode)
 void MainWindow::updateCompressionMode(const bool compress)
 {
   m->settings->compressionMode(compress);
+}
+
+void MainWindow::updateContainerMode(const bool container)
+{
+  m->settings->containerMode(container);
 }
 
 QString MainWindow::loadStyleSheet(const QString& styleFile,
