@@ -1,5 +1,5 @@
 #include "src/gui/HeaderFrame.hpp"
-#include "src/gui/FluidLayout.hpp"
+#include "src/gui/flowlayout.h"
 #include "src/utility/pimpl_impl.h"
 #include <QPushButton>
 #include <QLabel>
@@ -30,7 +30,7 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   headerImageLabel->setObjectName("headerImageLabel");
 
   auto buttonFrame = new QFrame{this};
-  buttonFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  buttonFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
   const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
   m->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), buttonFrame};
