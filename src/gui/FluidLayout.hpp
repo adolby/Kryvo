@@ -38,13 +38,6 @@ class FluidLayout : public FlowLayout
   int heightForWidth(int width) const;
 
   /*!
-   * \brief minimumSize Calculates the minimum size accounting for the line
-   * count
-   * \return Minimum size for the fluid layout
-   */
-  QSize minimumSize() const;
-
-  /*!
    * \brief setGeometry Sets the geometry for this layout manager to the
    * parameter rectangle rect
    * \param rect New geometry rectangle
@@ -57,20 +50,10 @@ class FluidLayout : public FlowLayout
    * accordingly, which allows the layout manager to return an accurate size
    * of its children
    * \param rect New geometry rectangle
+   * \param testOnly Boolean indicating calculation only
+   * \return Height in pixels
    */
-  void doLayout(const QRect& rect);
-
-  /*!
-   * \brief checkLayout Returns the vertical height of the layout, calculated
-   * from its children
-   * \param rect New geometry rectangle
-   * \return Vertical layout height
-   */
-  int checkLayout(const QRect& rect) const;
-
- private:
-  // Number of lines children currently occupy in this layout manager
-  int lineCount;
+  int doLayout(const QRect& rect, const bool testOnly) const;
 };
 
 #endif // KRYVOS_GUI_FLUIDLAYOUT_HPP_

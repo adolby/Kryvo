@@ -30,6 +30,7 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   headerImageLabel->setObjectName("headerImageLabel");
 
   auto buttonFrame = new QFrame{this};
+  buttonFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
   const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
   m->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), buttonFrame};
@@ -59,17 +60,12 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   m->settingsButton->setObjectName(QStringLiteral("settingsButton"));
   m->settingsButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  auto buttonLayout = new FluidLayout{buttonFrame};
+  auto buttonLayout = new FlowLayout{this, 2};
+  buttonLayout->addWidget(headerImageLabel);
   buttonLayout->addWidget(m->pauseButton);
   buttonLayout->addWidget(m->addFilesButton);
   buttonLayout->addWidget(m->clearFilesButton);
   buttonLayout->addWidget(m->settingsButton);
-  buttonLayout->setContentsMargins(0, 0, 0, 0);
-
-  auto headerLayout = new QHBoxLayout{this};
-  headerLayout->addWidget(headerImageLabel, 0);
-  headerLayout->addWidget(buttonFrame, 1);
-  headerLayout->setContentsMargins(0, 0, 0, 0);
 
   connect(m->pauseButton, &QPushButton::toggled,
           this, &HeaderFrame::pause);
