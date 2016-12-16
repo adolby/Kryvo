@@ -23,6 +23,8 @@ class SettingsFrame : public QFrame {
   explicit SettingsFrame(const QString& cipher,
                          const std::size_t& keySize,
                          const QString& mode,
+                         const bool compressionMode,
+                         const bool containerMode,
                          QWidget* parent = nullptr);
 
   /*!

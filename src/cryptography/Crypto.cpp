@@ -8,147 +8,141 @@
 #include <string>
 #include <atomic>
 
-#if defined(Q_OS_ANDROID)
-namespace std {
-
-int64_t stoll(const string& str)
-{
-  return strtoll(str.c_str(), nullptr, 10);
-}
-
-}
-#endif
+const auto EXTENSION = QStringLiteral("enc");
+const auto KDF_HASH = std::string{"KDF2(Keccak-1600)"};
+const auto KEY_LABEL = std::string{"user secret"};
+const auto IV_LABEL = std::string{"initialization vector"};
 
 /*!
- * \brief removeExtension Attempts to return the file name string input
+ * \brief removeExtension Attempts to return the file path string input
  * without the last extension. It's used to extract an extension to determine
- * a decrypted file name.
- * \param fileName String representing the file name.
+ * a decrypted file path.
+ * \param filePath String containing the file path
  * \param extension String representing the extension to remove from the
- * file name.
- * \return String representing a file name without an extension.
+ * file path
+ * \return String representing a file path without an extension
  */
-QString removeExtension(const QString& fileName, const QString& extension)
+QString removeExtension(const QString& filePath, const QString& extension)
 {
-  QFileInfo file{fileName};
-  QString newFileName = fileName;
+  QFileInfo fileInfo{filePath};
+  QString newFilePath = filePath;
 
-  if (file.suffix() == extension)
+  if (fileInfo.suffix() == extension)
   {
-    newFileName = file.absolutePath() % QDir::separator() %
-                  file.completeBaseName();
+    newFilePath = fileInfo.absolutePath() % QDir::separator() %
+                  fileInfo.completeBaseName();
   }
 
-  return newFileName;
+  return newFilePath;
 }
 
 /*!
- * \brief uniqueFileName Returns a unique file name from the input file name
- * by appending numbers, if necessary.
- * \param fileName String representing the file name that will be tested
- * for uniqueness.
- * \return String representing a unique file name created from the input file
- * name.
+ * \brief uniqueFilePath Returns a unique file path from the input file path
+ * by appending an increasing number, if necessary.
+ * \param filePath String representing the file path that will be tested
+ * for uniqueness
+ * \return String representing a unique file path created from the input file
+ * path
  */
-QString uniqueFileName(const QString& fileName)
+QString uniqueFilePath(const QString& filePath)
 {
-  QFileInfo originalFile{fileName};
-  QString uniqueFileName = fileName;
+  QFileInfo originalFile{filePath};
+  QString uniqueFilePath = filePath;
 
-  auto foundUniqueFileName = false;
+  auto foundUniqueFilePath = false;
   auto i = 0;
 
-  while (!foundUniqueFileName && i < 100000)
+  while (!foundUniqueFilePath && i < 100000)
   {
-    QFileInfo uniqueFile{uniqueFileName};
+    QFileInfo uniqueFile{uniqueFilePath};
 
     if (uniqueFile.exists() && uniqueFile.isFile())
     { // Write number of copies before file extension
-      uniqueFileName = originalFile.absolutePath() % QDir::separator() %
+      uniqueFilePath = originalFile.absolutePath() % QDir::separator() %
                        originalFile.baseName() % QString{" (%1)"}.arg(i + 2);
 
       if (!originalFile.completeSuffix().isEmpty())
       { // Add the file extension if there is one
-        uniqueFileName += QStringLiteral(".") % originalFile.completeSuffix();
+        uniqueFilePath += QStringLiteral(".") % originalFile.completeSuffix();
       }
 
       ++i;
     }
     else
     {
-      foundUniqueFileName = true;
+      foundUniqueFilePath = true;
     }
   }
 
-  return uniqueFileName;
+  return uniqueFilePath;
 }
 
 class Crypto::CryptoPrivate {
  public:
   /*!
-   * \brief CryptoPrivate Constructs the Crypto private implementation.
+   * \brief CryptoPrivate Constructs the Crypto private implementation
    */
   CryptoPrivate();
 
   /*!
-   * \brief resetFlags Resets the status flags, except pause, to default values.
+   * \brief resetFlags Resets the status flags, except pause, to default values
    */
   void resetFlags();
 
   /*!
-   * \brief abort Updates the abort status.
-   * \param abort Boolean representing the abort status.
+   * \brief abort Updates the abort status
+   * \param abort Boolean representing the abort status
    */
   void abort(const bool abort);
 
   /*!
-   * \brief isAborted Returns the current abort status.
-   * \return Boolean representing the abort status.
+   * \brief isAborted Returns the current abort status
+   * \return Boolean representing the abort status
    */
   bool isAborted() const;
 
   /*!
-   * \brief pause Updates the pause status.
-   * \param pause Boolean representing the pause status.
+   * \brief pause Updates the pause status
+   * \param pause Boolean representing the pause status
    */
   void pause(const bool pause);
 
   /*!
-   * \brief isPaused Returns the current pause status.
-   * \return Boolean representing the pause status.
+   * \brief isPaused Returns the current pause status
+   * \return Boolean representing the pause status
    */
   bool isPaused() const;
 
   /*!
    * \brief stop Updates a stop status in the stop status container. A stop
-   * status corresponds with a filename and is used to decide whether to stop
+   * status corresponds with a file path and is used to decide whether to stop
    * encrypting/decrypting a file.
-   * \param fileName String containing the filename to set to stopped.
+   * \param filePath String containing the path of the file to set to stopped
    * \param stop Boolean representing the stop status for the file represented
-   * by fileName.
+   * by filePath
    */
-  void stop(const QString& fileName, const bool stop);
+  void stop(const QString& filePath, const bool stop);
 
   /*!
    * \brief isStopped Returns a stop status in the stop status container. A stop
-   * status corresponds with a filename and is used to decide whether to stop
+   * status corresponds with a file path and is used to decide whether to stop
    * encrypting/decrypting a file.
-   * \param fileName String containing the file name to check the stop status
-   * for.
+   * \param filePath String containing the file path to check the stop status
+   * for
    * \return Boolean Boolean representing the stop status for the file
-   * represented by fileName.
+   * represented by filePath
    */
-  bool isStopped(const QString& fileName) const;
+  bool isStopped(const QString& filePath) const;
 
   /*!
-   * \brief busy Updates the busy status.
-   * \param busy Boolean representing the busy status.
+   * \brief busy Updates the busy status
+   * \param busy Boolean representing the busy status
    */
   void busy(const bool busy);
 
   /*!
-   * \brief isBusy Returns the busy status.
-   * \return Boolean representing the busy status.
+   * \brief isBusy Returns the busy status
+   * \return Boolean representing the busy status
    */
   bool isBusy() const;
 
@@ -185,11 +179,13 @@ Crypto::Crypto(QObject* parent)
 Crypto::~Crypto() {}
 
 void Crypto::encrypt(const QString& passphrase,
-                     const QStringList& inputFileNames,
+                     const QStringList& inputFilePaths,
+                     const QString& outputPath,
                      const QString& cipher,
                      const std::size_t& inputKeySize,
                      const QString& modeOfOperation,
-                     const bool compress)
+                     const bool compress,
+                     const bool container)
 {
   m->busy(true);
   emit busyStatus(m->isBusy());
@@ -213,15 +209,33 @@ void Crypto::encrypt(const QString& passphrase,
     algorithm = cipher % QStringLiteral("/") % modeOfOperation;
   }
 
-  for (const auto& inputFileName : inputFileNames)
+  auto outputFilePaths = QStringList{};
+
+  for (const auto& inputFilePath : inputFilePaths)
   {
+    const QFileInfo inputFileInfo{inputFilePath};
+    const auto inFileName = inputFileInfo.fileName();
+    const auto inFilePath = inputFileInfo.absoluteFilePath();
+
     try
     {
-      encryptFile(passphrase, inputFileName, algorithm, keySize, compress);
+      auto outputFilePath = QString{inFilePath % QStringLiteral(".") %
+                                    EXTENSION};
 
-      if (m->isAborted() || m->isStopped(inputFileName))
+      if (!outputPath.isEmpty())
       {
-        emit errorMessage(inputFileName, m->messages[2]);
+        outputFilePath = QDir::cleanPath(outputPath) % QDir::separator() %
+                         inFileName % QStringLiteral(".") % EXTENSION;
+      }
+
+      outputFilePaths << outputFilePath;
+
+      encryptFile(passphrase, inFilePath, outputFilePath, algorithm, keySize,
+                  compress);
+
+      if (m->isAborted() || m->isStopped(inFilePath))
+      {
+        emit errorMessage(m->messages[2], inFilePath);
 
         if (m->isAborted())
         {
@@ -230,14 +244,14 @@ void Crypto::encrypt(const QString& passphrase,
         }
       }
     }
-    catch (const Botan::Stream_IO_Error&)
+    catch (const Botan::Stream_IO_Error& e)
     {
-      emit errorMessage(inputFileName, m->messages[7]);
+      emit errorMessage(m->messages[7], inFilePath);
     }
     catch (const std::exception& e)
     {
       const auto error = QString{e.what()};
-      emit errorMessage(inputFileName, error);
+      emit errorMessage(QStringLiteral("Error: ") % error, inFilePath);
     }
   } // End file loop
 
@@ -248,60 +262,74 @@ void Crypto::encrypt(const QString& passphrase,
 }
 
 void Crypto::decrypt(const QString& passphrase,
-                     const QStringList& inputFileNames)
+                     const QStringList& inputFilePaths,
+                     const QString& outputPath)
 {
   m->busy(true);
   emit busyStatus(m->isBusy());
 
-  for (const auto& inputFileName : inputFileNames)
+  for (const auto& inputFilePath : inputFilePaths)
   {
+    const QFileInfo inputFileInfo{inputFilePath};
+    const auto inFileName = inputFileInfo.fileName();
+    const auto inFilePath = inputFileInfo.absoluteFilePath();
+
+    auto outputFilePath = QString{inFilePath % QStringLiteral(".") %
+                                  EXTENSION};
+
+    if (!outputPath.isEmpty())
+    {
+      outputFilePath = outputPath % inFileName % QStringLiteral(".") %
+                       EXTENSION;
+    }
+
     try
     {
-      decryptFile(passphrase, inputFileName);
+      decryptFile(passphrase, inFilePath, outputFilePath);
 
       if (m->isAborted())
       { // Reset abort flag
         m->abort(false);
-        emit errorMessage(inputFileName, m->messages[3]);
+        emit errorMessage(m->messages[3], inFilePath);
         break;
       }
 
-      if (m->isStopped(inputFileName))
+      if (m->isStopped(inFilePath))
       {
-        emit errorMessage(inputFileName, m->messages[3]);
+        emit errorMessage(m->messages[3], inFilePath);
       }
     }
-    catch (const Botan::Decoding_Error&)
+    catch (const Botan::Decoding_Error& e)
     {
-      emit errorMessage(inputFileName, m->messages[5]);
+      emit errorMessage(m->messages[5], inFilePath);
     }
-    catch (const Botan::Integrity_Failure&)
+    catch (const Botan::Integrity_Failure& e)
     {
-      emit errorMessage(inputFileName, m->messages[5]);
+      emit errorMessage(m->messages[5], inFilePath);
     }
-    catch (const Botan::Invalid_Argument&)
+    catch (const Botan::Invalid_Argument& e)
     {
-      emit errorMessage(inputFileName, m->messages[6]);
+      emit errorMessage(m->messages[6], inFilePath);
     }
-    catch (const std::invalid_argument&)
+    catch (const std::invalid_argument& e)
     {
-      emit errorMessage(inputFileName, m->messages[6]);
+      emit errorMessage(m->messages[6], inFilePath);
     }
-    catch (const std::runtime_error&)
+    catch (const std::runtime_error& e)
     {
-      emit errorMessage(inputFileName, m->messages[4]);
+      emit errorMessage(m->messages[4], inFilePath);
     }
     catch (const std::exception& e)
     {
       const auto error = QString{e.what()};
 
-      if ("zlib inflate error -3" == error)
+      if (QStringLiteral("zlib inflate error -3") == error)
       {
-        emit errorMessage(inputFileName, m->messages[5]);
+        emit errorMessage(m->messages[5], inFilePath);
       }
       else
       {
-        emit errorMessage(inputFileName, error);
+        emit errorMessage(QStringLiteral("Error: ") % error, inFilePath);
       }
     }
   } // End file loop
@@ -325,24 +353,25 @@ void Crypto::pause(bool pause)
   m->pause(pause);
 }
 
-void Crypto::stop(const QString& fileName)
+void Crypto::stop(const QString& filePath)
 {
   if (m->isBusy())
   {
-    m->stop(fileName, true);
+    m->stop(filePath, true);
   }
 }
 
 void Crypto::encryptFile(const QString& passphrase,
-                         const QString& inputFileName,
+                         const QString& inputFilePath,
+                         const QString& outputFilePath,
                          const QString& algorithmName,
                          const std::size_t& keySize,
                          const bool compress)
 {
-  QFileInfo fileInfo{inputFileName};
+  const QFileInfo inputFileInfo{inputFilePath};
 
-  if (!m->isAborted() && fileInfo.exists() &&
-      fileInfo.isFile() && fileInfo.isReadable())
+  if (!m->isAborted() && inputFileInfo.exists() &&
+      inputFileInfo.isFile() && inputFileInfo.isReadable())
   {
     Botan::AutoSeeded_RNG rng{};
 
@@ -369,8 +398,7 @@ void Crypto::encryptFile(const QString& passphrase,
                        pbkdfSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
-    const auto kdfHash = std::string{"KDF2(Keccak-1600)"};
-    std::unique_ptr<Botan::KDF> kdf{Botan::KDF::create(kdfHash)};
+    std::unique_ptr<Botan::KDF> kdf{Botan::KDF::create(KDF_HASH)};
 
     // Set up key salt size
     const auto keySaltSize = static_cast<std::size_t>(64);
@@ -380,16 +408,15 @@ void Crypto::encryptFile(const QString& passphrase,
 
     // Key is constrained to sizes allowed by algorithm
     const auto keySizeInBytes = keySize / 8;
-    const std::string keyLabel = "user secret";
     const auto keyLabelVector =
-      reinterpret_cast<const Botan::byte*>(keyLabel.data());
+      reinterpret_cast<const Botan::byte*>(KEY_LABEL.data());
     Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes,
                                             pbkdfKey.data(),
                                             pbkdfKey.size(),
                                             keySalt.data(),
                                             keySalt.size(),
                                             keyLabelVector,
-                                            keyLabel.size())};
+                                            KEY_LABEL.size())};
 
     // Set up IV salt size
     const auto ivSaltSize = static_cast<std::size_t>(64);
@@ -398,21 +425,18 @@ void Crypto::encryptFile(const QString& passphrase,
     rng.randomize(&ivSalt[0], ivSalt.size());
 
     const auto ivSize = static_cast<std::size_t>(256);
-    const std::string ivLabel = "initialization vector";
     const auto ivLabelVector =
-      reinterpret_cast<const Botan::byte*>(ivLabel.data());
+      reinterpret_cast<const Botan::byte*>(IV_LABEL.data());
     Botan::InitializationVector iv{kdf->derive_key(ivSize,
                                                    pbkdfKey.data(),
                                                    pbkdfKey.size(),
                                                    ivSalt.data(),
                                                    ivSalt.size(),
                                                    ivLabelVector,
-                                                   ivLabel.size())};
+                                                   IV_LABEL.size())};
 
-    std::ifstream in{inputFileName.toStdString(), std::ios::binary};
-
-    const QString outputFileName = inputFileName % QStringLiteral(".enc");
-    std::ofstream out{outputFileName.toStdString(), std::ios::binary};
+    std::ifstream in{inputFilePath.toStdString(), std::ios::binary};
+    std::ofstream out{outputFilePath.toStdString(), std::ios::binary};
 
     const auto algorithmNameStd = algorithmName.toStdString();
 
@@ -438,7 +462,7 @@ void Crypto::encryptFile(const QString& passphrase,
     if (compress)
     {
       pipe.append(new Botan::Compression_Filter{std::string{"zlib"},
-                  static_cast<std::size_t>(9)});
+                                                static_cast<std::size_t>(9)});
     }
 
     pipe.append(Botan::get_cipher(algorithmNameStd,
@@ -448,32 +472,33 @@ void Crypto::encryptFile(const QString& passphrase,
 
     pipe.append(new Botan::DataSink_Stream{out});
 
-    executeCipher(inputFileName, pipe, in, out);
+    executeCipher(inputFilePath, pipe, in, out);
 
-    if (!m->isAborted() && !m->isStopped(inputFileName))
+    if (!m->isAborted() && !m->isStopped(inputFilePath))
     {
       // Progress: finished
-      emit progress(inputFileName, 100);
+      emit progress(inputFilePath, 100);
 
       // Encryption success message
-      emit statusMessage(m->messages[0].arg(inputFileName));
+      emit statusMessage(m->messages[0].arg(inputFilePath));
     }
   }
 }
 
 void Crypto::decryptFile(const QString& passphrase,
-                         const QString& inputFileName)
+                         const QString& inputFilePath,
+                         const QString& outputPath)
 {
-  const QFileInfo fileInfo{inputFileName};
+  const QFileInfo inputFileInfo{inputFilePath};
 
-  if (!m->isAborted() && fileInfo.exists() &&
-      fileInfo.isFile() && fileInfo.isReadable())
+  if (!m->isAborted() && inputFileInfo.exists() &&
+      inputFileInfo.isFile() && inputFileInfo.isReadable())
   {
-    std::ifstream in{inputFileName.toStdString(), std::ios::binary};
+    std::ifstream in{inputFilePath.toStdString(), std::ios::binary};
 
-    // Read the salts from file
+    // Read metadata from file
     std::string headerStringStd, algorithmNameStd, keySizeString,
-                compressStringStd;
+                compressStringStd, containerStringStd;
     std::string pbkdfSaltString, keySaltString, ivSaltString;
 
     std::getline(in, headerStringStd);
@@ -486,12 +511,16 @@ void Crypto::decryptFile(const QString& passphrase,
     std::getline(in, ivSaltString);
 
     auto headerString = QString{headerStringStd.c_str()};
+    auto containerString = QString{containerStringStd.c_str()};
     auto compressString = QString{compressStringStd.c_str()};
 
     if (headerString != tr("-------- ENCRYPTED FILE --------"))
     {
-      emit statusMessage(m->messages[6].arg(inputFileName));
+      emit errorMessage(m->messages[6].arg(inputFilePath));
     }
+
+    // Extract files from container and process them
+    // extract(passphrase, inputFilePath, outputPath);
 
     // Set up the key derive functions
     const auto macSize = static_cast<std::size_t>(512);
@@ -510,48 +539,44 @@ void Crypto::decryptFile(const QString& passphrase,
                        pbkdfSalt.size(), PBKDF2_ITERATIONS).bits_of();
 
     // Create the key and IV
-    const auto kdfHash = std::string{"KDF2(Keccak-1600)"};
-    std::unique_ptr<Botan::KDF> kdf{Botan::KDF::create(kdfHash)};
+    std::unique_ptr<Botan::KDF> kdf{Botan::KDF::create(KDF_HASH)};
 
     // Key salt
     Botan::secure_vector<Botan::byte> keySalt =
         Botan::base64_decode(keySaltString);
     const auto keySize =
-        static_cast<std::size_t> (std::stoll(keySizeString.c_str()));
+      static_cast<std::size_t>(QString{keySizeString.c_str()}.toInt());
     const auto keySizeInBytes = keySize / 8;
-    const std::string keyLabel = "user secret";
     const auto keyLabelVector =
-        reinterpret_cast<const Botan::byte*>(keyLabel.data());
+      reinterpret_cast<const Botan::byte*>(KEY_LABEL.data());
     Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes,
                                             pbkdfKey.data(),
                                             pbkdfKey.size(),
                                             keySalt.data(),
                                             keySalt.size(),
                                             keyLabelVector,
-                                            keyLabel.size())};
+                                            KEY_LABEL.size())};
 
     Botan::secure_vector<Botan::byte> ivSalt =
       Botan::base64_decode(ivSaltString);
     const auto ivSize = static_cast<std::size_t>(256);
-    const std::string ivLabel = "initialization vector";
     const auto ivLabelVector =
-        reinterpret_cast<const Botan::byte*>(ivLabel.data());
+      reinterpret_cast<const Botan::byte*>(IV_LABEL.data());
     Botan::InitializationVector iv{kdf->derive_key(ivSize,
                                                    pbkdfKey.data(),
                                                    pbkdfKey.size(),
                                                    ivSalt.data(),
                                                    ivSalt.size(),
                                                    ivLabelVector,
-                                                   ivLabel.size())};
+                                                   IV_LABEL.size())};
 
-    // Remove the .enc extension if it's in the file name
-    const auto outputFileName = removeExtension(inputFileName,
-                                                QStringLiteral("enc"));
+    // Remove the .enc extension if it's in the file path
+    const auto outputFilePath = removeExtension(inputFilePath, EXTENSION);
 
     // Create a unique file name for the file in this directory
-    auto uniqueOutputFileName = uniqueFileName(outputFileName);
+    const auto uniqueOutputFilePath = uniqueFilePath(outputFilePath);
 
-    std::ofstream out{uniqueOutputFileName.toStdString(), std::ios::binary};
+    std::ofstream out{uniqueOutputFilePath.toStdString(), std::ios::binary};
 
     Botan::Pipe pipe{};
 
@@ -568,20 +593,20 @@ void Crypto::decryptFile(const QString& passphrase,
 
     pipe.append(new Botan::DataSink_Stream{out});
 
-    executeCipher(inputFileName, pipe, in, out);
+    executeCipher(inputFilePath, pipe, in, out);
 
-    if (!m->isAborted() && !m->isStopped(inputFileName))
+    if (!m->isAborted() && !m->isStopped(inputFilePath))
     {
       // Progress: finished
-      emit progress(inputFileName, 100);
+      emit progress(inputFilePath, 100);
 
       // Decryption success message
-      emit statusMessage(m->messages[1].arg(inputFileName));
+      emit statusMessage(m->messages[1].arg(inputFilePath));
     }
   }
 }
 
-void Crypto::executeCipher(const QString& inputFileName,
+void Crypto::executeCipher(const QString& inputFilePath,
                            Botan::Pipe& pipe,
                            std::ifstream& in,
                            std::ofstream& out)
@@ -592,14 +617,14 @@ void Crypto::executeCipher(const QString& inputFileName,
   buffer.resize(bufferSize);
 
   // Get file size for percent progress calculation
-  QFileInfo file{inputFileName};
+  QFileInfo file{inputFilePath};
   const qint64 size = file.size();
   std::size_t fileIndex = 0;
   qint64 percent = -1;
 
   pipe.start_msg();
 
-  while (in.good() && !m->isAborted() && !m->isStopped(inputFileName))
+  while (in.good() && !m->isAborted() && !m->isStopped(inputFilePath))
   {
     if (!m->isPaused())
     {
@@ -616,7 +641,7 @@ void Crypto::executeCipher(const QString& inputFileName,
       if (nextPercent > percent && nextPercent < 100)
       {
         percent = nextPercent;
-        emit progress(inputFileName, percent);
+        emit progress(inputFilePath, percent);
       }
 
       if (in.eof())
@@ -634,7 +659,7 @@ void Crypto::executeCipher(const QString& inputFileName,
 
   if (in.bad() || (in.fail() && !in.eof()))
   {
-    emit errorMessage(inputFileName, m->messages[4]);
+    emit errorMessage(m->messages[4], inputFilePath);
   }
 
   out.flush();
@@ -650,7 +675,8 @@ Crypto::CryptoPrivate::CryptoPrivate()
                 "file has been corrupted."),
              tr("Error: Can't decrypt file %1. Is it an encrypted file?"),
              tr("Error: Can't encrypt file %1. Check that this file exists and "
-                "that you have permission to access it and try again.")},
+                "that you have permission to access it and try again."),
+             tr("Unknown error: Please contact andrewdolby@gmail.com.")},
     aborted{false}, paused{false}, busyStatus{false}
 {
   // Reserve a small number of elements to improve dictionary performance
@@ -677,14 +703,14 @@ bool Crypto::CryptoPrivate::isPaused() const
   return paused;
 }
 
-void Crypto::CryptoPrivate::stop(const QString& fileName, const bool stop)
+void Crypto::CryptoPrivate::stop(const QString& filePath, const bool stop)
 {
-  stopped.insert(fileName, stop);
+  stopped.insert(filePath, stop);
 }
 
-bool Crypto::CryptoPrivate::isStopped(const QString& fileName) const
+bool Crypto::CryptoPrivate::isStopped(const QString& filePath) const
 {
-  return stopped.value(fileName, false);
+  return stopped.value(filePath, false);
 }
 
 void Crypto::CryptoPrivate::resetFlags()

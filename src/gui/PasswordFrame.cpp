@@ -1,6 +1,7 @@
 #include "src/gui/PasswordFrame.hpp"
 #include "src/utility/pimpl_impl.h"
 #include <QLabel>
+#include <QLineEdit>
 #include <QHBoxLayout>
 
 class PasswordFrame::PasswordFramePrivate {

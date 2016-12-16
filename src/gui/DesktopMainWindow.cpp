@@ -9,8 +9,9 @@ DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent)
   this->settings = settings;
 
   messageFrame->appendText(tr("To begin, click the Add Files button or drag "
-                              "and drop files. Enter a password. Finally, "
-                              "click the Encrypt or Decrypt button."));
+                              "and drop files. Next, enter a file path for the "
+                              "output files. Enter a password. Finally, click "
+                              "the Encrypt or Decrypt button."));
 
   // Adjust stretch of file list view
   contentLayout->setStretch(1, 200);
@@ -105,5 +106,5 @@ QSize DesktopMainWindow::sizeHint() const
 
 QSize DesktopMainWindow::minimumSizeHint() const
 {
-  return QSize(600, 350);
+  return QSize(600, 420);
 }

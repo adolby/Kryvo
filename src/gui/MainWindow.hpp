@@ -6,6 +6,7 @@
 #include "src/gui/HeaderFrame.hpp"
 #include "src/gui/FileListFrame.hpp"
 #include "src/gui/MessageFrame.hpp"
+#include "src/gui/OutputFrame.hpp"
 #include "src/gui/PasswordFrame.hpp"
 #include "src/gui/ControlButtonFrame.hpp"
 #include "src/utility/pimpl.h"
@@ -37,25 +38,32 @@ class MainWindow : public QMainWindow {
    * encryption and clicks the Encrypt push button
    * \param passphrase String representing the user supplied passphrase
    * \param inputFileNames List of input file strings
+   * \param outputPath String containing output file path
    * \param cipher String representing the current cipher
    * \param keySize Key size
    * \param modeOfOperation String representing mode of operation
    * \param compress Boolean representing compression mode
+   * \param container Boolean representing container mode
    */
   void encrypt(const QString& passphrase,
                const QStringList& inputFileNames,
+               const QString& outputPath,
                const QString& cipher,
                const std::size_t& keySize,
                const QString& modeOfOperation,
-               const bool compress);
+               const bool compress,
+               const bool container);
 
   /*!
    * \brief decrypt Emitted when the user provides all required data for
    * decryption and clicks the Decrypt push button
    * \param passphrase String representing the user supplied passphrase
    * \param inputFileNames List of input file strings
+   * \param outputFileName String containing output file path in container mode
    */
-  void decrypt(const QString& passphrase, const QStringList& inputFileNames);
+  void decrypt(const QString& passphrase,
+               const QStringList& inputFileNames,
+               const QString& outputFileName);
 
   /*!
    * \brief pauseCipher Emitted when the user toggles the Pause push button
@@ -91,9 +99,9 @@ class MainWindow : public QMainWindow {
    * clicked. Starts the encryption or decryption operation using the passphrase
    * from the password line edit, the file list from the file list model, and
    * the algorithm name from the settings panel.
-   * \param cryptFlag Boolean representing encrypt (true) or decrypt (false)
+   * \param cryptDirection Boolean representing encrypt or decrypt
    */
-  void processFiles(const bool cryptFlag);
+  void processFiles(const bool cryptDirection);
 
   /*!
    * \brief updateProgress Executed when the cipher operation progress is
@@ -106,16 +114,16 @@ class MainWindow : public QMainWindow {
   /*!
    * \brief updateStatusMessage Executed when a message should be displayed to
    * the user. Updates the message text edit text to the message.
-   * \param message String representing the message.
+   * \param message String containing the message
    */
   void updateStatusMessage(const QString& message);
 
   /*!
    * \brief updateError Executed when a cipher operation fails
-   * \param index Integer representing the file list index to update
-   * \param message String representing the error message
+   * \param message String containing the error message
+   * \param path String containing the error file name path
    */
-  void updateError(const QString& path, const QString& message);
+  void updateError(const QString& message, const QString& fileName = QString{});
 
   /*!
    * \brief updateBusyStatus Executed when the cipher operation updates its busy
@@ -180,6 +188,7 @@ class MainWindow : public QMainWindow {
   HeaderFrame* headerFrame;
   FileListFrame* fileListFrame;
   MessageFrame* messageFrame;
+  OutputFrame* outputFrame;
   PasswordFrame* passwordFrame;
   ControlButtonFrame* controlButtonFrame;
   QVBoxLayout* contentLayout;

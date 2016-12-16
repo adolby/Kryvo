@@ -10,14 +10,13 @@
         <file>images/pauseIcon.png</file>
         <file>images/resumeIcon.png</file>
         <file>images/unlockIcon.png</file>
-        <file>images/sliderBackground.png</file>
-        <file>images/sliderKnobDisable.png</file>
-        <file>images/sliderKnobEnable.png</file>
         <file>images/backIcon.png</file>
         <file>images/leftArrowIcon.png</file>
         <file>images/rightArrowIcon.png</file>
         <file>images/kryvos@2x.png</file>
         <file>images/kryvos.png</file>
         <file>images/gearIcon@2x.png</file>
+        <file>images/settingsIcon.png</file>
+        <file>images/settingsIcon@2x.png</file>
     </qresource>
 </RCC>

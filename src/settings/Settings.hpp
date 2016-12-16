@@ -118,7 +118,19 @@ class Settings {
   bool containerMode() const;
 
   /*!
-   * \brief lastDirectory Sets the last opened directory for later storage
+   * \brief outputPath Sets the output path
+   * \param fileName String containing the output path
+   */
+  void outputPath(const QString& path);
+
+  /*!
+   * \brief outputPath Returns the name of the output path
+   * \return String containing the output path
+   */
+  QString outputPath() const;
+
+  /*!
+   * \brief lastDirectory Sets the last opened directory
    * \param algorithm String containing the directory path
    */
   void lastDirectory(const QString& directory);

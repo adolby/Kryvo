@@ -33,11 +33,11 @@ SOURCES += \
   src/gui/FileListFrame.cpp \
   src/gui/FileListDelegate.cpp \
   src/gui/MessageFrame.cpp \
+  src/gui/OutputFrame.cpp \
   src/gui/PasswordFrame.cpp \
   src/gui/ControlButtonFrame.cpp \
   src/gui/SlideSwitch.cpp \
   src/gui/flowlayout.cpp \
-  src/gui/FluidLayout.cpp \
   src/gui/SlidingStackedWidget.cpp \
   src/settings/Settings.cpp
 
@@ -50,11 +50,11 @@ HEADERS += \
   src/gui/FileListFrame.hpp \
   src/gui/FileListDelegate.hpp \
   src/gui/MessageFrame.hpp \
+  src/gui/OutputFrame.hpp \
   src/gui/PasswordFrame.hpp \
   src/gui/ControlButtonFrame.hpp \
   src/gui/SlideSwitch.hpp \
   src/gui/flowlayout.h \
-  src/gui/FluidLayout.hpp \
   src/gui/SlidingStackedWidget.hpp \
   src/settings/Settings.hpp \
   src/utility/pimpl_impl.h \

@@ -18,7 +18,7 @@ class Kryvos : public QObject {
    * \brief Kryvos Constructs the Kryvos class. Connects the GUI to the
    * cryptography object. Moves the cryptography object to a work
    * thread. Starts the thread and shows the GUI main window.
-   * \param parent
+   * \param parent Parent object
    */
   explicit Kryvos(QObject* parent = nullptr);
 

@@ -37,6 +37,7 @@ class Settings::SettingsPrivate {
   bool containerMode;
   QString lastDirectory;
   QString styleSheetPath;
+  QString outputPath;
 };
 
 Settings::Settings()
@@ -129,6 +130,16 @@ bool Settings::containerMode() const
   return m->containerMode;
 }
 
+void Settings::outputPath(const QString& path)
+{
+  m->outputPath = path;
+}
+
+QString Settings::outputPath() const
+{
+  return m->outputPath;
+}
+
 void Settings::lastDirectory(const QString& directory)
 {
   m->lastDirectory = directory;
@@ -169,44 +180,34 @@ void Settings::SettingsPrivate::importSettings()
     auto settings = settingsDoc.object();
 
     auto positionObject = settings[QStringLiteral("position")].toObject();
-    auto xObject = static_cast<QJsonValue>(positionObject[QStringLiteral("x")]);
-    auto yObject = static_cast<QJsonValue>(positionObject[QStringLiteral("y")]);
-    position = QPoint{xObject.toInt(200), yObject.toInt(200)};
+    position = QPoint{positionObject[QStringLiteral("x")].toInt(100),
+                      positionObject[QStringLiteral("y")].toInt(100)};
 
-    auto maximizedObject =
-      static_cast<QJsonValue>(settings[QStringLiteral("maximized")]);
-    maximized = maximizedObject.toBool(false);
+    maximized = settings[QStringLiteral("maximized")].toBool(false);
+
     if (!maximized)
     {
       auto sizeObject = settings["size"].toObject();
-      auto widthObject =
-        static_cast<QJsonValue>(sizeObject[QStringLiteral("width")]);
-      auto heightObject =
-        static_cast<QJsonValue>(sizeObject[QStringLiteral("height")]);
-      size = QSize{widthObject.toInt(800), heightObject.toInt(600)};
+      size = QSize{sizeObject[QStringLiteral("width")].toInt(800),
+                   sizeObject[QStringLiteral("height")].toInt(600)};
     }
 
-    lastDirectory = settings[QStringLiteral("lastDirectory")].toString();
+    cipher = settings[QStringLiteral("cipher")].toString(QStringLiteral("AES"));
 
-    auto cipherObject =
-      static_cast<QJsonValue>(settings[QStringLiteral("cipher")]);
-    cipher = cipherObject.toString(QStringLiteral("AES"));
-
-    auto keySizeObject =
-      static_cast<QJsonValue>(settings[QStringLiteral("keySize")]);
-    keySize = static_cast<std::size_t>(keySizeObject.toInt(128));
+    keySize =
+      static_cast<std::size_t>(settings[QStringLiteral("keySize")].toInt(128));
 
     auto modeOfOperationObject =
       static_cast<QJsonValue>(settings[QStringLiteral("modeOfOperation")]);
     modeOfOperation = modeOfOperationObject.toString(QStringLiteral("GCM"));
 
-    auto compressionModeObject =
-        static_cast<QJsonValue>(settings[QStringLiteral("compressionMode")]);
-    compressionMode = compressionModeObject.toBool(true);
+    compressionMode = settings[QStringLiteral("compressionMode")].toBool(true);
 
-    auto containerModeObject =
-        static_cast<QJsonValue>(settings[QStringLiteral("containerMode")]);
-    containerMode = containerModeObject.toBool(true);
+    containerMode = settings[QStringLiteral("containerMode")].toBool(true);
+
+    outputPath = settings[QStringLiteral("outputPath")].toString();
+
+    lastDirectory = settings[QStringLiteral("lastDirectory")].toString();
 
     auto styleObject =
         static_cast<QJsonValue>(settings[QStringLiteral("styleSheetPath")]);
@@ -214,13 +215,16 @@ void Settings::SettingsPrivate::importSettings()
   }
   else
   { // Settings file couldn't be opened, so use defaults
-    position = QPoint{200, 200};
+    position = QPoint{100, 100};
+    maximized = false;
     size = QSize{800, 600};
     cipher = QStringLiteral("AES");
-    keySize = 128;
+    keySize = std::size_t{128};
     modeOfOperation = QStringLiteral("GCM");
     compressionMode = true;
     containerMode = true;
+    outputPath = QString{};
+    lastDirectory = QString{};
     styleSheetPath = QStringLiteral("kryvos.qss");
   }
 }
@@ -258,11 +262,13 @@ void Settings::SettingsPrivate::exportSettings() const
       settings[QStringLiteral("size")] = sizeObject;
     }
 
-    settings[QStringLiteral("lastDirectory")] = lastDirectory;
     settings[QStringLiteral("cipher")] = cipher;
     settings[QStringLiteral("keySize")] = static_cast<int>(keySize);
     settings[QStringLiteral("modeOfOperation")] = modeOfOperation;
     settings[QStringLiteral("compressionMode")] = compressionMode;
+    settings[QStringLiteral("containerMode")] = containerMode;
+    settings[QStringLiteral("outputPath")] = outputPath;
+    settings[QStringLiteral("lastDirectory")] = lastDirectory;
     settings[QStringLiteral("styleSheetPath")] = styleSheetPath;
 
     auto settingsDoc = QJsonDocument{settings};

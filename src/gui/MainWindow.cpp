@@ -58,8 +58,8 @@ class MainWindow::MainWindowPrivate {
 
 MainWindow::MainWindow(Settings* settings, QWidget* parent)
   : QMainWindow{parent}, headerFrame{nullptr}, fileListFrame{nullptr},
-    messageFrame{nullptr}, passwordFrame{nullptr}, controlButtonFrame{nullptr},
-    contentLayout{nullptr}
+    messageFrame{nullptr}, outputFrame{nullptr}, passwordFrame{nullptr},
+    controlButtonFrame{nullptr}, contentLayout{nullptr}
 {
   // Set object name
   this->setObjectName(QStringLiteral("mainWindow"));
@@ -89,6 +89,11 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   messageFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   messageFrame->setMinimumHeight(36);
 
+  // Archive file name frame
+  outputFrame = new OutputFrame{contentFrame};
+  outputFrame->setObjectName(QStringLiteral("outputFrame"));
+  outputFrame->outputPath(m->settings->outputPath());
+
   // Password entry frame
   passwordFrame = new PasswordFrame{contentFrame};
   passwordFrame->setObjectName(QStringLiteral("passwordFrame"));
@@ -101,6 +106,7 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   contentLayout->addWidget(headerFrame);
   contentLayout->addWidget(fileListFrame);
   contentLayout->addWidget(messageFrame);
+  contentLayout->addWidget(outputFrame);
   contentLayout->addWidget(passwordFrame);
   contentLayout->addWidget(controlButtonFrame);
   contentLayout->setSpacing(0);
@@ -110,6 +116,8 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
   settingsFrame = new SettingsFrame{m->settings->cipher(),
                                     m->settings->keySize(),
                                     m->settings->modeOfOperation(),
+                                    m->settings->compressionMode(),
+                                    m->settings->containerMode(),
                                     slidingStackedWidget};
   settingsFrame->setObjectName(QStringLiteral("settingsFrame"));
 
@@ -154,7 +162,10 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
           this, &MainWindow::processFiles);
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow()
+{
+  m->settings->outputPath(outputFrame->outputPath());
+}
 
 void MainWindow::addFiles()
 {
@@ -191,7 +202,7 @@ void MainWindow::removeFiles()
   fileListFrame->clear();
 }
 
-void MainWindow::processFiles(const bool cryptFlag)
+void MainWindow::processFiles(const bool cryptDirection)
 {
   Q_ASSERT(m->settings);
   Q_ASSERT(passwordFrame);
@@ -199,12 +210,13 @@ void MainWindow::processFiles(const bool cryptFlag)
 
   if (!m->isBusy())
   {
-    // Get passphrase from line edit
+    const auto outputPath = outputFrame->outputPath();
     const auto passphrase = passwordFrame->password();
 
     if (!passphrase.isEmpty())
     {
       const auto rowCount = fileListFrame->rowCount();
+
       if (rowCount > 0)
       {
         auto fileList = QStringList{};
@@ -215,18 +227,20 @@ void MainWindow::processFiles(const bool cryptFlag)
           fileList.append(item->data().toString());
         }
 
-        if (cryptFlag)
+        if (cryptDirection)
         {
           emit encrypt(passphrase,
                        fileList,
+                       outputPath,
                        m->settings->cipher(),
                        m->settings->keySize(),
                        m->settings->modeOfOperation(),
-                       m->settings->compressionMode());
+                       m->settings->compressionMode(),
+                       m->settings->containerMode());
         }
         else
         {
-          emit decrypt(passphrase, fileList);
+          emit decrypt(passphrase, fileList, outputPath);
         }
       }
     }
@@ -237,6 +251,7 @@ void MainWindow::processFiles(const bool cryptFlag)
   }
   else
   {
+    // Inform user that encryption/decryption is already in progress
     updateStatusMessage(m->messages[1]);
   }
 }
@@ -255,10 +270,17 @@ void MainWindow::updateStatusMessage(const QString& message)
   messageFrame->appendText(message);
 }
 
-void MainWindow::updateError(const QString& fileName, const QString& message)
+void MainWindow::updateError(const QString& message, const QString& fileName)
 {
-  updateStatusMessage(message.arg(fileName));
-  updateProgress(fileName, 0);
+  if (!fileName.isEmpty())
+  {
+    updateStatusMessage(message.arg(fileName));
+    updateProgress(fileName, 0);
+  }
+  else
+  {
+    updateStatusMessage(message);
+  }
 }
 
 void MainWindow::updateBusyStatus(const bool busy)
@@ -313,8 +335,7 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
   }
   else
   { // Otherwise, load default theme
-    const QString localPath = QStringLiteral(":/stylesheets/") %
-                              defaultFile;
+    const QString localPath = QStringLiteral(":/stylesheets/") % defaultFile;
     QFile defaultTheme{localPath};
 
     auto defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
@@ -331,11 +352,14 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
 
 MainWindow::MainWindowPrivate::MainWindowPrivate()
   : settings{nullptr},
-    messages(std::initializer_list<QString>(
-             {tr("A password is required to encrypt or decrypt files. Please "
-                 "enter one to continue."),
-              tr("Encryption/decryption is already in progress. Please wait "
-                 "until the current operation finishes.")})),
+    messages{std::initializer_list<QString>({tr("A password is required to "
+                                                "encrypt or decrypt files. "
+                                                "Please enter one to "
+                                                "continue."),
+                                             tr("Encryption/decryption is "
+                                                "already in progress. "
+                                                "Please wait until the current "
+                                                "operation finishes.")})},
     busyStatus{false} {}
 
 void MainWindow::MainWindowPrivate::busy(const bool busy)

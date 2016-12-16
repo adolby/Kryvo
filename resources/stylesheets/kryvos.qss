@@ -14,12 +14,15 @@ QFrame#mainFrame {
 
 QFrame#contentFrame {
   background-color: #2c3e50;
-  margin: 2px;
-  padding-bottom: 5px;
+  margin-top: 2px;
+  margin-left: 2px;
+  margin-right: 2px;
+  margin-bottom: 7px;
 }
 
 QFrame#headerFrame {
   background-color: #2c3e50;
+  margin-top: 0;
   margin-right: 10px;
   margin-bottom: 15px;
   margin-left: 10px;
@@ -41,9 +44,17 @@ QFrame#messageFrame {
   margin-left: 6px;
 }
 
-QFrame#passwordFrame {
+QFrame#outputFrame {
   background-color: #2c3e50;
   margin-top: 15px;
+  margin-right: 20px;
+  margin-left: 20px;
+  margin-bottom: 7px;
+}
+
+QFrame#passwordFrame {
+  background-color: #2c3e50;
+  margin-top: 7px;
   margin-right: 20px;
   margin-left: 20px;
   margin-bottom: 20px;
@@ -151,7 +162,12 @@ QFrame#settingsSubFrame {
   border: none;
 }
 
-/*--------- Password Line Edit ---------*/
+/*--------- Line edits ---------*/
+QLineEdit#outputLineEdit {
+  font-size: 20px;
+  padding: 6px;
+}
+
 QLineEdit#passwordLineEdit {
   font-size: 20px;
   padding: 6px;

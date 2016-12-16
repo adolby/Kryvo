@@ -3,7 +3,6 @@
 
 #include "src/utility/pimpl.h"
 #include <QFrame>
-#include <QLineEdit>
 
 /*!
  * \brief The PasswordFrame class contains a line edit that allows the user to
@@ -16,7 +15,7 @@ class PasswordFrame : public QFrame {
   /*!
    * \brief PasswordFrame Constructs a password frame, which allows a user to
    * enter a password for encrypting/decrypting a file
-   * \param parent QWidget parent of this password frame
+   * \param parent Parent of this password frame
    */
   explicit PasswordFrame(QWidget* parent = nullptr);
 
@@ -26,9 +25,9 @@ class PasswordFrame : public QFrame {
   virtual ~PasswordFrame();
 
   /*!
-   * \brief passwordLineEdit Returns the password string from the password line
+   * \brief password Returns the password string from the password line
    * edit
-   * \return Password string
+   * \return String containing password
    */
   QString password() const;
 

@@ -1,6 +1,5 @@
 #include "src/gui/SettingsFrame.hpp"
 #include "src/gui/SlideSwitch.hpp"
-#include "src/gui/FluidLayout.hpp"
 #include "src/utility/pimpl_impl.h"
 #include <QCheckBox>
 #include <QComboBox>
@@ -42,12 +41,14 @@ class SettingsFrame::SettingsFramePrivate {
 SettingsFrame::SettingsFrame(const QString& cipher,
                              const std::size_t& keySize,
                              const QString& mode,
+                             const bool compressionMode,
+                             const bool containerMode,
                              QWidget* parent)
   : QFrame{parent}
 {
   // TODO: Fix this slide switch or remove it.
   //auto slideSwitch = new SlideSwitch{this};
-  //slideSwitch->setBackgroundPixmap(":/images/sliderBackground.png");
+  //slideSwitch->setBackgroundPixmap(QStringLiteral(":/images/sliderBackground.png"));
   //slideSwitch->setKnobPixmaps(QStringLiteral(":/images/sliderKnobEnable.png"),
   //                            QStringLiteral(":/images/sliderKnobDisable.png"));
 
@@ -56,8 +57,8 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   headerFrame->setContentsMargins(0, 0, 0, 0);
   headerFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-  auto gearImageLabel = new QLabel{headerFrame};
-  gearImageLabel->setPixmap(QPixmap{QStringLiteral(":/images/gearIcon.png")});
+  auto settingsIcon = new QLabel{headerFrame};
+  settingsIcon->setPixmap(QPixmap{QStringLiteral(":/images/settingsIcon.png")});
 
   const auto backIcon = QIcon{QStringLiteral(":/images/backIcon.png")};
   auto backButton = new QPushButton{backIcon, tr(" Back"), headerFrame};
@@ -65,7 +66,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   backButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   auto headerLayout = new QHBoxLayout{headerFrame};
-  headerLayout->addWidget(gearImageLabel);
+  headerLayout->addWidget(settingsIcon);
   headerLayout->addStretch();
   headerLayout->addWidget(backButton);
   headerLayout->setContentsMargins(0, 0, 0, 0);
@@ -137,8 +138,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
                                       "transform data. GCM and EAX are both "
                                       "currently considered to be secure modes "
                                       "of operation.")};
-  const auto modeSplitToolTip = m->splitToolTip(modeToolTip,
-                                                m->toolTipWidth);
+  const auto modeSplitToolTip = m->splitToolTip(modeToolTip, m->toolTipWidth);
 
   auto modeLabel = new QLabel{tr("Mode of operation: "), modeFrame};
   modeLabel->setObjectName(QStringLiteral("text"));
@@ -165,8 +165,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   auto fileSettingsFrame = new QFrame{contentFrame};
   fileSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
 
-  auto fileSettingsLabel = new QLabel{tr("File Settings"),
-                                      cryptoSettingsFrame};
+  auto fileSettingsLabel = new QLabel{tr("File Settings"), cryptoSettingsFrame};
   fileSettingsLabel->setObjectName(QStringLiteral("text"));
 
   auto compressionFrame = new QFrame{fileSettingsFrame};
@@ -175,18 +174,18 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   m->compressionCheckBox = new QCheckBox{"Compress files before encryption",
                                          compressionFrame};
   m->compressionCheckBox->setObjectName("settingsCheckBox");
-  m->compressionCheckBox->setChecked(true);
+  m->compressionCheckBox->setChecked(compressionMode);
 
   auto compressionLayout = new QHBoxLayout{compressionFrame};
   compressionLayout->addWidget(m->compressionCheckBox);
 
   auto containerFrame = new QFrame{fileSettingsFrame};
-  compressionFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+  containerFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   m->containerCheckBox = new QCheckBox{"Archive encrypted files",
                                        containerFrame};
   m->containerCheckBox->setObjectName("settingsCheckBox");
-  m->containerCheckBox->setChecked(true);
+  m->containerCheckBox->setChecked(containerMode);
 
   auto containerLayout = new QHBoxLayout{containerFrame};
   containerLayout->addWidget(m->containerCheckBox);
@@ -233,8 +232,13 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   connect(m->modeComboBox, indexChangedSignal,
           this, &SettingsFrame::changeModeOfOperation);
 
+  // Connect compression check box change signal to change compression mode slot
   connect(m->compressionCheckBox, &QCheckBox::stateChanged,
           this, &SettingsFrame::changeCompressionMode);
+
+  // Connect container check box change signal to change container mode slot
+  connect(m->containerCheckBox, &QCheckBox::stateChanged,
+          this, &SettingsFrame::changeContainerMode);
 
   // Return to previous GUI state
   auto returnAction = new QAction{this};
