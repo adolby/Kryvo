@@ -27,6 +27,8 @@ SOURCES += \
   src/main.cpp \
   src/Kryvos.cpp \
   src/cryptography/Crypto.cpp \
+  src/cryptography/CryptoState.cpp \
+  src/cryptography/BotanCrypto.cpp \
   src/gui/MainWindow.cpp \
   src/gui/SettingsFrame.cpp \
   src/gui/HeaderFrame.cpp \
@@ -44,6 +46,9 @@ SOURCES += \
 HEADERS += \
   src/Kryvos.hpp \
   src/cryptography/Crypto.hpp \
+  src/cryptography/CryptoState.hpp \
+  src/cryptography/BotanCrypto.hpp \
+  src/cryptography/constants.h \
   src/gui/MainWindow.hpp \
   src/gui/SettingsFrame.hpp \
   src/gui/HeaderFrame.hpp \

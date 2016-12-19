@@ -23,13 +23,13 @@ class Settings {
 
   /*!
    * \brief position Sets the main window position
-   * \param position Point at position of the main window
+   * \param position Upper left corner position of the main window
    */
   void position(const QPoint& position);
 
   /*!
    * \brief position Returns the main window's position
-   * \return Point at position of the main window
+   * \return Upper left corner position of the main window
    */
   QPoint position() const;
 
@@ -53,7 +53,7 @@ class Settings {
 
   /*!
    * \brief size Returns the main window's last size
-   * \return Size of main window
+   * \return Size of the main window
    */
   QSize size() const;
 
@@ -119,7 +119,7 @@ class Settings {
 
   /*!
    * \brief outputPath Sets the output path
-   * \param fileName String containing the output path
+   * \param path String containing the output path
    */
   void outputPath(const QString& path);
 
@@ -130,16 +130,16 @@ class Settings {
   QString outputPath() const;
 
   /*!
-   * \brief lastDirectory Sets the last opened directory
-   * \param algorithm String containing the directory path
+   * \brief lastOpenPath Sets the last opened path
+   * \param path String containing the path
    */
-  void lastDirectory(const QString& directory);
+  void lastOpenPath(const QString& path);
 
   /*!
-   * \brief lastDirectory Returns the name of the last opened directory
-   * \return String containing the directory path
+   * \brief lastOpenPath Returns the name of the last opened path
+   * \return String containing the path
    */
-  QString lastDirectory() const;
+  QString lastOpenPath() const;
 
   /*!
    * \brief styleSheetPath Returns the path to the application stylesheet

@@ -173,22 +173,22 @@ void MainWindow::addFiles()
   Q_ASSERT(fileListFrame);
 
   // Open a file dialog to get files
-  const auto files = QFileDialog::getOpenFileNames(this,
-                                                   tr("Add Files"),
-                                                   m->settings->lastDirectory(),
-                                                   tr("Any files (*)"));
+  const auto fileNames =
+    QFileDialog::getOpenFileNames(this, tr("Add Files"),
+                                  m->settings->lastOpenPath(),
+                                  tr("Any files (*)"));
 
-  if (!files.isEmpty())
+  if (!fileNames.isEmpty())
   { // If files were selected, add them to the model
-    for (const auto& file : files)
+    for (const auto& fileName : fileNames)
     {
-      fileListFrame->addFileToModel(file);
+      const QFileInfo fileInfo{fileName};
+      fileListFrame->addFileToModel(fileInfo.absoluteFilePath());
     }
 
     // Save this directory for returning to later
-    const auto fileName = files[0];
-    const QFileInfo file{fileName};
-    m->settings->lastDirectory(file.absolutePath());
+    const QFileInfo lastFileInfo{fileNames.last()};
+    m->settings->lastOpenPath(lastFileInfo.absolutePath());
   }
 }
 

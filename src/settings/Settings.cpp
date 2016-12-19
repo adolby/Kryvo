@@ -1,5 +1,6 @@
 #include "src/settings/Settings.hpp"
 #include "src/utility/pimpl_impl.h"
+#include <QStandardPaths>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
@@ -8,22 +9,21 @@
 #include <QStringBuilder>
 #include <QCoreApplication>
 
+const auto kDefaultPaths =
+  QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
+const auto kDefaultPath = kDefaultPaths.first();
+
 class Settings::SettingsPrivate {
  public:
   SettingsPrivate();
 
   /*!
-   * \brief importSettings Imports settings from the local settings file:
-   * the last application size and position, the last directory opened by the
-   * file open dialog, the last algorithm set, and the stylesheet path for
-   * theming.
+   * \brief importSettings Imports settings from the local settings file
    */
   void importSettings();
 
   /*!
-   * \brief exportSettings Exports settings to the local settings file: the
-   * application size and position, the last directory opened by the open
-   * dialog, and the stylesheet path for theming.
+   * \brief exportSettings Exports settings to the local settings file
    */
   void exportSettings() const;
 
@@ -35,9 +35,9 @@ class Settings::SettingsPrivate {
   QString modeOfOperation;
   bool compressionMode;
   bool containerMode;
-  QString lastDirectory;
-  QString styleSheetPath;
   QString outputPath;
+  QString lastOpenPath;
+  QString styleSheetPath;
 };
 
 Settings::Settings()
@@ -132,7 +132,7 @@ bool Settings::containerMode() const
 
 void Settings::outputPath(const QString& path)
 {
-  m->outputPath = path;
+  m->outputPath = QDir::cleanPath(path % QDir::separator());
 }
 
 QString Settings::outputPath() const
@@ -140,14 +140,14 @@ QString Settings::outputPath() const
   return m->outputPath;
 }
 
-void Settings::lastDirectory(const QString& directory)
+void Settings::lastOpenPath(const QString& path)
 {
-  m->lastDirectory = directory;
+  m->lastOpenPath = QDir::cleanPath(path % QDir::separator());
 }
 
-QString Settings::lastDirectory() const
+QString Settings::lastOpenPath() const
 {
-  return m->lastDirectory;
+  return m->lastOpenPath;
 }
 
 QString Settings::styleSheetPath() const
@@ -156,15 +156,15 @@ QString Settings::styleSheetPath() const
 }
 
 Settings::SettingsPrivate::SettingsPrivate()
-  : maximized{false}, keySize{128}, compressionMode{true}
+  : maximized{false}, keySize{std::size_t{128}}, compressionMode{true},
+    outputPath{kDefaultPath}, lastOpenPath{kDefaultPath}
 {}
 
 void Settings::SettingsPrivate::importSettings()
 {
 #if defined(Q_OS_MAC)
   const auto settingsPath = QCoreApplication::applicationDirPath() %
-                            QDir::separator() %
-                            "settings.json";
+                            QDir::separator() % "settings.json";
 #else
   const auto settingsPath = QStringLiteral("settings.json");
 #endif
@@ -205,9 +205,10 @@ void Settings::SettingsPrivate::importSettings()
 
     containerMode = settings[QStringLiteral("containerMode")].toBool(true);
 
-    outputPath = settings[QStringLiteral("outputPath")].toString();
+    outputPath = settings[QStringLiteral("outputPath")].toString(kDefaultPath);
 
-    lastDirectory = settings[QStringLiteral("lastDirectory")].toString();
+    lastOpenPath =
+      settings[QStringLiteral("lastOpenPath")].toString(kDefaultPath);
 
     auto styleObject =
         static_cast<QJsonValue>(settings[QStringLiteral("styleSheetPath")]);
@@ -223,8 +224,8 @@ void Settings::SettingsPrivate::importSettings()
     modeOfOperation = QStringLiteral("GCM");
     compressionMode = true;
     containerMode = true;
-    outputPath = QString{};
-    lastDirectory = QString{};
+    outputPath = kDefaultPath;
+    lastOpenPath = kDefaultPath;
     styleSheetPath = QStringLiteral("kryvos.qss");
   }
 }
@@ -267,9 +268,10 @@ void Settings::SettingsPrivate::exportSettings() const
     settings[QStringLiteral("modeOfOperation")] = modeOfOperation;
     settings[QStringLiteral("compressionMode")] = compressionMode;
     settings[QStringLiteral("containerMode")] = containerMode;
-    settings[QStringLiteral("outputPath")] = outputPath;
-    settings[QStringLiteral("lastDirectory")] = lastDirectory;
-    settings[QStringLiteral("styleSheetPath")] = styleSheetPath;
+    settings[QStringLiteral("outputPath")] = QDir::cleanPath(outputPath);
+    settings[QStringLiteral("lastOpenPath")] = QDir::cleanPath(lastOpenPath);
+    settings[QStringLiteral("styleSheetPath")] =
+      QDir::cleanPath(styleSheetPath);
 
     auto settingsDoc = QJsonDocument{settings};
     settingsFile.write(settingsDoc.toJson());
