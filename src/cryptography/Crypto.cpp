@@ -75,24 +75,29 @@ void Crypto::encrypt(const QString& passphrase,
   m->state->busy(true);
   emit busyStatus(m->state->isBusy());
 
-  auto keySize = std::size_t{128};
+  const auto keySize = [&inputKeySize] {
+    auto size = std::size_t{128};
 
-  if (inputKeySize > 0)
-  {
-    keySize = inputKeySize;
-  }
+    if (inputKeySize > 0) {
+      size = inputKeySize;
+    }
 
-  auto algorithm = QStringLiteral("AES-128/GCM");
+    return size;
+  }();
 
-  if (QStringLiteral("AES") == cipher)
-  {
-    algorithm = cipher % QStringLiteral("-") % QString::number(keySize) %
-                QStringLiteral("/") % modeOfOperation;
-  }
-  else
-  {
-    algorithm = cipher % QStringLiteral("/") % modeOfOperation;
-  }
+  const auto algorithm = [&cipher, &keySize, &modeOfOperation] {
+    auto algo = QStringLiteral("AES-128/GCM");
+
+    if (QStringLiteral("AES") == cipher) {
+      algo = cipher % QStringLiteral("-") % QString::number(keySize) %
+             QStringLiteral("/") % modeOfOperation;
+    }
+    else {
+      algo = cipher % QStringLiteral("/") % modeOfOperation;
+    }
+
+    return algo;
+  }();
 
   auto outputFilePaths = QStringList{};
 
