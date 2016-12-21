@@ -34,8 +34,7 @@ class FileListFrame::FileListFramePrivate {
 };
 
 FileListFrame::FileListFrame(QWidget* parent)
-  : QFrame{parent}
-{
+  : QFrame{parent} {
   // File list header
   const QStringList headerList = {tr("File"), tr("Progress"), tr("Remove")};
   m->fileListModel->setHorizontalHeaderLabels(headerList);
@@ -66,24 +65,22 @@ FileListFrame::FileListFrame(QWidget* parent)
           this, &FileListFrame::removeFileFromModel);
 }
 
-FileListFrame::~FileListFrame() {}
+FileListFrame::~FileListFrame() {
+}
 
-QStandardItem* FileListFrame::item(const int row)
-{
+QStandardItem* FileListFrame::item(const int row) {
   Q_ASSERT(m->fileListModel);
 
   return m->fileListModel->item(row, 0);
 }
 
-int FileListFrame::rowCount() const
-{
+int FileListFrame::rowCount() const {
   Q_ASSERT(m->fileListModel);
 
   return m->fileListModel->rowCount();
 }
 
-void FileListFrame::clear()
-{
+void FileListFrame::clear() {
   Q_ASSERT(m->fileListModel);
 
   m->fileListModel->clear();
@@ -100,36 +97,31 @@ void FileListFrame::clear()
   m->fileListView->setColumnWidth(2, this->width() * 0.05);
 }
 
-void FileListFrame::updateProgress(const QString& path, const qint64 percent)
-{
+void FileListFrame::updateProgress(const QString& path, const qint64 percent) {
   Q_ASSERT(m->fileListModel);
 
   const auto items = m->fileListModel->findItems(path);
 
-  if (items.size() > 0)
-  {
+  if (items.size() > 0) {
     auto item = items[0];
 
-    if (item != nullptr)
-    {
+    if (item != nullptr) {
       const auto index = item->row();
 
       auto progressItem = m->fileListModel->item(index, 1);
 
-      if (progressItem != nullptr)
-      {
+      if (progressItem != nullptr) {
         progressItem->setData(percent, Qt::DisplayRole);
       }
     }
   }
 }
 
-void FileListFrame::addFileToModel(const QString& path)
-{
+void FileListFrame::addFileToModel(const QString& path) {
   QFileInfo fileInfo{path};
 
-  if (fileInfo.exists() && fileInfo.isFile())
-  { // If the file exists, add it to the model
+  if (fileInfo.exists() && fileInfo.isFile()) {
+    // If the file exists, add it to the model
     auto pathItem = new QStandardItem{path};
     pathItem->setDragEnabled(false);
     pathItem->setDropEnabled(false);
@@ -157,25 +149,21 @@ void FileListFrame::addFileToModel(const QString& path)
     auto addNewItem = true;
 
     const auto rowCount = m->fileListModel->rowCount();
-    for (auto row = 0; row < rowCount; ++row)
-    {
+    for (auto row = 0; row < rowCount; ++row) {
       auto testItem = m->fileListModel->item(row, 0);
 
-      if (testItem->data().toString() == pathItem->data().toString())
-      {
+      if (testItem->data().toString() == pathItem->data().toString()) {
         addNewItem = false;
       }
     }
 
-    if (addNewItem)
-    { // Add the item to the model if it's new
+    if (addNewItem) { // Add the item to the model if it's new
       m->fileListModel->appendRow(items);
     }
   } // End if file exists and is a file
 }
 
-void FileListFrame::removeFileFromModel(const QModelIndex& index)
-{
+void FileListFrame::removeFileFromModel(const QModelIndex& index) {
   Q_ASSERT(m->fileListModel);
 
   auto testItem = m->fileListModel->item(index.row(), 0);
@@ -187,12 +175,11 @@ void FileListFrame::removeFileFromModel(const QModelIndex& index)
   m->fileListModel->removeRow(index.row());
 }
 
-void FileListFrame::resizeEvent(QResizeEvent* event)
-{
+void FileListFrame::resizeEvent(QResizeEvent* event) {
   Q_UNUSED(event);
   Q_ASSERT(m->fileListView);
 
-  auto width = this->width();
+  const auto width = this->width();
 
   m->fileListView->setColumnWidth(0, width * 0.7);
   m->fileListView->setColumnWidth(1, width * 0.2);
@@ -200,5 +187,6 @@ void FileListFrame::resizeEvent(QResizeEvent* event)
 }
 
 FileListFrame::FileListFramePrivate::FileListFramePrivate()
-  : fileListModel{std::make_unique<QStandardItemModel>()}, fileListView{nullptr}
-{}
+  : fileListModel{std::make_unique<QStandardItemModel>()},
+    fileListView{nullptr} {
+}

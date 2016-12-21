@@ -17,8 +17,7 @@ class ControlButtonFrame::ControlButtonFramePrivate {
 };
 
 ControlButtonFrame::ControlButtonFrame(QWidget* parent)
-  : QFrame{parent}
-{
+  : QFrame{parent} {
   const auto iconSize = QSize{19, 19};
 
   const auto lockIcon = QIcon{QStringLiteral(":/images/lockIcon.png")};
@@ -44,10 +43,10 @@ ControlButtonFrame::ControlButtonFrame(QWidget* parent)
           this, &ControlButtonFrame::decryptFiles);
 }
 
-ControlButtonFrame::~ControlButtonFrame() {}
+ControlButtonFrame::~ControlButtonFrame() {
+}
 
-void ControlButtonFrame::setIconSize(const QSize& iconSize)
-{
+void ControlButtonFrame::setIconSize(const QSize& iconSize) {
   Q_ASSERT(m->encryptButton);
   Q_ASSERT(m->decryptButton);
 
@@ -55,16 +54,14 @@ void ControlButtonFrame::setIconSize(const QSize& iconSize)
   m->decryptButton->setIconSize(iconSize);
 }
 
-void ControlButtonFrame::encryptFiles()
-{
+void ControlButtonFrame::encryptFiles() {
   emit processFiles(true);
 }
 
-void ControlButtonFrame::decryptFiles()
-{
+void ControlButtonFrame::decryptFiles() {
   emit processFiles(false);
 }
 
 ControlButtonFrame::ControlButtonFramePrivate::ControlButtonFramePrivate()
-  : encryptButton{nullptr}, decryptButton{nullptr}
-{}
+  : encryptButton{nullptr}, decryptButton{nullptr} {
+}

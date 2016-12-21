@@ -23,8 +23,7 @@ class MessageFrame::MessageFramePrivate {
 };
 
 MessageFrame::MessageFrame(QWidget* parent)
-  : QFrame{parent}
-{
+  : QFrame{parent} {
   auto leftAction = new QAction{this};
   connect(leftAction, &QAction::triggered, this, &MessageFrame::pageLeft);
   const auto leftIcon = QIcon{QStringLiteral(":/images/leftArrowIcon.png")};
@@ -53,10 +52,10 @@ MessageFrame::MessageFrame(QWidget* parent)
   messageLayout->setSpacing(8);
 }
 
-MessageFrame::~MessageFrame() {}
+MessageFrame::~MessageFrame() {
+}
 
-void MessageFrame::appendText(const QString& message)
-{
+void MessageFrame::appendText(const QString& message) {
   Q_ASSERT(m->messageLabel);
 
   m->messages.append(message);
@@ -64,12 +63,10 @@ void MessageFrame::appendText(const QString& message)
   m->messageLabel->setText(*m->it);
 }
 
-void MessageFrame::pageLeft()
-{
+void MessageFrame::pageLeft() {
   Q_ASSERT(m->messageLabel);
 
-  if (m->it != m->messages.constBegin())
-  {
+  if (m->it != m->messages.constBegin()) {
     m->it = std::prev(m->it, 1);
     m->messageLabel->setText(*m->it);
   }
@@ -81,13 +78,12 @@ void MessageFrame::pageRight()
 
   const auto end = m->messages.constEnd();
 
-  if (m->it != std::prev(end, 1) && m->it != end)
-  {
+  if (m->it != std::prev(end, 1) && m->it != end) {
     m->it = std::next(m->it, 1);
     m->messageLabel->setText(*m->it);
   }
 }
 
 MessageFrame::MessageFramePrivate::MessageFramePrivate()
-  : messageLabel{nullptr}
-{}
+  : messageLabel{nullptr} {
+}

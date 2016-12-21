@@ -40,128 +40,104 @@ class Settings::SettingsPrivate {
   QString styleSheetPath;
 };
 
-Settings::Settings()
-{
+Settings::Settings() {
   m->importSettings();
 }
 
-Settings::~Settings()
-{
+Settings::~Settings() {
   m->exportSettings();
 }
 
-void Settings::position(const QPoint& position)
-{
+void Settings::position(const QPoint& position) {
   m->position = position;
 }
 
-QPoint Settings::position() const
-{
+QPoint Settings::position() const {
   return m->position;
 }
 
-void Settings::maximized(const bool maximized)
-{
+void Settings::maximized(const bool maximized) {
   m->maximized = maximized;
 }
 
-bool Settings::maximized() const
-{
+bool Settings::maximized() const {
   return m->maximized;
 }
 
-void Settings::size(const QSize& size)
-{
+void Settings::size(const QSize& size) {
   m->size = size;
 }
 
-QSize Settings::size() const
-{
+QSize Settings::size() const {
   return m->size;
 }
 
-void Settings::cipher(const QString& cipherName)
-{
+void Settings::cipher(const QString& cipherName) {
   m->cipher = cipherName;
 }
 
-QString Settings::cipher() const
-{
+QString Settings::cipher() const {
   return m->cipher;
 }
 
-void Settings::keySize(const std::size_t& keySize)
-{
+void Settings::keySize(const std::size_t& keySize) {
   m->keySize = keySize;
 }
 
-std::size_t Settings::keySize() const
-{
+std::size_t Settings::keySize() const {
   return m->keySize;
 }
 
-void Settings::modeOfOperation(const QString& modeOfOperation)
-{
+void Settings::modeOfOperation(const QString& modeOfOperation) {
   m->modeOfOperation = modeOfOperation;
 }
 
-QString Settings::modeOfOperation() const
-{
+QString Settings::modeOfOperation() const {
   return m->modeOfOperation;
 }
 
-void Settings::compressionMode(const bool compress)
-{
+void Settings::compressionMode(const bool compress) {
   m->compressionMode = compress;
 }
 
-bool Settings::compressionMode() const
-{
+bool Settings::compressionMode() const {
   return m->compressionMode;
 }
 
-void Settings::containerMode(const bool container)
-{
+void Settings::containerMode(const bool container) {
   m->containerMode = container;
 }
 
-bool Settings::containerMode() const
-{
+bool Settings::containerMode() const {
   return m->containerMode;
 }
 
-void Settings::outputPath(const QString& path)
-{
+void Settings::outputPath(const QString& path) {
   m->outputPath = QDir::cleanPath(path % QDir::separator());
 }
 
-QString Settings::outputPath() const
-{
+QString Settings::outputPath() const {
   return m->outputPath;
 }
 
-void Settings::lastOpenPath(const QString& path)
-{
+void Settings::lastOpenPath(const QString& path) {
   m->lastOpenPath = QDir::cleanPath(path % QDir::separator());
 }
 
-QString Settings::lastOpenPath() const
-{
+QString Settings::lastOpenPath() const {
   return m->lastOpenPath;
 }
 
-QString Settings::styleSheetPath() const
-{
+QString Settings::styleSheetPath() const {
   return m->styleSheetPath;
 }
 
 Settings::SettingsPrivate::SettingsPrivate()
   : maximized{false}, keySize{std::size_t{128}}, compressionMode{true},
-    outputPath{kDefaultPath}, lastOpenPath{kDefaultPath}
-{}
+    outputPath{kDefaultPath}, lastOpenPath{kDefaultPath} {
+}
 
-void Settings::SettingsPrivate::importSettings()
-{
+void Settings::SettingsPrivate::importSettings() {
 #if defined(Q_OS_MAC)
   const auto settingsPath = QCoreApplication::applicationDirPath() %
                             QDir::separator() % "settings.json";
@@ -172,8 +148,7 @@ void Settings::SettingsPrivate::importSettings()
   QFile settingsFile{settingsPath};
   auto fileOpen = settingsFile.open(QIODevice::ReadOnly);
 
-  if (fileOpen)
-  {
+  if (fileOpen) {
     auto settingsData = settingsFile.readAll();
 
     auto settingsDoc = QJsonDocument::fromJson(settingsData);
@@ -185,8 +160,7 @@ void Settings::SettingsPrivate::importSettings()
 
     maximized = settings[QStringLiteral("maximized")].toBool(false);
 
-    if (!maximized)
-    {
+    if (!maximized) {
       auto sizeObject = settings["size"].toObject();
       size = QSize{sizeObject[QStringLiteral("width")].toInt(800),
                    sizeObject[QStringLiteral("height")].toInt(600)};
@@ -214,8 +188,7 @@ void Settings::SettingsPrivate::importSettings()
         static_cast<QJsonValue>(settings[QStringLiteral("styleSheetPath")]);
     styleSheetPath = styleObject.toString(QStringLiteral("kryvos.qss"));
   }
-  else
-  { // Settings file couldn't be opened, so use defaults
+  else { // Settings file couldn't be opened, so use defaults
     position = QPoint{100, 100};
     maximized = false;
     size = QSize{800, 600};
@@ -230,8 +203,7 @@ void Settings::SettingsPrivate::importSettings()
   }
 }
 
-void Settings::SettingsPrivate::exportSettings() const
-{
+void Settings::SettingsPrivate::exportSettings() const {
 #if defined(Q_OS_MAC)
   const auto settingsPath = QCoreApplication::applicationDirPath() %
                             QDir::separator() %
@@ -244,8 +216,7 @@ void Settings::SettingsPrivate::exportSettings() const
   settingsFile.setDirectWriteFallback(true);
   auto fileOpen = settingsFile.open(QIODevice::WriteOnly);
 
-  if (fileOpen)
-  {
+  if (fileOpen) {
     auto settings = QJsonObject{};
 
     auto positionObject = QJsonObject{};
@@ -255,8 +226,7 @@ void Settings::SettingsPrivate::exportSettings() const
     settings[QStringLiteral("position")] = positionObject;
     settings[QStringLiteral("maximized")] = maximized;
 
-    if (!maximized)
-    {
+    if (!maximized) {
       auto sizeObject = QJsonObject{};
       sizeObject[QStringLiteral("width")] = size.width();
       sizeObject[QStringLiteral("height")] = size.height();

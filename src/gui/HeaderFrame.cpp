@@ -23,8 +23,7 @@ class HeaderFrame::HeaderFramePrivate {
 };
 
 HeaderFrame::HeaderFrame(QWidget* parent)
-  : QFrame{parent}
-{
+  : QFrame{parent} {
   auto headerImageLabel = new QLabel{this};
   headerImageLabel->setPixmap(QPixmap{":/images/kryvos.png"});
   headerImageLabel->setObjectName("headerImageLabel");
@@ -79,10 +78,10 @@ HeaderFrame::HeaderFrame(QWidget* parent)
           this, &HeaderFrame::switchFrame);
 }
 
-HeaderFrame::~HeaderFrame() {}
+HeaderFrame::~HeaderFrame() {
+}
 
-void HeaderFrame::setIconSize(const QSize& iconSize)
-{
+void HeaderFrame::setIconSize(const QSize& iconSize) {
   Q_ASSERT(m->pauseButton);
   Q_ASSERT(m->addFilesButton);
   Q_ASSERT(m->clearFilesButton);
@@ -94,18 +93,15 @@ void HeaderFrame::setIconSize(const QSize& iconSize)
   m->clearFilesButton->setIconSize(m->iconSize);
 }
 
-void HeaderFrame::togglePauseIcon(const bool toggle)
-{
+void HeaderFrame::togglePauseIcon(const bool toggle) {
   Q_ASSERT(m->pauseButton);
 
-  if (toggle)
-  {
+  if (toggle) {
     const auto resumeIcon = QIcon{QStringLiteral(":/images/resumeIcon.png")};
     m->pauseButton->setIcon(resumeIcon);
     m->pauseButton->setText(tr(" Resume"));
   }
-  else
-  {
+  else {
     const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
     m->pauseButton->setIcon(pauseIcon);
     m->pauseButton->setText(tr(" Pause"));
@@ -114,5 +110,5 @@ void HeaderFrame::togglePauseIcon(const bool toggle)
 
 HeaderFrame::HeaderFramePrivate::HeaderFramePrivate()
   : pauseButton{nullptr}, addFilesButton{nullptr}, clearFilesButton{nullptr},
-    settingsButton{nullptr}
-{}
+    settingsButton{nullptr} {
+}

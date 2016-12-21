@@ -4,8 +4,7 @@
 #include <QMimeData>
 
 DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent)
-  : MainWindow{settings, parent}
-{
+  : MainWindow{settings, parent} {
   this->settings = settings;
 
   messageFrame->appendText(tr("To begin, click the Add Files button or drag "
@@ -35,12 +34,11 @@ DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent)
 
   this->move(this->settings->position());
 
-  if (this->settings->maximized())
-  { // Move window, then maximize to ensure maximize occurs on correct screen
+  if (this->settings->maximized()) {
+    // Move window, then maximize to ensure maximize occurs on correct screen
     this->setWindowState(this->windowState() | Qt::WindowMaximized);
   }
-  else
-  {
+  else {
     this->resize(this->settings->size());
   }
 
@@ -51,24 +49,21 @@ DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent)
   const auto styleSheet = loadStyleSheet(this->settings->styleSheetPath(),
                                          QStringLiteral("kryvos.qss"));
 
-  if (!styleSheet.isEmpty())
-  {
+  if (!styleSheet.isEmpty()) {
     this->setStyleSheet(styleSheet);
   }
 }
 
-DesktopMainWindow::~DesktopMainWindow() {}
+DesktopMainWindow::~DesktopMainWindow() {
+}
 
-void DesktopMainWindow::closeEvent(QCloseEvent* event)
-{
+void DesktopMainWindow::closeEvent(QCloseEvent* event) {
   this->settings->position(this->pos());
 
-  if (this->isMaximized())
-  {
+  if (this->isMaximized()) {
     this->settings->maximized(true);
   }
-  else
-  {
+  else {
     this->settings->maximized(false);
     this->settings->size(this->size());
   }
@@ -76,8 +71,7 @@ void DesktopMainWindow::closeEvent(QCloseEvent* event)
   QMainWindow::closeEvent(event);
 }
 
-void DesktopMainWindow::dragEnterEvent(QDragEnterEvent* event)
-{
+void DesktopMainWindow::dragEnterEvent(QDragEnterEvent* event) {
   // Show drag and drop as a move action
   event->setDropAction(Qt::MoveAction);
 
@@ -87,24 +81,19 @@ void DesktopMainWindow::dragEnterEvent(QDragEnterEvent* event)
   }
 }
 
-void DesktopMainWindow::dropEvent(QDropEvent* event)
-{
+void DesktopMainWindow::dropEvent(QDropEvent* event) {
   // Check for the URL MIME type, which is a list of files
-  if (event->mimeData()->hasUrls())
-  { // Extract the local path from the file(s)
-    for (const auto& url : event->mimeData()->urls())
-    {
+  if (event->mimeData()->hasUrls()) { // Extract the local path from the file(s)
+    for (const auto& url : event->mimeData()->urls()) {
       fileListFrame->addFileToModel(url.toLocalFile());
     }
   }
 }
 
-QSize DesktopMainWindow::sizeHint() const
-{
+QSize DesktopMainWindow::sizeHint() const {
   return QSize(800, 600);
 }
 
-QSize DesktopMainWindow::minimumSizeHint() const
-{
+QSize DesktopMainWindow::minimumSizeHint() const {
   return QSize(600, 420);
 }

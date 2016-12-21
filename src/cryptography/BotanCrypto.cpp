@@ -17,35 +17,29 @@ class BotanCrypto::BotanCryptoPrivate {
   CryptoState* state;
 };
 
-BotanCrypto::BotanCryptoPrivate::BotanCryptoPrivate()
-  : state{nullptr}
-{}
-
 BotanCrypto::BotanCrypto(CryptoState* state, QObject* parent)
-  : QObject{parent}
-{
+  : QObject{parent} {
   m->state = state;
 
   // Initialize Botan
   Botan::LibraryInitializer init{std::string{"thread_safe=true"}};
 }
 
-BotanCrypto::~BotanCrypto() {}
+BotanCrypto::~BotanCrypto() {
+}
 
 void BotanCrypto::encryptFile(const QString& passphrase,
                               const QString& inputFilePath,
                               const QString& outputFilePath,
                               const QString& algorithmName,
                               const std::size_t& keySize,
-                              const bool compress)
-{
+                              const bool compress) {
   Q_ASSERT(m->state);
 
   const QFileInfo inputFileInfo{inputFilePath};
 
   if (!m->state->isAborted() && inputFileInfo.exists() &&
-      inputFileInfo.isFile() && inputFileInfo.isReadable())
-  {
+      inputFileInfo.isFile() && inputFileInfo.isReadable()) {
     Botan::AutoSeeded_RNG rng{};
 
     // Define a size for the PBKDF salt vector
@@ -115,12 +109,15 @@ void BotanCrypto::encryptFile(const QString& passphrase,
 
     auto headerText = tr("-------- ENCRYPTED FILE --------");
 
-    auto compressedText = tr("Not compressed");
+    const auto compressedText = [&compress]() {
+      auto text = tr("Not compressed");
 
-    if (compress)
-    {
-      compressedText = tr("Compressed");
-    }
+      if (compress) {
+        text = tr("Compressed");
+      }
+
+      return text;
+    }();
 
     out << headerText.toStdString() << std::endl;
     out << algorithmNameStd << std::endl;
@@ -132,8 +129,7 @@ void BotanCrypto::encryptFile(const QString& passphrase,
 
     Botan::Pipe pipe{};
 
-    if (compress)
-    {
+    if (compress) {
       pipe.append(new Botan::Compression_Filter{std::string{"zlib"},
                                                 static_cast<std::size_t>(9)});
     }
@@ -147,8 +143,7 @@ void BotanCrypto::encryptFile(const QString& passphrase,
 
     executeCipher(inputFilePath, pipe, in, out);
 
-    if (!m->state->isAborted() && !m->state->isStopped(inputFilePath))
-    {
+    if (!m->state->isAborted() && !m->state->isStopped(inputFilePath)) {
       // Progress: finished
       emit progress(inputFilePath, 100);
 
@@ -160,15 +155,13 @@ void BotanCrypto::encryptFile(const QString& passphrase,
 
 void BotanCrypto::decryptFile(const QString& passphrase,
                               const QString& inputFilePath,
-                              const QString& outputPath)
-{
+                              const QString& outputPath) {
   Q_ASSERT(m->state);
 
   const QFileInfo inputFileInfo{inputFilePath};
 
   if (!m->state->isAborted() && inputFileInfo.exists() &&
-      inputFileInfo.isFile() && inputFileInfo.isReadable())
-  {
+      inputFileInfo.isFile() && inputFileInfo.isReadable()) {
     std::ifstream in{inputFilePath.toStdString(), std::ios::binary};
 
     // Read metadata from file
@@ -189,8 +182,7 @@ void BotanCrypto::decryptFile(const QString& passphrase,
     auto containerString = QString{containerStringStd.c_str()};
     auto compressString = QString{compressStringStd.c_str()};
 
-    if (headerString != tr("-------- ENCRYPTED FILE --------"))
-    {
+    if (headerString != tr("-------- ENCRYPTED FILE --------")) {
       emit errorMessage(messages[6].arg(inputFilePath));
     }
 
@@ -218,7 +210,7 @@ void BotanCrypto::decryptFile(const QString& passphrase,
 
     // Key salt
     Botan::secure_vector<Botan::byte> keySalt =
-        Botan::base64_decode(keySaltString);
+      Botan::base64_decode(keySaltString);
     const auto keySize =
       static_cast<std::size_t>(QString{keySizeString.c_str()}.toInt());
     const auto keySizeInBytes = keySize / 8;
@@ -260,8 +252,7 @@ void BotanCrypto::decryptFile(const QString& passphrase,
                                   iv,
                                   Botan::DECRYPTION));
 
-    if (tr("Compressed") == compressString)
-    {
+    if (tr("Compressed") == compressString) {
       pipe.append(new Botan::Decompression_Filter{std::string{"zlib"},
                                                   static_cast<std::size_t>(9)});
     }
@@ -270,8 +261,7 @@ void BotanCrypto::decryptFile(const QString& passphrase,
 
     executeCipher(inputFilePath, pipe, in, out);
 
-    if (!m->state->isAborted() && !m->state->isStopped(inputFilePath))
-    {
+    if (!m->state->isAborted() && !m->state->isStopped(inputFilePath)) {
       // Progress: finished
       emit progress(inputFilePath, 100);
 
@@ -284,8 +274,7 @@ void BotanCrypto::decryptFile(const QString& passphrase,
 void BotanCrypto::executeCipher(const QString& inputFilePath,
                                 Botan::Pipe& pipe,
                                 std::ifstream& in,
-                                std::ofstream& out)
-{
+                                std::ofstream& out) {
   Q_ASSERT(m->state);
 
   // Define a size for the buffer vector
@@ -302,10 +291,8 @@ void BotanCrypto::executeCipher(const QString& inputFilePath,
   pipe.start_msg();
 
   while (in.good() && !m->state->isAborted() &&
-         !m->state->isStopped(inputFilePath))
-  {
-    if (!m->state->isPaused())
-    {
+         !m->state->isStopped(inputFilePath)) {
+    if (!m->state->isPaused()) {
       in.read(reinterpret_cast<char*>(&buffer[0]), buffer.size());
       const auto remainingSize = in.gcount();
       pipe.write(&buffer[0], remainingSize);
@@ -316,29 +303,29 @@ void BotanCrypto::executeCipher(const QString& inputFilePath,
                                 static_cast<double>(size);
       const qint64 nextPercent = static_cast<qint64>(nextFraction * 100);
 
-      if (nextPercent > percent && nextPercent < 100)
-      {
+      if (nextPercent > percent && nextPercent < 100) {
         percent = nextPercent;
         emit progress(inputFilePath, percent);
       }
 
-      if (in.eof())
-      {
+      if (in.eof()) {
         pipe.end_msg();
       }
 
-      while (pipe.remaining() > 0)
-      {
+      while (pipe.remaining() > 0) {
         const auto buffered = pipe.read(&buffer[0], buffer.size());
         out.write(reinterpret_cast<const char*>(&buffer[0]), buffered);
       }
     }
   }
 
-  if (in.bad() || (in.fail() && !in.eof()))
-  {
+  if (in.bad() || (in.fail() && !in.eof())) {
     emit errorMessage(messages[4], inputFilePath);
   }
 
   out.flush();
+}
+
+BotanCrypto::BotanCryptoPrivate::BotanCryptoPrivate()
+  : state{nullptr} {
 }

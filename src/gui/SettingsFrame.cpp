@@ -44,8 +44,7 @@ SettingsFrame::SettingsFrame(const QString& cipher,
                              const bool compressionMode,
                              const bool containerMode,
                              QWidget* parent)
-  : QFrame{parent}
-{
+  : QFrame{parent} {
   // TODO: Fix this slide switch or remove it.
   //auto slideSwitch = new SlideSwitch{this};
   //slideSwitch->setBackgroundPixmap(QStringLiteral(":/images/sliderBackground.png"));
@@ -251,17 +250,16 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   this->addAction(returnAction);
 }
 
-SettingsFrame::~SettingsFrame() {}
+SettingsFrame::~SettingsFrame() {
+}
 
-void SettingsFrame::changeCipher()
-{
+void SettingsFrame::changeCipher() {
   Q_ASSERT(m->cipherComboBox);
 
   emit updateCipher(m->cipherComboBox->currentText());
 }
 
-void SettingsFrame::changeKeySize()
-{
+void SettingsFrame::changeKeySize() {
   Q_ASSERT(m->keySizeComboBox);
 
   const auto keySizeString = m->keySizeComboBox->currentText();
@@ -272,22 +270,19 @@ void SettingsFrame::changeKeySize()
   emit updateKeySize(keySize);
 }
 
-void SettingsFrame::changeModeOfOperation()
-{
+void SettingsFrame::changeModeOfOperation() {
   Q_ASSERT(m->modeComboBox);
 
   emit updateModeOfOperation(m->modeComboBox->currentText());
 }
 
-void SettingsFrame::changeCompressionMode()
-{
+void SettingsFrame::changeCompressionMode() {
   Q_ASSERT(m->compressionCheckBox);
 
   emit updateCompressionMode(m->compressionCheckBox->isChecked());
 }
 
-void SettingsFrame::changeContainerMode()
-{
+void SettingsFrame::changeContainerMode() {
   Q_ASSERT(m->containerCheckBox);
 
   emit updateContainerMode(m->containerCheckBox->isChecked());
@@ -296,30 +291,26 @@ void SettingsFrame::changeContainerMode()
 SettingsFrame::SettingsFramePrivate::SettingsFramePrivate()
   : cipherComboBox{nullptr}, keySizeComboBox{nullptr}, modeComboBox{nullptr},
     compressionCheckBox{nullptr}, containerCheckBox{nullptr},
-    toolTipWidth{250}
-{}
+    toolTipWidth{250} {
+}
 
-QString SettingsFrame::SettingsFramePrivate::splitToolTip(const QString& text,
-                                                          const int width) const
-{
+QString SettingsFrame::SettingsFramePrivate::
+splitToolTip(const QString& text, const int width) const {
   QFontMetrics fm{QToolTip::font()};
   QString result;
   auto temp = text;
 
   auto k = 0;
-  while (k < 100000)
-  {
+  while (k < 100000) {
     auto i = 0;
-    while (i < temp.length())
-    {
+
+    while (i < temp.length()) {
       i = i + 1;
 
-      if (fm.width(temp.left(i + 1)) > width)
-      {
+      if (fm.width(temp.left(i + 1)) > width) {
         auto j = temp.lastIndexOf(' ', i);
 
-        if (j > 0)
-        {
+        if (j > 0) {
           i = j;
         }
 
@@ -331,8 +322,7 @@ QString SettingsFrame::SettingsFramePrivate::splitToolTip(const QString& text,
       }
     }
 
-    if (i >= temp.length())
-    {
+    if (i >= temp.length()) {
       break;
     }
 

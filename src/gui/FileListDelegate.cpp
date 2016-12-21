@@ -4,35 +4,29 @@
 #include <QEvent>
 
 FileListDelegate::FileListDelegate(QObject* parent)
-  : QStyledItemDelegate{parent}, focusBorderEnabled{false}
-{}
+  : QStyledItemDelegate{parent}, focusBorderEnabled{false} {
+}
 
-void FileListDelegate::setFocusBorderEnabled(bool enabled)
-{
+void FileListDelegate::setFocusBorderEnabled(bool enabled) {
   focusBorderEnabled = enabled;
 }
 
 void FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
-                                       const QModelIndex& index) const
-{
+                                       const QModelIndex& index) const {
   QStyledItemDelegate::initStyleOption(option, index);
 
-  if (!focusBorderEnabled && option->state & QStyle::State_HasFocus)
-  {
+  if (!focusBorderEnabled && option->state & QStyle::State_HasFocus) {
     option->state = option->state & ~QStyle::State_HasFocus;
   }
 }
 
 void FileListDelegate::paint(QPainter* painter,
                              const QStyleOptionViewItem& option,
-                             const QModelIndex& index) const
-{
+                             const QModelIndex& index) const {
   const auto column = index.column();
 
-  switch (column)
-  {
-    case 0:
-    {
+  switch (column) {
+    case 0: {
       auto elidedOption = option;
       elidedOption.textElideMode = Qt::ElideLeft;
 
@@ -40,8 +34,7 @@ void FileListDelegate::paint(QPainter* painter,
 
       break;
     }
-    case 1:
-    {
+    case 1: {
       // Set up a QStyleOptionProgressBar to mimic the environment of a progress
       // bar.
       auto progressBarOption = QStyleOptionProgressBar{};
@@ -68,8 +61,7 @@ void FileListDelegate::paint(QPainter* painter,
                                          painter);
       break;
     }
-    case 2:
-    {
+    case 2: {
       auto buttonOption = QStyleOptionButton{};
       buttonOption.state = QStyle::State_Enabled;
       buttonOption.direction = QApplication::layoutDirection();
@@ -97,18 +89,14 @@ void FileListDelegate::paint(QPainter* painter,
 bool FileListDelegate::editorEvent(QEvent* event,
                                    QAbstractItemModel* model,
                                    const QStyleOptionViewItem& option,
-                                   const QModelIndex& index)
-{
-  if (2 == index.column())
-  {
+                                   const QModelIndex& index) {
+  if (2 == index.column()) {
     if (QEvent::MouseButtonRelease == event->type() ||
-        QEvent::MouseButtonDblClick == event->type())
-    {
+        QEvent::MouseButtonDblClick == event->type()) {
       auto mouseEvent = static_cast<QMouseEvent*>(event);
 
       if (Qt::LeftButton == mouseEvent->button() &&
-          option.rect.contains(mouseEvent->pos()))
-      {
+          option.rect.contains(mouseEvent->pos())) {
         emit removeRow(index);
       }
     }

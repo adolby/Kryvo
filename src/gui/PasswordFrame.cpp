@@ -16,8 +16,7 @@ class PasswordFrame::PasswordFramePrivate {
 };
 
 PasswordFrame::PasswordFrame(QWidget* parent)
-  : QFrame{parent}
-{
+  : QFrame{parent} {
   auto passwordLabel = new QLabel{tr("Password "), this};
   passwordLabel->setObjectName(QStringLiteral("text"));
 
@@ -32,10 +31,10 @@ PasswordFrame::PasswordFrame(QWidget* parent)
   passwordLayout->setContentsMargins(0, 0, 0, 0);
 }
 
-PasswordFrame::~PasswordFrame() {}
+PasswordFrame::~PasswordFrame() {
+}
 
-QString PasswordFrame::password() const
-{
+QString PasswordFrame::password() const {
   Q_ASSERT(m->passwordLineEdit);
 
   auto password = m->passwordLineEdit->text();
@@ -44,4 +43,5 @@ QString PasswordFrame::password() const
 }
 
 PasswordFrame::PasswordFramePrivate::PasswordFramePrivate()
-  : passwordLineEdit{nullptr} {}
+  : passwordLineEdit{nullptr} {
+}

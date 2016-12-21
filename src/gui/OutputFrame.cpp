@@ -16,8 +16,7 @@ class OutputFrame::OutputFramePrivate {
 };
 
 OutputFrame::OutputFrame(QWidget* parent)
-  : QFrame{parent}
-{
+  : QFrame{parent} {
   auto outputLabel = new QLabel{tr("Output path "), this};
   outputLabel->setObjectName(QStringLiteral("text"));
 
@@ -31,17 +30,16 @@ OutputFrame::OutputFrame(QWidget* parent)
   outputLayout->setContentsMargins(0, 0, 0, 0);
 }
 
-OutputFrame::~OutputFrame() {}
+OutputFrame::~OutputFrame() {
+}
 
-void OutputFrame::outputPath(const QString& path)
-{
+void OutputFrame::outputPath(const QString& path) {
   Q_ASSERT(m->outputLineEdit);
 
   m->outputLineEdit->setText(path);
 }
 
-QString OutputFrame::outputPath() const
-{
+QString OutputFrame::outputPath() const {
   Q_ASSERT(m->outputLineEdit);
 
   auto fileName = m->outputLineEdit->text();
@@ -50,4 +48,5 @@ QString OutputFrame::outputPath() const
 }
 
 OutputFrame::OutputFramePrivate::OutputFramePrivate()
-  : outputLineEdit{nullptr} {}
+  : outputLineEdit{nullptr} {
+}

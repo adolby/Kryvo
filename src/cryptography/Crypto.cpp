@@ -16,12 +16,10 @@
 
 QString outputFilePath(const QString& inputFilePath,
                        const QString& inputFileName,
-                       const QString& outputPath)
-{
+                       const QString& outputPath) {
   auto path = QString{inputFilePath % QStringLiteral(".") % kExtension};
 
-  if (!outputPath.isEmpty())
-  {
+  if (!outputPath.isEmpty()) {
     path = QDir::cleanPath(outputPath) % QDir::separator() % inputFileName %
            QStringLiteral(".") % kExtension;
   }
@@ -50,8 +48,7 @@ class Crypto::CryptoPrivate {
 };
 
 Crypto::Crypto(QObject* parent)
-  : QObject{parent}
-{
+  : QObject{parent} {
   // Subscribe to provider's signals
   connect(m->botanCrypto.get(), &BotanCrypto::progress,
           this, &Crypto::progress);
@@ -61,7 +58,8 @@ Crypto::Crypto(QObject* parent)
           this, &Crypto::errorMessage);
 }
 
-Crypto::~Crypto() {}
+Crypto::~Crypto() {
+}
 
 void Crypto::encrypt(const QString& passphrase,
                      const QStringList& inputFilePaths,
@@ -70,8 +68,7 @@ void Crypto::encrypt(const QString& passphrase,
                      const std::size_t& inputKeySize,
                      const QString& modeOfOperation,
                      const bool compress,
-                     const bool container)
-{
+                     const bool container) {
   m->state->busy(true);
   emit busyStatus(m->state->isBusy());
 
@@ -101,8 +98,7 @@ void Crypto::encrypt(const QString& passphrase,
 
   auto outputFilePaths = QStringList{};
 
-  for (const auto& inputFilePath : inputFilePaths)
-  {
+  for (const auto& inputFilePath : inputFilePaths) {
     const QFileInfo inputFileInfo{inputFilePath};
     const auto inFileName = inputFileInfo.fileName();
     const auto inFilePath = inputFileInfo.absoluteFilePath();
@@ -111,28 +107,23 @@ void Crypto::encrypt(const QString& passphrase,
 
     outputFilePaths << outFilePath;
 
-    try
-    {
+    try {
       m->botanCrypto->encryptFile(passphrase, inFilePath, outFilePath,
                                   algorithm, keySize, compress);
 
-      if (m->state->isAborted() || m->state->isStopped(inFilePath))
-      {
+      if (m->state->isAborted() || m->state->isStopped(inFilePath)) {
         emit errorMessage(m->messages[2], inFilePath);
 
-        if (m->state->isAborted())
-        {
+        if (m->state->isAborted()) {
           m->state->abort(false);
           break;
         }
       }
     }
-    catch (const Botan::Stream_IO_Error& e)
-    {
+    catch (const Botan::Stream_IO_Error& e) {
       emit errorMessage(m->messages[7], inFilePath);
     }
-    catch (const std::exception& e)
-    {
+    catch (const std::exception& e) {
       const auto error = QString{e.what()};
       emit errorMessage(QStringLiteral("Error: ") % error, inFilePath);
     }
@@ -146,64 +137,51 @@ void Crypto::encrypt(const QString& passphrase,
 
 void Crypto::decrypt(const QString& passphrase,
                      const QStringList& inputFilePaths,
-                     const QString& outputPath)
-{
+                     const QString& outputPath) {
   m->state->busy(true);
   emit busyStatus(m->state->isBusy());
 
-  for (const auto& inputFilePath : inputFilePaths)
-  {
+  for (const auto& inputFilePath : inputFilePaths) {
     const QFileInfo inputFileInfo{inputFilePath};
     const auto inFileName = inputFileInfo.fileName();
     const auto inFilePath = inputFileInfo.absoluteFilePath();
     const auto outFilePath = outputFilePath(inFilePath,inFileName, outputPath);
 
-    try
-    {
+    try {
       m->botanCrypto->decryptFile(passphrase, inFilePath, outFilePath);
 
-      if (m->state->isAborted())
-      { // Reset abort flag
+      if (m->state->isAborted()) { // Reset abort flag
         m->state->abort(false);
         emit errorMessage(m->messages[3], inFilePath);
         break;
       }
 
-      if (m->state->isStopped(inFilePath))
-      {
+      if (m->state->isStopped(inFilePath)) {
         emit errorMessage(m->messages[3], inFilePath);
       }
     }
-    catch (const Botan::Decoding_Error& e)
-    {
+    catch (const Botan::Decoding_Error& e) {
       emit errorMessage(m->messages[5], inFilePath);
     }
-    catch (const Botan::Integrity_Failure& e)
-    {
+    catch (const Botan::Integrity_Failure& e) {
       emit errorMessage(m->messages[5], inFilePath);
     }
-    catch (const Botan::Invalid_Argument& e)
-    {
+    catch (const Botan::Invalid_Argument& e) {
       emit errorMessage(m->messages[6], inFilePath);
     }
-    catch (const std::invalid_argument& e)
-    {
+    catch (const std::invalid_argument& e) {
       emit errorMessage(m->messages[6], inFilePath);
     }
-    catch (const std::runtime_error& e)
-    {
+    catch (const std::runtime_error& e) {
       emit errorMessage(m->messages[4], inFilePath);
     }
-    catch (const std::exception& e)
-    {
+    catch (const std::exception& e) {
       const auto error = QString{e.what()};
 
-      if (QStringLiteral("zlib inflate error -3") == error)
-      {
+      if (QStringLiteral("zlib inflate error -3") == error) {
         emit errorMessage(m->messages[5], inFilePath);
       }
-      else
-      {
+      else {
         emit errorMessage(QStringLiteral("Error: ") % error, inFilePath);
       }
     }
@@ -215,28 +193,23 @@ void Crypto::decrypt(const QString& passphrase,
   emit busyStatus(m->state->isBusy());
 }
 
-void Crypto::abort()
-{
-  if (m->state->isBusy())
-  {
+void Crypto::abort() {
+  if (m->state->isBusy()) {
     m->state->abort(true);
   }
 }
 
-void Crypto::pause(bool pause)
-{
+void Crypto::pause(bool pause) {
   m->state->pause(pause);
 }
 
-void Crypto::stop(const QString& filePath)
-{
-  if (m->state->isBusy())
-  {
+void Crypto::stop(const QString& filePath) {
+  if (m->state->isBusy()) {
     m->state->stop(filePath, true);
   }
 }
 
 Crypto::CryptoPrivate::CryptoPrivate()
   : state{std::make_unique<CryptoState>()},
-    botanCrypto{std::make_unique<BotanCrypto>(state.get())}
-{}
+    botanCrypto{std::make_unique<BotanCrypto>(state.get())} {
+}

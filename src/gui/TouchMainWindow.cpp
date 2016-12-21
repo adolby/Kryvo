@@ -2,8 +2,7 @@
 #include <QApplication>
 
 TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)
-  : MainWindow{settings, parent}
-{
+  : MainWindow{settings, parent} {
   messageFrame->appendText(tr("To begin, tap the Add Files button. Enter a "
                               "password. Finally, tap the Encrypt or Decrypt "
                               "button."));
@@ -22,10 +21,10 @@ TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)
   const auto styleSheet = loadStyleSheet(settings->styleSheetPath(),
                                          QStringLiteral("kryvosTouch.qss"));
 
-  if (!styleSheet.isEmpty())
-  {
+  if (!styleSheet.isEmpty()) {
     this->setStyleSheet(styleSheet);
   }
 }
 
-TouchMainWindow::~TouchMainWindow() {}
+TouchMainWindow::~TouchMainWindow() {
+}

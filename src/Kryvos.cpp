@@ -39,8 +39,7 @@ class Kryvos::KryvosPrivate {
 };
 
 Kryvos::Kryvos(QObject* parent)
-  : QObject{parent}
-{
+  : QObject{parent} {
   qRegisterMetaType<std::size_t>("std::size_t");
 
   // Move cryptography object to another thread to prevent GUI from blocking
@@ -85,8 +84,7 @@ Kryvos::Kryvos(QObject* parent)
   m->gui->show();
 }
 
-Kryvos::~Kryvos()
-{
+Kryvos::~Kryvos() {
   // Abort current threaded cipher operation
   m->cryptography->abort();
 
@@ -96,8 +94,7 @@ Kryvos::~Kryvos()
   auto timedOut = !m->cipherThread->wait(1000);
 
   // If the thread couldn't quit within one second, terminate it
-  if (timedOut)
-  {
+  if (timedOut) {
     m->cipherThread->terminate();
   }
 }
@@ -110,6 +107,8 @@ Kryvos::KryvosPrivate::KryvosPrivate()
     gui{std::make_unique<DesktopMainWindow>(settings.get())},
     #endif
     cryptography{std::make_unique<Crypto>()},
-    cipherThread{std::make_unique<QThread>()} {}
+    cipherThread{std::make_unique<QThread>()} {
+}
 
-Kryvos::KryvosPrivate::~KryvosPrivate() {}
+Kryvos::KryvosPrivate::~KryvosPrivate() {
+}

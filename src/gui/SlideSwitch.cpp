@@ -30,8 +30,7 @@ class SlideSwitch::SlideSwitchPrivate {
 };
 
 SlideSwitch::SlideSwitch(QWidget* parent)
-  : QAbstractButton(parent)
-{
+  : QAbstractButton(parent) {
   setCheckable(true);
   setChecked(false);
 
@@ -47,77 +46,63 @@ SlideSwitch::SlideSwitch(QWidget* parent)
   setAttribute(Qt::WA_Hover);
 }
 
-SlideSwitch::~SlideSwitch()
-{}
+SlideSwitch::~SlideSwitch() {
+}
 
-void SlideSwitch::setBackgroundPixmap(const QString& backgroundPath)
-{
+void SlideSwitch::setBackgroundPixmap(const QString& backgroundPath) {
   m->background = QPixmap(backgroundPath);
 }
 
 void SlideSwitch::setKnobPixmaps(const QString& knobEnabledPath,
-                                 const QString& knobDisabledPath)
-{
+                                 const QString& knobDisabledPath) {
   m->knobEnabled = QPixmap(knobEnabledPath);
   m->knobDisabled = QPixmap(knobDisabledPath);
 }
 
-void SlideSwitch::paintEvent(QPaintEvent* /*event*/)
-{
+void SlideSwitch::paintEvent(QPaintEvent* /*event*/) {
   QPainter painter(this);
 
   //painter.drawPixmap(buttonRect().toRect(), m->background);
 
-  if (isChecked())
-  {
+  if (isChecked()) {
     //painter.drawPixmap(knobRect().toRect(), m->knobEnabled);
   }
-  else
-  {
+  else {
     //painter.drawPixmap(knobRect().toRect(), m->knobDisabled);
   }
 }
 
-QSize SlideSwitch::sizeHint() const
-{
-  if (!m->background.isNull())
-  {
+QSize SlideSwitch::sizeHint() const {
+  if (!m->background.isNull()) {
     return m->background.size();
   }
-  else
-  {
+  else {
     return QSize(80, 38);
   }
 }
 
-void SlideSwitch::mouseMoveEvent(QMouseEvent* event)
-{
-  if(m->dragInProgress)
-  {
+void SlideSwitch::mouseMoveEvent(QMouseEvent* event) {
+  if(m->dragInProgress) {
     m->dragDistanceX = event->x() - m->dragStartPosition.x();
 
-    if (isChecked())
-    {
+    if (isChecked()) {
       m->position = 100 * (buttonRect().width() - knobRect().width() +
                            m->dragDistanceX) / (buttonRect().width() -
                                                 knobRect().width());
     }
-    else
-    {
+    else {
       m->position = 100 * m->dragDistanceX /
                         (buttonRect().width() - knobRect().width());
     }
 
     //qDebug() << m->position;
 
-    if (m->position >= 100)
-    {
+    if (m->position >= 100) {
       m->position = 100;
       setChecked(true);
     }
 
-    if (m->position <= 0)
-    {
+    if (m->position <= 0) {
       m->position = 0;
       setChecked(false);
     }
@@ -126,37 +111,28 @@ void SlideSwitch::mouseMoveEvent(QMouseEvent* event)
   }
 }
 
-void SlideSwitch::mousePressEvent(QMouseEvent* event)
-{
-  if (Qt::LeftButton == event->button() && knobRect().contains(event->pos()))
-  {
+void SlideSwitch::mousePressEvent(QMouseEvent* event) {
+  if (Qt::LeftButton == event->button() && knobRect().contains(event->pos())) {
     m->dragInProgress = true;
     m->dragStartPosition = event->pos();
   }
 }
 
-void SlideSwitch::mouseReleaseEvent(QMouseEvent* /*event*/)
-{
-  if (m->dragDistanceX != 0)
-  {
-    if (m->position < 100)
-    {
-      if (isChecked())
-      {
+void SlideSwitch::mouseReleaseEvent(QMouseEvent* /*event*/) {
+  if (m->dragDistanceX != 0) {
+    if (m->position < 100) {
+      if (isChecked()) {
         m->timeLine->setFrameRange(100 - m->position, 100);
       }
-      else
-      {
+      else {
         m->timeLine->setFrameRange(m->position, 100);
       }
     }
-    else
-    {
+    else {
       m->timeLine->setFrameRange(0, 100);
     }
 
-    if (0 == m->position || 100 == m->position)
-    {
+    if (0 == m->position || 100 == m->position) {
       m->timeLine->start();
     }
   }
@@ -165,49 +141,40 @@ void SlideSwitch::mouseReleaseEvent(QMouseEvent* /*event*/)
   m->dragInProgress = false;
 }
 
-bool SlideSwitch::hitButton(const QPoint& pos) const
-{
+bool SlideSwitch::hitButton(const QPoint& pos) const {
   return buttonRect().contains(pos);
 }
 
-void SlideSwitch::setSwitchPosition(const int position)
-{
+void SlideSwitch::setSwitchPosition(const int position) {
   m->position = isChecked() ? 100 - position : position;
 
   update();
 
-  if (100 == m->position)
-  {
+  if (100 == m->position) {
     setChecked(true);
   }
-  else if (0 == m->position)
-  {
+  else if (0 == m->position) {
     setChecked(false);
   }
 }
 
-void SlideSwitch::updateSwitchPosition(const bool checked)
-{
-  if (checked)
-  {
+void SlideSwitch::updateSwitchPosition(const bool checked) {
+  if (checked) {
     m->position = 100;
   }
-  else
-  {
+  else {
     m->position = 0;
   }
 }
 
-QRectF SlideSwitch::buttonRect() const
-{
+QRectF SlideSwitch::buttonRect() const {
   QSizeF buttonSize = m->background.size();
   buttonSize.scale(size(), Qt::KeepAspectRatio);
 
   return QRectF(QPointF(0, 0), buttonSize);
 }
 
-QRectF SlideSwitch::knobRect() const
-{
+QRectF SlideSwitch::knobRect() const {
   QRectF button = buttonRect();
   QSizeF knobSize = m->knobEnabled.size();
   knobSize.scale(button.size(), Qt::KeepAspectRatio);
@@ -225,5 +192,5 @@ QRectF SlideSwitch::knobRect() const
 }
 
 SlideSwitch::SlideSwitchPrivate::SlideSwitchPrivate()
-  : timeLine{nullptr}, dragDistanceX{0}, dragInProgress{false}, position{0}
-{}
+  : timeLine{nullptr}, dragDistanceX{0}, dragInProgress{false}, position{0} {
+}
