@@ -1,6 +1,9 @@
 #include "src/cryptography/BotanCrypto.hpp"
 #include "src/cryptography/constants.h"
+#include <QDir>
 #include <QFileInfo>
+#include <string>
+#include <memory>
 
 namespace Kryvos {
 

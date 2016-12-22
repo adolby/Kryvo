@@ -143,12 +143,12 @@ void Kryvos::SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
       offsetY = 0;
     }
 
-    const auto currentWidgetPos = currentWidget->pos();
+    const auto& currentWidgetPos = currentWidget->pos();
 
     // Store current widget position for re-positioning later
     m->lastWidgetPos = currentWidgetPos;
 
-    const auto nextWidgetPos = nextWidget->pos();
+    const auto& nextWidgetPos = nextWidget->pos();
     nextWidget->move(nextWidgetPos.x() - offsetX,
                      nextWidgetPos.y() - offsetY);
 

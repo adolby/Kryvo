@@ -139,17 +139,17 @@ Kryvos::Settings::SettingsPrivate::SettingsPrivate()
 
 void Kryvos::Settings::SettingsPrivate::importSettings() {
 #if defined(Q_OS_MAC)
-  const auto settingsPath = QCoreApplication::applicationDirPath() %
-                            QDir::separator() % "settings.json";
+  const auto& settingsPath = QCoreApplication::applicationDirPath() %
+                             QDir::separator() % "settings.json";
 #else
-  const auto settingsPath = QStringLiteral("settings.json");
+  const auto& settingsPath = QStringLiteral("settings.json");
 #endif
 
   QFile settingsFile{settingsPath};
-  auto fileOpen = settingsFile.open(QIODevice::ReadOnly);
+  const auto fileOpen = settingsFile.open(QIODevice::ReadOnly);
 
   if (fileOpen) {
-    auto settingsData = settingsFile.readAll();
+    const auto& settingsData = settingsFile.readAll();
 
     auto settingsDoc = QJsonDocument::fromJson(settingsData);
     auto settings = settingsDoc.object();
@@ -205,16 +205,16 @@ void Kryvos::Settings::SettingsPrivate::importSettings() {
 
 void Kryvos::Settings::SettingsPrivate::exportSettings() const {
 #if defined(Q_OS_MAC)
-  const auto settingsPath = QCoreApplication::applicationDirPath() %
+  const auto& settingsPath = QCoreApplication::applicationDirPath() %
                             QDir::separator() %
                             "settings.json";
 #else
-  const auto settingsPath = QStringLiteral("settings.json");
+  const auto& settingsPath = QStringLiteral("settings.json");
 #endif
 
   QSaveFile settingsFile{settingsPath};
   settingsFile.setDirectWriteFallback(true);
-  auto fileOpen = settingsFile.open(QIODevice::WriteOnly);
+  const auto fileOpen = settingsFile.open(QIODevice::WriteOnly);
 
   if (fileOpen) {
     auto settings = QJsonObject{};

@@ -170,7 +170,7 @@ void Kryvos::MainWindow::addFiles() {
   Q_ASSERT(fileListFrame);
 
   // Open a file dialog to get files
-  const auto fileNames =
+  const auto& fileNames =
     QFileDialog::getOpenFileNames(this, tr("Add Files"),
                                   m->settings->lastOpenPath(),
                                   tr("Any files (*)"));
@@ -299,7 +299,7 @@ QString Kryvos::MainWindow::loadStyleSheet(const QString& styleFile,
   auto styleSheet = QString{};
 
   if (userTheme.exists()) {
-    auto themeOpen = userTheme.open(QFile::ReadOnly);
+    const auto themeOpen = userTheme.open(QFile::ReadOnly);
 
     if (themeOpen) {
       styleSheet = QString{QLatin1String{userTheme.readAll()}};
@@ -310,7 +310,7 @@ QString Kryvos::MainWindow::loadStyleSheet(const QString& styleFile,
     const QString localPath = QStringLiteral(":/stylesheets/") % defaultFile;
     QFile defaultTheme{localPath};
 
-    auto defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
+    const auto defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
 
     if (defaultThemeOpen) {
       styleSheet = QString{QLatin1String{defaultTheme.readAll()}};

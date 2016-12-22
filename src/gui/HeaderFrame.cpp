@@ -31,20 +31,20 @@ Kryvos::HeaderFrame::HeaderFrame(QWidget* parent)
   auto buttonFrame = new QFrame{this};
   buttonFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-  const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
+  const auto& pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
   m->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), buttonFrame};
   m->pauseButton->setObjectName(QStringLiteral("pauseButton"));
   m->pauseButton->setCheckable(true);
   m->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const auto addFilesIcon = QIcon{QStringLiteral(":/images/addFilesIcon.png")};
+  const auto& addFilesIcon = QIcon{QStringLiteral(":/images/addFilesIcon.png")};
   m->addFilesButton = new QPushButton{addFilesIcon,
                                       tr(" Add files"),
                                       buttonFrame};
   m->addFilesButton->setObjectName(QStringLiteral("addButton"));
   m->addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const auto clearFilesIcon =
+  const auto& clearFilesIcon =
     QIcon{QStringLiteral(":/images/clearFilesIcon.png")};
   m->clearFilesButton = new QPushButton{clearFilesIcon,
                                         tr(" Remove all files"),
@@ -52,7 +52,7 @@ Kryvos::HeaderFrame::HeaderFrame(QWidget* parent)
   m->clearFilesButton->setObjectName(QStringLiteral("clearButton"));
   m->clearFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const auto settingsIcon = QIcon{QStringLiteral(":/images/gearIcon.png")};
+  const auto& settingsIcon = QIcon{QStringLiteral(":/images/gearIcon.png")};
   m->settingsButton = new QPushButton{settingsIcon,
                                       tr(" Settings"),
                                       buttonFrame};
@@ -97,12 +97,12 @@ void Kryvos::HeaderFrame::togglePauseIcon(const bool toggle) {
   Q_ASSERT(m->pauseButton);
 
   if (toggle) {
-    const auto resumeIcon = QIcon{QStringLiteral(":/images/resumeIcon.png")};
+    const auto& resumeIcon = QIcon{QStringLiteral(":/images/resumeIcon.png")};
     m->pauseButton->setIcon(resumeIcon);
     m->pauseButton->setText(tr(" Resume"));
   }
   else {
-    const auto pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
+    const auto& pauseIcon = QIcon{QStringLiteral(":/images/pauseIcon.png")};
     m->pauseButton->setIcon(pauseIcon);
     m->pauseButton->setText(tr(" Pause"));
   }

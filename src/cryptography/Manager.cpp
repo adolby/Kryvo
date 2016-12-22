@@ -3,11 +3,6 @@
 #include "src/cryptography/BotanCrypto.hpp"
 #include "src/cryptography/constants.h"
 #include "src/utility/pimpl_impl.h"
-#include <QFileInfo>
-#include <QDir>
-#include <QStringRef>
-#include <QStringBuilder>
-#include <string>
 #include <memory>
 
 #if defined(_MSC_VER)
@@ -60,7 +55,7 @@ void Kryvos::Manager::encrypt(const QString& passphrase,
   m->state->busy(true);
   emit busyStatus(m->state->isBusy());
 
-  const auto keySize = [&inputKeySize] {
+  const auto& keySize = [&inputKeySize] {
     auto size = std::size_t{128};
 
     if (inputKeySize > 0) {

@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 
   Kryvos::Application kryvos{};
 
-  auto retval = app.exec();
+  const auto retval = app.exec();
 
   return retval;
 }

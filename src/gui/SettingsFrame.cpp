@@ -59,7 +59,7 @@ Kryvos::SettingsFrame::SettingsFrame(const QString& cipher,
   auto settingsIcon = new QLabel{headerFrame};
   settingsIcon->setPixmap(QPixmap{QStringLiteral(":/images/settingsIcon.png")});
 
-  const auto backIcon = QIcon{QStringLiteral(":/images/backIcon.png")};
+  const auto& backIcon = QIcon{QStringLiteral(":/images/backIcon.png")};
   auto backButton = new QPushButton{backIcon, tr(" Back"), headerFrame};
   backButton->setObjectName(QStringLiteral("backButton"));
   backButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -131,13 +131,13 @@ Kryvos::SettingsFrame::SettingsFrame(const QString& cipher,
   auto modeFrame = new QFrame{cryptoSettingsFrame};
   modeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  const auto modeToolTip = QString{tr("The mode of operation is the algorithm "
-                                      "that repeatedly applies the cipher's "
-                                      "single-block operation to securely "
-                                      "transform data. GCM and EAX are both "
-                                      "currently considered to be secure modes "
-                                      "of operation.")};
-  const auto modeSplitToolTip = m->splitToolTip(modeToolTip, m->toolTipWidth);
+  const auto& modeToolTip = QString{tr("The mode of operation is the algorithm "
+                                       "that repeatedly applies the cipher's "
+                                       "single-block operation to securely "
+                                       "transform data. GCM and EAX are both "
+                                       "currently considered to be secure "
+                                       "modes of operation.")};
+  const auto& modeSplitToolTip = m->splitToolTip(modeToolTip, m->toolTipWidth);
 
   auto modeLabel = new QLabel{tr("Mode of operation: "), modeFrame};
   modeLabel->setObjectName(QStringLiteral("text"));
@@ -262,10 +262,9 @@ void Kryvos::SettingsFrame::changeCipher() {
 void Kryvos::SettingsFrame::changeKeySize() {
   Q_ASSERT(m->keySizeComboBox);
 
-  const auto keySizeString = m->keySizeComboBox->currentText();
+  const auto& keySizeString = m->keySizeComboBox->currentText();
 
-  const std::size_t keySize =
-    static_cast<std::size_t>(keySizeString.toLongLong());
+  const auto& keySize = static_cast<std::size_t>(keySizeString.toLongLong());
 
   emit updateKeySize(keySize);
 }

@@ -47,7 +47,7 @@ Kryvos::DesktopMainWindow::DesktopMainWindow(Settings* settings,
   this->setAcceptDrops(true);
 
   // Load stylesheet
-  const auto styleSheet = loadStyleSheet(this->settings->styleSheetPath(),
+  const auto& styleSheet = loadStyleSheet(this->settings->styleSheetPath(),
                                          QStringLiteral("kryvos.qss"));
 
   if (!styleSheet.isEmpty()) {

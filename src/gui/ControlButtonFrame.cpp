@@ -18,15 +18,15 @@ class Kryvos::ControlButtonFrame::ControlButtonFramePrivate {
 
 Kryvos::ControlButtonFrame::ControlButtonFrame(QWidget* parent)
   : QFrame{parent} {
-  const auto iconSize = QSize{19, 19};
+  const auto& iconSize = QSize{19, 19};
 
-  const auto lockIcon = QIcon{QStringLiteral(":/images/lockIcon.png")};
+  const auto& lockIcon = QIcon{QStringLiteral(":/images/lockIcon.png")};
   m->encryptButton = new QPushButton{lockIcon, tr(" Encrypt"), this};
   m->encryptButton->setIconSize(iconSize);
   m->encryptButton->setObjectName(QStringLiteral("cryptButton"));
   m->encryptButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const auto unlockedIcon = QIcon{QStringLiteral(":/images/unlockIcon.png")};
+  const auto& unlockedIcon = QIcon{QStringLiteral(":/images/unlockIcon.png")};
   m->decryptButton = new QPushButton{unlockedIcon, tr(" Decrypt"), this};
   m->decryptButton->setIconSize(iconSize);
   m->decryptButton->setObjectName(QStringLiteral("cryptButton"));

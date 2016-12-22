@@ -37,7 +37,7 @@ Kryvos::PasswordFrame::~PasswordFrame() {
 QString Kryvos::PasswordFrame::password() const {
   Q_ASSERT(m->passwordLineEdit);
 
-  auto password = m->passwordLineEdit->text();
+  const auto& password = m->passwordLineEdit->text();
 
   return password;
 }
