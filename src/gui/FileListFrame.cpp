@@ -15,7 +15,7 @@
 #include "src/utility/make_unique.h"
 #endif
 
-class FileListFrame::FileListFramePrivate {
+class Kryvos::FileListFrame::FileListFramePrivate {
  public:
   /*!
    * \brief FileListFramePrivate Constructs the FileListFrame private
@@ -33,7 +33,7 @@ class FileListFrame::FileListFramePrivate {
   QTableView* fileListView;
 };
 
-FileListFrame::FileListFrame(QWidget* parent)
+Kryvos::FileListFrame::FileListFrame(QWidget* parent)
   : QFrame{parent} {
   // File list header
   const QStringList headerList = {tr("File"), tr("Progress"), tr("Remove")};
@@ -65,22 +65,22 @@ FileListFrame::FileListFrame(QWidget* parent)
           this, &FileListFrame::removeFileFromModel);
 }
 
-FileListFrame::~FileListFrame() {
+Kryvos::FileListFrame::~FileListFrame() {
 }
 
-QStandardItem* FileListFrame::item(const int row) {
+QStandardItem* Kryvos::FileListFrame::item(const int row) {
   Q_ASSERT(m->fileListModel);
 
   return m->fileListModel->item(row, 0);
 }
 
-int FileListFrame::rowCount() const {
+int Kryvos::FileListFrame::rowCount() const {
   Q_ASSERT(m->fileListModel);
 
   return m->fileListModel->rowCount();
 }
 
-void FileListFrame::clear() {
+void Kryvos::FileListFrame::clear() {
   Q_ASSERT(m->fileListModel);
 
   m->fileListModel->clear();
@@ -97,7 +97,8 @@ void FileListFrame::clear() {
   m->fileListView->setColumnWidth(2, this->width() * 0.05);
 }
 
-void FileListFrame::updateProgress(const QString& path, const qint64 percent) {
+void Kryvos::FileListFrame::updateProgress(const QString& path,
+                                           const qint64 percent) {
   Q_ASSERT(m->fileListModel);
 
   const auto items = m->fileListModel->findItems(path);
@@ -117,7 +118,7 @@ void FileListFrame::updateProgress(const QString& path, const qint64 percent) {
   }
 }
 
-void FileListFrame::addFileToModel(const QString& path) {
+void Kryvos::FileListFrame::addFileToModel(const QString& path) {
   QFileInfo fileInfo{path};
 
   if (fileInfo.exists() && fileInfo.isFile()) {
@@ -163,7 +164,7 @@ void FileListFrame::addFileToModel(const QString& path) {
   } // End if file exists and is a file
 }
 
-void FileListFrame::removeFileFromModel(const QModelIndex& index) {
+void Kryvos::FileListFrame::removeFileFromModel(const QModelIndex& index) {
   Q_ASSERT(m->fileListModel);
 
   auto testItem = m->fileListModel->item(index.row(), 0);
@@ -175,7 +176,7 @@ void FileListFrame::removeFileFromModel(const QModelIndex& index) {
   m->fileListModel->removeRow(index.row());
 }
 
-void FileListFrame::resizeEvent(QResizeEvent* event) {
+void Kryvos::FileListFrame::resizeEvent(QResizeEvent* event) {
   Q_UNUSED(event);
   Q_ASSERT(m->fileListView);
 
@@ -186,7 +187,7 @@ void FileListFrame::resizeEvent(QResizeEvent* event) {
   m->fileListView->setColumnWidth(2, width * 0.05);
 }
 
-FileListFrame::FileListFramePrivate::FileListFramePrivate()
+Kryvos::FileListFrame::FileListFramePrivate::FileListFramePrivate()
   : fileListModel{std::make_unique<QStandardItemModel>()},
     fileListView{nullptr} {
 }

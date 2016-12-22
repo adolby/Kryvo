@@ -6,6 +6,10 @@
 #include <QtWidgets/QWidget>
 #include <QtCore/QEasingCurve>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * SlidingStackedWidget is a class that is derived from QStackedWidget
  * and allows smooth side shifting of widgets, in addition
@@ -50,7 +54,11 @@ class SlidingStackedWidget : public QStackedWidget {
   void stopAnimation();
 
   class SlidingStackedWidgetPrivate;
-  pimpl<SlidingStackedWidgetPrivate> m;
+  Kryvos::pimpl<SlidingStackedWidgetPrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_SLIDINGSTACKEDWIDGET_HPP_

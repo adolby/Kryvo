@@ -6,7 +6,7 @@
 
 //#include <QDebug>
 
-class SlideSwitch::SlideSwitchPrivate {
+class Kryvos::SlideSwitch::SlideSwitchPrivate {
  public:
   SlideSwitchPrivate();
 
@@ -29,7 +29,7 @@ class SlideSwitch::SlideSwitchPrivate {
   int position;
 };
 
-SlideSwitch::SlideSwitch(QWidget* parent)
+Kryvos::SlideSwitch::SlideSwitch(QWidget* parent)
   : QAbstractButton(parent) {
   setCheckable(true);
   setChecked(false);
@@ -46,20 +46,20 @@ SlideSwitch::SlideSwitch(QWidget* parent)
   setAttribute(Qt::WA_Hover);
 }
 
-SlideSwitch::~SlideSwitch() {
+Kryvos::SlideSwitch::~SlideSwitch() {
 }
 
-void SlideSwitch::setBackgroundPixmap(const QString& backgroundPath) {
+void Kryvos::SlideSwitch::setBackgroundPixmap(const QString& backgroundPath) {
   m->background = QPixmap(backgroundPath);
 }
 
-void SlideSwitch::setKnobPixmaps(const QString& knobEnabledPath,
+void Kryvos::SlideSwitch::setKnobPixmaps(const QString& knobEnabledPath,
                                  const QString& knobDisabledPath) {
   m->knobEnabled = QPixmap(knobEnabledPath);
   m->knobDisabled = QPixmap(knobDisabledPath);
 }
 
-void SlideSwitch::paintEvent(QPaintEvent* /*event*/) {
+void Kryvos::SlideSwitch::paintEvent(QPaintEvent* /*event*/) {
   QPainter painter(this);
 
   //painter.drawPixmap(buttonRect().toRect(), m->background);
@@ -72,7 +72,7 @@ void SlideSwitch::paintEvent(QPaintEvent* /*event*/) {
   }
 }
 
-QSize SlideSwitch::sizeHint() const {
+QSize Kryvos::SlideSwitch::sizeHint() const {
   if (!m->background.isNull()) {
     return m->background.size();
   }
@@ -81,7 +81,7 @@ QSize SlideSwitch::sizeHint() const {
   }
 }
 
-void SlideSwitch::mouseMoveEvent(QMouseEvent* event) {
+void Kryvos::SlideSwitch::mouseMoveEvent(QMouseEvent* event) {
   if(m->dragInProgress) {
     m->dragDistanceX = event->x() - m->dragStartPosition.x();
 
@@ -111,14 +111,14 @@ void SlideSwitch::mouseMoveEvent(QMouseEvent* event) {
   }
 }
 
-void SlideSwitch::mousePressEvent(QMouseEvent* event) {
+void Kryvos::SlideSwitch::mousePressEvent(QMouseEvent* event) {
   if (Qt::LeftButton == event->button() && knobRect().contains(event->pos())) {
     m->dragInProgress = true;
     m->dragStartPosition = event->pos();
   }
 }
 
-void SlideSwitch::mouseReleaseEvent(QMouseEvent* /*event*/) {
+void Kryvos::SlideSwitch::mouseReleaseEvent(QMouseEvent* /*event*/) {
   if (m->dragDistanceX != 0) {
     if (m->position < 100) {
       if (isChecked()) {
@@ -141,11 +141,11 @@ void SlideSwitch::mouseReleaseEvent(QMouseEvent* /*event*/) {
   m->dragInProgress = false;
 }
 
-bool SlideSwitch::hitButton(const QPoint& pos) const {
+bool Kryvos::SlideSwitch::hitButton(const QPoint& pos) const {
   return buttonRect().contains(pos);
 }
 
-void SlideSwitch::setSwitchPosition(const int position) {
+void Kryvos::SlideSwitch::setSwitchPosition(const int position) {
   m->position = isChecked() ? 100 - position : position;
 
   update();
@@ -158,7 +158,7 @@ void SlideSwitch::setSwitchPosition(const int position) {
   }
 }
 
-void SlideSwitch::updateSwitchPosition(const bool checked) {
+void Kryvos::SlideSwitch::updateSwitchPosition(const bool checked) {
   if (checked) {
     m->position = 100;
   }
@@ -167,14 +167,14 @@ void SlideSwitch::updateSwitchPosition(const bool checked) {
   }
 }
 
-QRectF SlideSwitch::buttonRect() const {
+QRectF Kryvos::SlideSwitch::buttonRect() const {
   QSizeF buttonSize = m->background.size();
   buttonSize.scale(size(), Qt::KeepAspectRatio);
 
   return QRectF(QPointF(0, 0), buttonSize);
 }
 
-QRectF SlideSwitch::knobRect() const {
+QRectF Kryvos::SlideSwitch::knobRect() const {
   QRectF button = buttonRect();
   QSizeF knobSize = m->knobEnabled.size();
   knobSize.scale(button.size(), Qt::KeepAspectRatio);
@@ -191,6 +191,6 @@ QRectF SlideSwitch::knobRect() const {
   return knobRect;
 }
 
-SlideSwitch::SlideSwitchPrivate::SlideSwitchPrivate()
+Kryvos::SlideSwitch::SlideSwitchPrivate::SlideSwitchPrivate()
   : timeLine{nullptr}, dragDistanceX{0}, dragInProgress{false}, position{0} {
 }

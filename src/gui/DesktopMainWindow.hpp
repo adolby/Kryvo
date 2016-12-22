@@ -8,6 +8,10 @@
 #include <QDropEvent>
 #include <QSize>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The DesktopMainWindow class is used as the main window for the
  * application when a desktop display is the primary display for the operating
@@ -65,5 +69,9 @@ class DesktopMainWindow : public MainWindow {
  private:
   Settings* settings;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_DESKTOPMAINWINDOW_HPP_

@@ -4,6 +4,10 @@
 #include "src/utility/pimpl.h"
 #include <QFrame>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The MessageFrame class contains a text edit display used to inform the
  * user of the status of encryption and decryption operations.
@@ -45,5 +49,9 @@ class MessageFrame : public QFrame {
   class MessageFramePrivate;
   pimpl<MessageFramePrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_MESSAGEFRAME_HPP_

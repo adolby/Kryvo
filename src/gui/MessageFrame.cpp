@@ -9,7 +9,7 @@
 #include <QVector>
 #include <iterator>
 
-class MessageFrame::MessageFramePrivate {
+class Kryvos::MessageFrame::MessageFramePrivate {
  public:
   /*!
    * \brief MessageFramePrivate Constructs the MessageFrame private
@@ -22,7 +22,7 @@ class MessageFrame::MessageFramePrivate {
   QLabel* messageLabel;
 };
 
-MessageFrame::MessageFrame(QWidget* parent)
+Kryvos::MessageFrame::MessageFrame(QWidget* parent)
   : QFrame{parent} {
   auto leftAction = new QAction{this};
   connect(leftAction, &QAction::triggered, this, &MessageFrame::pageLeft);
@@ -52,10 +52,10 @@ MessageFrame::MessageFrame(QWidget* parent)
   messageLayout->setSpacing(8);
 }
 
-MessageFrame::~MessageFrame() {
+Kryvos::MessageFrame::~MessageFrame() {
 }
 
-void MessageFrame::appendText(const QString& message) {
+void Kryvos::MessageFrame::appendText(const QString& message) {
   Q_ASSERT(m->messageLabel);
 
   m->messages.append(message);
@@ -63,7 +63,7 @@ void MessageFrame::appendText(const QString& message) {
   m->messageLabel->setText(*m->it);
 }
 
-void MessageFrame::pageLeft() {
+void Kryvos::MessageFrame::pageLeft() {
   Q_ASSERT(m->messageLabel);
 
   if (m->it != m->messages.constBegin()) {
@@ -72,7 +72,7 @@ void MessageFrame::pageLeft() {
   }
 }
 
-void MessageFrame::pageRight()
+void Kryvos::MessageFrame::pageRight()
 {
   Q_ASSERT(m->messageLabel);
 
@@ -84,6 +84,6 @@ void MessageFrame::pageRight()
   }
 }
 
-MessageFrame::MessageFramePrivate::MessageFramePrivate()
+Kryvos::MessageFrame::MessageFramePrivate::MessageFramePrivate()
   : messageLabel{nullptr} {
 }

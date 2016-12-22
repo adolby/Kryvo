@@ -1,4 +1,4 @@
-#include "src/Kryvos.hpp"
+#include "src/Application.hpp"
 #include <QApplication>
 
 /*!
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
   app.setOrganizationDomain("andrewdolby.com");
   app.setApplicationName("Kryvos");
 
-  Kryvos kryvos{};
+  Kryvos::Application kryvos{};
 
   auto retval = app.exec();
 

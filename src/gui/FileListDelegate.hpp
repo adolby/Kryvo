@@ -4,6 +4,10 @@
 #include <QStyledItemDelegate>
 #include <QSize>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The FileListDelegate class augments the view to display a progress bar
  * and to remove the focus border.
@@ -69,5 +73,9 @@ class FileListDelegate : public QStyledItemDelegate {
  protected:
   bool focusBorderEnabled;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_FILELISTDELEGATE_HPP_

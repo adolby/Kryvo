@@ -4,6 +4,10 @@
 #include "src/gui/MainWindow.hpp"
 #include "src/settings/Settings.hpp"
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The TouchMainWindow class is used as the main window for the
  * application when a touch-based display is the primary display for the
@@ -25,7 +29,11 @@ class TouchMainWindow : public MainWindow
    * \brief ~TouchMainWindow Destroys the application's main window for
    * touch-based displays
    */
-  ~TouchMainWindow();
+  virtual ~TouchMainWindow();
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_TOUCHMAINWINDOW_HPP_

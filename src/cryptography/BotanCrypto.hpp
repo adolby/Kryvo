@@ -1,7 +1,7 @@
 #ifndef KRYVOS_CRYPTOGRAPHY_BOTANCRYPTO_HPP_
 #define KRYVOS_CRYPTOGRAPHY_BOTANCRYPTO_HPP_
 
-#include "src/cryptography/CryptoState.hpp"
+#include "src/cryptography/State.hpp"
 
 #include <QtGlobal>
 
@@ -33,68 +33,22 @@
   #endif
 #endif
 
-#include "src/utility/pimpl.h"
 #include <QObject>
 #include <QString>
 #include <fstream>
 #include <string>
 
+namespace Kryvos {
+
+inline namespace Cryptography {
+
 class BotanCrypto : public QObject {
   Q_OBJECT
 
  public:
-  /*!
-   * \brief BotanCrypto Constructs the BotanCrypto class. Initializes Botan.
-   * \param parent
-   */
-  explicit BotanCrypto(CryptoState* state, QObject* parent = nullptr);
+  explicit BotanCrypto(QObject* parent = nullptr);
 
-  ~BotanCrypto();
-
-  /*!
-   * \brief executeCipher Executes a cipher on a file with the a key,
-   * initialization vector, and cipher direction
-   * \param inputFilePath String containing the file path of the file to
-   * encrypt/decrypt
-   * \param pipe Botan pipe for encryption or decryption
-   * \param in Input file stream
-   * \param out Output file stream
-   */
-  void executeCipher(const QString& inputFilePath,
-                     Botan::Pipe& pipe,
-                     std::ifstream& in,
-                     std::ofstream& out);
-
-  /*!
-   * \brief encryptFile Encrypts a single file with the input passphrase and
-   * algorithm name
-   * \param passphrase String representing the user-entered passphrase
-   * \param inputFilePath String representing the file path of the file to
-   * encrypt
-   * \param outputFilePath String containing the file path of the encrypted
-   * file
-   * \param algorithmName String representing the name of the algorithm to use
-   * for encryption
-   * \param keySize Key size
-   * \param compress Boolean representing compression mode
-   */
-  void encryptFile(const QString& passphrase,
-                   const QString& inputFilePath,
-                   const QString& outputFilePath,
-                   const QString& algorithmName,
-                   const std::size_t& keySize,
-                   const bool compress);
-
-  /*!
-   * \brief decryptFile Decrypts a single file with the input passphrase and
-   * algorithm name
-   * \param passphrase String representing the user-entered passphrase
-   * \param inputFilePath String containing the file path of the file to decrypt
-   * \param outputPath String containing output path
-   */
-  void decryptFile(const QString& passphrase,
-                   const QString& inputFilePath,
-                   const QString& outputPath);
+  virtual ~BotanCrypto();
 
  signals:
   /*!
@@ -119,9 +73,96 @@ class BotanCrypto : public QObject {
   void errorMessage(const QString& message,
                     const QString& filePath = QString{});
 
- private:
-  class BotanCryptoPrivate;
-  pimpl<BotanCryptoPrivate> m;
+ public:
+ /*!
+  * \brief encrypt Encrypt a list of files
+  * \param passphrase String representing the user-entered passphrase
+  * \param inputFilePaths List of strings containing the file paths of the
+  * files to encrypt
+  * \param outputPath String containing output file path
+  * \param cipher String representing name of the cipher
+  * \param inputKeySize Key size in bits
+  * \param modeOfOperation String representing mode of operation
+  * \param compress Boolean representing compression mode
+  * \param container Boolean representing container mode
+  */
+  void encrypt(State* state,
+               const QString& passphrase,
+               const QStringList& inputFilePaths,
+               const QString& outputPath = QString{},
+               const QString& cipher = QString{"AES"},
+               const std::size_t& keySize = std::size_t{128},
+               const QString& modeOfOperation = QString{"GCM"},
+               const bool compress = true,
+               const bool container = true);
+
+  /*!
+   * \brief decrypt Decrypt a list of files. The algorithm is determined from
+   * the file header.
+   * \param passphrase String representing the user-entered passphrase
+   * \param inputFilePaths List of strings containing the file paths of
+   * the files to decrypt
+   * \param outputPath String containing output file path
+   */
+  void decrypt(State* state,
+               const QString& passphrase,
+               const QStringList& inputFilePaths,
+               const QString& outputPath);
+
+  /*!
+   * \brief encryptFile Encrypts a single file with the input passphrase and
+   * algorithm name
+   * \param state Encryption process state
+   * \param passphrase String representing the user-entered passphrase
+   * \param inputFilePath String representing the file path of the file to
+   * encrypt
+   * \param outputFilePath String containing the file path of the encrypted
+   * file
+   * \param algorithmName String representing the name of the algorithm to use
+   * for encryption
+   * \param keySize Key size
+   * \param compress Boolean representing compression mode
+   */
+  void encryptFile(State* state,
+                   const QString& passphrase,
+                   const QString& inputFilePath,
+                   const QString& outputFilePath,
+                   const QString& algorithmName,
+                   const std::size_t& keySize,
+                   const bool compress);
+
+  /*!
+   * \brief decryptFile Decrypts a single file with the input passphrase and
+   * algorithm name
+   * \param state Decryption process state
+   * \param passphrase String representing the user-entered passphrase
+   * \param inputFilePath String containing the file path of the file to decrypt
+   * \param outputPath String containing output path
+   */
+  void decryptFile(State* state,
+                   const QString& passphrase,
+                   const QString& inputFilePath,
+                   const QString& outputPath);
+
+  /*!
+   * \brief executeCipher Executes a cipher on a file with the a key,
+   * initialization vector, and cipher direction
+   * \param state Cipher process state
+   * \param inputFilePath String containing the file path of the file to
+   * encrypt/decrypt
+   * \param pipe Botan pipe for encryption or decryption
+   * \param in Input file stream
+   * \param out Output file stream
+   */
+  void executeCipher(State* state,
+                     const QString& inputFilePath,
+                     Botan::Pipe& pipe,
+                     std::ifstream& in,
+                     std::ofstream& out);
 };
+
+}
+
+}
 
 #endif // KRYVOS_CRYPTOGRAPHY_BOTANCRYPTO_HPP_

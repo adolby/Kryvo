@@ -3,16 +3,16 @@
 #include <QMouseEvent>
 #include <QEvent>
 
-FileListDelegate::FileListDelegate(QObject* parent)
+Kryvos::FileListDelegate::FileListDelegate(QObject* parent)
   : QStyledItemDelegate{parent}, focusBorderEnabled{false} {
 }
 
-void FileListDelegate::setFocusBorderEnabled(bool enabled) {
+void Kryvos::FileListDelegate::setFocusBorderEnabled(bool enabled) {
   focusBorderEnabled = enabled;
 }
 
-void FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
-                                       const QModelIndex& index) const {
+void Kryvos::FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
+                                               const QModelIndex& index) const {
   QStyledItemDelegate::initStyleOption(option, index);
 
   if (!focusBorderEnabled && option->state & QStyle::State_HasFocus) {
@@ -20,9 +20,9 @@ void FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
   }
 }
 
-void FileListDelegate::paint(QPainter* painter,
-                             const QStyleOptionViewItem& option,
-                             const QModelIndex& index) const {
+void Kryvos::FileListDelegate::paint(QPainter* painter,
+                                     const QStyleOptionViewItem& option,
+                                     const QModelIndex& index) const {
   const auto column = index.column();
 
   switch (column) {
@@ -86,10 +86,10 @@ void FileListDelegate::paint(QPainter* painter,
   }
 }
 
-bool FileListDelegate::editorEvent(QEvent* event,
-                                   QAbstractItemModel* model,
-                                   const QStyleOptionViewItem& option,
-                                   const QModelIndex& index) {
+bool Kryvos::FileListDelegate::editorEvent(QEvent* event,
+                                           QAbstractItemModel* model,
+                                           const QStyleOptionViewItem& option,
+                                           const QModelIndex& index) {
   if (2 == index.column()) {
     if (QEvent::MouseButtonRelease == event->type() ||
         QEvent::MouseButtonDblClick == event->type()) {

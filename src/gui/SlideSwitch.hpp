@@ -7,6 +7,10 @@
 #include <QRectF>
 #include <QString>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 class SlideSwitch : public QAbstractButton {
   Q_OBJECT
 
@@ -87,5 +91,9 @@ class SlideSwitch : public QAbstractButton {
   class SlideSwitchPrivate;
   pimpl<SlideSwitchPrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_SLIDESWITCH_HPP_

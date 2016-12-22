@@ -13,6 +13,10 @@
 #include <QMainWindow>
 #include <QVBoxLayout>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The MainWindow class is the main window for the application.
  */
@@ -197,5 +201,9 @@ class MainWindow : public QMainWindow {
   class MainWindowPrivate;
   pimpl<MainWindowPrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_MAINWINDOW_HPP_

@@ -4,7 +4,7 @@
 #include <QLineEdit>
 #include <QHBoxLayout>
 
-class PasswordFrame::PasswordFramePrivate {
+class Kryvos::PasswordFrame::PasswordFramePrivate {
  public:
   /*!
    * \brief PasswordFramePrivate Constructs the password frame private
@@ -15,7 +15,7 @@ class PasswordFrame::PasswordFramePrivate {
   QLineEdit* passwordLineEdit;
 };
 
-PasswordFrame::PasswordFrame(QWidget* parent)
+Kryvos::PasswordFrame::PasswordFrame(QWidget* parent)
   : QFrame{parent} {
   auto passwordLabel = new QLabel{tr("Password "), this};
   passwordLabel->setObjectName(QStringLiteral("text"));
@@ -31,10 +31,10 @@ PasswordFrame::PasswordFrame(QWidget* parent)
   passwordLayout->setContentsMargins(0, 0, 0, 0);
 }
 
-PasswordFrame::~PasswordFrame() {
+Kryvos::PasswordFrame::~PasswordFrame() {
 }
 
-QString PasswordFrame::password() const {
+QString Kryvos::PasswordFrame::password() const {
   Q_ASSERT(m->passwordLineEdit);
 
   auto password = m->passwordLineEdit->text();
@@ -42,6 +42,6 @@ QString PasswordFrame::password() const {
   return password;
 }
 
-PasswordFrame::PasswordFramePrivate::PasswordFramePrivate()
+Kryvos::PasswordFrame::PasswordFramePrivate::PasswordFramePrivate()
   : passwordLineEdit{nullptr} {
 }

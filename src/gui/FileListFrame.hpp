@@ -5,6 +5,10 @@
 #include <QFrame>
 #include <QStandardItem>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The FileListFrame class contains the file list that displays the file
  * name, progress bar, and close button.
@@ -84,5 +88,9 @@ class FileListFrame : public QFrame {
   class FileListFramePrivate;
   pimpl<FileListFramePrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_FILELISTFRAME_HPP_

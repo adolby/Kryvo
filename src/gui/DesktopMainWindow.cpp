@@ -3,7 +3,8 @@
 #include <QDropEvent>
 #include <QMimeData>
 
-DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent)
+Kryvos::DesktopMainWindow::DesktopMainWindow(Settings* settings,
+                                             QWidget* parent)
   : MainWindow{settings, parent} {
   this->settings = settings;
 
@@ -54,10 +55,10 @@ DesktopMainWindow::DesktopMainWindow(Settings* settings, QWidget* parent)
   }
 }
 
-DesktopMainWindow::~DesktopMainWindow() {
+Kryvos::DesktopMainWindow::~DesktopMainWindow() {
 }
 
-void DesktopMainWindow::closeEvent(QCloseEvent* event) {
+void Kryvos::DesktopMainWindow::closeEvent(QCloseEvent* event) {
   this->settings->position(this->pos());
 
   if (this->isMaximized()) {
@@ -71,7 +72,7 @@ void DesktopMainWindow::closeEvent(QCloseEvent* event) {
   QMainWindow::closeEvent(event);
 }
 
-void DesktopMainWindow::dragEnterEvent(QDragEnterEvent* event) {
+void Kryvos::DesktopMainWindow::dragEnterEvent(QDragEnterEvent* event) {
   // Show drag and drop as a move action
   event->setDropAction(Qt::MoveAction);
 
@@ -81,7 +82,7 @@ void DesktopMainWindow::dragEnterEvent(QDragEnterEvent* event) {
   }
 }
 
-void DesktopMainWindow::dropEvent(QDropEvent* event) {
+void Kryvos::DesktopMainWindow::dropEvent(QDropEvent* event) {
   // Check for the URL MIME type, which is a list of files
   if (event->mimeData()->hasUrls()) { // Extract the local path from the file(s)
     for (const auto& url : event->mimeData()->urls()) {
@@ -90,10 +91,10 @@ void DesktopMainWindow::dropEvent(QDropEvent* event) {
   }
 }
 
-QSize DesktopMainWindow::sizeHint() const {
+QSize Kryvos::DesktopMainWindow::sizeHint() const {
   return QSize(800, 600);
 }
 
-QSize DesktopMainWindow::minimumSizeHint() const {
+QSize Kryvos::DesktopMainWindow::minimumSizeHint() const {
   return QSize(600, 420);
 }

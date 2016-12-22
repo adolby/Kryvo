@@ -5,6 +5,10 @@
 #include <QFrame>
 #include <QString>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The SettingsFrame class contains controls for customizing encryption
  * settings.
@@ -104,5 +108,9 @@ class SettingsFrame : public QFrame {
   class SettingsFramePrivate;
   pimpl<SettingsFramePrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_SETTINGSFRAME_HPP_

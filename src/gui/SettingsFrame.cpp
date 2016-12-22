@@ -16,7 +16,7 @@
 #include <QStringRef>
 #include <QStringBuilder>
 
-class SettingsFrame::SettingsFramePrivate {
+class Kryvos::SettingsFrame::SettingsFramePrivate {
  public:
   /*!
    * \brief SettingsFramePrivate Constructs the settings frame private
@@ -38,12 +38,12 @@ class SettingsFrame::SettingsFramePrivate {
   int toolTipWidth;
 };
 
-SettingsFrame::SettingsFrame(const QString& cipher,
-                             const std::size_t& keySize,
-                             const QString& mode,
-                             const bool compressionMode,
-                             const bool containerMode,
-                             QWidget* parent)
+Kryvos::SettingsFrame::SettingsFrame(const QString& cipher,
+                                    const std::size_t& keySize,
+                                    const QString& mode,
+                                    const bool compressionMode,
+                                    const bool containerMode,
+                                    QWidget* parent)
   : QFrame{parent} {
   // TODO: Fix this slide switch or remove it.
   //auto slideSwitch = new SlideSwitch{this};
@@ -250,16 +250,16 @@ SettingsFrame::SettingsFrame(const QString& cipher,
   this->addAction(returnAction);
 }
 
-SettingsFrame::~SettingsFrame() {
+Kryvos::SettingsFrame::~SettingsFrame() {
 }
 
-void SettingsFrame::changeCipher() {
+void Kryvos::SettingsFrame::changeCipher() {
   Q_ASSERT(m->cipherComboBox);
 
   emit updateCipher(m->cipherComboBox->currentText());
 }
 
-void SettingsFrame::changeKeySize() {
+void Kryvos::SettingsFrame::changeKeySize() {
   Q_ASSERT(m->keySizeComboBox);
 
   const auto keySizeString = m->keySizeComboBox->currentText();
@@ -270,31 +270,31 @@ void SettingsFrame::changeKeySize() {
   emit updateKeySize(keySize);
 }
 
-void SettingsFrame::changeModeOfOperation() {
+void Kryvos::SettingsFrame::changeModeOfOperation() {
   Q_ASSERT(m->modeComboBox);
 
   emit updateModeOfOperation(m->modeComboBox->currentText());
 }
 
-void SettingsFrame::changeCompressionMode() {
+void Kryvos::SettingsFrame::changeCompressionMode() {
   Q_ASSERT(m->compressionCheckBox);
 
   emit updateCompressionMode(m->compressionCheckBox->isChecked());
 }
 
-void SettingsFrame::changeContainerMode() {
+void Kryvos::SettingsFrame::changeContainerMode() {
   Q_ASSERT(m->containerCheckBox);
 
   emit updateContainerMode(m->containerCheckBox->isChecked());
 }
 
-SettingsFrame::SettingsFramePrivate::SettingsFramePrivate()
+Kryvos::SettingsFrame::SettingsFramePrivate::SettingsFramePrivate()
   : cipherComboBox{nullptr}, keySizeComboBox{nullptr}, modeComboBox{nullptr},
     compressionCheckBox{nullptr}, containerCheckBox{nullptr},
     toolTipWidth{250} {
 }
 
-QString SettingsFrame::SettingsFramePrivate::
+QString Kryvos::SettingsFrame::SettingsFramePrivate::
 splitToolTip(const QString& text, const int width) const {
   QFontMetrics fm{QToolTip::font()};
   QString result;

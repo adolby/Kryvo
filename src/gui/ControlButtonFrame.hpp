@@ -4,6 +4,10 @@
 #include "src/utility/pimpl.h"
 #include <QFrame>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The ControlButtonFrame class contains the encryption/decryption
  * buttons.
@@ -53,5 +57,9 @@ class ControlButtonFrame : public QFrame {
   class ControlButtonFramePrivate;
   pimpl<ControlButtonFramePrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_CONTROLBUTTONFRAME_HPP_

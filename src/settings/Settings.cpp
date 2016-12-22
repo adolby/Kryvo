@@ -13,7 +13,7 @@ const auto kDefaultPaths =
   QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
 const auto kDefaultPath = kDefaultPaths.first();
 
-class Settings::SettingsPrivate {
+class Kryvos::Settings::SettingsPrivate {
  public:
   SettingsPrivate();
 
@@ -40,104 +40,104 @@ class Settings::SettingsPrivate {
   QString styleSheetPath;
 };
 
-Settings::Settings() {
+Kryvos::Settings::Settings() {
   m->importSettings();
 }
 
-Settings::~Settings() {
+Kryvos::Settings::~Settings() {
   m->exportSettings();
 }
 
-void Settings::position(const QPoint& position) {
+void Kryvos::Settings::position(const QPoint& position) {
   m->position = position;
 }
 
-QPoint Settings::position() const {
+QPoint Kryvos::Settings::position() const {
   return m->position;
 }
 
-void Settings::maximized(const bool maximized) {
+void Kryvos::Settings::maximized(const bool maximized) {
   m->maximized = maximized;
 }
 
-bool Settings::maximized() const {
+bool Kryvos::Settings::maximized() const {
   return m->maximized;
 }
 
-void Settings::size(const QSize& size) {
+void Kryvos::Settings::size(const QSize& size) {
   m->size = size;
 }
 
-QSize Settings::size() const {
+QSize Kryvos::Settings::size() const {
   return m->size;
 }
 
-void Settings::cipher(const QString& cipherName) {
+void Kryvos::Settings::cipher(const QString& cipherName) {
   m->cipher = cipherName;
 }
 
-QString Settings::cipher() const {
+QString Kryvos::Settings::cipher() const {
   return m->cipher;
 }
 
-void Settings::keySize(const std::size_t& keySize) {
+void Kryvos::Settings::keySize(const std::size_t& keySize) {
   m->keySize = keySize;
 }
 
-std::size_t Settings::keySize() const {
+std::size_t Kryvos::Settings::keySize() const {
   return m->keySize;
 }
 
-void Settings::modeOfOperation(const QString& modeOfOperation) {
+void Kryvos::Settings::modeOfOperation(const QString& modeOfOperation) {
   m->modeOfOperation = modeOfOperation;
 }
 
-QString Settings::modeOfOperation() const {
+QString Kryvos::Settings::modeOfOperation() const {
   return m->modeOfOperation;
 }
 
-void Settings::compressionMode(const bool compress) {
+void Kryvos::Settings::compressionMode(const bool compress) {
   m->compressionMode = compress;
 }
 
-bool Settings::compressionMode() const {
+bool Kryvos::Settings::compressionMode() const {
   return m->compressionMode;
 }
 
-void Settings::containerMode(const bool container) {
+void Kryvos::Settings::containerMode(const bool container) {
   m->containerMode = container;
 }
 
-bool Settings::containerMode() const {
+bool Kryvos::Settings::containerMode() const {
   return m->containerMode;
 }
 
-void Settings::outputPath(const QString& path) {
+void Kryvos::Settings::outputPath(const QString& path) {
   m->outputPath = QDir::cleanPath(path % QDir::separator());
 }
 
-QString Settings::outputPath() const {
+QString Kryvos::Settings::outputPath() const {
   return m->outputPath;
 }
 
-void Settings::lastOpenPath(const QString& path) {
+void Kryvos::Settings::lastOpenPath(const QString& path) {
   m->lastOpenPath = QDir::cleanPath(path % QDir::separator());
 }
 
-QString Settings::lastOpenPath() const {
+QString Kryvos::Settings::lastOpenPath() const {
   return m->lastOpenPath;
 }
 
-QString Settings::styleSheetPath() const {
+QString Kryvos::Settings::styleSheetPath() const {
   return m->styleSheetPath;
 }
 
-Settings::SettingsPrivate::SettingsPrivate()
+Kryvos::Settings::SettingsPrivate::SettingsPrivate()
   : maximized{false}, keySize{std::size_t{128}}, compressionMode{true},
     outputPath{kDefaultPath}, lastOpenPath{kDefaultPath} {
 }
 
-void Settings::SettingsPrivate::importSettings() {
+void Kryvos::Settings::SettingsPrivate::importSettings() {
 #if defined(Q_OS_MAC)
   const auto settingsPath = QCoreApplication::applicationDirPath() %
                             QDir::separator() % "settings.json";
@@ -203,7 +203,7 @@ void Settings::SettingsPrivate::importSettings() {
   }
 }
 
-void Settings::SettingsPrivate::exportSettings() const {
+void Kryvos::Settings::SettingsPrivate::exportSettings() const {
 #if defined(Q_OS_MAC)
   const auto settingsPath = QCoreApplication::applicationDirPath() %
                             QDir::separator() %

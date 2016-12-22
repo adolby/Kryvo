@@ -3,6 +3,8 @@
 
 #include <memory>
 
+namespace Kryvos {
+
 template<typename T>
 class pimpl {
  public:
@@ -17,5 +19,7 @@ class pimpl {
  private:
   std::unique_ptr<T> m;
 };
+
+}
 
 #endif // KRYVOS_UTILITY_PIMPL_H_

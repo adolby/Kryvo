@@ -5,12 +5,16 @@
 #include <QString>
 #include <atomic>
 
-class CryptoState {
+namespace Kryvos {
+
+inline namespace Cryptography {
+
+class State {
  public:
   /*!
-   * \brief CryptoState Constructs the CryptoState class
+   * \brief State Constructs the State class
    */
-  explicit CryptoState();
+  explicit State();
 
   /*!
    * \brief reset Resets the status, except pause and busy, to default values
@@ -93,5 +97,9 @@ class CryptoState {
   // executing a cipher operation.
   std::atomic<bool> busyStatus;
 };
+
+}
+
+}
 
 #endif // KRYVOS_CRYPTOGRAPHY_CRYPTOSTATE_HPP_

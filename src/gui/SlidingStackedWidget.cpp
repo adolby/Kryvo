@@ -5,7 +5,7 @@
 #include <QPropertyAnimation>
 #include <QByteArray>
 
-class SlidingStackedWidget::SlidingStackedWidgetPrivate {
+class Kryvos::SlidingStackedWidget::SlidingStackedWidgetPrivate {
  public:
   /*!
    * \brief SlidingStackedWidgetPrivate Constructs the SlidingStackedWidgetFrame
@@ -26,7 +26,7 @@ class SlidingStackedWidget::SlidingStackedWidgetPrivate {
   QParallelAnimationGroup* animationGroup;
 };
 
-SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
+Kryvos::SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
   : QStackedWidget{parent} {
   m->animationGroup->setParent(this);
 
@@ -34,26 +34,27 @@ SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
           this, &SlidingStackedWidget::animationDone);
 }
 
-SlidingStackedWidget::~SlidingStackedWidget() {
+Kryvos::SlidingStackedWidget::~SlidingStackedWidget() {
 }
 
-void SlidingStackedWidget::setSpeed(const int speed) {
+void Kryvos::SlidingStackedWidget::setSpeed(const int speed) {
   m->speed = speed;
 }
 
-void SlidingStackedWidget::setAnimation(QEasingCurve::Type animationType) {
+void Kryvos::SlidingStackedWidget::
+setAnimation(QEasingCurve::Type animationType) {
   m->animationType = animationType;
 }
 
-void SlidingStackedWidget::setVerticalMode(const bool vertical) {
+void Kryvos::SlidingStackedWidget::setVerticalMode(const bool vertical) {
   m->vertical = vertical;
 }
 
-void SlidingStackedWidget::setWrap(const bool wrap) {
+void Kryvos::SlidingStackedWidget::setWrap(const bool wrap) {
   m->wrap = wrap;
 }
 
-void SlidingStackedWidget::slideInNext() {
+void Kryvos::SlidingStackedWidget::slideInNext() {
   stopAnimation();
 
   auto index = currentIndex();
@@ -63,7 +64,7 @@ void SlidingStackedWidget::slideInNext() {
   }
 }
 
-void SlidingStackedWidget::slideInPrev() {
+void Kryvos::SlidingStackedWidget::slideInPrev() {
   stopAnimation();
 
   auto index = currentIndex();
@@ -73,8 +74,8 @@ void SlidingStackedWidget::slideInPrev() {
   }
 }
 
-void SlidingStackedWidget::slideInIndex(const int index,
-                                        const Direction direction) {
+void Kryvos::SlidingStackedWidget::slideInIndex(const int index,
+                                                const Direction direction) {
   auto updatedIndex = index;
   auto updatedDirection = direction;
 
@@ -91,7 +92,7 @@ void SlidingStackedWidget::slideInIndex(const int index,
   slideInWidget(widget(updatedIndex), updatedDirection);
 }
 
-void SlidingStackedWidget::animationDone() {
+void Kryvos::SlidingStackedWidget::animationDone() {
   setCurrentIndex(m->nextIndex);
 
   // Reset the position of the out-shifted widget
@@ -100,8 +101,8 @@ void SlidingStackedWidget::animationDone() {
   emit animationFinished();
 }
 
-void SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
-                                         const Direction direction) {
+void Kryvos::SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
+                                                 const Direction direction) {
   auto currentIdx = currentIndex();
   auto nextIdx = indexOf(nextWidget);
 
@@ -179,7 +180,7 @@ void SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
   }
 }
 
-void SlidingStackedWidget::stopAnimation() {
+void Kryvos::SlidingStackedWidget::stopAnimation() {
   if (m->animationGroup->state() == QAbstractAnimation::Running) {
     m->animationGroup->stop();
 
@@ -191,7 +192,8 @@ void SlidingStackedWidget::stopAnimation() {
   }
 }
 
-SlidingStackedWidget::SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate()
+Kryvos::SlidingStackedWidget::SlidingStackedWidgetPrivate::
+SlidingStackedWidgetPrivate()
   : speed{500}, animationType{QEasingCurve::InOutSine}, vertical{false},
     currentIndex{0}, nextIndex{0}, wrap{false} {
   currentWidgetAnimation = new QPropertyAnimation{};

@@ -24,7 +24,7 @@
 #include <QString>
 #include <initializer_list>
 
-class MainWindow::MainWindowPrivate {
+class Kryvos::MainWindow::MainWindowPrivate {
  public:
   /*!
    * \brief MainWindowPrivate Constructs the MainWindow private implementation.
@@ -56,7 +56,7 @@ class MainWindow::MainWindowPrivate {
   bool busyStatus;
 };
 
-MainWindow::MainWindow(Settings* settings, QWidget* parent)
+Kryvos::MainWindow::MainWindow(Settings* settings, QWidget* parent)
   : QMainWindow{parent}, headerFrame{nullptr}, fileListFrame{nullptr},
     messageFrame{nullptr}, outputFrame{nullptr}, passwordFrame{nullptr},
     controlButtonFrame{nullptr}, contentLayout{nullptr} {
@@ -161,11 +161,11 @@ MainWindow::MainWindow(Settings* settings, QWidget* parent)
           this, &MainWindow::processFiles);
 }
 
-MainWindow::~MainWindow() {
+Kryvos::MainWindow::~MainWindow() {
   m->settings->outputPath(outputFrame->outputPath());
 }
 
-void MainWindow::addFiles() {
+void Kryvos::MainWindow::addFiles() {
   Q_ASSERT(m->settings);
   Q_ASSERT(fileListFrame);
 
@@ -187,7 +187,7 @@ void MainWindow::addFiles() {
   }
 }
 
-void MainWindow::removeFiles() {
+void Kryvos::MainWindow::removeFiles() {
   Q_ASSERT(fileListFrame);
 
   // Signal to abort current cipher operation if it's in progress
@@ -196,7 +196,7 @@ void MainWindow::removeFiles() {
   fileListFrame->clear();
 }
 
-void MainWindow::processFiles(const bool cryptDirection) {
+void Kryvos::MainWindow::processFiles(const bool cryptDirection) {
   Q_ASSERT(m->settings);
   Q_ASSERT(passwordFrame);
   Q_ASSERT(fileListFrame);
@@ -241,19 +241,21 @@ void MainWindow::processFiles(const bool cryptDirection) {
   }
 }
 
-void MainWindow::updateProgress(const QString& path, const qint64 percent) {
+void Kryvos::MainWindow::updateProgress(const QString& path,
+                                        const qint64 percent) {
   Q_ASSERT(fileListFrame);
 
   fileListFrame->updateProgress(path, percent);
 }
 
-void MainWindow::updateStatusMessage(const QString& message) {
+void Kryvos::MainWindow::updateStatusMessage(const QString& message) {
   Q_ASSERT(messageFrame);
 
   messageFrame->appendText(message);
 }
 
-void MainWindow::updateError(const QString& message, const QString& fileName) {
+void Kryvos::MainWindow::updateError(const QString& message,
+                                     const QString& fileName) {
   if (!fileName.isEmpty()) {
     updateStatusMessage(message.arg(fileName));
     updateProgress(fileName, 0);
@@ -263,32 +265,32 @@ void MainWindow::updateError(const QString& message, const QString& fileName) {
   }
 }
 
-void MainWindow::updateBusyStatus(const bool busy) {
+void Kryvos::MainWindow::updateBusyStatus(const bool busy) {
   m->busy(busy);
 }
 
-void MainWindow::updateCipher(const QString& cipher) {
+void Kryvos::MainWindow::updateCipher(const QString& cipher) {
   m->settings->cipher(cipher);
 }
 
-void MainWindow::updateKeySize(const std::size_t& keySize) {
+void Kryvos::MainWindow::updateKeySize(const std::size_t& keySize) {
   m->settings->keySize(keySize);
 }
 
-void MainWindow::updateModeOfOperation(const QString& mode) {
+void Kryvos::MainWindow::updateModeOfOperation(const QString& mode) {
   m->settings->modeOfOperation(mode);
 }
 
-void MainWindow::updateCompressionMode(const bool compress) {
+void Kryvos::MainWindow::updateCompressionMode(const bool compress) {
   m->settings->compressionMode(compress);
 }
 
-void MainWindow::updateContainerMode(const bool container) {
+void Kryvos::MainWindow::updateContainerMode(const bool container) {
   m->settings->containerMode(container);
 }
 
-QString MainWindow::loadStyleSheet(const QString& styleFile,
-                                   const QString& defaultFile) const {
+QString Kryvos::MainWindow::loadStyleSheet(const QString& styleFile,
+                                           const QString& defaultFile) const {
   // Try to load user theme, if it exists
   const QString styleSheetPath = QStringLiteral("themes") %
                                  QDir::separator() % styleFile;
@@ -319,7 +321,7 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
   return styleSheet;
 }
 
-MainWindow::MainWindowPrivate::MainWindowPrivate()
+Kryvos::MainWindow::MainWindowPrivate::MainWindowPrivate()
   : settings{nullptr},
     messages{std::initializer_list<QString>({tr("A password is required to "
                                                 "encrypt or decrypt files. "
@@ -332,10 +334,10 @@ MainWindow::MainWindowPrivate::MainWindowPrivate()
     busyStatus{false} {
 }
 
-void MainWindow::MainWindowPrivate::busy(const bool busy) {
+void Kryvos::MainWindow::MainWindowPrivate::busy(const bool busy) {
   busyStatus = busy;
 }
 
-bool MainWindow::MainWindowPrivate::isBusy() const {
+bool Kryvos::MainWindow::MainWindowPrivate::isBusy() const {
   return busyStatus;
 }

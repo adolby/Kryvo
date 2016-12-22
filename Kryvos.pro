@@ -25,9 +25,9 @@ CONFIG(release, debug|release) {
 
 SOURCES += \
   src/main.cpp \
-  src/Kryvos.cpp \
-  src/cryptography/Crypto.cpp \
-  src/cryptography/CryptoState.cpp \
+  src/Application.cpp \
+  src/cryptography/Manager.cpp \
+  src/cryptography/State.cpp \
   src/cryptography/BotanCrypto.cpp \
   src/gui/MainWindow.cpp \
   src/gui/SettingsFrame.cpp \
@@ -44,9 +44,9 @@ SOURCES += \
   src/settings/Settings.cpp
 
 HEADERS += \
-  src/Kryvos.hpp \
-  src/cryptography/Crypto.hpp \
-  src/cryptography/CryptoState.hpp \
+  src/Application.hpp \
+  src/cryptography/Manager.hpp \
+  src/cryptography/State.hpp \
   src/cryptography/BotanCrypto.hpp \
   src/cryptography/constants.h \
   src/gui/MainWindow.hpp \

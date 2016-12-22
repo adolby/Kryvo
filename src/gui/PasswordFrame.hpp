@@ -4,6 +4,10 @@
 #include "src/utility/pimpl.h"
 #include <QFrame>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The PasswordFrame class contains a line edit that allows the user to
  * enter a password for file encryption/decryption.
@@ -42,5 +46,9 @@ class PasswordFrame : public QFrame {
   class PasswordFramePrivate;
   pimpl<PasswordFramePrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_PASSWORDFRAME_HPP_

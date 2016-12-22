@@ -6,24 +6,24 @@
 #include <QStringList>
 #include <QString>
 
-/*!
- * \brief The Crypto class performs encryption and decryption using the Botan
- * library.
- */
-class Crypto : public QObject {
+namespace Kryvos {
+
+inline namespace Cryptography {
+
+class Manager : public QObject {
   Q_OBJECT
 
  public:
   /*!
-   * \brief Crypto Constructs the Crypto class
+   * \brief Manager Constructs the Manager class
    * \param parent
    */
-  explicit Crypto(QObject* parent = nullptr);
+  explicit Manager(QObject* parent = nullptr);
 
   /*!
-   * \brief ~Crypto Destroys the Crypto class
+   * \brief ~Manager Destroys the Manager class
    */
-  virtual ~Crypto();
+  virtual ~Manager();
 
  signals:
   /*!
@@ -79,8 +79,7 @@ class Crypto : public QObject {
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
-   * passphrase and a list of input file paths. The algorithm is determined from
-   * the file header.
+   * passphrase and a list of input file paths
    * \param passphrase String representing the user-entered passphrase
    * \param inputFilePaths List of strings containing the file paths of
    * the files to decrypt
@@ -119,8 +118,12 @@ class Crypto : public QObject {
   void stop(const QString& filePath);
 
  private:
-  class CryptoPrivate;
-  pimpl<CryptoPrivate> m;
+  class ManagerPrivate;
+  pimpl<ManagerPrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_

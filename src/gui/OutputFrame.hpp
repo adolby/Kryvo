@@ -4,6 +4,10 @@
 #include "src/utility/pimpl.h"
 #include <QFrame>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The OutputFrame class contains a line edit that allows the user to
  * enter an output file name.
@@ -49,5 +53,9 @@ class OutputFrame : public QFrame {
   class OutputFramePrivate;
   pimpl<OutputFramePrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_OUTPUTFRAME_HPP_

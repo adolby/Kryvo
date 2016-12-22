@@ -6,7 +6,7 @@
 #include <QHBoxLayout>
 #include <QIcon>
 
-class HeaderFrame::HeaderFramePrivate {
+class Kryvos::HeaderFrame::HeaderFramePrivate {
  public:
   /*!
    * \brief HeaderFramePrivate Constructs the HeaderFrame private
@@ -22,7 +22,7 @@ class HeaderFrame::HeaderFramePrivate {
   QSize iconSize;
 };
 
-HeaderFrame::HeaderFrame(QWidget* parent)
+Kryvos::HeaderFrame::HeaderFrame(QWidget* parent)
   : QFrame{parent} {
   auto headerImageLabel = new QLabel{this};
   headerImageLabel->setPixmap(QPixmap{":/images/kryvos.png"});
@@ -78,10 +78,10 @@ HeaderFrame::HeaderFrame(QWidget* parent)
           this, &HeaderFrame::switchFrame);
 }
 
-HeaderFrame::~HeaderFrame() {
+Kryvos::HeaderFrame::~HeaderFrame() {
 }
 
-void HeaderFrame::setIconSize(const QSize& iconSize) {
+void Kryvos::HeaderFrame::setIconSize(const QSize& iconSize) {
   Q_ASSERT(m->pauseButton);
   Q_ASSERT(m->addFilesButton);
   Q_ASSERT(m->clearFilesButton);
@@ -93,7 +93,7 @@ void HeaderFrame::setIconSize(const QSize& iconSize) {
   m->clearFilesButton->setIconSize(m->iconSize);
 }
 
-void HeaderFrame::togglePauseIcon(const bool toggle) {
+void Kryvos::HeaderFrame::togglePauseIcon(const bool toggle) {
   Q_ASSERT(m->pauseButton);
 
   if (toggle) {
@@ -108,7 +108,7 @@ void HeaderFrame::togglePauseIcon(const bool toggle) {
   }
 }
 
-HeaderFrame::HeaderFramePrivate::HeaderFramePrivate()
+Kryvos::HeaderFrame::HeaderFramePrivate::HeaderFramePrivate()
   : pauseButton{nullptr}, addFilesButton{nullptr}, clearFilesButton{nullptr},
     settingsButton{nullptr} {
 }

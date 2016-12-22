@@ -8,6 +8,8 @@
 #include <memory>
 #include <utility>
 
+using namespace Kryvos;
+
 template<typename T>
 pimpl<T>::pimpl() : m{ std::make_unique<T>() } { }
 

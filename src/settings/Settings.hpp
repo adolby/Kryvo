@@ -6,6 +6,8 @@
 #include <QSize>
 #include <QString>
 
+namespace Kryvos {
+
 /*!
  * \brief The Settings class keeps settings data for the application.
  */
@@ -151,5 +153,7 @@ class Settings {
   class SettingsPrivate;
   pimpl<SettingsPrivate> m;
 };
+
+}
 
 #endif // KRYVOS_SETTINGS_SETTINGS_HPP_

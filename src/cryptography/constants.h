@@ -8,6 +8,10 @@
 #include <QString>
 #include <QStringBuilder>
 
+namespace Kryvos {
+
+namespace Constants {
+
 const auto kExtension = QStringLiteral("enc");
 
 const QStringList messages
@@ -26,13 +30,35 @@ const QStringList messages
 };
 
 /*!
+ * \brief outputFilePath Create an output file path from user input file or
+ * from an output path if the user specified it
+ * \param inputFilePath String containing the input file's path
+ * \param inputFileName String containing the input file name
+ * \param outputPath String containing a user specified output path
+ * \return String containing an output file path
+ */
+inline QString outputFilePath(const QString& inputFilePath,
+                              const QString& inputFileName,
+                              const QString& outputPath) {
+  auto path = QString{inputFilePath % QStringLiteral(".") %
+              Constants::kExtension};
+
+  if (!outputPath.isEmpty()) {
+    path = QDir::cleanPath(outputPath) % QDir::separator() % inputFileName %
+           QStringLiteral(".") % Constants::kExtension;
+  }
+
+  return path;
+}
+
+/*!
  * \brief removeExtension Attempts to return the file path string input
  * without the last extension. It's used to extract an extension to determine
  * a decrypted file path.
  * \param filePath String containing the file path
  * \param extension String representing the extension to remove from the
  * file path
- * \return String representing a file path without an extension
+ * \return String containing a file path without an extension
  */
 inline QString removeExtension(const QString& filePath,
                                const QString& extension)
@@ -88,6 +114,10 @@ inline QString uniqueFilePath(const QString& filePath)
   }
 
   return uniqueFilePath;
+}
+
+}
+
 }
 
 #endif // KRYVOS_CRYPTOGRAPHY_CONSTANTS_H_

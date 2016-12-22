@@ -4,7 +4,7 @@
 #include <QLineEdit>
 #include <QHBoxLayout>
 
-class OutputFrame::OutputFramePrivate {
+class Kryvos::OutputFrame::OutputFramePrivate {
  public:
   /*!
    * \brief OutputFramePrivate Constructs the output frame private
@@ -15,7 +15,7 @@ class OutputFrame::OutputFramePrivate {
   QLineEdit* outputLineEdit;
 };
 
-OutputFrame::OutputFrame(QWidget* parent)
+Kryvos::OutputFrame::OutputFrame(QWidget* parent)
   : QFrame{parent} {
   auto outputLabel = new QLabel{tr("Output path "), this};
   outputLabel->setObjectName(QStringLiteral("text"));
@@ -30,16 +30,16 @@ OutputFrame::OutputFrame(QWidget* parent)
   outputLayout->setContentsMargins(0, 0, 0, 0);
 }
 
-OutputFrame::~OutputFrame() {
+Kryvos::OutputFrame::~OutputFrame() {
 }
 
-void OutputFrame::outputPath(const QString& path) {
+void Kryvos::OutputFrame::outputPath(const QString& path) {
   Q_ASSERT(m->outputLineEdit);
 
   m->outputLineEdit->setText(path);
 }
 
-QString OutputFrame::outputPath() const {
+QString Kryvos::OutputFrame::outputPath() const {
   Q_ASSERT(m->outputLineEdit);
 
   auto fileName = m->outputLineEdit->text();
@@ -47,6 +47,6 @@ QString OutputFrame::outputPath() const {
   return fileName;
 }
 
-OutputFrame::OutputFramePrivate::OutputFramePrivate()
+Kryvos::OutputFrame::OutputFramePrivate::OutputFramePrivate()
   : outputLineEdit{nullptr} {
 }

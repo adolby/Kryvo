@@ -4,7 +4,7 @@
 #include <QHBoxLayout>
 #include <QIcon>
 
-class ControlButtonFrame::ControlButtonFramePrivate {
+class Kryvos::ControlButtonFrame::ControlButtonFramePrivate {
  public:
   /*!
    * \brief ControlButtonFramePrivate Constructs the ControlButtonFrame private
@@ -16,7 +16,7 @@ class ControlButtonFrame::ControlButtonFramePrivate {
   QPushButton* decryptButton;
 };
 
-ControlButtonFrame::ControlButtonFrame(QWidget* parent)
+Kryvos::ControlButtonFrame::ControlButtonFrame(QWidget* parent)
   : QFrame{parent} {
   const auto iconSize = QSize{19, 19};
 
@@ -43,10 +43,10 @@ ControlButtonFrame::ControlButtonFrame(QWidget* parent)
           this, &ControlButtonFrame::decryptFiles);
 }
 
-ControlButtonFrame::~ControlButtonFrame() {
+Kryvos::ControlButtonFrame::~ControlButtonFrame() {
 }
 
-void ControlButtonFrame::setIconSize(const QSize& iconSize) {
+void Kryvos::ControlButtonFrame::setIconSize(const QSize& iconSize) {
   Q_ASSERT(m->encryptButton);
   Q_ASSERT(m->decryptButton);
 
@@ -54,14 +54,15 @@ void ControlButtonFrame::setIconSize(const QSize& iconSize) {
   m->decryptButton->setIconSize(iconSize);
 }
 
-void ControlButtonFrame::encryptFiles() {
+void Kryvos::ControlButtonFrame::encryptFiles() {
   emit processFiles(true);
 }
 
-void ControlButtonFrame::decryptFiles() {
+void Kryvos::ControlButtonFrame::decryptFiles() {
   emit processFiles(false);
 }
 
-ControlButtonFrame::ControlButtonFramePrivate::ControlButtonFramePrivate()
+Kryvos::ControlButtonFrame::ControlButtonFramePrivate::
+ControlButtonFramePrivate()
   : encryptButton{nullptr}, decryptButton{nullptr} {
 }

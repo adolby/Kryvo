@@ -4,6 +4,10 @@
 #include "src/utility/pimpl.h"
 #include <QFrame>
 
+namespace Kryvos {
+
+inline namespace UI {
+
 /*!
  * \brief The HeaderFrame class contains the header frame which contains the
  * header text, pause button, add files button, and remove all files button.
@@ -63,5 +67,9 @@ class HeaderFrame : public QFrame {
   class HeaderFramePrivate;
   pimpl<HeaderFramePrivate> m;
 };
+
+}
+
+}
 
 #endif // KRYVOS_GUI_HEADERFRAME_HPP_

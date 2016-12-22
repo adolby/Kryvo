@@ -1,7 +1,7 @@
 #include "src/gui/TouchMainWindow.hpp"
 #include <QApplication>
 
-TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)
+Kryvos::TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)
   : MainWindow{settings, parent} {
   messageFrame->appendText(tr("To begin, tap the Add Files button. Enter a "
                               "password. Finally, tap the Encrypt or Decrypt "
@@ -26,5 +26,5 @@ TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)
   }
 }
 
-TouchMainWindow::~TouchMainWindow() {
+Kryvos::TouchMainWindow::~TouchMainWindow() {
 }
