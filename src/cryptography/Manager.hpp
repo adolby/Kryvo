@@ -1,5 +1,5 @@
-#ifndef KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_
-#define KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_
+#ifndef KRYVOS_CRYPTOGRAPHY_MANAGER_HPP_
+#define KRYVOS_CRYPTOGRAPHY_MANAGER_HPP_
 
 #include "src/utility/pimpl.h"
 #include <QObject>
@@ -126,4 +126,4 @@ class Manager : public QObject {
 
 }
 
-#endif // KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_
+#endif // KRYVOS_CRYPTOGRAPHY_MANAGER_HPP_
