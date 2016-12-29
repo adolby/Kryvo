@@ -26,7 +26,7 @@ CONFIG(release, debug|release) {
 SOURCES += \
   src/main.cpp \
   src/Application.cpp \
-  src/cryptography/Manager.cpp \
+  src/cryptography/Crypto.cpp \
   src/cryptography/State.cpp \
   src/cryptography/BotanCrypto.cpp \
   src/gui/MainWindow.cpp \
@@ -45,9 +45,10 @@ SOURCES += \
 
 HEADERS += \
   src/Application.hpp \
-  src/cryptography/Manager.hpp \
+  src/cryptography/Crypto.hpp \
   src/cryptography/State.hpp \
   src/cryptography/BotanCrypto.hpp \
+  src/cryptography/archiver.h \
   src/cryptography/constants.h \
   src/gui/MainWindow.hpp \
   src/gui/SettingsFrame.hpp \
@@ -120,7 +121,8 @@ android {
   linux {
     message(Linux)
 
-    LIBS += -lz
+    LIBS += -lz -larchive
+
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
@@ -182,7 +184,9 @@ android {
 
     QMAKE_MAC_SDK = macosx10.12
 
-    LIBS += -lz
+    INCLUDEPATH += /usr/local/Cellar/libarchive/3.2.2/include/
+    LIBS += -lz -L/usr/local/Cellar/libarchive/3.2.2/lib/ -larchive
+
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
 
@@ -214,11 +218,12 @@ android {
     message(Windows)
 
     win32-msvc2015 {
+      LIBS += advapi32.lib user32.lib $$PWD/libs/libarchive.lib
+
+      INCLUDEPATH += $$PWD/src/cryptography/botan/zlib/ \
+                     $$PWD/src/cryptography/botan/libarchive/
+
       QMAKE_CXXFLAGS += -bigobj -arch:AVX2
-
-      LIBS += advapi32.lib user32.lib
-
-      INCLUDEPATH += $$PWD/src/cryptography/botan/zlib/
 
       SOURCES += \
         src/cryptography/botan/zlib/adler32.c \

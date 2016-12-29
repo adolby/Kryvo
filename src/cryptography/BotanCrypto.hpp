@@ -137,12 +137,12 @@ class BotanCrypto : public QObject {
    * \param state Decryption process state
    * \param passphrase String representing the user-entered passphrase
    * \param inputFilePath String containing the file path of the file to decrypt
-   * \param outputPath String containing output path
+   * \param outputPath String containing output file path
    */
   void decryptFile(State* state,
                    const QString& passphrase,
                    const QString& inputFilePath,
-                   const QString& outputPath);
+                   const QString& outputFilePath);
 
   /*!
    * \brief executeCipher Executes a cipher on a file with the a key,

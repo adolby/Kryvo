@@ -1,6 +1,7 @@
-#include "src/cryptography/Manager.hpp"
+#include "src/cryptography/Crypto.hpp"
 #include "src/cryptography/State.hpp"
 #include "src/cryptography/BotanCrypto.hpp"
+#include "src/cryptography/archiver.h"
 #include "src/cryptography/constants.h"
 #include "src/utility/pimpl_impl.h"
 #include <memory>
@@ -9,12 +10,12 @@
 #include "src/utility/make_unique.h"
 #endif
 
-class Kryvos::Manager::ManagerPrivate {
+class Kryvos::Crypto::CryptoPrivate {
  public:
   /*!
-   * \brief ManagerPrivate Constructs the manager's private implementation
+   * \brief CryptoPrivate Constructs the Crypto private implementation
    */
-  ManagerPrivate();
+  CryptoPrivate();
 
   /*!
    * \brief errorMessage Returns error message
@@ -30,21 +31,21 @@ class Kryvos::Manager::ManagerPrivate {
   const QStringList messages;
 };
 
-Kryvos::Manager::Manager(QObject* parent)
+Kryvos::Crypto::Crypto(QObject* parent)
   : QObject{parent} {
   // Subscribe to provider's signals
   connect(m->botanCrypto.get(), &BotanCrypto::progress,
-          this, &Manager::progress);
+          this, &Crypto::progress);
   connect(m->botanCrypto.get(), &BotanCrypto::statusMessage,
-          this, &Manager::statusMessage);
+          this, &Crypto::statusMessage);
   connect(m->botanCrypto.get(), &BotanCrypto::errorMessage,
-          this, &Manager::errorMessage);
+          this, &Crypto::errorMessage);
 }
 
-Kryvos::Manager::~Manager() {
+Kryvos::Crypto::~Crypto() {
 }
 
-void Kryvos::Manager::encrypt(const QString& passphrase,
+void Kryvos::Crypto::encrypt(const QString& passphrase,
                               const QStringList& inputFilePaths,
                               const QString& outputPath,
                               const QString& cipher,
@@ -75,7 +76,7 @@ void Kryvos::Manager::encrypt(const QString& passphrase,
   emit busyStatus(m->state->isBusy());
 }
 
-void Kryvos::Manager::decrypt(const QString& passphrase,
+void Kryvos::Crypto::decrypt(const QString& passphrase,
                               const QStringList& inputFilePaths,
                               const QString& outputPath) {
   m->state->busy(true);
@@ -90,23 +91,23 @@ void Kryvos::Manager::decrypt(const QString& passphrase,
   emit busyStatus(m->state->isBusy());
 }
 
-void Kryvos::Manager::abort() {
+void Kryvos::Crypto::abort() {
   if (m->state->isBusy()) {
     m->state->abort(true);
   }
 }
 
-void Kryvos::Manager::pause(bool pause) {
+void Kryvos::Crypto::pause(bool pause) {
   m->state->pause(pause);
 }
 
-void Kryvos::Manager::stop(const QString& filePath) {
+void Kryvos::Crypto::stop(const QString& filePath) {
   if (m->state->isBusy()) {
     m->state->stop(filePath, true);
   }
 }
 
-Kryvos::Manager::ManagerPrivate::ManagerPrivate()
+Kryvos::Crypto::CryptoPrivate::CryptoPrivate()
   : state{std::make_unique<State>()},
     botanCrypto{std::make_unique<BotanCrypto>()} {
 }

@@ -1,9 +1,15 @@
 #include "src/cryptography/BotanCrypto.hpp"
+#include "src/cryptography/archiver.h"
 #include "src/cryptography/constants.h"
+#include <QMimeDataBase>
+#include <QMimeType>
 #include <QDir>
 #include <QFileInfo>
 #include <string>
+#include <stdexcept>
 #include <memory>
+
+#include <QDebug>
 
 namespace Kryvos {
 
@@ -51,10 +57,18 @@ void Kryvos::BotanCrypto::encrypt(State* state,
 
   for (const auto& inputFilePath : inputFilePaths) {
     const QFileInfo inputFileInfo{inputFilePath};
-    const auto& inFileName = inputFileInfo.fileName();
     const auto& inFilePath = inputFileInfo.absoluteFilePath();
-    const auto& outFilePath = Constants::outputFilePath(inFilePath, inFileName,
-                                                       outputPath);
+
+    const auto& outFilePath = [&inputFileInfo, &inFilePath, &outputPath] {
+      const auto& inFileName = inputFileInfo.fileName();
+      auto path = inFilePath;
+
+      if (!outputPath.isEmpty()) {
+        path = QDir::cleanPath(outputPath) % QDir::separator() % inFileName;
+      }
+
+      return path % QStringLiteral(".") % Constants::kExtension;;
+    }();
 
     outputFilePaths << outFilePath;
 
@@ -87,15 +101,58 @@ void Kryvos::BotanCrypto::decrypt(State* state,
                                   const QString& outputPath) {
   for (const auto& inputFilePath : inputFilePaths) {
     const QFileInfo inputFileInfo{inputFilePath};
-    const auto& inFileName = inputFileInfo.fileName();
     const auto& inFilePath = inputFileInfo.absoluteFilePath();
-    const auto& outFilePath = Constants::outputFilePath(inFilePath, inFileName,
-                                                       outputPath);
 
     try {
-      decryptFile(state, passphrase, inFilePath, outFilePath);
+      QMimeDatabase db;
+      const auto& mime = db.mimeTypeForFile(inputFileInfo);
 
-      if (state->isAborted()) { // Reset abort flag
+      const auto& inPath = inputFileInfo.absolutePath();
+      const auto& outPath = [&inPath, &outputPath] {
+        auto path = inPath;
+
+        if (!outputPath.isEmpty()) {
+          path = outputPath;
+        }
+
+        return path % QDir::separator();
+      }();
+
+      // Create output path if it doesn't exist
+      const QDir path{};
+      path.mkpath(outPath);
+
+      const auto& inFileName = inputFileInfo.fileName();
+      const auto& outFilePath = outPath % inFileName;
+
+      if (mime.inherits("application/zip")) { // Container file
+        const auto& archiveFilePaths = list_archive_files(inFilePath);
+
+        const auto extractStatus = extract(inFilePath, outPath);
+
+        if (1 == extractStatus) {
+          throw std::invalid_argument{"File extraction failed"};
+        }
+
+        for (const auto& archiveFilePath : archiveFilePaths) {
+          decryptFile(state, passphrase, archiveFilePath, outFilePath);
+
+          if (state->isAborted()) {
+            state->abort(false);
+            emit errorMessage(Constants::messages[3], archiveFilePath);
+            break;
+          }
+
+          if (state->isStopped(archiveFilePath)) {
+            emit errorMessage(Constants::messages[3], archiveFilePath);
+          }
+        }
+      }
+      else { // Non-container file
+        decryptFile(state, passphrase, inFilePath, outFilePath);
+      }
+
+      if (state->isAborted()) {
         state->abort(false);
         emit errorMessage(Constants::messages[3], inFilePath);
         break;
@@ -104,6 +161,9 @@ void Kryvos::BotanCrypto::decrypt(State* state,
       if (state->isStopped(inFilePath)) {
         emit errorMessage(Constants::messages[3], inFilePath);
       }
+    }
+    catch (const Botan::Stream_IO_Error& e) {
+      emit errorMessage(Constants::messages[5], inFilePath);
     }
     catch (const Botan::Decoding_Error& e) {
       emit errorMessage(Constants::messages[5], inFilePath);
@@ -134,12 +194,12 @@ void Kryvos::BotanCrypto::decrypt(State* state,
 }
 
 void Kryvos::BotanCrypto::encryptFile(State* state,
-                         const QString& passphrase,
-                         const QString& inputFilePath,
-                         const QString& outputFilePath,
-                         const QString& algorithmName,
-                         const std::size_t& keySize,
-                         const bool compress) {
+                                      const QString& passphrase,
+                                      const QString& inputFilePath,
+                                      const QString& outputFilePath,
+                                      const QString& algorithmName,
+                                      const std::size_t& keySize,
+                                      const bool compress) {
   Q_ASSERT(state);
 
   const QFileInfo inputFileInfo{inputFilePath};
@@ -215,7 +275,7 @@ void Kryvos::BotanCrypto::encryptFile(State* state,
 
     const auto& headerText = tr("-------- ENCRYPTED FILE --------");
 
-    const auto& compressedText = [&compress]() {
+    const auto& compressedText = [&compress] {
       auto text = tr("Not compressed");
 
       if (compress) {
@@ -257,12 +317,15 @@ void Kryvos::BotanCrypto::encryptFile(State* state,
       emit statusMessage(Constants::messages[0].arg(inputFilePath));
     }
   }
+  else {
+    throw std::invalid_argument{"Input file doesn't exist or can't be read"};
+  }
 }
 
 void Kryvos::BotanCrypto::decryptFile(State* state,
                                       const QString& passphrase,
                                       const QString& inputFilePath,
-                                      const QString& outputPath) {
+                                      const QString& outputFilePath) {
   Q_ASSERT(state);
 
   const QFileInfo inputFileInfo{inputFilePath};
@@ -273,7 +336,7 @@ void Kryvos::BotanCrypto::decryptFile(State* state,
 
     // Read metadata from file
     std::string headerStringStd, algorithmNameStd, keySizeString,
-                compressStringStd, containerStringStd;
+                compressStringStd;
     std::string pbkdfSaltString, keySaltString, ivSaltString;
 
     std::getline(in, headerStringStd);
@@ -286,15 +349,11 @@ void Kryvos::BotanCrypto::decryptFile(State* state,
     std::getline(in, ivSaltString);
 
     const auto& headerString = QString{headerStringStd.c_str()};
-    const auto& containerString = QString{containerStringStd.c_str()};
     const auto& compressString = QString{compressStringStd.c_str()};
 
     if (headerString != tr("-------- ENCRYPTED FILE --------")) {
       emit errorMessage(Constants::messages[6].arg(inputFilePath));
     }
-
-    // TODO: Extract files from container and process them
-    // extract(passphrase, inputFilePath, outputPath);
 
     // Set up the key derive functions
     const auto& macSize = static_cast<std::size_t>(512);
@@ -344,12 +403,12 @@ void Kryvos::BotanCrypto::decryptFile(State* state,
                                                    ivLabelVector,
                                                    Constants::kIVLabel.size())};
 
-    // Remove the .enc extension if it's in the file path
-    const auto& outputFilePath =
-      Constants::removeExtension(inputFilePath, Constants::kExtension);
+    // Remove the .enc and .zip extensions if at the end of the file path
+    const auto& outFilePath =
+      Constants::removeExtension(outputFilePath, Constants::kExtension);
 
     // Create a unique file name for the file in this directory
-    const auto& uniqueOutputFilePath = Constants::uniqueFilePath(outputFilePath);
+    const auto& uniqueOutputFilePath = Constants::uniqueFilePath(outFilePath);
 
     std::ofstream out{uniqueOutputFilePath.toStdString(), std::ios::binary};
 
@@ -376,6 +435,9 @@ void Kryvos::BotanCrypto::decryptFile(State* state,
       // Decryption success message
       emit statusMessage(Constants::messages[1].arg(inputFilePath));
     }
+  }
+  else {
+    throw std::invalid_argument{"Input file doesn't exist or can't be read"};
   }
 }
 

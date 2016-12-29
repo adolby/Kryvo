@@ -1,5 +1,5 @@
-#ifndef KRYVOS_CRYPTOGRAPHY_MANAGER_HPP_
-#define KRYVOS_CRYPTOGRAPHY_MANAGER_HPP_
+#ifndef KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_
+#define KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_
 
 #include "src/utility/pimpl.h"
 #include <QObject>
@@ -10,7 +10,7 @@ namespace Kryvos {
 
 inline namespace Cryptography {
 
-class Manager : public QObject {
+class Crypto : public QObject {
   Q_OBJECT
 
  public:
@@ -18,12 +18,12 @@ class Manager : public QObject {
    * \brief Manager Constructs the Manager class
    * \param parent
    */
-  explicit Manager(QObject* parent = nullptr);
+  explicit Crypto(QObject* parent = nullptr);
 
   /*!
    * \brief ~Manager Destroys the Manager class
    */
-  virtual ~Manager();
+  virtual ~Crypto();
 
  signals:
   /*!
@@ -118,12 +118,12 @@ class Manager : public QObject {
   void stop(const QString& filePath);
 
  private:
-  class ManagerPrivate;
-  pimpl<ManagerPrivate> m;
+  class CryptoPrivate;
+  pimpl<CryptoPrivate> m;
 };
 
 }
 
 }
 
-#endif // KRYVOS_CRYPTOGRAPHY_MANAGER_HPP_
+#endif // KRYVOS_CRYPTOGRAPHY_CRYPTO_HPP_

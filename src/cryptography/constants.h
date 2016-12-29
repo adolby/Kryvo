@@ -16,40 +16,18 @@ const auto kExtension = QStringLiteral("enc");
 
 const QStringList messages
 {
- QObject::tr("File %1 encrypted."), // 0
- QObject::tr("File %1 decrypted."), // 1
- QObject::tr("Encryption stopped. File %1 is incomplete."), // 2
- QObject::tr("Decryption stopped. File %1 is incomplete."), // 3
- QObject::tr("Error: Can't read file %1."), // 4
- QObject::tr("Error: Can't decrypt file %1. Wrong password entered or the file"
-             "has been corrupted."), // 5
- QObject::tr("Error: Can't decrypt file %1. Is it an encrypted file?"), // 6
- QObject::tr("Error: Can't encrypt file %1. Check that this file exists and "
-             "that you have permission to access it and try again."), // 7
- QObject::tr("Unknown error: Please contact andrewdolby@gmail.com.") // 8
+  QObject::tr("File %1 encrypted."), // 0
+  QObject::tr("File %1 decrypted."), // 1
+  QObject::tr("Encryption stopped. File %1 is incomplete."), // 2
+  QObject::tr("Decryption stopped. File %1 is incomplete."), // 3
+  QObject::tr("Error: Can't read file %1."), // 4
+  QObject::tr("Error: Can't decrypt file %1. Wrong password entered or the "
+              "file has been corrupted."), // 5
+  QObject::tr("Error: Can't decrypt file %1. Is it an encrypted file?"), // 6
+  QObject::tr("Error: Can't encrypt file %1. Check that this file exists and "
+              "that you have permission to access it and try again."), // 7
+  QObject::tr("Unknown error: Please contact andrewdolby@gmail.com.") // 8
 };
-
-/*!
- * \brief outputFilePath Create an output file path from user input file or
- * from an output path if the user specified it
- * \param inputFilePath String containing the input file's path
- * \param inputFileName String containing the input file name
- * \param outputPath String containing a user specified output path
- * \return String containing an output file path
- */
-inline QString outputFilePath(const QString& inputFilePath,
-                              const QString& inputFileName,
-                              const QString& outputPath) {
-  auto path = QString{inputFilePath % QStringLiteral(".") %
-              Constants::kExtension};
-
-  if (!outputPath.isEmpty()) {
-    path = QDir::cleanPath(outputPath) % QDir::separator() % inputFileName %
-           QStringLiteral(".") % Constants::kExtension;
-  }
-
-  return path;
-}
 
 /*!
  * \brief removeExtension Attempts to return the file path string input
@@ -63,13 +41,19 @@ inline QString outputFilePath(const QString& inputFilePath,
 inline QString removeExtension(const QString& filePath,
                                const QString& extension)
 {
-  QFileInfo fileInfo{filePath};
+  const QFileInfo firstSuffixFileInfo{filePath};
   QString newFilePath = filePath;
 
-  if (fileInfo.suffix() == extension)
-  {
-    newFilePath = fileInfo.absolutePath() % QDir::separator() %
-                  fileInfo.completeBaseName();
+  if (firstSuffixFileInfo.suffix() == "zip") {
+    newFilePath = firstSuffixFileInfo.absolutePath() % QDir::separator() %
+                  firstSuffixFileInfo.completeBaseName();
+  }
+
+  const QFileInfo secondSuffixFileInfo{newFilePath};
+
+  if (secondSuffixFileInfo.suffix() == extension) {
+    newFilePath = secondSuffixFileInfo.absolutePath() % QDir::separator() %
+                  secondSuffixFileInfo.completeBaseName();
   }
 
   return newFilePath;
@@ -85,7 +69,7 @@ inline QString removeExtension(const QString& filePath,
  */
 inline QString uniqueFilePath(const QString& filePath)
 {
-  QFileInfo originalFile{filePath};
+  const QFileInfo originalFile{filePath};
   QString uniqueFilePath = filePath;
 
   auto foundUniqueFilePath = false;
@@ -93,15 +77,15 @@ inline QString uniqueFilePath(const QString& filePath)
 
   while (!foundUniqueFilePath && i < 100000)
   {
-    QFileInfo uniqueFile{uniqueFilePath};
+    const QFileInfo uniqueFile{uniqueFilePath};
 
-    if (uniqueFile.exists() && uniqueFile.isFile())
-    { // Write number of copies before file extension
+    if (uniqueFile.exists() && uniqueFile.isFile()) {
+      // Write number of copies before file extension
       uniqueFilePath = originalFile.absolutePath() % QDir::separator() %
                        originalFile.baseName() % QString{" (%1)"}.arg(i + 2);
 
-      if (!originalFile.completeSuffix().isEmpty())
-      { // Add the file extension if there is one
+      if (!originalFile.completeSuffix().isEmpty()) {
+        // Add the file extension if there is one
         uniqueFilePath += QStringLiteral(".") % originalFile.completeSuffix();
       }
 
