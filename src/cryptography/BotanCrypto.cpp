@@ -1,7 +1,7 @@
 #include "src/cryptography/BotanCrypto.hpp"
-#include "src/cryptography/archiver.h"
 #include "src/cryptography/constants.h"
-#include <QMimeDataBase>
+#include "src/libs/quazip/JlCompress.h"
+#include <QMimeDatabase>
 #include <QMimeType>
 #include <QDir>
 #include <QFileInfo>
@@ -40,14 +40,11 @@ void Kryvos::BotanCrypto::encrypt(State* state,
                                   const bool compress,
                                   const bool container) {
   const auto& algorithm = [&cipher, &keySize, &modeOfOperation] {
-    auto algo = QStringLiteral("AES-128/GCM");
+    auto algo = QString{cipher % QStringLiteral("/") % modeOfOperation};
 
     if (QStringLiteral("AES") == cipher) {
-      algo = cipher % QStringLiteral("-") % QString::number(keySize) %
-             QStringLiteral("/") % modeOfOperation;
-    }
-    else {
-      algo = cipher % QStringLiteral("/") % modeOfOperation;
+      algo = QString{cipher % QStringLiteral("-") % QString::number(keySize) %
+                     QStringLiteral("/") % modeOfOperation};
     }
 
     return algo;
@@ -55,24 +52,29 @@ void Kryvos::BotanCrypto::encrypt(State* state,
 
   auto outputFilePaths = QStringList{};
 
+  const QFileInfo outputPathInfo{outputPath};
+
   for (const auto& inputFilePath : inputFilePaths) {
     const QFileInfo inputFileInfo{inputFilePath};
     const auto& inFilePath = inputFileInfo.absoluteFilePath();
 
-    const auto& outFilePath = [&inputFileInfo, &inFilePath, &outputPath] {
-      const auto& inFileName = inputFileInfo.fileName();
-      auto path = inFilePath;
+    try {
+      const auto& outPath =
+        outputPath.isEmpty() ? inputFileInfo.absolutePath() :
+                               outputPathInfo.absolutePath();
 
-      if (!outputPath.isEmpty()) {
-        path = QDir::cleanPath(outputPath) % QDir::separator() % inFileName;
+      // Create output path if it doesn't exist
+      const QDir pathDir{outPath};
+      if (!pathDir.exists()) {
+        pathDir.mkpath(outPath);
       }
 
-      return path % QStringLiteral(".") % Constants::kExtension;;
-    }();
+      const auto& outFilePath =
+          QString{outPath % QDir::separator() % inputFileInfo.fileName() %
+                  Constants::kDot % Constants::kExtension};
 
-    outputFilePaths << outFilePath;
+      outputFilePaths << outFilePath;
 
-    try {
       encryptFile(state, passphrase, inFilePath, outFilePath, algorithm,
                   keySize, compress);
 
@@ -88,11 +90,27 @@ void Kryvos::BotanCrypto::encrypt(State* state,
     catch (const Botan::Stream_IO_Error& e) {
       emit errorMessage(Constants::messages[7], inFilePath);
     }
+    catch (const Botan::Invalid_Argument& e) {
+      emit errorMessage(Constants::messages[7], inFilePath);
+    }
+    catch (const std::invalid_argument& e) {
+      emit errorMessage(Constants::messages[7], inFilePath);
+    }
     catch (const std::exception& e) {
-      const auto error = QString{e.what()};
+      const auto& error = QString{e.what()};
       emit errorMessage(QStringLiteral("Error: ") % error, inFilePath);
     }
   } // End file loop
+
+  if (container) {
+    const QString& outputArchiveFileName =
+      outputPathInfo.isFile() ? outputPath :
+                                QString{outputFilePaths.first() %
+                                        Constants::kDot %
+                                        Constants::kArchiveExtension};
+
+    JlCompress::compressFiles(outputArchiveFileName, outputFilePaths);
+  }
 }
 
 void Kryvos::BotanCrypto::decrypt(State* state,
@@ -109,29 +127,32 @@ void Kryvos::BotanCrypto::decrypt(State* state,
 
       const auto& inPath = inputFileInfo.absolutePath();
       const auto& outPath = [&inPath, &outputPath] {
-        auto path = inPath;
+        auto path = QString{inPath};
 
-        if (!outputPath.isEmpty()) {
-          path = outputPath;
+        const QFileInfo outputPathInfo{outputPath};
+
+        if (outputPathInfo.isDir()) {
+          path = outputPathInfo.absolutePath();
         }
 
-        return path % QDir::separator();
+        return QString{path % QDir::separator()};
       }();
 
       // Create output path if it doesn't exist
-      const QDir path{};
-      path.mkpath(outPath);
+      const QDir path{outPath};
+      if (!path.exists()) {
+        path.mkpath(outPath);
+      }
 
       const auto& inFileName = inputFileInfo.fileName();
-      const auto& outFilePath = outPath % inFileName;
+      const auto& outFilePath = QString{outPath % inFileName};
 
       if (mime.inherits("application/zip")) { // Container file
-        const auto& archiveFilePaths = list_archive_files(inFilePath);
+        const auto& archiveFilePaths =
+          JlCompress::extractDir(inFilePath, outPath);
 
-        const auto extractStatus = extract(inFilePath, outPath);
-
-        if (1 == extractStatus) {
-          throw std::invalid_argument{"File extraction failed"};
+        if (archiveFilePaths.isEmpty()) {
+          emit errorMessage(Constants::messages[3], inFilePath);
         }
 
         for (const auto& archiveFilePath : archiveFilePaths) {
@@ -187,7 +208,8 @@ void Kryvos::BotanCrypto::decrypt(State* state,
         emit errorMessage(Constants::messages[5], inFilePath);
       }
       else {
-        emit errorMessage(QStringLiteral("Error: ") % error, inFilePath);
+        emit errorMessage(QString{QStringLiteral("Error: ") % error},
+                          inFilePath);
       }
     }
   }
@@ -210,7 +232,7 @@ void Kryvos::BotanCrypto::encryptFile(State* state,
 
     // Define a size for the PBKDF salt vector
     const auto& pbkdfSaltSize = static_cast<std::size_t>(256);
-    Botan::secure_vector<Botan::byte> pbkdfSalt;
+    Botan::secure_vector<Botan::byte> pbkdfSalt{};
     pbkdfSalt.resize(pbkdfSaltSize);
 
     // Create random PBKDF salt
@@ -235,12 +257,12 @@ void Kryvos::BotanCrypto::encryptFile(State* state,
 
     // Set up key salt size
     const auto& keySaltSize = static_cast<std::size_t>(64);
-    Botan::secure_vector<Botan::byte> keySalt;
+    Botan::secure_vector<Botan::byte> keySalt{};
     keySalt.resize(keySaltSize);
     rng.randomize(&keySalt[0], keySalt.size());
 
     // Key is constrained to sizes allowed by algorithm
-    const auto keySizeInBytes = keySize / 8;
+    const auto& keySizeInBytes = static_cast<std::size_t>(keySize / 8);
     const auto keyLabelVector =
       reinterpret_cast<const Botan::byte*>(Constants::kKeyLabel.data());
     Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes,
@@ -253,7 +275,7 @@ void Kryvos::BotanCrypto::encryptFile(State* state,
 
     // Set up IV salt size
     const auto& ivSaltSize = static_cast<std::size_t>(64);
-    Botan::secure_vector<Botan::byte> ivSalt;
+    Botan::secure_vector<Botan::byte> ivSalt{};
     ivSalt.resize(ivSaltSize);
     rng.randomize(&ivSalt[0], ivSalt.size());
 
@@ -311,7 +333,7 @@ void Kryvos::BotanCrypto::encryptFile(State* state,
 
     if (!state->isAborted() && !state->isStopped(inputFilePath)) {
       // Progress: finished
-      emit progress(inputFilePath, 100);
+      emit fileProgress(inputFilePath, 100);
 
       // Encryption success message
       emit statusMessage(Constants::messages[0].arg(inputFilePath));
@@ -361,7 +383,7 @@ void Kryvos::BotanCrypto::decryptFile(State* state,
     // PKCS5_PBKDF2 takes ownership of the new HMAC and the HMAC takes ownership
     // of the Keccak_1600 hash function object (via unique_ptr)
     Botan::PKCS5_PBKDF2 pbkdf{new Botan::HMAC{new Botan::Keccak_1600{macSize}}};
-    const auto& PBKDF2_ITERATIONS = static_cast<std::size_t>(15000);
+    const auto& kPBKDF2Iterations = static_cast<std::size_t>(15000);
 
     // Create the PBKDF key
     Botan::secure_vector<Botan::byte> pbkdfSalt =
@@ -369,7 +391,7 @@ void Kryvos::BotanCrypto::decryptFile(State* state,
     const auto& pbkdfKeySize = static_cast<std::size_t>(256);
     Botan::secure_vector<Botan::byte> pbkdfKey =
       pbkdf.derive_key(pbkdfKeySize, passphrase.toStdString(), &pbkdfSalt[0],
-                       pbkdfSalt.size(), PBKDF2_ITERATIONS).bits_of();
+                       pbkdfSalt.size(), kPBKDF2Iterations).bits_of();
 
     // Create the key and IV
     std::unique_ptr<Botan::KDF> kdf{Botan::KDF::create(Constants::kKDFHash)};
@@ -379,7 +401,7 @@ void Kryvos::BotanCrypto::decryptFile(State* state,
       Botan::base64_decode(keySaltString);
     const auto& keySize =
       static_cast<std::size_t>(QString{keySizeString.c_str()}.toInt());
-    const auto& keySizeInBytes = keySize / 8;
+    const auto& keySizeInBytes = static_cast<std::size_t>(keySize / 8);
     const auto keyLabelVector =
       reinterpret_cast<const Botan::byte*>(Constants::kKeyLabel.data());
     Botan::SymmetricKey key{kdf->derive_key(keySizeInBytes,
@@ -430,7 +452,7 @@ void Kryvos::BotanCrypto::decryptFile(State* state,
 
     if (!state->isAborted() && !state->isStopped(inputFilePath)) {
       // Progress: finished
-      emit progress(inputFilePath, 100);
+      emit fileProgress(inputFilePath, 100);
 
       // Decryption success message
       emit statusMessage(Constants::messages[1].arg(inputFilePath));
@@ -456,7 +478,7 @@ void Kryvos::BotanCrypto::executeCipher(State* state,
   // Get file size for percent progress calculation
   const QFileInfo file{inputFilePath};
   const qint64 size = file.size();
-  std::size_t fileIndex = 0;
+  auto fileIndex = static_cast<std::size_t>(0);
   qint64 percent = -1;
 
   pipe.start_msg();
@@ -476,7 +498,7 @@ void Kryvos::BotanCrypto::executeCipher(State* state,
 
       if (nextPercent > percent && nextPercent < 100) {
         percent = nextPercent;
-        emit progress(inputFilePath, percent);
+        emit fileProgress(inputFilePath, percent);
       }
 
       if (in.eof()) {

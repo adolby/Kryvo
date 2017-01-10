@@ -58,8 +58,9 @@ class Kryvos::MainWindow::MainWindowPrivate {
 
 Kryvos::MainWindow::MainWindow(Settings* settings, QWidget* parent)
   : QMainWindow{parent}, headerFrame{nullptr}, fileListFrame{nullptr},
-    messageFrame{nullptr}, outputFrame{nullptr}, passwordFrame{nullptr},
-    controlButtonFrame{nullptr}, contentLayout{nullptr} {
+    progressFrame{nullptr}, messageFrame{nullptr}, outputFrame{nullptr},
+    passwordFrame{nullptr}, controlButtonFrame{nullptr},
+    contentLayout{nullptr} {
   // Set object name
   this->setObjectName(QStringLiteral("mainWindow"));
 
@@ -74,15 +75,22 @@ Kryvos::MainWindow::MainWindow(Settings* settings, QWidget* parent)
   auto contentFrame = new QFrame{slidingStackedWidget};
   contentFrame->setObjectName(QStringLiteral("contentFrame"));
 
+  // Header label and operation button frame
   headerFrame = new HeaderFrame{contentFrame};
   headerFrame->setObjectName(QStringLiteral("headerFrame"));
   headerFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
+  // File list frame
   fileListFrame = new FileListFrame{contentFrame};
   fileListFrame->setObjectName(QStringLiteral("fileListFrame"));
   fileListFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-  // Message text edit display
+  // Progress frame
+  progressFrame = new ProgressFrame{contentFrame};
+  progressFrame->setObjectName(QStringLiteral("progressFrame"));
+  progressFrame->setVisible(false);
+
+  // Message text edit display frame
   messageFrame = new MessageFrame{contentFrame};
   messageFrame->setObjectName(QStringLiteral("messageFrame"));
   messageFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -104,6 +112,7 @@ Kryvos::MainWindow::MainWindow(Settings* settings, QWidget* parent)
   contentLayout = new QVBoxLayout{contentFrame};
   contentLayout->addWidget(headerFrame);
   contentLayout->addWidget(fileListFrame);
+  contentLayout->addWidget(progressFrame);
   contentLayout->addWidget(messageFrame);
   contentLayout->addWidget(outputFrame);
   contentLayout->addWidget(passwordFrame);
@@ -202,8 +211,8 @@ void Kryvos::MainWindow::processFiles(const bool cryptDirection) {
   Q_ASSERT(fileListFrame);
 
   if (!m->isBusy()) {
-    const auto outputPath = outputFrame->outputPath();
-    const auto passphrase = passwordFrame->password();
+    const auto& outputPath = outputFrame->outputPath();
+    const auto& passphrase = passwordFrame->password();
 
     if (!passphrase.isEmpty()) {
       const auto rowCount = fileListFrame->rowCount();
@@ -241,11 +250,18 @@ void Kryvos::MainWindow::processFiles(const bool cryptDirection) {
   }
 }
 
-void Kryvos::MainWindow::updateProgress(const QString& path,
-                                        const qint64 percent) {
+void Kryvos::MainWindow::updateFileProgress(const QString& path,
+                                            const qint64 progressValue) {
   Q_ASSERT(fileListFrame);
 
-  fileListFrame->updateProgress(path, percent);
+  fileListFrame->updateProgress(path, progressValue);
+}
+
+void Kryvos::MainWindow::updateProgress(const QString& task,
+                                        const qint64 progressValue) {
+  Q_ASSERT(progressFrame);
+
+  progressFrame->updateTask(task, progressValue);
 }
 
 void Kryvos::MainWindow::updateStatusMessage(const QString& message) {
@@ -256,13 +272,14 @@ void Kryvos::MainWindow::updateStatusMessage(const QString& message) {
 
 void Kryvos::MainWindow::updateError(const QString& message,
                                      const QString& fileName) {
-  if (!fileName.isEmpty()) {
+  if (message.contains("%1")) {
     updateStatusMessage(message.arg(fileName));
-    updateProgress(fileName, 0);
   }
   else {
     updateStatusMessage(message);
   }
+
+  updateFileProgress(fileName, 0);
 }
 
 void Kryvos::MainWindow::updateBusyStatus(const bool busy) {

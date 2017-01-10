@@ -5,6 +5,7 @@
 #include "src/gui/SettingsFrame.hpp"
 #include "src/gui/HeaderFrame.hpp"
 #include "src/gui/FileListFrame.hpp"
+#include "src/gui/ProgressFrame.hpp"
 #include "src/gui/MessageFrame.hpp"
 #include "src/gui/OutputFrame.hpp"
 #include "src/gui/PasswordFrame.hpp"
@@ -108,12 +109,18 @@ class MainWindow : public QMainWindow {
   void processFiles(const bool cryptDirection);
 
   /*!
-   * \brief updateProgress Executed when the cipher operation progress is
+   * \brief updateFileProgress Executed when the cipher operation progress is
    * updated. Updates the progress bar for the item at the specified index.
-   * \param index Integer representing the file list index to update
-   * \param percent Integer representing the current progress in percent
+   * \param path File path serving as the index to update the progress
+   * \param progressValue Integer representing the current progress in percent
    */
-  void updateProgress(const QString& path, const qint64 percent);
+  void updateFileProgress(const QString& path, const qint64 progressValue);
+
+  /*!
+   * \brief updateProgress Executed when the task progress is updated
+   * \param progressValue Integer representing the current progress in percent
+   */
+  void updateProgress(const QString& task, const qint64 progressValue);
 
   /*!
    * \brief updateStatusMessage Executed when a message should be displayed to
@@ -191,6 +198,7 @@ class MainWindow : public QMainWindow {
   SettingsFrame* settingsFrame;
   HeaderFrame* headerFrame;
   FileListFrame* fileListFrame;
+  ProgressFrame* progressFrame;
   MessageFrame* messageFrame;
   OutputFrame* outputFrame;
   PasswordFrame* passwordFrame;

@@ -38,6 +38,12 @@ QFrame#fileListFrame {
   margin-left: 6px;
 }
 
+QFrame#progressFrame {
+  background-color: white;
+  margin-right: 6px;
+  margin-left: 6px;
+}
+
 QFrame#messageFrame {
   background-color: #4b77be;
   margin-right: 6px;
@@ -182,6 +188,10 @@ QLabel#text {
 QLabel#headerText {
   color: #fab52a;
   font-size: 38px;
+}
+
+QLabel#progressLabel {
+  font-size: 20px;
 }
 
 #message {

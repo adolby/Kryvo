@@ -26,6 +26,7 @@ CONFIG(release, debug|release) {
 SOURCES += \
   src/main.cpp \
   src/Application.cpp \
+  src/archive/Archiver.cpp \
   src/cryptography/Crypto.cpp \
   src/cryptography/State.cpp \
   src/cryptography/BotanCrypto.cpp \
@@ -34,6 +35,7 @@ SOURCES += \
   src/gui/HeaderFrame.cpp \
   src/gui/FileListFrame.cpp \
   src/gui/FileListDelegate.cpp \
+  src/gui/ProgressFrame.cpp \
   src/gui/MessageFrame.cpp \
   src/gui/OutputFrame.cpp \
   src/gui/PasswordFrame.cpp \
@@ -45,16 +47,17 @@ SOURCES += \
 
 HEADERS += \
   src/Application.hpp \
+  src/archive/Archiver.hpp \
   src/cryptography/Crypto.hpp \
   src/cryptography/State.hpp \
   src/cryptography/BotanCrypto.hpp \
-  src/cryptography/archiver.h \
   src/cryptography/constants.h \
   src/gui/MainWindow.hpp \
   src/gui/SettingsFrame.hpp \
   src/gui/HeaderFrame.hpp \
   src/gui/FileListFrame.hpp \
   src/gui/FileListDelegate.hpp \
+  src/gui/ProgressFrame.hpp \
   src/gui/MessageFrame.hpp \
   src/gui/OutputFrame.hpp \
   src/gui/PasswordFrame.hpp \
@@ -66,11 +69,15 @@ HEADERS += \
   src/utility/pimpl_impl.h \
   src/utility/pimpl.h
 
+# Include QuaZip files
+DEFINES += QUAZIP_STATIC
+include(src/libs/quazip/quazip.pri)
+
 # Platform-specific configuration
 android {
   message(Android)
 
-  # You'll need to place your Boost path here.
+  # You'll need to place your Boost path here
   INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
 
   SOURCES += \
@@ -121,7 +128,7 @@ android {
   linux {
     message(Linux)
 
-    LIBS += -lz -larchive
+    LIBS += -lz
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -184,8 +191,7 @@ android {
 
     QMAKE_MAC_SDK = macosx10.12
 
-    INCLUDEPATH += /usr/local/Cellar/libarchive/3.2.2/include/
-    LIBS += -lz -L/usr/local/Cellar/libarchive/3.2.2/lib/ -larchive
+    LIBS += -lz
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -218,42 +224,41 @@ android {
     message(Windows)
 
     win32-msvc2015 {
-      LIBS += advapi32.lib user32.lib $$PWD/libs/libarchive.lib
+      LIBS += advapi32.lib user32.lib
 
-      INCLUDEPATH += $$PWD/src/cryptography/botan/zlib/ \
-                     $$PWD/src/cryptography/botan/libarchive/
+      INCLUDEPATH += $$PWD/src/libs/zlib/
 
       QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
       SOURCES += \
-        src/cryptography/botan/zlib/adler32.c \
-        src/cryptography/botan/zlib/compress.c \
-        src/cryptography/botan/zlib/crc32.c \
-        src/cryptography/botan/zlib/deflate.c \
-        src/cryptography/botan/zlib/gzclose.c \
-        src/cryptography/botan/zlib/gzlib.c \
-        src/cryptography/botan/zlib/gzread.c \
-        src/cryptography/botan/zlib/gzwrite.c \
-        src/cryptography/botan/zlib/infback.c \
-        src/cryptography/botan/zlib/inffast.c \
-        src/cryptography/botan/zlib/inflate.c \
-        src/cryptography/botan/zlib/inftrees.c \
-        src/cryptography/botan/zlib/trees.c \
-        src/cryptography/botan/zlib/uncompr.c \
-        src/cryptography/botan/zlib/zutil.c
+        src/libs/zlib/adler32.c \
+        src/libs/zlib/compress.c \
+        src/libs/zlib/crc32.c \
+        src/libs/zlib/deflate.c \
+        src/libs/zlib/gzclose.c \
+        src/libs/zlib/gzlib.c \
+        src/libs/zlib/gzread.c \
+        src/libs/zlib/gzwrite.c \
+        src/libs/zlib/infback.c \
+        src/libs/zlib/inffast.c \
+        src/libs/zlib/inflate.c \
+        src/libs/zlib/inftrees.c \
+        src/libs/zlib/trees.c \
+        src/libs/zlib/uncompr.c \
+        src/libs/zlib/zutil.c
 
       HEADERS += \
-        src/cryptography/botan/zlib/zlib.h \
-        src/cryptography/botan/zlib/crc32.h \
-        src/cryptography/botan/zlib/deflate.h \
-        src/cryptography/botan/zlib/gzguts.h \
-        src/cryptography/botan/zlib/inffast.h \
-        src/cryptography/botan/zlib/inffixed.h \
-        src/cryptography/botan/zlib/inflate.h \
-        src/cryptography/botan/zlib/inftrees.h \
-        src/cryptography/botan/zlib/trees.h \
-        src/cryptography/botan/zlib/zconf.h \
-        src/cryptography/botan/zlib/zutil.h
+        src/libs/zlib/zlib.h \
+        src/libs/zlib/crc32.h \
+        src/libs/zlib/deflate.h \
+        src/libs/zlib/gzguts.h \
+        src/libs/zlib/inffast.h \
+        src/libs/zlib/inffixed.h \
+        src/libs/zlib/inflate.h \
+        src/libs/zlib/inftrees.h \
+        src/libs/zlib/trees.h \
+        src/libs/zlib/zconf.h \
+        src/libs/zlib/zutil.h
 
       contains(QT_ARCH, x86_64) {
         message(MSVC x86_64)

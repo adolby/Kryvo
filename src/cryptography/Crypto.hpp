@@ -27,11 +27,18 @@ class Crypto : public QObject {
 
  signals:
   /*!
-   * \brief progress Emitted when the cipher operation progress changes
+   * \brief fileProgress Emitted when the cipher operation file progress changes
    * \param path String containing path of the file to update progress on
-   * \param percent Integer representing the current percent
+   * \param progressValue Integer representing the current progress as a percent
    */
-  void progress(const QString& filePath, qint64 percent);
+  void fileProgress(const QString& filePath, const qint64 percentProgress);
+
+  /*!
+   * \brief progress Emitted when the task operation progress changes
+   * \param task String containing task name
+   * \param percent Integer representing the current progress as a percent
+   */
+  void progress(const QString& task, const qint64 percentProgress);
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher

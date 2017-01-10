@@ -62,6 +62,9 @@ Kryvos::App::Application::Application(QObject* parent)
           Qt::DirectConnection);
 
   // Update progress bars
+  connect(m->cryptography.get(), &Crypto::fileProgress,
+          m->gui.get(), &MainWindow::updateFileProgress);
+
   connect(m->cryptography.get(), &Crypto::progress,
           m->gui.get(), &MainWindow::updateProgress);
 

@@ -5,13 +5,15 @@
 #include <QJsonObject>
 #include <QSaveFile>
 #include <QFile>
+#include <QFileInfo>
 #include <QDir>
 #include <QStringBuilder>
 #include <QCoreApplication>
 
-const auto kDefaultPaths =
+const QStringList kDefaultPaths =
   QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
-const auto kDefaultPath = kDefaultPaths.first();
+const QString kDefaultPath = QString{kDefaultPaths.first() %
+                                     QDir::separator()};
 
 class Kryvos::Settings::SettingsPrivate {
  public:
@@ -113,7 +115,7 @@ bool Kryvos::Settings::containerMode() const {
 }
 
 void Kryvos::Settings::outputPath(const QString& path) {
-  m->outputPath = QDir::cleanPath(path % QDir::separator());
+  m->outputPath = path;
 }
 
 QString Kryvos::Settings::outputPath() const {
@@ -121,7 +123,7 @@ QString Kryvos::Settings::outputPath() const {
 }
 
 void Kryvos::Settings::lastOpenPath(const QString& path) {
-  m->lastOpenPath = QDir::cleanPath(path % QDir::separator());
+  m->lastOpenPath = path;
 }
 
 QString Kryvos::Settings::lastOpenPath() const {
@@ -151,17 +153,18 @@ void Kryvos::Settings::SettingsPrivate::importSettings() {
   if (fileOpen) {
     const auto& settingsData = settingsFile.readAll();
 
-    auto settingsDoc = QJsonDocument::fromJson(settingsData);
-    auto settings = settingsDoc.object();
+    const auto& settingsDoc = QJsonDocument::fromJson(settingsData);
+    const auto& settings = settingsDoc.object();
 
-    auto positionObject = settings[QStringLiteral("position")].toObject();
+    const auto& positionObject =
+      settings[QStringLiteral("position")].toObject();
     position = QPoint{positionObject[QStringLiteral("x")].toInt(100),
                       positionObject[QStringLiteral("y")].toInt(100)};
 
     maximized = settings[QStringLiteral("maximized")].toBool(false);
 
     if (!maximized) {
-      auto sizeObject = settings["size"].toObject();
+      const auto& sizeObject = settings["size"].toObject();
       size = QSize{sizeObject[QStringLiteral("width")].toInt(800),
                    sizeObject[QStringLiteral("height")].toInt(600)};
     }
@@ -171,7 +174,7 @@ void Kryvos::Settings::SettingsPrivate::importSettings() {
     keySize =
       static_cast<std::size_t>(settings[QStringLiteral("keySize")].toInt(128));
 
-    auto modeOfOperationObject =
+    const auto& modeOfOperationObject =
       static_cast<QJsonValue>(settings[QStringLiteral("modeOfOperation")]);
     modeOfOperation = modeOfOperationObject.toString(QStringLiteral("GCM"));
 
@@ -184,7 +187,7 @@ void Kryvos::Settings::SettingsPrivate::importSettings() {
     lastOpenPath =
       settings[QStringLiteral("lastOpenPath")].toString(kDefaultPath);
 
-    auto styleObject =
+    const auto& styleObject =
         static_cast<QJsonValue>(settings[QStringLiteral("styleSheetPath")]);
     styleSheetPath = styleObject.toString(QStringLiteral("kryvos.qss"));
   }
@@ -206,7 +209,7 @@ void Kryvos::Settings::SettingsPrivate::importSettings() {
 void Kryvos::Settings::SettingsPrivate::exportSettings() const {
 #if defined(Q_OS_MAC)
   const auto& settingsPath = QCoreApplication::applicationDirPath() %
-                            QDir::separator() %
+                             QDir::separator() %
                             "settings.json";
 #else
   const auto& settingsPath = QStringLiteral("settings.json");
@@ -238,12 +241,29 @@ void Kryvos::Settings::SettingsPrivate::exportSettings() const {
     settings[QStringLiteral("modeOfOperation")] = modeOfOperation;
     settings[QStringLiteral("compressionMode")] = compressionMode;
     settings[QStringLiteral("containerMode")] = containerMode;
-    settings[QStringLiteral("outputPath")] = QDir::cleanPath(outputPath);
-    settings[QStringLiteral("lastOpenPath")] = QDir::cleanPath(lastOpenPath);
-    settings[QStringLiteral("styleSheetPath")] =
-      QDir::cleanPath(styleSheetPath);
 
-    auto settingsDoc = QJsonDocument{settings};
+    auto addPathSeparator = [] (const QString& inPath) {
+      const QString& cleanedPath = QDir::cleanPath(inPath);
+
+      const QFileInfo cleanedPathInfo{cleanedPath};
+
+      QString outPath = cleanedPath;
+
+      if (cleanedPathInfo.isDir() && !cleanedPathInfo.isRoot()) {
+        outPath = cleanedPath % QDir::separator();
+      }
+
+      return outPath;
+    };
+
+    settings[QStringLiteral("outputPath")] =
+      outputPath.isEmpty() ? kDefaultPath : addPathSeparator(outputPath);
+    settings[QStringLiteral("lastOpenPath")] =
+      lastOpenPath.isEmpty() ? kDefaultPath : addPathSeparator(lastOpenPath);
+    settings[QStringLiteral("styleSheetPath")] =
+      addPathSeparator(styleSheetPath);
+
+    const auto& settingsDoc = QJsonDocument{settings};
     settingsFile.write(settingsDoc.toJson());
   }
 

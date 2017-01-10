@@ -12,14 +12,15 @@ namespace Kryvos {
 
 namespace Constants {
 
-const auto kExtension = QStringLiteral("enc");
+const QString kDot = QStringLiteral(".");
+const QString kExtension = QStringLiteral("enc");
+const QString kArchiveExtension = QStringLiteral("zip");
 
-const QStringList messages
-{
+const QStringList messages {
   QObject::tr("File %1 encrypted."), // 0
   QObject::tr("File %1 decrypted."), // 1
-  QObject::tr("Encryption stopped. File %1 is incomplete."), // 2
-  QObject::tr("Decryption stopped. File %1 is incomplete."), // 3
+  QObject::tr("Encryption stopped. File %1 not fully encrypted."), // 2
+  QObject::tr("Decryption stopped. File %1 not fully decrypted."), // 3
   QObject::tr("Error: Can't read file %1."), // 4
   QObject::tr("Error: Can't decrypt file %1. Wrong password entered or the "
               "file has been corrupted."), // 5
@@ -39,12 +40,11 @@ const QStringList messages
  * \return String containing a file path without an extension
  */
 inline QString removeExtension(const QString& filePath,
-                               const QString& extension)
-{
+                               const QString& extension) {
   const QFileInfo firstSuffixFileInfo{filePath};
   QString newFilePath = filePath;
 
-  if (firstSuffixFileInfo.suffix() == "zip") {
+  if (QStringLiteral("zip") == firstSuffixFileInfo.suffix()) {
     newFilePath = firstSuffixFileInfo.absolutePath() % QDir::separator() %
                   firstSuffixFileInfo.completeBaseName();
   }
@@ -67,32 +67,31 @@ inline QString removeExtension(const QString& filePath,
  * \return String representing a unique file path created from the input file
  * path
  */
-inline QString uniqueFilePath(const QString& filePath)
-{
-  const QFileInfo originalFile{filePath};
-  QString uniqueFilePath = filePath;
+inline QString uniqueFilePath(const QString& filePath) {
+  const QFileInfo inputFile{filePath};
+  auto uniqueFilePath = filePath;
 
   auto foundUniqueFilePath = false;
   auto i = 0;
 
-  while (!foundUniqueFilePath && i < 100000)
-  {
+  while (!foundUniqueFilePath && i < 100000) {
     const QFileInfo uniqueFile{uniqueFilePath};
 
     if (uniqueFile.exists() && uniqueFile.isFile()) {
       // Write number of copies before file extension
-      uniqueFilePath = originalFile.absolutePath() % QDir::separator() %
-                       originalFile.baseName() % QString{" (%1)"}.arg(i + 2);
+      uniqueFilePath = QString{inputFile.absolutePath() % QDir::separator() %
+                               inputFile.baseName() %
+                               QString{" (%1)"}.arg(i + 2)};
 
-      if (!originalFile.completeSuffix().isEmpty()) {
+      const auto& suffix = inputFile.completeSuffix();
+      if (!suffix.isEmpty()) {
         // Add the file extension if there is one
-        uniqueFilePath += QStringLiteral(".") % originalFile.completeSuffix();
+        uniqueFilePath += QString{Constants::kDot % suffix};
       }
 
       ++i;
     }
-    else
-    {
+    else {
       foundUniqueFilePath = true;
     }
   }

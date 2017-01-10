@@ -45,6 +45,7 @@ Kryvos::FileListFrame::FileListFrame(QWidget* parent)
   m->fileListView->verticalHeader()->hide();
   m->fileListView->horizontalHeader()->hide();
   m->fileListView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m->fileListView->setFrameShape(QFrame::NoFrame);
 
   QHeaderView* header = m->fileListView->horizontalHeader();
   header->setStretchLastSection(false);
@@ -101,18 +102,20 @@ void Kryvos::FileListFrame::updateProgress(const QString& path,
                                            const qint64 percent) {
   Q_ASSERT(m->fileListModel);
 
-  const auto items = m->fileListModel->findItems(path);
+  if (!path.isEmpty()) {
+    const QList<QStandardItem*>& items = m->fileListModel->findItems(path);
 
-  if (items.size() > 0) {
-    auto item = items[0];
+    if (items.size() > 0) {
+      auto item = items[0];
 
-    if (item != nullptr) {
-      const auto index = item->row();
+      if (item != nullptr) {
+        const auto index = item->row();
 
-      auto progressItem = m->fileListModel->item(index, 1);
+        auto progressItem = m->fileListModel->item(index, 1);
 
-      if (progressItem != nullptr) {
-        progressItem->setData(percent, Qt::DisplayRole);
+        if (progressItem != nullptr) {
+          progressItem->setData(percent, Qt::DisplayRole);
+        }
       }
     }
   }

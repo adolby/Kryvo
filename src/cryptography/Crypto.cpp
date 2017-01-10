@@ -1,7 +1,6 @@
 #include "src/cryptography/Crypto.hpp"
 #include "src/cryptography/State.hpp"
 #include "src/cryptography/BotanCrypto.hpp"
-#include "src/cryptography/archiver.h"
 #include "src/cryptography/constants.h"
 #include "src/utility/pimpl_impl.h"
 #include <memory>
@@ -34,7 +33,9 @@ class Kryvos::Crypto::CryptoPrivate {
 Kryvos::Crypto::Crypto(QObject* parent)
   : QObject{parent} {
   // Subscribe to provider's signals
-  connect(m->botanCrypto.get(), &BotanCrypto::progress,
+  connect(m->botanCrypto.get(), &BotanCrypto::fileProgress,
+          this, &Crypto::fileProgress);
+  connect(m->botanCrypto.get(), &BotanCrypto::archiveProgress,
           this, &Crypto::progress);
   connect(m->botanCrypto.get(), &BotanCrypto::statusMessage,
           this, &Crypto::statusMessage);

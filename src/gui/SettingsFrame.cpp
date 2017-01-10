@@ -16,6 +16,44 @@
 #include <QStringRef>
 #include <QStringBuilder>
 
+QString splitToolTip(const QString& text, const int width) {
+  const QFontMetrics fm{QToolTip::font()};
+  QString result{};
+
+  QString temp = text;
+
+  auto k = 0;
+  while (k < 100000) {
+    auto i = 0;
+
+    while (i < temp.length()) {
+      i = i + 1;
+
+      if (fm.width(temp.left(i + 1)) > width) {
+        auto j = temp.lastIndexOf(' ', i);
+
+        if (j > 0) {
+          i = j;
+        }
+
+        result += temp.left(i);
+        result += '\n';
+        temp = temp.mid(i+1);
+
+        break;
+      }
+    }
+
+    if (i >= temp.length()) {
+      break;
+    }
+
+    ++k;
+  }
+
+  return result + temp;
+}
+
 class Kryvos::SettingsFrame::SettingsFramePrivate {
  public:
   /*!
@@ -23,8 +61,6 @@ class Kryvos::SettingsFrame::SettingsFramePrivate {
    * implementation.
    */
   SettingsFramePrivate();
-
-  QString splitToolTip(const QString& text, const int width) const;
 
   // Cryptography settings
   QComboBox* cipherComboBox;
@@ -101,16 +137,17 @@ Kryvos::SettingsFrame::SettingsFrame(const QString& cipher,
   auto keySizeFrame = new QFrame{cryptoSettingsFrame};
   keySizeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  const auto keySizeToolTip = QString{tr("The cipher key size is the number of "
-                                         "bits in the key that is created from "
-                                         "your password via a secure hash "
-                                         "function. A larger key size does not "
-                                         "necessarily yield a more secure "
-                                         "encrypted output. Key sizes of 128, "
-                                         "192, and 256 are all currently "
-                                         "considered to be secure key sizes.")};
-  const auto keySizeSplitToolTip = m->splitToolTip(keySizeToolTip,
-                                                   m->toolTipWidth);
+  const auto& keySizeToolTip = QString{tr("The cipher key size is the number "
+                                          "of bits in the key that is created "
+                                          "from your password via a secure "
+                                          "hash function. A larger key size "
+                                          "does not necessarily yield a more "
+                                          "secure encrypted output. Key sizes "
+                                          "of 128, 192, and 256 are all "
+                                          "currently considered to be secure "
+                                          "key sizes.")};
+  const auto& keySizeSplitToolTip = splitToolTip(keySizeToolTip,
+                                                 m->toolTipWidth);
 
   auto keySizeLabel = new QLabel{tr("Key size (bits): "), keySizeFrame};
   keySizeLabel->setObjectName(QStringLiteral("text"));
@@ -137,7 +174,7 @@ Kryvos::SettingsFrame::SettingsFrame(const QString& cipher,
                                        "transform data. GCM and EAX are both "
                                        "currently considered to be secure "
                                        "modes of operation.")};
-  const auto& modeSplitToolTip = m->splitToolTip(modeToolTip, m->toolTipWidth);
+  const auto& modeSplitToolTip = splitToolTip(modeToolTip, m->toolTipWidth);
 
   auto modeLabel = new QLabel{tr("Mode of operation: "), modeFrame};
   modeLabel->setObjectName(QStringLiteral("text"));
@@ -291,42 +328,4 @@ Kryvos::SettingsFrame::SettingsFramePrivate::SettingsFramePrivate()
   : cipherComboBox{nullptr}, keySizeComboBox{nullptr}, modeComboBox{nullptr},
     compressionCheckBox{nullptr}, containerCheckBox{nullptr},
     toolTipWidth{250} {
-}
-
-QString Kryvos::SettingsFrame::SettingsFramePrivate::
-splitToolTip(const QString& text, const int width) const {
-  QFontMetrics fm{QToolTip::font()};
-  QString result;
-  auto temp = text;
-
-  auto k = 0;
-  while (k < 100000) {
-    auto i = 0;
-
-    while (i < temp.length()) {
-      i = i + 1;
-
-      if (fm.width(temp.left(i + 1)) > width) {
-        auto j = temp.lastIndexOf(' ', i);
-
-        if (j > 0) {
-          i = j;
-        }
-
-        result += temp.left(i);
-        result += '\n';
-        temp = temp.mid(i+1);
-
-        break;
-      }
-    }
-
-    if (i >= temp.length()) {
-      break;
-    }
-
-    ++k;
-  }
-
-  return result + temp;
 }
