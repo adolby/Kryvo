@@ -1,13 +1,10 @@
 #include "src/cryptography/Crypto.hpp"
 #include "src/cryptography/State.hpp"
 #include "src/cryptography/BotanCrypto.hpp"
-#include "src/cryptography/constants.h"
+#include "src/archive/Archiver.hpp"
+#include "src/constants.h"
 #include "src/utility/pimpl_impl.h"
 #include <memory>
-
-#if defined(_MSC_VER)
-#include "src/utility/make_unique.h"
-#endif
 
 class Kryvos::Crypto::CryptoPrivate {
  public:
@@ -23,7 +20,7 @@ class Kryvos::Crypto::CryptoPrivate {
   QString errorMessage(const int index) const;
 
   std::unique_ptr<State> state;
-
+  std::unique_ptr<Archiver> archiver;
   std::unique_ptr<BotanCrypto> botanCrypto;
 
   // The list of status messages that can be displayed to the user
@@ -32,15 +29,17 @@ class Kryvos::Crypto::CryptoPrivate {
 
 Kryvos::Crypto::Crypto(QObject* parent)
   : QObject{parent} {
-  // Subscribe to provider's signals
+  // Subscribe to crypto provider's signals
   connect(m->botanCrypto.get(), &BotanCrypto::fileProgress,
           this, &Crypto::fileProgress);
-  connect(m->botanCrypto.get(), &BotanCrypto::archiveProgress,
-          this, &Crypto::progress);
   connect(m->botanCrypto.get(), &BotanCrypto::statusMessage,
           this, &Crypto::statusMessage);
   connect(m->botanCrypto.get(), &BotanCrypto::errorMessage,
           this, &Crypto::errorMessage);
+
+  // Subscribe to archiver's signal
+  connect(m->archiver.get(), &Archiver::progress,
+          this, &Crypto::fileProgress);
 }
 
 Kryvos::Crypto::~Crypto() {
@@ -67,9 +66,9 @@ void Kryvos::Crypto::encrypt(const QString& passphrase,
     return size;
   }();
 
-  m->botanCrypto->encrypt(m->state.get(), passphrase, inputFilePaths,
-                          outputPath, cipher, keySize, modeOfOperation,
-                          compress, container);
+  m->botanCrypto->encrypt(m->state.get(), m->archiver.get(), passphrase,
+                          inputFilePaths, outputPath, cipher, keySize,
+                          modeOfOperation, compress, container);
 
   m->state->reset();
 
@@ -83,8 +82,8 @@ void Kryvos::Crypto::decrypt(const QString& passphrase,
   m->state->busy(true);
   emit busyStatus(m->state->isBusy());
 
-  m->botanCrypto->decrypt(m->state.get(), passphrase, inputFilePaths,
-                          outputPath);
+  m->botanCrypto->decrypt(m->state.get(), m->archiver.get(), passphrase,
+                          inputFilePaths, outputPath);
 
   m->state->reset();
 
@@ -110,5 +109,6 @@ void Kryvos::Crypto::stop(const QString& filePath) {
 
 Kryvos::Crypto::CryptoPrivate::CryptoPrivate()
   : state{std::make_unique<State>()},
+    archiver{std::make_unique<Archiver>()},
     botanCrypto{std::make_unique<BotanCrypto>()} {
 }

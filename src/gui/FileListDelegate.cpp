@@ -3,6 +3,8 @@
 #include <QMouseEvent>
 #include <QEvent>
 
+#include <QDebug>
+
 Kryvos::FileListDelegate::FileListDelegate(QObject* parent)
   : QStyledItemDelegate{parent}, focusBorderEnabled{false} {
 }
@@ -35,8 +37,16 @@ void Kryvos::FileListDelegate::paint(QPainter* painter,
       break;
     }
     case 1: {
+      auto elidedOption = option;
+      elidedOption.textElideMode = Qt::ElideLeft;
+
+      QStyledItemDelegate::paint(painter, elidedOption, index);
+
+      break;
+    }
+    case 2: {
       // Set up a QStyleOptionProgressBar to mimic the environment of a progress
-      // bar.
+      // bar
       auto progressBarOption = QStyleOptionProgressBar{};
       progressBarOption.state = QStyle::State_Enabled;
       progressBarOption.direction = QApplication::layoutDirection();
@@ -50,18 +60,18 @@ void Kryvos::FileListDelegate::paint(QPainter* painter,
       progressBarOption.textAlignment = Qt::AlignCenter;
       progressBarOption.textVisible = true;
 
-      // Set the progress and text values of the style option.
+      // Set the progress and text values of the style option
       const auto progress = index.model()->data(index, Qt::DisplayRole).toInt();
       progressBarOption.progress = progress < 0 ? 0 : progress;
       progressBarOption.text = QString{"%1%"}.arg(progressBarOption.progress);
 
-      // Draw the progress bar onto the view.
+      // Draw the progress bar onto the view
       QApplication::style()->drawControl(QStyle::CE_ProgressBar,
                                          &progressBarOption,
                                          painter);
       break;
     }
-    case 2: {
+    case 3: {
       auto buttonOption = QStyleOptionButton{};
       buttonOption.state = QStyle::State_Enabled;
       buttonOption.direction = QApplication::layoutDirection();
@@ -74,8 +84,11 @@ void Kryvos::FileListDelegate::paint(QPainter* painter,
       const auto& closeIcon =
           QIcon{QStringLiteral(":/images/closeFileIcon.png")};
       buttonOption.icon = closeIcon;
-      const auto& iconSize = QSize{static_cast<int>(option.rect.width() * 0.4),
-                                  static_cast<int>(option.rect.height() * 0.4)};
+      const auto iconDimension =
+        qMax(qMin(option.rect.width() / 2, option.rect.height() / 2), 6) -
+        4;
+
+      const auto& iconSize = QSize{iconDimension, iconDimension};
       buttonOption.iconSize = iconSize;
 
       QApplication::style()->drawControl(QStyle::CE_PushButton,
@@ -90,7 +103,7 @@ bool Kryvos::FileListDelegate::editorEvent(QEvent* event,
                                            QAbstractItemModel* model,
                                            const QStyleOptionViewItem& option,
                                            const QModelIndex& index) {
-  if (2 == index.column()) {
+  if (3 == index.column()) {
     if (QEvent::MouseButtonRelease == event->type() ||
         QEvent::MouseButtonDblClick == event->type()) {
       auto mouseEvent = static_cast<QMouseEvent*>(event);

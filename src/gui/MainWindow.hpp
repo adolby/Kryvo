@@ -112,15 +112,11 @@ class MainWindow : public QMainWindow {
    * \brief updateFileProgress Executed when the cipher operation progress is
    * updated. Updates the progress bar for the item at the specified index.
    * \param path File path serving as the index to update the progress
+   * \param task Task operating on file
    * \param progressValue Integer representing the current progress in percent
    */
-  void updateFileProgress(const QString& path, const qint64 progressValue);
-
-  /*!
-   * \brief updateProgress Executed when the task progress is updated
-   * \param progressValue Integer representing the current progress in percent
-   */
-  void updateProgress(const QString& task, const qint64 progressValue);
+  void updateFileProgress(const QString& path, const QString& task,
+                          const qint64 progressValue);
 
   /*!
    * \brief updateStatusMessage Executed when a message should be displayed to
@@ -198,7 +194,6 @@ class MainWindow : public QMainWindow {
   SettingsFrame* settingsFrame;
   HeaderFrame* headerFrame;
   FileListFrame* fileListFrame;
-  ProgressFrame* progressFrame;
   MessageFrame* messageFrame;
   OutputFrame* outputFrame;
   PasswordFrame* passwordFrame;

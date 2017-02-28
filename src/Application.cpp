@@ -11,10 +11,6 @@
 #include <QThread>
 #include <memory>
 
-#if defined(_MSC_VER)
-#include "src/utility/make_unique.h"
-#endif
-
 /*!
  * \brief ApplicationPrivate class
  */
@@ -65,9 +61,6 @@ Kryvos::App::Application::Application(QObject* parent)
   connect(m->cryptography.get(), &Crypto::fileProgress,
           m->gui.get(), &MainWindow::updateFileProgress);
 
-  connect(m->cryptography.get(), &Crypto::progress,
-          m->gui.get(), &MainWindow::updateProgress);
-
   // Update status message
   connect(m->cryptography.get(), &Crypto::statusMessage,
           m->gui.get(), &MainWindow::updateStatusMessage);
@@ -91,13 +84,8 @@ Kryvos::App::Application::~Application() {
 
   // Quit the cipher thread
   m->cipherThread->quit();
-
-  const auto timedOut = !m->cipherThread->wait(1000);
-
-  // If the thread couldn't quit within one second, terminate it
-  if (timedOut) {
-    m->cipherThread->terminate();
-  }
+  m->cipherThread->requestInterruption();
+  m->cipherThread->wait();
 }
 
 Kryvos::App::Application::ApplicationPrivate::ApplicationPrivate()

@@ -85,7 +85,7 @@ void Kryvos::DesktopMainWindow::dragEnterEvent(QDragEnterEvent* event) {
 void Kryvos::DesktopMainWindow::dropEvent(QDropEvent* event) {
   // Check for the URL MIME type, which is a list of files
   if (event->mimeData()->hasUrls()) { // Extract the local path from the file(s)
-    for (const auto& url : event->mimeData()->urls()) {
+    foreach (const auto& url, event->mimeData()->urls()) {
       fileListFrame->addFileToModel(url.toLocalFile());
     }
   }

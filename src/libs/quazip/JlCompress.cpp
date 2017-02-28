@@ -430,11 +430,6 @@ QStringList JlCompress::getFileList(QIODevice *ioDevice)
     return getFileList(zip);
 }
 
-QString JlCompress::extractFile(QIODevice *ioDevice, QString fileName, QString fileDest)
-{
-    QuaZip zip(ioDevice);
-    return extractFile(zip, fileName, fileDest);
-}
 
 QStringList JlCompress::extractFiles(QIODevice *ioDevice, QStringList files, QString dir)
 {

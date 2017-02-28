@@ -39,7 +39,8 @@ QFrame#fileListFrame {
 }
 
 QFrame#progressFrame {
-  background-color: white;
+  background-color: #4b77be;
+  border-bottom: 2px solid #325ea5;
   margin-right: 6px;
   margin-left: 6px;
 }
@@ -53,16 +54,16 @@ QFrame#messageFrame {
 QFrame#outputFrame {
   background-color: #2c3e50;
   margin-top: 15px;
-  margin-right: 20px;
-  margin-left: 20px;
+  margin-right: 15px;
+  margin-left: 15px;
   margin-bottom: 7px;
 }
 
 QFrame#passwordFrame {
   background-color: #2c3e50;
   margin-top: 7px;
-  margin-right: 20px;
-  margin-left: 20px;
+  margin-right: 15px;
+  margin-left: 15px;
   margin-bottom: 20px;
 }
 
@@ -190,7 +191,8 @@ QLabel#headerText {
   font-size: 38px;
 }
 
-QLabel#progressLabel {
+QFrame#progressLabel {
+  color: white;
   font-size: 20px;
 }
 

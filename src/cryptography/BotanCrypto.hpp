@@ -33,6 +33,7 @@
   #endif
 #endif
 
+#include "src/archive/Archiver.hpp"
 #include <QObject>
 #include <QString>
 #include <fstream>
@@ -54,16 +55,11 @@ class BotanCrypto : public QObject {
   /*!
    * \brief fileProgress Emitted when the cipher operation file progress changes
    * \param path String containing path of the file to update progress on
+   * \param task String containing task name
    * \param percent Integer representing the current progress as a percent
    */
-  void fileProgress(const QString& filePath, const qint64 percentProgress);
-
-  /*!
-   * \brief archiveProgress Emitted when the container archive progress changes
-   * \param path String containing path of the file to update progress on
-   * \param percent Integer representing the current progress as a percent
-   */
-  void archiveProgress(const QString& task, const qint64 percentProgress);
+  void fileProgress(const QString& filePath, const QString& task,
+                    const qint64 percentProgress);
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher
@@ -83,6 +79,8 @@ class BotanCrypto : public QObject {
  public:
  /*!
   * \brief encrypt Encrypt a list of files
+  * \param state Encryption process state
+  * \param archiver File archiver for container mode
   * \param passphrase String representing the user-entered passphrase
   * \param inputFilePaths List of strings containing the file paths of the
   * files to encrypt
@@ -94,6 +92,7 @@ class BotanCrypto : public QObject {
   * \param container Boolean representing container mode
   */
   void encrypt(State* state,
+               Archiver* archiver,
                const QString& passphrase,
                const QStringList& inputFilePaths,
                const QString& outputPath = QString{},
@@ -106,12 +105,15 @@ class BotanCrypto : public QObject {
   /*!
    * \brief decrypt Decrypt a list of files. The algorithm is determined from
    * the file header.
+   * \param state Decryption process state
+   * \param
    * \param passphrase String representing the user-entered passphrase
    * \param inputFilePaths List of strings containing the file paths of
    * the files to decrypt
    * \param outputPath String containing output file path
    */
   void decrypt(State* state,
+               Archiver* archiver,
                const QString& passphrase,
                const QStringList& inputFilePaths,
                const QString& outputPath);
@@ -155,6 +157,7 @@ class BotanCrypto : public QObject {
    * \brief executeCipher Executes a cipher on a file with the a key,
    * initialization vector, and cipher direction
    * \param state Cipher process state
+   * \param direction Cipher direction
    * \param inputFilePath String containing the file path of the file to
    * encrypt/decrypt
    * \param pipe Botan pipe for encryption or decryption
@@ -162,6 +165,7 @@ class BotanCrypto : public QObject {
    * \param out Output file stream
    */
   void executeCipher(State* state,
+                     Botan::Cipher_Dir direction,
                      const QString& inputFilePath,
                      Botan::Pipe& pipe,
                      std::ifstream& in,

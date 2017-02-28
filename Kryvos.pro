@@ -40,18 +40,18 @@ SOURCES += \
   src/gui/OutputFrame.cpp \
   src/gui/PasswordFrame.cpp \
   src/gui/ControlButtonFrame.cpp \
-  src/gui/SlideSwitch.cpp \
+  src/gui/ElidedLabel.cpp \
   src/gui/flowlayout.cpp \
   src/gui/SlidingStackedWidget.cpp \
   src/settings/Settings.cpp
 
 HEADERS += \
+  src/constants.h \
   src/Application.hpp \
   src/archive/Archiver.hpp \
   src/cryptography/Crypto.hpp \
   src/cryptography/State.hpp \
   src/cryptography/BotanCrypto.hpp \
-  src/cryptography/constants.h \
   src/gui/MainWindow.hpp \
   src/gui/SettingsFrame.hpp \
   src/gui/HeaderFrame.hpp \
@@ -62,7 +62,7 @@ HEADERS += \
   src/gui/OutputFrame.hpp \
   src/gui/PasswordFrame.hpp \
   src/gui/ControlButtonFrame.hpp \
-  src/gui/SlideSwitch.hpp \
+  src/gui/ElidedLabel.hpp \
   src/gui/flowlayout.h \
   src/gui/SlidingStackedWidget.hpp \
   src/settings/Settings.hpp \
@@ -89,9 +89,16 @@ android {
     # src/cryptography/botan/android/android_to_string.h \
     src/gui/TouchMainWindow.hpp
 
-  ANDROID_PACKAGE_SOURCE_DIR = resources/android/
+  ANDROID_PACKAGE_SOURCE_DIR = $$PWD/resources/android
 
-  OTHER_FILES += resources/android/AndroidManifest.xml
+  DISTFILES += \
+    resources/android/AndroidManifest.xml \
+    resources/android/gradle/wrapper/gradle-wrapper.jar \
+    resources/android/gradlew \
+    resources/android/res/values/libs.xml \
+    resources/android/build.gradle \
+    resources/android/gradle/wrapper/gradle-wrapper.properties \
+    resources/android/gradlew.bat
 
   debug {
     message(Debug)
@@ -208,6 +215,7 @@ android {
       src/cryptography/botan/macOS/clang/x86_64/botan_all.h \
       src/cryptography/botan/macOS/clang/x86_64/botan_all_internal.h
 
+    QMAKE_TARGET_BUNDLE_PREFIX = com.andrewdolby
     ICON = resources/icons/kryvos.icns
 
     debug {
@@ -317,4 +325,5 @@ OBJECTS_DIR = $$DESTDIR/obj
 MOC_DIR = $$DESTDIR/moc
 RCC_DIR = $$DESTDIR/qrc
 
-RESOURCES += resources/kryvos.qrc
+RESOURCES += \
+  resources/assets.qrc

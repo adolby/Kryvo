@@ -27,7 +27,11 @@ const QStringList messages {
   QObject::tr("Error: Can't decrypt file %1. Is it an encrypted file?"), // 6
   QObject::tr("Error: Can't encrypt file %1. Check that this file exists and "
               "that you have permission to access it and try again."), // 7
-  QObject::tr("Unknown error: Please contact andrewdolby@gmail.com.") // 8
+  QObject::tr("Error: Can't compress %1. Please contact "
+              "andrewdolby@gmail.com"), // 8
+  QObject::tr("Error: Can't extract %1. Please contact "
+              "andrewdolby@gmail.com"), // 9
+  QObject::tr("Unknown error: Please contact andrewdolby@gmail.com.") // 10
 };
 
 /*!

@@ -10,7 +10,7 @@ class Kryvos::HeaderFrame::HeaderFramePrivate {
  public:
   /*!
    * \brief HeaderFramePrivate Constructs the HeaderFrame private
-   * implementation.
+   * implementation
    */
   HeaderFramePrivate();
 

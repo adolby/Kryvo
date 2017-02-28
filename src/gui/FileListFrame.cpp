@@ -11,6 +11,8 @@
 #include <QStringBuilder>
 #include <QString>
 
+#include <QDebug>
+
 #if defined(_MSC_VER)
 #include "src/utility/make_unique.h"
 #endif
@@ -36,7 +38,8 @@ class Kryvos::FileListFrame::FileListFramePrivate {
 Kryvos::FileListFrame::FileListFrame(QWidget* parent)
   : QFrame{parent} {
   // File list header
-  const QStringList headerList = {tr("File"), tr("Progress"), tr("Remove")};
+  const QStringList headerList = {tr("File"), tr("Task"), tr("Progress"),
+                                  tr("Remove")};
   m->fileListModel->setHorizontalHeaderLabels(headerList);
 
   m->fileListView = new QTableView{this};
@@ -55,7 +58,6 @@ Kryvos::FileListFrame::FileListFrame(QWidget* parent)
   // Custom delegate paints progress bar and file close button for each file
   auto delegate = new FileListDelegate{this};
   m->fileListView->setItemDelegate(delegate);
-
   m->fileListView->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 
   auto fileListLayout = new QVBoxLayout{this};
@@ -87,20 +89,25 @@ void Kryvos::FileListFrame::clear() {
   m->fileListModel->clear();
 
   // File list header
-  const QStringList headerList = {tr("File"), tr("Progress"), tr("Remove")};
+  const QStringList headerList = {tr("File"), tr("Task"), tr("Progress"),
+                                  tr("Remove")};
   m->fileListModel->setHorizontalHeaderLabels(headerList);
 
   QHeaderView* header = m->fileListView->horizontalHeader();
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(130);
-  m->fileListView->setColumnWidth(0, this->width() * 0.7);
-  m->fileListView->setColumnWidth(1, this->width() * 0.2);
-  m->fileListView->setColumnWidth(2, this->width() * 0.05);
+  m->fileListView->setColumnWidth(0, this->width() * 0.6);
+  m->fileListView->setColumnWidth(1, this->width() * 0.15);
+  m->fileListView->setColumnWidth(2, this->width() * 0.2);
+  m->fileListView->setColumnWidth(3, this->width() * 0.04);
 }
 
 void Kryvos::FileListFrame::updateProgress(const QString& path,
+                                           const QString& task,
                                            const qint64 percent) {
   Q_ASSERT(m->fileListModel);
+
+  qDebug() << path << " " << task << " " << percent;
 
   if (!path.isEmpty()) {
     const QList<QStandardItem*>& items = m->fileListModel->findItems(path);
@@ -108,12 +115,16 @@ void Kryvos::FileListFrame::updateProgress(const QString& path,
     if (items.size() > 0) {
       auto item = items[0];
 
-      if (item != nullptr) {
+      if (item) {
         const auto index = item->row();
 
-        auto progressItem = m->fileListModel->item(index, 1);
+        auto taskItem = m->fileListModel->item(index, 1);
+        if (taskItem) {
+          taskItem->setData(task, Qt::DisplayRole);
+        }
 
-        if (progressItem != nullptr) {
+        auto progressItem = m->fileListModel->item(index, 2);
+        if (progressItem) {
           progressItem->setData(percent, Qt::DisplayRole);
         }
       }
@@ -135,6 +146,12 @@ void Kryvos::FileListFrame::addFileToModel(const QString& path) {
     QVariant pathVariant = QVariant::fromValue(path);
     pathItem->setData(pathVariant);
 
+    auto taskItem = new QStandardItem{};
+    pathItem->setDragEnabled(false);
+    pathItem->setDropEnabled(false);
+    pathItem->setEditable(false);
+    pathItem->setSelectable(false);
+
     auto progressItem = new QStandardItem{};
     progressItem->setDragEnabled(false);
     progressItem->setDropEnabled(false);
@@ -147,14 +164,15 @@ void Kryvos::FileListFrame::addFileToModel(const QString& path) {
     closeFileItem->setEditable(false);
     closeFileItem->setSelectable(false);
 
-    const QList<QStandardItem*> items = {pathItem, progressItem, closeFileItem};
+    const QList<QStandardItem*> items = {pathItem, taskItem, progressItem,
+                                         closeFileItem};
 
     // Search to see if this item is already in the model
     auto addNewItem = true;
 
     const auto rowCount = m->fileListModel->rowCount();
     for (auto row = 0; row < rowCount; ++row) {
-      auto testItem = m->fileListModel->item(row, 0);
+      const auto& testItem = m->fileListModel->item(row, 0);
 
       if (testItem->data().toString() == pathItem->data().toString()) {
         addNewItem = false;
@@ -185,9 +203,10 @@ void Kryvos::FileListFrame::resizeEvent(QResizeEvent* event) {
 
   const auto width = this->width();
 
-  m->fileListView->setColumnWidth(0, width * 0.7);
-  m->fileListView->setColumnWidth(1, width * 0.2);
-  m->fileListView->setColumnWidth(2, width * 0.05);
+  m->fileListView->setColumnWidth(0, width * 0.6);
+  m->fileListView->setColumnWidth(1, width * 0.15);
+  m->fileListView->setColumnWidth(2, width * 0.2);
+  m->fileListView->setColumnWidth(3, width * 0.04);
 }
 
 Kryvos::FileListFrame::FileListFramePrivate::FileListFramePrivate()

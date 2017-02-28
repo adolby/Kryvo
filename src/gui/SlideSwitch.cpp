@@ -95,8 +95,6 @@ void Kryvos::SlideSwitch::mouseMoveEvent(QMouseEvent* event) {
                         (buttonRect().width() - knobRect().width());
     }
 
-    //qDebug() << m->position;
-
     if (m->position >= 100) {
       m->position = 100;
       setChecked(true);

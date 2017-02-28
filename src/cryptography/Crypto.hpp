@@ -15,13 +15,13 @@ class Crypto : public QObject {
 
  public:
   /*!
-   * \brief Manager Constructs the Manager class
+   * \brief Crypto Constructs the Crypto class
    * \param parent
    */
   explicit Crypto(QObject* parent = nullptr);
 
   /*!
-   * \brief ~Manager Destroys the Manager class
+   * \brief ~Crypto Destroys the Crypto class
    */
   virtual ~Crypto();
 
@@ -29,16 +29,11 @@ class Crypto : public QObject {
   /*!
    * \brief fileProgress Emitted when the cipher operation file progress changes
    * \param path String containing path of the file to update progress on
+   * \param task String containing path name
    * \param progressValue Integer representing the current progress as a percent
    */
-  void fileProgress(const QString& filePath, const qint64 percentProgress);
-
-  /*!
-   * \brief progress Emitted when the task operation progress changes
-   * \param task String containing task name
-   * \param percent Integer representing the current progress as a percent
-   */
-  void progress(const QString& task, const qint64 percentProgress);
+  void fileProgress(const QString& filePath, const QString& task,
+                    const qint64 percentProgress);
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher

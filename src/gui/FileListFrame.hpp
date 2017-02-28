@@ -52,9 +52,11 @@ class FileListFrame : public QFrame {
    * \brief updateProgress Executed when the cipher operation progress is
    * updated. Updates the progress bar for the item at the specified index.
    * \param path File path as an index to update the file list
+   * \param task Task operating on file
    * \param percent Integer representing progress as a percentage
    */
-  void updateProgress(const QString& path, const qint64 percent);
+  void updateProgress(const QString& path, const QString& task,
+                      const qint64 percent);
 
  signals:
   /*!

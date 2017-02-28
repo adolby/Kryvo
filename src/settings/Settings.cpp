@@ -10,6 +10,8 @@
 #include <QStringBuilder>
 #include <QCoreApplication>
 
+#include <QDebug>
+
 const QStringList kDefaultPaths =
   QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
 const QString kDefaultPath = QString{kDefaultPaths.first() %
@@ -184,8 +186,17 @@ void Kryvos::Settings::SettingsPrivate::importSettings() {
 
     outputPath = settings[QStringLiteral("outputPath")].toString(kDefaultPath);
 
-    lastOpenPath =
+    const QString& lastOpen =
       settings[QStringLiteral("lastOpenPath")].toString(kDefaultPath);
+
+    const QFileInfo lastOpenInfo{lastOpen};
+
+    if (lastOpenInfo.exists() && lastOpenInfo.isDir()) {
+      lastOpenPath = lastOpenInfo.absolutePath() % QDir::separator();
+    }
+    else {
+      lastOpenPath = kDefaultPath;
+    }
 
     const auto& styleObject =
         static_cast<QJsonValue>(settings[QStringLiteral("styleSheetPath")]);

@@ -1,25 +1,46 @@
-#include "Archiver.hpp"
+#include "src/archive/Archiver.hpp"
 #include "quazipfile.h"
 #include "quazipfileinfo.h"
 #include <QDir>
 #include <QFile>
+#include <QStringBuilder>
+
+#include <QDebug>
+
+qint64 copyData(QIODevice& inFile, QIODevice& outFile) {
+  char buffer[4096];
+  const qint64 readSize = inFile.read(buffer, 4096);
+
+  if (readSize <= 0) {
+    return -1;
+  }
+
+  const qint64 writeSize = outFile.write(buffer, readSize);
+
+  if (writeSize != readSize) {
+    return -1;
+  }
+
+  return writeSize;
+}
 
 bool removeFiles(const QStringList& fileList) {
   bool ret = true;
 
-  for (const auto& filePath : fileList) {
+  foreach (const auto& filePath, fileList) {
     ret = ret && QFile::remove(filePath);
   }
 
   return ret;
 }
 
-Archiver::Archiver(QObject* parent) :
-  QObject{parent} {
+Kryvos::Archiver::Archiver(QObject* parent)
+  : QObject{parent} {
 }
 
-bool Archiver::compressFiles(const QString& fileCompressed,
-                             const QStringList& files) {
+bool Kryvos::Archiver::compressFiles(const QString& fileCompressed,
+                                     const QStringList& encryptedFiles,
+                                     const QStringList& originalFiles) {
   QuaZip zip{fileCompressed};
 
   QDir{}.mkpath(QFileInfo(fileCompressed).absolutePath());
@@ -31,14 +52,17 @@ bool Archiver::compressFiles(const QString& fileCompressed,
     return false;
   }
 
-  QFileInfo info{};
+  qint64 compressedSize = 0;
 
-  for (const auto& file : files) {
-    info.setFile(file);
+  for (auto i = 0; i < encryptedFiles.length(); ++i) {
+    const auto& file = encryptedFiles.at(i);
+    const auto& originalFile = originalFiles.at(i);
 
-    const bool compressedFile = compressFile(&zip, file, info.fileName());
+    QFileInfo info{file};
 
-    if (!info.exists() || !compressedFile) {
+    compressedSize = compressFile(&zip, file, info.fileName(), originalFile);
+
+    if (!info.exists() || (compressedSize <= 0)) {
       QFile::remove(fileCompressed);
       return false;
     }
@@ -54,61 +78,72 @@ bool Archiver::compressFiles(const QString& fileCompressed,
   return true;
 }
 
-QStringList Archiver::extractDir(const QString& fileCompressed,
-                                 const QString& dir) {
+QStringList Kryvos::Archiver::extractDir(const QString& fileCompressed,
+                                         const QString& dir) {
   QuaZip zip{fileCompressed};
 
   return extractDir(zip, dir);
 }
 
-QString Archiver::extractFile(QIODevice* ioDevice, const QString& fileName,
-                              const QString& fileDest) {
-  QuaZip zip{ioDevice};
+qint64 Kryvos::Archiver::copyFileData(QIODevice& inFile,
+                                      QIODevice& outFile,
+                                      const QString& filePath,
+                                      const qint64 fileSize,
+                                      const QString& task) {
+  qint64 processedSize = 0;
 
-  return extractFile(zip, fileName, fileDest);
-}
-
-bool Archiver::copyData(QIODevice& inFile, QIODevice& outFile) {
   while (!inFile.atEnd()) {
-    char buffer[4096];
-    const qint64 readLength = inFile.read(buffer, 4096);
+    const qint64 writeSize = copyData(inFile, outFile);
 
-    if (readLength <= 0) {
-      return false;
+    if (-1 == writeSize) {
+      processedSize = -1;
+      break;
     }
 
-    const qint64 writeLength = outFile.write(buffer, readLength);
+    processedSize += writeSize;
 
-    if (writeLength != readLength) {
-      return false;
+    const auto nextFraction = static_cast<double>(processedSize) /
+                              static_cast<double>(fileSize);
+    const auto nextPercent = static_cast<int>(nextFraction * 100);
+
+    if (!task.isEmpty()) {
+      if (nextPercent > 99) {
+        if (tr("Compress") == task) {
+          emit progress(filePath, tr("Compressed"), nextPercent);
+        }
+        else if (tr("Extract") == task) {
+          emit progress(filePath, tr("Extracted"), nextPercent);
+        }
+      }
+      else {
+        emit progress(filePath, task, nextPercent);
+      }
     }
-
-    int percentProgress = 5;
-    emit progress(percentProgress);
   }
 
-  return true;
+  return fileSize;
 }
 
-bool Archiver::compressFile(QuaZip* zip, const QString& fileName,
-                            const QString& fileDestination) {
+qint64 Kryvos::Archiver::compressFile(QuaZip* zip,
+                                      const QString& fileName,
+                                      const QString& fileDestination,
+                                      const QString& originalFilePath) {
   if (!zip) {
-    return false;
+    return -1;
   }
 
   if (zip->getMode() != QuaZip::mdCreate &&
       zip->getMode() != QuaZip::mdAppend &&
       zip->getMode() != QuaZip::mdAdd) {
-    return false;
+    return -1;
   }
 
-  QFile inFile{};
-  inFile.setFileName(fileName);
+  QFile inFile{fileName};
 
   const bool inFileOpen = inFile.open(QIODevice::ReadOnly);
 
   if (!inFileOpen) {
-    return false;
+    return -1;
   }
 
   QuaZipFile outFile{zip};
@@ -117,46 +152,49 @@ bool Archiver::compressFile(QuaZip* zip, const QString& fileName,
                  QuaZipNewInfo{fileDestination, inFile.fileName()});
 
   if (!outFileOpen) {
-    return false;
+    return -1;
   }
 
-  const bool copiedData = copyData(inFile, outFile);
+  const auto& task = tr("Compress");
+  const qint64 copiedDataSize = copyFileData(inFile, outFile, originalFilePath,
+                                             inFile.size(), task);
 
-  if (!copiedData || (outFile.getZipError() != UNZ_OK)) {
-    return false;
+  if (copiedDataSize <= 0 || (outFile.getZipError() != UNZ_OK)) {
+    return -1;
   }
 
   outFile.close();
 
   if (outFile.getZipError() != UNZ_OK) {
-    return false;
+    return -1;
   }
 
   inFile.close();
 
-  return true;
+  return copiedDataSize;
 }
 
-QStringList Archiver::extractDir(QuaZip& zip, const QString& dir) {
+QStringList Kryvos::Archiver::extractDir(QuaZip& zip, const QString& dir) {
   if (!zip.open(QuaZip::mdUnzip)) {
     return QStringList{};
   }
 
   QDir directory{dir};
 
-  QStringList extracted{};
-
   if (!zip.goToFirstFile()) {
     return QStringList{};
   }
+
+  QStringList extracted{};
+  qint64 extractedSize = 0;
 
   do {
     const QString& name = zip.getCurrentFileName();
     const QString& absFilePath = directory.absoluteFilePath(name);
 
-    const bool extractFileSuccess = extractFile(&zip, "", absFilePath);
+    extractedSize = extractFile(&zip, QString{}, absFilePath);
 
-    if (!extractFileSuccess) {
+    if (extractedSize <= 0) {
       removeFiles(extracted);
       return QStringList{};
     }
@@ -174,39 +212,15 @@ QStringList Archiver::extractDir(QuaZip& zip, const QString& dir) {
   return extracted;
 }
 
-QString Archiver::extractFile(QuaZip& zip, const QString& fileName,
-                              const QString& fileDestination) {
-  if (!zip.open(QuaZip::mdUnzip)) {
-    return QString{};
-  }
-
-  const QString& fileDest = fileDestination.isEmpty() ? fileName :
-                                                        fileDestination;
-
-  const bool extractedFile = extractFile(&zip,fileName,fileDest);
-
-  if (!extractedFile) {
-    return QString{};
-  }
-
-  zip.close();
-
-  if (zip.getZipError() != 0) {
-    removeFiles(QStringList{fileDest});
-    return QString{};
-  }
-
-  return QFileInfo{fileDest}.absoluteFilePath();
-}
-
-bool Archiver::extractFile(QuaZip* zip, const QString& fileName,
-                           const QString& fileDest) {
+qint64 Kryvos::Archiver::extractFile(QuaZip* zip,
+                                     const QString& fileName,
+                                     const QString& fileDest) {
   if (!zip) {
-    return false;
+    return -1;
   }
 
   if (zip->getMode() != QuaZip::mdUnzip) {
-    return false;
+    return -1;
   }
 
   if (!fileName.isEmpty()) {
@@ -218,24 +232,28 @@ bool Archiver::extractFile(QuaZip* zip, const QString& fileName,
   const bool inFileOpen = inFile.open(QIODevice::ReadOnly);
 
   if (!inFileOpen || inFile.getZipError() != UNZ_OK) {
-    return false;
+    return -1;
   }
 
   QDir curDir{};
 
   if (fileDest.endsWith('/')) {
-    if (!curDir.mkpath(fileDest)) {
-      return false;
+    const auto destPath = curDir.mkpath(fileDest);
+
+    if (!destPath) {
+      return -1;
     }
   } else {
-    if (!curDir.mkpath(QFileInfo(fileDest).absolutePath())) {
-      return false;
+    const auto destPath = curDir.mkpath(QFileInfo{fileDest}.absolutePath());
+
+    if (!destPath) {
+      return -1;
     }
   }
 
-  QuaZipFileInfo64 info{};
+  QuaZipFileInfo64 info;
   if (!zip->getCurrentFileInfo(&info)) {
-    return false;
+    return -1;
   }
 
   const auto srcPerm = info.getPermissions();
@@ -245,7 +263,7 @@ bool Archiver::extractFile(QuaZip* zip, const QString& fileName,
       QFile{fileDest}.setPermissions(srcPerm);
     }
 
-    return true;
+    return -1;
   }
 
   QFile outFile{};
@@ -254,15 +272,19 @@ bool Archiver::extractFile(QuaZip* zip, const QString& fileName,
   const bool outFileOpen = outFile.open(QIODevice::WriteOnly);
 
   if (!outFileOpen) {
-    return false;
+    return -1;
   }
 
-  const bool copiedData = copyData(inFile, outFile);
+  const qint64 uncompressedSize = info.uncompressedSize;
 
-  if (!copiedData || inFile.getZipError() != UNZ_OK) {
+  const auto& task = tr("Extract");
+  const qint64 copiedDataSize = copyFileData(inFile, outFile, fileDest,
+                                             uncompressedSize, task);
+
+  if ((copiedDataSize <= 0) || inFile.getZipError() != UNZ_OK) {
     outFile.close();
     removeFiles(QStringList{fileDest});
-    return false;
+    return -1;
   }
 
   outFile.close();
@@ -270,12 +292,12 @@ bool Archiver::extractFile(QuaZip* zip, const QString& fileName,
 
   if (inFile.getZipError() != UNZ_OK) {
     removeFiles(QStringList{fileDest});
-    return false;
+    return -1;
   }
 
   if (srcPerm != 0) {
     outFile.setPermissions(srcPerm);
   }
 
-  return true;
+  return copiedDataSize;
 }
