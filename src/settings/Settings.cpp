@@ -8,7 +8,7 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QStringBuilder>
-#include <QCoreApplication>
+#include <QApplication>
 
 #include <QDebug>
 
@@ -143,10 +143,10 @@ Kryvos::Settings::SettingsPrivate::SettingsPrivate()
 
 void Kryvos::Settings::SettingsPrivate::importSettings() {
 #if defined(Q_OS_MAC)
-  const auto& settingsPath = QCoreApplication::applicationDirPath() %
-                             QDir::separator() % "settings.json";
+  const QString settingsPath = qApp->applicationDirPath() %
+                               QDir::separator() % "settings.json";
 #else
-  const auto& settingsPath = QStringLiteral("settings.json");
+  const QString settingsPath = QStringLiteral("settings.json");
 #endif
 
   QFile settingsFile{settingsPath};

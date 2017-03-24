@@ -43,7 +43,8 @@ SOURCES += \
   src/gui/ElidedLabel.cpp \
   src/gui/flowlayout.cpp \
   src/gui/SlidingStackedWidget.cpp \
-  src/settings/Settings.cpp
+  src/settings/Settings.cpp \
+  src/utility/Thread.cpp
 
 HEADERS += \
   src/constants.h \
@@ -66,6 +67,7 @@ HEADERS += \
   src/gui/flowlayout.h \
   src/gui/SlidingStackedWidget.hpp \
   src/settings/Settings.hpp \
+  src/utility/Thread.hpp \
   src/utility/pimpl_impl.h \
   src/utility/pimpl.h
 

@@ -7,8 +7,8 @@
 #endif
 #include "src/cryptography/Crypto.hpp"
 #include "src/settings/Settings.hpp"
+#include "src/utility/Thread.hpp"
 #include "src/utility/pimpl_impl.h"
-#include <QThread>
 #include <memory>
 
 /*!
@@ -26,7 +26,7 @@ class Kryvos::App::Application::ApplicationPrivate {
   std::unique_ptr<Settings> settings;
   std::unique_ptr<MainWindow> gui;
   std::unique_ptr<Crypto> cryptography;
-  std::unique_ptr<QThread> cipherThread;
+  std::unique_ptr<Thread> cipherThread;
 };
 
 Kryvos::App::Application::Application(QObject* parent)
@@ -81,11 +81,6 @@ Kryvos::App::Application::Application(QObject* parent)
 Kryvos::App::Application::~Application() {
   // Abort current threaded cipher operation
   m->cryptography->abort();
-
-  // Quit the cipher thread
-  m->cipherThread->quit();
-  m->cipherThread->requestInterruption();
-  m->cipherThread->wait();
 }
 
 Kryvos::App::Application::ApplicationPrivate::ApplicationPrivate()
@@ -96,5 +91,5 @@ Kryvos::App::Application::ApplicationPrivate::ApplicationPrivate()
     gui{std::make_unique<DesktopMainWindow>(settings.get())},
     #endif
     cryptography{std::make_unique<Crypto>()},
-    cipherThread{std::make_unique<QThread>()} {
+    cipherThread{std::make_unique<Thread>()} {
 }

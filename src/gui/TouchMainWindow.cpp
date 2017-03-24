@@ -18,8 +18,8 @@ Kryvos::TouchMainWindow::TouchMainWindow(Settings* settings, QWidget* parent)
   contentLayout->setStretch(2, 1);
 
   // Load touch-optimized stylesheet
-  const auto& styleSheet = loadStyleSheet(settings->styleSheetPath(),
-                                          QStringLiteral("kryvosTouch.qss"));
+  const QString styleSheet = loadStyleSheet(settings->styleSheetPath(),
+                                            QStringLiteral("kryvosTouch.qss"));
 
   if (!styleSheet.isEmpty()) {
     this->setStyleSheet(styleSheet);

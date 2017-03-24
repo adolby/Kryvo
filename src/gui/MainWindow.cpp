@@ -172,7 +172,7 @@ void Kryvos::MainWindow::addFiles() {
   Q_ASSERT(fileListFrame);
 
   // Open a file dialog to get files
-  const auto& fileNames =
+  const QStringList fileNames =
     QFileDialog::getOpenFileNames(this, tr("Add Files"),
                                   m->settings->lastOpenPath(),
                                   tr("Any files (*)"));
@@ -204,8 +204,8 @@ void Kryvos::MainWindow::processFiles(const bool cryptDirection) {
   Q_ASSERT(fileListFrame);
 
   if (!m->isBusy()) {
-    const auto& outputPath = outputFrame->outputPath();
-    const auto& passphrase = passwordFrame->password();
+    const QString outputPath = outputFrame->outputPath();
+    const QString passphrase = passwordFrame->password();
 
     if (!passphrase.isEmpty()) {
       const auto rowCount = fileListFrame->rowCount();

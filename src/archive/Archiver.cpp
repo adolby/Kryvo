@@ -55,8 +55,8 @@ bool Kryvos::Archiver::compressFiles(const QString& fileCompressed,
   qint64 compressedSize = 0;
 
   for (auto i = 0; i < encryptedFiles.length(); ++i) {
-    const auto& file = encryptedFiles.at(i);
-    const auto& originalFile = originalFiles.at(i);
+    const QString file = encryptedFiles.at(i);
+    const QString originalFile = originalFiles.at(i);
 
     QFileInfo info{file};
 
@@ -155,7 +155,7 @@ qint64 Kryvos::Archiver::compressFile(QuaZip* zip,
     return -1;
   }
 
-  const auto& task = tr("Compress");
+  const QString task = tr("Compress");
   const qint64 copiedDataSize = copyFileData(inFile, outFile, originalFilePath,
                                              inFile.size(), task);
 
@@ -277,7 +277,7 @@ qint64 Kryvos::Archiver::extractFile(QuaZip* zip,
 
   const qint64 uncompressedSize = info.uncompressedSize;
 
-  const auto& task = tr("Extract");
+  const QString task = tr("Extract");
   const qint64 copiedDataSize = copyFileData(inFile, outFile, fileDest,
                                              uncompressedSize, task);
 

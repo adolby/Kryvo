@@ -172,7 +172,7 @@ void Kryvos::FileListFrame::addFileToModel(const QString& path) {
 
     const auto rowCount = m->fileListModel->rowCount();
     for (auto row = 0; row < rowCount; ++row) {
-      const auto& testItem = m->fileListModel->item(row, 0);
+      const auto testItem = m->fileListModel->item(row, 0);
 
       if (testItem->data().toString() == pathItem->data().toString()) {
         addNewItem = false;

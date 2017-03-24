@@ -95,7 +95,7 @@ Kryvos::SettingsFrame::SettingsFrame(const QString& cipher,
   auto settingsIcon = new QLabel{headerFrame};
   settingsIcon->setPixmap(QPixmap{QStringLiteral(":/images/settingsIcon.png")});
 
-  const auto& backIcon = QIcon{QStringLiteral(":/images/backIcon.png")};
+  const QIcon backIcon = QIcon{QStringLiteral(":/images/backIcon.png")};
   auto backButton = new QPushButton{backIcon, tr(" Back"), headerFrame};
   backButton->setObjectName(QStringLiteral("backButton"));
   backButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -137,8 +137,8 @@ Kryvos::SettingsFrame::SettingsFrame(const QString& cipher,
   auto keySizeFrame = new QFrame{cryptoSettingsFrame};
   keySizeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  const auto& keySizeToolTip = QString{tr("The cipher key size is the number "
-                                          "of bits in the key that is created "
+  const QString keySizeToolTip = QString{tr("The cipher key size is the number "
+                                            "of bits in the key that is created "
                                           "from your password via a secure "
                                           "hash function. A larger key size "
                                           "does not necessarily yield a more "

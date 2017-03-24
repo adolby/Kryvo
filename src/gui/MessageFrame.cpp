@@ -38,7 +38,7 @@ Kryvos::MessageFrame::MessageFrame(QWidget* parent)
 
   auto rightAction = new QAction{this};
   connect(rightAction, &QAction::triggered, this, &MessageFrame::pageRight);
-  const auto& rightIcon = QIcon{QStringLiteral(":/images/rightArrowIcon.png")};
+  const QIcon rightIcon = QIcon{QStringLiteral(":/images/rightArrowIcon.png")};
   rightAction->setIcon(rightIcon);
   auto rightButton = new QToolButton{this};
   rightButton->setObjectName(QStringLiteral("messageNavButton"));

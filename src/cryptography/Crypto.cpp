@@ -56,7 +56,7 @@ void Kryvos::Crypto::encrypt(const QString& passphrase,
   m->state->busy(true);
   emit busyStatus(m->state->isBusy());
 
-  const auto& keySize = [&inputKeySize] {
+  const auto keySize = [&inputKeySize] {
     auto size = std::size_t{128};
 
     if (inputKeySize > 0) {

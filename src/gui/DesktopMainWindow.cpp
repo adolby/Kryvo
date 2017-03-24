@@ -47,8 +47,8 @@ Kryvos::DesktopMainWindow::DesktopMainWindow(Settings* settings,
   this->setAcceptDrops(true);
 
   // Load stylesheet
-  const auto& styleSheet = loadStyleSheet(this->settings->styleSheetPath(),
-                                         QStringLiteral("kryvos.qss"));
+  const QString styleSheet = loadStyleSheet(this->settings->styleSheetPath(),
+                                            QStringLiteral("kryvos.qss"));
 
   if (!styleSheet.isEmpty()) {
     this->setStyleSheet(styleSheet);
@@ -76,8 +76,7 @@ void Kryvos::DesktopMainWindow::dragEnterEvent(QDragEnterEvent* event) {
   // Show drag and drop as a move action
   event->setDropAction(Qt::MoveAction);
 
-  if (event->mimeData()->hasUrls())
-  { // Accept drag and drops with files only
+  if (event->mimeData()->hasUrls()) { // Accept drag and drops with files only
     event->accept();
   }
 }

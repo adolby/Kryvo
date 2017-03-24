@@ -81,14 +81,14 @@ void Kryvos::FileListDelegate::paint(QPainter* painter,
                                 option.rect.height()};
       buttonOption.fontMetrics = QApplication::fontMetrics();
       buttonOption.features = QStyleOptionButton::Flat;
-      const auto& closeIcon =
+      const QIcon closeIcon =
           QIcon{QStringLiteral(":/images/closeFileIcon.png")};
       buttonOption.icon = closeIcon;
       const auto iconDimension =
         qMax(qMin(option.rect.width() / 2, option.rect.height() / 2), 6) -
         4;
 
-      const auto& iconSize = QSize{iconDimension, iconDimension};
+      const QSize iconSize = QSize{iconDimension, iconDimension};
       buttonOption.iconSize = iconSize;
 
       QApplication::style()->drawControl(QStyle::CE_PushButton,
