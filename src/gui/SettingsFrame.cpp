@@ -75,11 +75,11 @@ class Kryvos::SettingsFrame::SettingsFramePrivate {
 };
 
 Kryvos::SettingsFrame::SettingsFrame(const QString& cipher,
-                                    const std::size_t& keySize,
-                                    const QString& mode,
-                                    const bool compressionMode,
-                                    const bool containerMode,
-                                    QWidget* parent)
+                                     const std::size_t keySize,
+                                     const QString& mode,
+                                     const bool compressionMode,
+                                     const bool containerMode,
+                                     QWidget* parent)
   : QFrame{parent} {
   // TODO: Fix this slide switch or remove it.
   //auto slideSwitch = new SlideSwitch{this};
@@ -301,7 +301,7 @@ void Kryvos::SettingsFrame::changeKeySize() {
 
   const auto& keySizeString = m->keySizeComboBox->currentText();
 
-  const auto& keySize = static_cast<std::size_t>(keySizeString.toLongLong());
+  const auto& keySize = static_cast<std::size_t>(keySizeString.toInt());
 
   emit updateKeySize(keySize);
 }

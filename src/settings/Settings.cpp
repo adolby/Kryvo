@@ -84,7 +84,7 @@ QString Kryvos::Settings::cipher() const {
   return m->cipher;
 }
 
-void Kryvos::Settings::keySize(const std::size_t& keySize) {
+void Kryvos::Settings::keySize(const std::size_t keySize) {
   m->keySize = keySize;
 }
 

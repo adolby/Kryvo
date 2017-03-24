@@ -36,7 +36,7 @@ void Kryvos::BotanCrypto::encrypt(State* state,
                                   const QStringList& inputFilePaths,
                                   const QString& outputPath,
                                   const QString& cipher,
-                                  const std::size_t& keySize,
+                                  const std::size_t keySize,
                                   const QString& modeOfOperation,
                                   const bool compress,
                                   const bool container) {
@@ -231,7 +231,7 @@ void Kryvos::BotanCrypto::encryptFile(State* state,
                                       const QString& inputFilePath,
                                       const QString& outputFilePath,
                                       const QString& algorithmName,
-                                      const std::size_t& keySize,
+                                      const std::size_t keySize,
                                       const bool compress) {
   Q_ASSERT(state);
 

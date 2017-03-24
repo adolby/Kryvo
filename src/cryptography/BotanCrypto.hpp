@@ -97,7 +97,7 @@ class BotanCrypto : public QObject {
                const QStringList& inputFilePaths,
                const QString& outputPath = QString{},
                const QString& cipher = QString{"AES"},
-               const std::size_t& keySize = std::size_t{128},
+               const std::size_t keySize = std::size_t{128},
                const QString& modeOfOperation = QString{"GCM"},
                const bool compress = true,
                const bool container = true);
@@ -137,7 +137,7 @@ class BotanCrypto : public QObject {
                    const QString& inputFilePath,
                    const QString& outputFilePath,
                    const QString& algorithmName,
-                   const std::size_t& keySize,
+                   const std::size_t keySize,
                    const bool compress);
 
   /*!

@@ -75,7 +75,7 @@ class Settings {
    * \brief keySize Sets the key size
    * \param keySize Key size in bits
    */
-  void keySize(const std::size_t& keySize);
+  void keySize(const std::size_t keySize);
 
   /*!
    * \brief keySize Returns the key size

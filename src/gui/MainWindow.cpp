@@ -277,7 +277,7 @@ void Kryvos::MainWindow::updateCipher(const QString& cipher) {
   m->settings->cipher(cipher);
 }
 
-void Kryvos::MainWindow::updateKeySize(const std::size_t& keySize) {
+void Kryvos::MainWindow::updateKeySize(const std::size_t keySize) {
   m->settings->keySize(keySize);
 }
 

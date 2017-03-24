@@ -25,7 +25,7 @@ class SettingsFrame : public QFrame {
    * \param parent QWidget parent
    */
   explicit SettingsFrame(const QString& cipher,
-                         const std::size_t& keySize,
+                         const std::size_t keySize,
                          const QString& mode,
                          const bool compressionMode,
                          const bool containerMode,
@@ -55,7 +55,7 @@ class SettingsFrame : public QFrame {
    * combobox representing it
    * \param keySize Key size in bits
    */
-  void updateKeySize(const std::size_t& keySize);
+  void updateKeySize(const std::size_t keySize);
 
   /*!
    * \brief updateModeOfOperation Emitted when the user has changed the cipher

@@ -54,7 +54,7 @@ class MainWindow : public QMainWindow {
                const QStringList& inputFileNames,
                const QString& outputPath,
                const QString& cipher,
-               const std::size_t& keySize,
+               const std::size_t keySize,
                const QString& modeOfOperation,
                const bool compress,
                const bool container);
@@ -152,7 +152,7 @@ class MainWindow : public QMainWindow {
    * the settings frame
    * \param keySize Key size in bits
    */
-  void updateKeySize(const std::size_t& keySize);
+  void updateKeySize(const std::size_t keySize);
 
   /*!
    * \brief updateModeOfOperation Executed when the mode of operation is updated

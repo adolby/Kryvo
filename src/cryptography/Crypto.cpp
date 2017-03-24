@@ -46,13 +46,13 @@ Kryvos::Crypto::~Crypto() {
 }
 
 void Kryvos::Crypto::encrypt(const QString& passphrase,
-                              const QStringList& inputFilePaths,
-                              const QString& outputPath,
-                              const QString& cipher,
-                              const std::size_t& inputKeySize,
-                              const QString& modeOfOperation,
-                              const bool compress,
-                              const bool container) {
+                             const QStringList& inputFilePaths,
+                             const QString& outputPath,
+                             const QString& cipher,
+                             const std::size_t inputKeySize,
+                             const QString& modeOfOperation,
+                             const bool compress,
+                             const bool container) {
   m->state->busy(true);
   emit busyStatus(m->state->isBusy());
 

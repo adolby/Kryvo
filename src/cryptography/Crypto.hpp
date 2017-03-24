@@ -74,7 +74,7 @@ class Crypto : public QObject {
                const QStringList& inputFilePaths,
                const QString& outputPath = QString{},
                const QString& cipher = QString{"AES"},
-               const std::size_t& inputKeySize = std::size_t{128},
+               const std::size_t inputKeySize = std::size_t{128},
                const QString& modeOfOperation = QString{"GCM"},
                const bool compress = true,
                const bool container = true);
