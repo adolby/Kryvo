@@ -4,7 +4,6 @@ set -o errexit -o nounset
 
 # Update platform
 echo "Updating platform..."
-sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes install libarchive
 sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes install p7zip-full
 sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes install chrpath
 

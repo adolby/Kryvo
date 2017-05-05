@@ -11,18 +11,14 @@ sw_vers
 echo "Updating platform..."
 brew update
 brew install p7zip
-brew install libarchive
 npm install -g appdmg
 
 # Get Qt
 echo "Installing Qt..."
-cd /usr/local/
-sudo wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-macos-x86_64-clang.zip
-sudo 7z x qt-opensource-5.7.0-macos-x86_64-clang.zip &>/dev/null
-sudo chmod -R +x /usr/local/Qt-5.7.0/bin/
+brew install qt
 
 # Add Qt binaries to path
-PATH=/usr/local/Qt-5.7.0/bin/:${PATH}
+PATH=/usr/local/opt/qt/bin/:${PATH}
 
 # Get Botan
 # echo "Installing Botan..."
@@ -39,10 +35,6 @@ PATH=/usr/local/Qt-5.7.0/bin/:${PATH}
 # cp botan_all_ssse3.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all_ssse3.cpp
 # cp botan_all.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all.cpp
 # cp botan_all.h ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all.h
-
-# Create temporary symlink for Xcode8 compatibility
-cd /Applications/Xcode.app/Contents/Developer/usr/bin/
-sudo ln -s xcodebuild xcrun
 
 # Build Kryvos
 echo "Building Kryvos..."
