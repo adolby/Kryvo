@@ -23,10 +23,10 @@ class Kryvos::App::Application::ApplicationPrivate {
    */
   ApplicationPrivate();
 
-  std::unique_ptr<Settings> settings;
-  std::unique_ptr<MainWindow> gui;
-  std::unique_ptr<Crypto> cryptography;
-  std::unique_ptr<Thread> cipherThread;
+  Settings settings;
+  Crypto cryptography;
+  Thread cipherThread;
+  DesktopMainWindow gui;
 };
 
 Kryvos::App::Application::Application(QObject* parent)
@@ -34,62 +34,55 @@ Kryvos::App::Application::Application(QObject* parent)
   qRegisterMetaType<std::size_t>("std::size_t");
 
   // Move cryptography object to another thread to prevent GUI from blocking
-  m->cryptography->moveToThread(m->cipherThread.get());
+  m->cryptography.moveToThread(&m->cipherThread);
 
   // Connect GUI to cryptography object
-  connect(m->gui.get(), &MainWindow::encrypt,
-          m->cryptography.get(), &Crypto::encrypt);
+  connect(&m->gui, &MainWindow::encrypt,
+          &m->cryptography, &Crypto::encrypt);
 
-  connect(m->gui.get(), &MainWindow::decrypt,
-          m->cryptography.get(), &Crypto::decrypt);
+  connect(&m->gui, &MainWindow::decrypt,
+          &m->cryptography, &Crypto::decrypt);
 
   // Connections are direct so the cryptography object can receive communication
   // via flags from a different thread while it is runs a cipher operation
-  connect(m->gui.get(), &MainWindow::pauseCipher,
-          m->cryptography.get(), &Crypto::pause,
+  connect(&m->gui, &MainWindow::pauseCipher,
+          &m->cryptography, &Crypto::pause,
           Qt::DirectConnection);
 
-  connect(m->gui.get(), &MainWindow::abortCipher,
-          m->cryptography.get(), &Crypto::abort,
+  connect(&m->gui, &MainWindow::abortCipher,
+          &m->cryptography, &Crypto::abort,
           Qt::DirectConnection);
 
-  connect(m->gui.get(), &MainWindow::stopFile,
-          m->cryptography.get(), &Crypto::stop,
+  connect(&m->gui, &MainWindow::stopFile,
+          &m->cryptography, &Crypto::stop,
           Qt::DirectConnection);
 
   // Update progress bars
-  connect(m->cryptography.get(), &Crypto::fileProgress,
-          m->gui.get(), &MainWindow::updateFileProgress);
+  connect(&m->cryptography, &Crypto::fileProgress,
+          &m->gui, &MainWindow::updateFileProgress);
 
   // Update status message
-  connect(m->cryptography.get(), &Crypto::statusMessage,
-          m->gui.get(), &MainWindow::updateStatusMessage);
+  connect(&m->cryptography, &Crypto::statusMessage,
+          &m->gui, &MainWindow::updateStatusMessage);
 
   // Update error message
-  connect(m->cryptography.get(), &Crypto::errorMessage,
-          m->gui.get(), &MainWindow::updateError);
+  connect(&m->cryptography, &Crypto::errorMessage,
+          &m->gui, &MainWindow::updateError);
 
   // Update cipher operation in progress status
-  connect(m->cryptography.get(), &Crypto::busyStatus,
-          m->gui.get(), &MainWindow::updateBusyStatus);
+  connect(&m->cryptography, &Crypto::busyStatus,
+          &m->gui, &MainWindow::updateBusyStatus);
 
-  m->cipherThread->start();
+  m->cipherThread.start();
 
-  m->gui->show();
+  m->gui.show();
 }
 
 Kryvos::App::Application::~Application() {
   // Abort current threaded cipher operation
-  m->cryptography->abort();
+  m->cryptography.abort();
 }
 
 Kryvos::App::Application::ApplicationPrivate::ApplicationPrivate()
-  : settings{std::make_unique<Settings>()},
-    #if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
-    gui{std::make_unique<TouchMainWindow>(settings.get())},
-    #else
-    gui{std::make_unique<DesktopMainWindow>(settings.get())},
-    #endif
-    cryptography{std::make_unique<Crypto>()},
-    cipherThread{std::make_unique<Thread>()} {
+  : gui{&settings} {
 }
