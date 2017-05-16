@@ -28,29 +28,48 @@ INCLUDEPATH += ..
 
 SOURCES += \
   ../src/cryptography/Crypto.cpp \
+  ../src/cryptography/BotanCrypto.cpp \
+  ../src/cryptography/State.cpp \
+  ../src/archive/Archiver.cpp \
   src/test_Crypto.cpp
 
 HEADERS += \
   ../src/cryptography/Crypto.hpp \
+  ../src/cryptography/BotanCrypto.hpp \
+  ../src/cryptography/State.hpp \
+  ../src/archive/Archiver.hpp \
   src/test_Crypto.hpp
 
+# Include QuaZip files
+DEFINES += QUAZIP_STATIC
+include(../src/libs/quazip/quazip.pri)
+
 # Platform-specific configuration
-android-g++ {
+android {
   message(Android)
-  message(g++)
 
   # You'll need to place your Boost path here.
   INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
 
-  SOURCES += ../src/cryptography/botan/android/botan_all.cpp
+  SOURCES += \
+    # src/cryptography/botan/android/botan_all.cpp \
+    src/gui/TouchMainWindow.cpp
 
   HEADERS += \
-    ../src/cryptography/botan/android/botan_all.h \
-    ../src/cryptography/botan/android/android_to_string.h
+    # src/cryptography/botan/android/botan_all.h \
+    # src/cryptography/botan/android/android_to_string.h \
+    src/gui/TouchMainWindow.hpp
 
-  ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
+  ANDROID_PACKAGE_SOURCE_DIR = $$PWD/resources/android
 
-  OTHER_FILES += ../android/AndroidManifest.xml
+  DISTFILES += \
+    resources/android/AndroidManifest.xml \
+    resources/android/gradle/wrapper/gradle-wrapper.jar \
+    resources/android/gradlew \
+    resources/android/res/values/libs.xml \
+    resources/android/build.gradle \
+    resources/android/gradle/wrapper/gradle-wrapper.properties \
+    resources/android/gradlew.bat
 
   debug {
     message(Debug)
@@ -140,6 +159,8 @@ android-g++ {
     message(macOS)
     message(clang x86_64)
 
+    QMAKE_MAC_SDK = macosx10.12
+
     LIBS += -lz
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -170,11 +191,11 @@ android-g++ {
     message(Windows)
 
     win32-msvc2015 {
-      QMAKE_CXXFLAGS += -bigobj -arch:AVX2
-
       LIBS += advapi32.lib user32.lib
 
-      INCLUDEPATH += $$PWD/src/cryptography/botan/zlib/
+      INCLUDEPATH += $$PWD/src/libs/zlib/
+
+      QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
       SOURCES += \
         ../src/cryptography/botan/zlib/adler32.c \
