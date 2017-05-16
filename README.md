@@ -6,6 +6,9 @@ Kryvos is an open-source file encryptor and decryptor. It encrypts files with AE
 
 ## Getting Started
 
+## [Download](https://github.com/adolby/Kryvos/releases)
+[Download Kryvos](https://github.com/adolby/Kryvos/releases) for macOS, Windows, or Linux.
+
 ### Installation
 To install Kryvos on Windows or Linux, run the installer executable or extract the files from the Kryvos archive. To install Kryvos on macOS, extract the disk image archive, then mount the disk image. Drag Kryvos.app to your Applications folder. Once the install files are copied, run the Kryvos executable.
 
