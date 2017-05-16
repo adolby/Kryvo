@@ -19,9 +19,9 @@ class Kryvos::Crypto::CryptoPrivate {
    */
   QString errorMessage(const int index) const;
 
-  std::unique_ptr<State> state;
-  std::unique_ptr<Archiver> archiver;
-  std::unique_ptr<BotanCrypto> botanCrypto;
+  State state;
+  Archiver archiver;
+  BotanCrypto botanCrypto;
 
   // The list of status messages that can be displayed to the user
   const QStringList messages;
@@ -30,15 +30,15 @@ class Kryvos::Crypto::CryptoPrivate {
 Kryvos::Crypto::Crypto(QObject* parent)
   : QObject{parent} {
   // Subscribe to crypto provider's signals
-  connect(m->botanCrypto.get(), &BotanCrypto::fileProgress,
+  connect(&m->botanCrypto, &BotanCrypto::fileProgress,
           this, &Crypto::fileProgress);
-  connect(m->botanCrypto.get(), &BotanCrypto::statusMessage,
+  connect(&m->botanCrypto, &BotanCrypto::statusMessage,
           this, &Crypto::statusMessage);
-  connect(m->botanCrypto.get(), &BotanCrypto::errorMessage,
+  connect(&m->botanCrypto, &BotanCrypto::errorMessage,
           this, &Crypto::errorMessage);
 
   // Subscribe to archiver's signal
-  connect(m->archiver.get(), &Archiver::progress,
+  connect(&m->archiver, &Archiver::progress,
           this, &Crypto::fileProgress);
 }
 
@@ -53,8 +53,8 @@ void Kryvos::Crypto::encrypt(const QString& passphrase,
                              const QString& modeOfOperation,
                              const bool compress,
                              const bool container) {
-  m->state->busy(true);
-  emit busyStatus(m->state->isBusy());
+  m->state.busy(true);
+  emit busyStatus(m->state.isBusy());
 
   const auto keySize = [&inputKeySize] {
     auto size = std::size_t{128};
@@ -66,49 +66,46 @@ void Kryvos::Crypto::encrypt(const QString& passphrase,
     return size;
   }();
 
-  m->botanCrypto->encrypt(m->state.get(), m->archiver.get(), passphrase,
-                          inputFilePaths, outputPath, cipher, keySize,
-                          modeOfOperation, compress, container);
+  m->botanCrypto.encrypt(&m->state, &m->archiver, passphrase, inputFilePaths,
+                         outputPath, cipher, keySize, modeOfOperation, compress,
+                         container);
 
-  m->state->reset();
+  m->state.reset();
 
-  m->state->busy(false);
-  emit busyStatus(m->state->isBusy());
+  m->state.busy(false);
+  emit busyStatus(m->state.isBusy());
 }
 
 void Kryvos::Crypto::decrypt(const QString& passphrase,
                               const QStringList& inputFilePaths,
                               const QString& outputPath) {
-  m->state->busy(true);
-  emit busyStatus(m->state->isBusy());
+  m->state.busy(true);
+  emit busyStatus(m->state.isBusy());
 
-  m->botanCrypto->decrypt(m->state.get(), m->archiver.get(), passphrase,
-                          inputFilePaths, outputPath);
+  m->botanCrypto.decrypt(&m->state, &m->archiver, passphrase, inputFilePaths,
+                         outputPath);
 
-  m->state->reset();
+  m->state.reset();
 
-  m->state->busy(false);
-  emit busyStatus(m->state->isBusy());
+  m->state.busy(false);
+  emit busyStatus(m->state.isBusy());
 }
 
 void Kryvos::Crypto::abort() {
-  if (m->state->isBusy()) {
-    m->state->abort(true);
+  if (m->state.isBusy()) {
+    m->state.abort(true);
   }
 }
 
 void Kryvos::Crypto::pause(bool pause) {
-  m->state->pause(pause);
+  m->state.pause(pause);
 }
 
 void Kryvos::Crypto::stop(const QString& filePath) {
-  if (m->state->isBusy()) {
-    m->state->stop(filePath, true);
+  if (m->state.isBusy()) {
+    m->state.stop(filePath, true);
   }
 }
 
-Kryvos::Crypto::CryptoPrivate::CryptoPrivate()
-  : state{std::make_unique<State>()},
-    archiver{std::make_unique<Archiver>()},
-    botanCrypto{std::make_unique<BotanCrypto>()} {
+Kryvos::Crypto::CryptoPrivate::CryptoPrivate() {
 }
