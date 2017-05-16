@@ -108,10 +108,10 @@ qint64 Kryvos::Archiver::copyFileData(QIODevice& inFile,
 
     if (!task.isEmpty()) {
       if (nextPercent > 99) {
-        if (tr("Compress") == task) {
+        if (tr("Compressing") == task) {
           emit progress(filePath, tr("Compressed"), nextPercent);
         }
-        else if (tr("Extract") == task) {
+        else if (tr("Extracting") == task) {
           emit progress(filePath, tr("Extracted"), nextPercent);
         }
       }
@@ -155,7 +155,7 @@ qint64 Kryvos::Archiver::compressFile(QuaZip* zip,
     return -1;
   }
 
-  const QString task = tr("Compress");
+  const QString task = tr("Compressing");
   const qint64 copiedDataSize = copyFileData(inFile, outFile, originalFilePath,
                                              inFile.size(), task);
 
@@ -243,7 +243,8 @@ qint64 Kryvos::Archiver::extractFile(QuaZip* zip,
     if (!destPath) {
       return -1;
     }
-  } else {
+  }
+  else {
     const auto destPath = curDir.mkpath(QFileInfo{fileDest}.absolutePath());
 
     if (!destPath) {
@@ -277,7 +278,7 @@ qint64 Kryvos::Archiver::extractFile(QuaZip* zip,
 
   const qint64 uncompressedSize = info.uncompressedSize;
 
-  const QString task = tr("Extract");
+  const QString task = tr("Extracting");
   const qint64 copiedDataSize = copyFileData(inFile, outFile, fileDest,
                                              uncompressedSize, task);
 
