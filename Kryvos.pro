@@ -83,13 +83,11 @@ android {
   INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
 
   SOURCES += \
-    # src/cryptography/botan/android/botan_all.cpp \
-    src/gui/TouchMainWindow.cpp
+    # src/cryptography/botan/android/botan_all.cpp
 
   HEADERS += \
     # src/cryptography/botan/android/botan_all.h \
-    # src/cryptography/botan/android/android_to_string.h \
-    src/gui/TouchMainWindow.hpp
+    # src/cryptography/botan/android/android_to_string.h
 
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/resources/android
 
@@ -115,12 +113,10 @@ android {
   message(clang)
 
   SOURCES += \
-    src/cryptography/botan/iOS/botan_all.cpp \
-    src/gui/TouchMainWindow.cpp
+    src/cryptography/botan/iOS/botan_all.cpp
 
   HEADERS += \
-    src/cryptography/botan/iOS/botan_all.h \
-    src/gui/TouchMainWindow.hpp
+    src/cryptography/botan/iOS/botan_all.h
 
   debug {
     message(Debug)
@@ -138,7 +134,6 @@ android {
     message(Linux)
 
     LIBS += -lz
-
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
@@ -201,7 +196,6 @@ android {
     QMAKE_MAC_SDK = macosx10.12
 
     LIBS += -lz
-
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
 
