@@ -1,10 +1,6 @@
 #include "src/Application.hpp"
 #include "src/gui/MainWindow.hpp"
-#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
-#include "src/gui/TouchMainWindow.hpp"
-#else
 #include "src/gui/DesktopMainWindow.hpp"
-#endif
 #include "src/cryptography/Crypto.hpp"
 #include "src/settings/Settings.hpp"
 #include "src/utility/Thread.hpp"

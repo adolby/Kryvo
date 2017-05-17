@@ -83,11 +83,11 @@ android {
   INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
 
   SOURCES += \
-    # src/cryptography/botan/android/botan_all.cpp
+    src/libs/botan/android/botan_all.cpp
 
   HEADERS += \
-    # src/cryptography/botan/android/botan_all.h \
-    # src/cryptography/botan/android/android_to_string.h
+    src/libs/botan/android/botan_all.h \
+    src/libs/botan/android/android_to_string.h
 
   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/resources/android
 
@@ -113,10 +113,10 @@ android {
   message(clang)
 
   SOURCES += \
-    src/cryptography/botan/iOS/botan_all.cpp
+    src/libs/botan/iOS/botan_all.cpp
 
   HEADERS += \
-    src/cryptography/botan/iOS/botan_all.h
+    src/libs/botan/iOS/botan_all.h
 
   debug {
     message(Debug)
@@ -142,16 +142,16 @@ android {
       message(clang x86_64)
 
       SOURCES += \
-        src/cryptography/botan/linux/clang/x86_64/botan_all.cpp \
-        src/cryptography/botan/linux/clang/x86_64/botan_all_aesni.cpp \
-        src/cryptography/botan/linux/clang/x86_64/botan_all_avx2.cpp \
-        src/cryptography/botan/linux/clang/x86_64/botan_all_rdrand.cpp \
-        src/cryptography/botan/linux/clang/x86_64/botan_all_rdseed.cpp \
-        src/cryptography/botan/linux/clang/x86_64/botan_all_ssse3.cpp
+        src/libs/botan/linux/clang/x86_64/botan_all.cpp \
+        src/libs/botan/linux/clang/x86_64/botan_all_aesni.cpp \
+        src/libs/botan/linux/clang/x86_64/botan_all_avx2.cpp \
+        src/libs/botan/linux/clang/x86_64/botan_all_rdrand.cpp \
+        src/libs/botan/linux/clang/x86_64/botan_all_rdseed.cpp \
+        src/libs/botan/linux/clang/x86_64/botan_all_ssse3.cpp
 
       HEADERS += \
-        src/cryptography/botan/linux/clang/x86_64/botan_all.h \
-        src/cryptography/botan/linux/clang/x86_64/botan_all_internal.h
+        src/libs/botan/linux/clang/x86_64/botan_all.h \
+        src/libs/botan/linux/clang/x86_64/botan_all_internal.h
 
       debug {
         message(Debug)
@@ -167,16 +167,16 @@ android {
       message(g++ x86_64)
 
       SOURCES += \
-        src/cryptography/botan/linux/gcc/x86_64/botan_all.cpp \
-        src/cryptography/botan/linux/gcc/x86_64/botan_all_aesni.cpp \
-        src/cryptography/botan/linux/gcc/x86_64/botan_all_avx2.cpp \
-        src/cryptography/botan/linux/gcc/x86_64/botan_all_rdrand.cpp \
-        src/cryptography/botan/linux/gcc/x86_64/botan_all_rdseed.cpp \
-        src/cryptography/botan/linux/gcc/x86_64/botan_all_ssse3.cpp
+        src/libs/botan/linux/gcc/x86_64/botan_all.cpp \
+        src/libs/botan/linux/gcc/x86_64/botan_all_aesni.cpp \
+        src/libs/botan/linux/gcc/x86_64/botan_all_avx2.cpp \
+        src/libs/botan/linux/gcc/x86_64/botan_all_rdrand.cpp \
+        src/libs/botan/linux/gcc/x86_64/botan_all_rdseed.cpp \
+        src/libs/botan/linux/gcc/x86_64/botan_all_ssse3.cpp
 
       HEADERS += \
-        src/cryptography/botan/linux/gcc/x86_64/botan_all.h \
-        src/cryptography/botan/linux/gcc/x86_64/botan_all_internal.h
+        src/libs/botan/linux/gcc/x86_64/botan_all.h \
+        src/libs/botan/linux/gcc/x86_64/botan_all_internal.h
 
       debug {
         message(Debug)
@@ -200,16 +200,16 @@ android {
     QMAKE_LFLAGS += -fstack-protector
 
     SOURCES += \
-      src/cryptography/botan/macOS/clang/x86_64/botan_all.cpp \
-      src/cryptography/botan/macOS/clang/x86_64/botan_all_aesni.cpp \
-      src/cryptography/botan/macOS/clang/x86_64/botan_all_avx2.cpp \
-      src/cryptography/botan/macOS/clang/x86_64/botan_all_rdrand.cpp \
-      src/cryptography/botan/macOS/clang/x86_64/botan_all_rdseed.cpp \
-      src/cryptography/botan/macOS/clang/x86_64/botan_all_ssse3.cpp
+      src/libs/botan/macOS/clang/x86_64/botan_all.cpp \
+      src/libs/botan/macOS/clang/x86_64/botan_all_aesni.cpp \
+      src/libs/botan/macOS/clang/x86_64/botan_all_avx2.cpp \
+      src/libs/botan/macOS/clang/x86_64/botan_all_rdrand.cpp \
+      src/libs/botan/macOS/clang/x86_64/botan_all_rdseed.cpp \
+      src/libs/botan/macOS/clang/x86_64/botan_all_ssse3.cpp
 
     HEADERS += \
-      src/cryptography/botan/macOS/clang/x86_64/botan_all.h \
-      src/cryptography/botan/macOS/clang/x86_64/botan_all_internal.h
+      src/libs/botan/macOS/clang/x86_64/botan_all.h \
+      src/libs/botan/macOS/clang/x86_64/botan_all_internal.h
 
     QMAKE_TARGET_BUNDLE_PREFIX = com.andrewdolby
     ICON = resources/icons/kryvos.icns
@@ -268,16 +268,16 @@ android {
         message(MSVC x86_64)
 
         SOURCES += \
-          src/cryptography/botan/windows/msvc/x86_64/botan_all.cpp \
-          src/cryptography/botan/windows/msvc/x86_64/botan_all_aesni.cpp \
-          src/cryptography/botan/windows/msvc/x86_64/botan_all_avx2.cpp \
-          src/cryptography/botan/windows/msvc/x86_64/botan_all_rdrand.cpp \
-          src/cryptography/botan/windows/msvc/x86_64/botan_all_rdseed.cpp \
-          src/cryptography/botan/windows/msvc/x86_64/botan_all_ssse3.cpp
+          src/libs/botan/windows/msvc/x86_64/botan_all.cpp \
+          src/libs/botan/windows/msvc/x86_64/botan_all_aesni.cpp \
+          src/libs/botan/windows/msvc/x86_64/botan_all_avx2.cpp \
+          src/libs/botan/windows/msvc/x86_64/botan_all_rdrand.cpp \
+          src/libs/botan/windows/msvc/x86_64/botan_all_rdseed.cpp \
+          src/libs/botan/windows/msvc/x86_64/botan_all_ssse3.cpp
 
         HEADERS += \
-          src/cryptography/botan/windows/msvc/x86_64/botan_all.h \
-          src/cryptography/botan/windows/msvc/x86_64/botan_all_internal.h
+          src/libs/botan/windows/msvc/x86_64/botan_all.h \
+          src/libs/botan/windows/msvc/x86_64/botan_all_internal.h
 
         debug {
           message(Debug)
@@ -291,16 +291,16 @@ android {
         message(MSVC x86)
 
         SOURCES += \
-          src/cryptography/botan/windows/msvc/x86/botan_all.cpp \
-          src/cryptography/botan/windows/msvc/x86/botan_all_aesni.cpp \
-          src/cryptography/botan/windows/msvc/x86/botan_all_avx2.cpp \
-          src/cryptography/botan/windows/msvc/x86/botan_all_rdrand.cpp \
-          src/cryptography/botan/windows/msvc/x86/botan_all_rdseed.cpp \
-          src/cryptography/botan/windows/msvc/x86/botan_all_ssse3.cpp
+          src/libs/botan/windows/msvc/x86/botan_all.cpp \
+          src/libs/botan/windows/msvc/x86/botan_all_aesni.cpp \
+          src/libs/botan/windows/msvc/x86/botan_all_avx2.cpp \
+          src/libs/botan/windows/msvc/x86/botan_all_rdrand.cpp \
+          src/libs/botan/windows/msvc/x86/botan_all_rdseed.cpp \
+          src/libs/botan/windows/msvc/x86/botan_all_ssse3.cpp
 
         HEADERS += \
-          src/cryptography/botan/windows/msvc/x86/botan_all.h \
-          src/cryptography/botan/windows/msvc/x86/botan_all_internal.h
+          src/libs/botan/windows/msvc/x86/botan_all.h \
+          src/libs/botan/windows/msvc/x86/botan_all_internal.h
 
         debug {
           message(Debug)

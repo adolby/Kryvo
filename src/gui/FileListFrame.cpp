@@ -13,10 +13,6 @@
 
 #include <QDebug>
 
-#if defined(_MSC_VER)
-#include "src/utility/make_unique.h"
-#endif
-
 class Kryvos::FileListFrame::FileListFramePrivate {
  public:
   /*!
