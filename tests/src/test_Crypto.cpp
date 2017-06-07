@@ -1,46 +1,11 @@
 #include "test_Crypto.hpp"
+#include "FileOperations.h"
 #include "src/cryptography/Crypto.hpp"
-#include "src/utility/make_unique.h"
 #include <QTest>
 #include <QFile>
 #include <QThread>
 #include <QString>
 #include <memory>
-
-template <class InputIterator1, class InputIterator2>
-bool equal(InputIterator1 first1, InputIterator1 last1,
-           InputIterator2 first2, InputIterator2 last2) {
-  while ((first1 != last1) && (first2 != last2)) {
-    if (*first1 != *first2) {
-      return false;
-    }
-
-    ++first1;
-    ++first2;
-  }
-
-  return (first1 == last1) && (first2 == last2);
-}
-
-bool filesEqual(const QString& filePath1, const QString& filePath2) {
-  bool equivalent = false;
-
-  QFile file1{filePath1};
-  QFile file2{filePath2};
-
-  if (file1.exists() && file2.exists()) {
-    file1.open(QFile::ReadOnly);
-    uchar* fileMemory1 = file1.map(0, file1.size());
-
-    file2.open(QFile::ReadOnly);
-    uchar* fileMemory2 = file2.map(0, file2.size());
-
-    equivalent = equal(fileMemory1, fileMemory1 + file1.size(),
-                       fileMemory2, fileMemory2 + file2.size());
-  }
-
-  return equivalent;
-}
 
 void TestCrypto::testComparatorSameFile() {
   // Test data
@@ -64,7 +29,7 @@ void TestCrypto::testComparatorSameFile() {
     QSKIP(message.toStdString().c_str());
   }
 
-  const bool equivalentTest = filesEqual(fileName1, fileName2);
+  const bool equivalentTest = FileOperations::filesEqual(fileName1, fileName2);
 
   QVERIFY(equivalentTest);
 }
@@ -91,7 +56,7 @@ void TestCrypto::testComparatorDifferentFile() {
     QSKIP(message.toStdString().c_str());
   }
 
-  const bool equivalentTest = filesEqual(fileName1, fileName2);
+  const bool equivalentTest = FileOperations::filesEqual(fileName1, fileName2);
 
   QVERIFY(!equivalentTest);
 }
@@ -161,7 +126,8 @@ void TestCrypto::testEncryptDecrypt() {
   cryptography.decrypt(passphrase, encryptedFileNames);
 
   // Compare initial file to decrypted file
-  const bool equivalentTest = filesEqual(inputFileName, decryptedFileName);
+  const bool equivalentTest =
+        FileOperations::filesEqual(inputFileName, decryptedFileName);
 
   // Clean up test files
   QFile encryptedFile{encryptedFileName};
@@ -230,7 +196,8 @@ void TestCrypto::testEncryptDecryptAll() {
     const QString decryptedFileName = decryptedFileNames[i];
 
     // Compare initial file to decrypted file
-    equivalentTest = filesEqual(inputFileName, decryptedFileName);
+    equivalentTest =
+          FileOperations::filesEqual(inputFileName, decryptedFileName);
 
     if (!equivalentTest) { // If these two files weren't equivalent, test failed
       break;

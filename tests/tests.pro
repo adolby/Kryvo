@@ -31,14 +31,19 @@ SOURCES += \
   ../src/cryptography/BotanCrypto.cpp \
   ../src/cryptography/State.cpp \
   ../src/archive/Archiver.cpp \
-  src/test_Crypto.cpp
+  src/main.cpp \
+  src/test_Crypto.cpp \
+  src/test_Archiver.cpp \
+  src/FileOperations.cpp
 
 HEADERS += \
   ../src/cryptography/Crypto.hpp \
   ../src/cryptography/BotanCrypto.hpp \
   ../src/cryptography/State.hpp \
   ../src/archive/Archiver.hpp \
-  src/test_Crypto.hpp
+  src/test_Crypto.hpp \
+  src/test_Archiver.hpp \
+  src/FileOperations.h
 
 # Include QuaZip files
 DEFINES += QUAZIP_STATIC
