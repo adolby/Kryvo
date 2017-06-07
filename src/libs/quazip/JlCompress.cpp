@@ -102,21 +102,21 @@ bool JlCompress::compressSubDir(QuaZip* zip, QString dir, QString origDir, bool 
     // Se comprimo anche le sotto cartelle
     if (recursive) {
         // Per ogni sotto cartella
-        QFileInfoList files = directory.entryInfoList(QDir::AllDirs|QDir::NoDotAndDotDot|filters);
-        Q_FOREACH (QFileInfo file, files) {
+        const QFileInfoList files = directory.entryInfoList(QDir::AllDirs|QDir::NoDotAndDotDot|filters);
+        for (const QFileInfo& file : files) {
             // Comprimo la sotto cartella
             if(!compressSubDir(zip,file.absoluteFilePath(),origDir,recursive,filters)) return false;
         }
     }
 
     // Per ogni file nella cartella
-    QFileInfoList files = directory.entryInfoList(QDir::Files|filters);
-    Q_FOREACH (QFileInfo file, files) {
+    const QFileInfoList files = directory.entryInfoList(QDir::Files|filters);
+    for (const QFileInfo& file : files) {
         // Se non e un file o e il file compresso che sto creando
         if(!file.isFile()||file.absoluteFilePath()==zip->getZipName()) continue;
 
         // Creo il nome relativo da usare all'interno del file compresso
-        QString filename = origDirectory.relativeFilePath(file.absoluteFilePath());
+        const QString filename = origDirectory.relativeFilePath(file.absoluteFilePath());
 
         // Comprimo il file
         if (!compressFile(zip,file.absoluteFilePath(),filename)) return false;
@@ -236,7 +236,7 @@ bool JlCompress::compressFiles(QString fileCompressed, QStringList files) {
 
     // Comprimo i file
     QFileInfo info;
-    Q_FOREACH (QString file, files) {
+    for (const QString& file : files) {
         info.setFile(file);
         if (!info.exists() || !compressFile(&zip,file,info.fileName())) {
             QFile::remove(fileCompressed);

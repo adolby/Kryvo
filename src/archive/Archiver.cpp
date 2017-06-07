@@ -27,7 +27,7 @@ qint64 copyData(QIODevice& inFile, QIODevice& outFile) {
 bool removeFiles(const QStringList& fileList) {
   bool ret = true;
 
-  foreach (const auto& filePath, fileList) {
+  for (const QString& filePath : fileList) {
     ret = ret && QFile::remove(filePath);
   }
 

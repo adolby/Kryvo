@@ -178,7 +178,7 @@ void Kryvos::MainWindow::addFiles() {
                                   tr("Any files (*)"));
 
   if (!fileNames.isEmpty()) { // If files were selected, add them to the model
-    foreach (const auto& fileName, fileNames) {
+    for (const QString& fileName : fileNames) {
       const QFileInfo fileInfo{fileName};
       fileListFrame->addFileToModel(fileInfo.absoluteFilePath());
     }

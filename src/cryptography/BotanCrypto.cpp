@@ -13,9 +13,9 @@
 namespace Kryvos {
 
 namespace Constants {
-  const auto kKDFHash = std::string{"KDF2(Keccak-1600)"};
-  const auto kKeyLabel = std::string{"user secret"};
-  const auto kIVLabel = std::string{"initialization vector"};
+  const std::string kKDFHash = std::string{"KDF2(Keccak-1600)"};
+  const std::string kKeyLabel = std::string{"user secret"};
+  const std::string kIVLabel = std::string{"initialization vector"};
 }
 
 }
@@ -41,7 +41,7 @@ void Kryvos::BotanCrypto::encrypt(State* state,
                                   const bool compress,
                                   const bool container) {
   const QString algorithm = [&cipher, &keySize, &modeOfOperation] {
-    auto algo = QString{cipher % QStringLiteral("/") % modeOfOperation};
+    QString algo = QString{cipher % QStringLiteral("/") % modeOfOperation};
 
     if (QStringLiteral("AES") == cipher) {
       algo = QString{cipher % QStringLiteral("-") % QString::number(keySize) %
@@ -51,11 +51,11 @@ void Kryvos::BotanCrypto::encrypt(State* state,
     return algo;
   }();
 
-  auto outputFilePaths = QStringList{};
+  QStringList outputFilePaths{};
 
   const QFileInfo outputPathInfo{outputPath};
 
-  foreach (const auto& inputFilePath, inputFilePaths) {
+  for (const QString& inputFilePath : inputFilePaths) {
     const QFileInfo inputFileInfo{inputFilePath};
     const QString inFilePath = inputFileInfo.absoluteFilePath();
 
@@ -125,7 +125,7 @@ void Kryvos::BotanCrypto::decrypt(State* state,
                                   const QString& passphrase,
                                   const QStringList& inputFilePaths,
                                   const QString& outputPath) {
-  foreach (const auto& inputFilePath, inputFilePaths) {
+  for (const QString& inputFilePath : inputFilePaths) {
     const QFileInfo inputFileInfo{inputFilePath};
     const QString inFilePath = inputFileInfo.absoluteFilePath();
 
@@ -163,7 +163,7 @@ void Kryvos::BotanCrypto::decrypt(State* state,
           emit errorMessage(Constants::messages[9], inFilePath);
         }
 
-        foreach (const auto& archiveFilePath, archiveFilePaths) {
+        for (const QString& archiveFilePath : archiveFilePaths) {
           decryptFile(state, passphrase, archiveFilePath, outFilePath);
 
           if (state->isAborted()) {
@@ -384,8 +384,8 @@ void Kryvos::BotanCrypto::decryptFile(State* state,
     std::getline(in, keySaltString);
     std::getline(in, ivSaltString);
 
-    const QString headerString = QString{headerStringStd.c_str()};
-    const QString compressString = QString{compressStringStd.c_str()};
+    const QString headerString = QString{headerStringStd.data()};
+    const QString compressString = QString{compressStringStd.data()};
 
     if (headerString != tr("-------- ENCRYPTED FILE --------")) {
       emit errorMessage(Constants::messages[6].arg(inputFilePath));
