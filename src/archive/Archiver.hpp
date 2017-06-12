@@ -7,8 +7,7 @@
 
 namespace Kryvos {
 
-class Archiver : public QObject
-{
+class Archiver : public QObject {
   Q_OBJECT
 
  public:
