@@ -30,7 +30,8 @@ class MainWindow : public QMainWindow {
    * \param settings Application settings
    * \param parent Widget parent of this main window
    */
-  explicit MainWindow(Settings* settings = nullptr, QWidget* parent = nullptr);
+  explicit MainWindow(Settings* settings = nullptr,
+                      QWidget* parent = nullptr);
 
   /*!
    * \brief ~MainWindow Destroys the application's main window

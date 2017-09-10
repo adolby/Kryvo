@@ -11,7 +11,7 @@ class Thread : public QThread {
   using QThread::run; // This is a final class
 
  public:
-  explicit Thread(QObject* parent = Q_NULLPTR);
+  explicit Thread(QObject* parent = nullptr);
   ~Thread();
 };
 

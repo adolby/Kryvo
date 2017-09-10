@@ -48,7 +48,7 @@ void Kryvos::ProgressFrame::updateTask(const QString& task,
     m->progressTaskLabel->setText(task);
   }
 
-  const bool visibleStatus = (100 == percentProgress) ? false : true;
+  const bool visibleStatus = !(100 == percentProgress);
 
   this->setVisible(visibleStatus);
 

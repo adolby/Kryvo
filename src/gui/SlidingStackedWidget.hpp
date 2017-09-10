@@ -21,8 +21,7 @@ class SlidingStackedWidget : public QStackedWidget {
 
  public:
   //! This enumeration is used to define the animation direction.
-  enum Direction
-  {
+  enum Direction {
     LeftToRight,
     RightToLeft,
     TopToBottom,
