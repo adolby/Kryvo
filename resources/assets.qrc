@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>stylesheets/kryvos.qss</file>
         <file>images/addFilesIcon.png</file>
         <file>images/clearFilesIcon.png</file>
         <file>images/closeFileIcon.png</file>
@@ -12,10 +11,11 @@
         <file>images/backIcon.png</file>
         <file>images/leftArrowIcon.png</file>
         <file>images/rightArrowIcon.png</file>
-        <file>images/kryvos@2x.png</file>
-        <file>images/kryvos.png</file>
         <file>images/gearIcon@2x.png</file>
         <file>images/settingsIcon.png</file>
         <file>images/settingsIcon@2x.png</file>
+        <file>stylesheets/kryvo.qss</file>
+        <file>images/kryvo.png</file>
+        <file>images/kryvo@2x.png</file>
     </qresource>
 </RCC>

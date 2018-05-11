@@ -1,0 +1,168 @@
+QT += core testlib
+QT -= gui
+
+TARGET = CryptoTests
+
+TEMPLATE = app
+
+CONFIG += c++14
+
+# Qt Creator Debug/Release Differentiation
+# Ensure one "debug_and_release" in CONFIG, for clarity.
+debug_and_release {
+  CONFIG -= debug_and_release
+  CONFIG += debug_and_release
+}
+# Ensure one "debug" or "release" in CONFIG so they can be used as conditionals
+# instead of writing "CONFIG(debug, debug|release)"
+CONFIG(debug, debug|release) {
+  CONFIG -= debug release
+  CONFIG += debug
+}
+CONFIG(release, debug|release) {
+  CONFIG -= debug release
+  CONFIG += release
+}
+
+INCLUDEPATH += $$PWD/../app/
+
+SOURCES += \
+  ../app/cryptography/Crypto.cpp \
+  ../app/cryptography/CryptoState.cpp \
+  test_Crypto.cpp \
+#  test_Archiver.cpp \
+  FileOperations.cpp
+
+HEADERS += \
+  ../app/cryptography/Crypto.hpp \
+  ../app/cryptography/CryptoState.hpp \
+  test_Crypto.hpp \
+#  test_Archiver.hpp \
+  FileOperations.h
+
+# Platform-specific configuration
+android {
+  message(Android)
+
+  # You'll need to place your Boost path here.
+  INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
+
+  HEADERS += \
+    src/libs/botan/android/android_to_string.h
+
+  ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../resources/android
+
+  debug {
+    message(Debug)
+    DESTDIR = ../../build/android/debug/test/
+  }
+  release {
+    message(Release)
+    DESTDIR = ../../build/android/release/test/
+  }
+} else:ios {
+  message(iOS)
+  message(clang)
+
+  debug {
+    message(Debug)
+    DESTDIR = ../../build/iOS/debug/test/
+  }
+  release {
+    message(Release)
+    DESTDIR = ../../build/iOS/release/test/
+  }
+} else { # Desktop OS
+  linux {
+    message(Linux)
+
+    LIBS += -lz
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
+    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
+
+    linux-clang {
+      message(clang x86_64)
+
+      debug {
+        message(Debug)
+        DESTDIR = ../../build/linux/clang/x86_64/debug/test/
+      }
+      release {
+        message(Release)
+        DESTDIR = ../../build/linux/clang/x86_64/release/test/
+      }
+    }
+
+    linux-g++-64 {
+      message(g++ x86_64)
+
+      debug {
+        message(Debug)
+        DESTDIR = ../../build/linux/gcc/x86_64/debug/test/
+      }
+      release {
+        message(Release)
+        DESTDIR = ../../build/linux/gcc/x86_64/release/test/
+      }
+    }
+  } # End Linux
+
+  macx {
+    message(macOS)
+    message(clang x86_64)
+
+    QMAKE_MAC_SDK = macosx10.12
+
+    LIBS += -lz
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
+
+    debug {
+      message(Debug)
+      DESTDIR = ../../build/macOS/clang/x86_64/debug/test/
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../build/macOS/clang/x86_64/release/test/
+    }
+  }
+
+  win32 {
+    message(Windows)
+
+    win32-msvc2015 {
+      LIBS += advapi32.lib user32.lib
+
+      QMAKE_CXXFLAGS += -bigobj -arch:AVX2
+
+      contains(QT_ARCH, x86_64) {
+        message(MSVC x86_64)
+
+        debug {
+          message(Debug)
+          DESTDIR = ../../build/windows/msvc/x86_64/debug/test/
+        }
+        release {
+          message(Release)
+          DESTDIR = ../../build/windows/msvc/x86_64/release/test/
+        }
+      } else {
+        message(MSVC x86)
+
+        debug {
+          message(Debug)
+          DESTDIR = ../../build/windows/msvc/x86/debug/test/
+        }
+        release {
+          message(Release)
+          DESTDIR = ../../build/windows/msvc/x86/release/test/
+        }
+      }
+    }
+  } # End win32
+} # End desktop
+
+OBJECTS_DIR = $$DESTDIR/obj
+MOC_DIR = $$DESTDIR/moc
+RCC_DIR = $$DESTDIR/qrc

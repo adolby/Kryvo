@@ -44,8 +44,8 @@ PATH=${qt_install_dir}/Qt/5.7/gcc_64/bin/:${qt_install_dir}/Qt/QtIFW2.0.3/bin/:$
 # cp botan_all.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all.cpp
 # cp botan_all.h ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all.h
 
-# Build Kryvos
-echo "Building Kryvos..."
+# Build Kryvo
+echo "Building Kryvo..."
 cd ${project_dir}
 qmake -v
 qmake -config release -spec linux-g++-64
@@ -73,9 +73,9 @@ echo "Running tests..."
 sudo chmod +x CryptoTests
 ./CryptoTests
 
-# Package Kryvos
+# Package Kryvo
 echo "Packaging..."
-cd ${project_dir}/build/linux/gcc/x86_64/release/Kryvos/
+cd ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/
 
 rm -rf moc
 rm -rf obj
@@ -107,18 +107,18 @@ cp "${project_dir}/LICENSE" "LICENSE"
 cp "${project_dir}/Botan License" "Botan License"
 cp "${project_dir}/Qt License" "Qt License"
 mkdir themes
-cp "${project_dir}/resources/stylesheets/kryvos.qss" "themes/kryvos.qss"
+cp "${project_dir}/resources/stylesheets/kryvo.qss" "themes/kryvo.qss"
 
 echo "Copying files for installer..."
-cp -R * "${project_dir}/installer/linux/packages/com.kryvosproject.kryvos/data/"
+cp -R * "${project_dir}/installer/linux/packages/io.kryvo.kryvo/data/"
 
 echo "Packaging portable archive..."
 cd ..
-7z a kryvos_${TAG_NAME}_linux_x86_64_portable.zip Kryvos
+7z a kryvo_${TAG_NAME}_linux_x86_64_portable.zip Kryvo
 
 echo "Creating installer..."
 cd "${project_dir}/installer/linux/"
-binarycreator --offline-only -c config/config.xml -p packages kryvos_${TAG_NAME}_linux_x86_64_installer
+binarycreator --offline-only -c config/config.xml -p packages kryvo_${TAG_NAME}_linux_x86_64_installer
 
 echo "Done!"
 

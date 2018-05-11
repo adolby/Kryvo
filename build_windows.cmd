@@ -6,7 +6,7 @@ echo Set up environment...
 set PATH=%QT%\bin\;C:\Qt\Tools\QtCreator\bin\;C:\Qt\QtIFW2.0.1\bin\;%PATH%
 call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
 
-echo Building Kryvos...
+echo Building Kryvo...
 qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
 nmake
 
@@ -26,28 +26,28 @@ CryptoTests
 
 echo Packaging...
 cd %project_dir%\build\windows\msvc\x86_64\release\
-windeployqt Kryvos\Kryvos.exe
+windeployqt Kryvo\Kryvo.exe
 
-rd /s /q Kryvos\moc\
-rd /s /q Kryvos\obj\
-rd /s /q Kryvos\qrc\
+rd /s /q Kryvo\moc\
+rd /s /q Kryvo\obj\
+rd /s /q Kryvo\qrc\
 
 echo Copying files for archival...
-copy "%project_dir%\Release Notes" "Kryvos\Release Notes.txt"
-copy "%project_dir%\README.md" "Kryvos\README.md"
-copy "%project_dir%\LICENSE" "Kryvos\LICENSE.txt"
-copy "%project_dir%\Botan License" "Kryvos\Botan License.txt"
-copy "%project_dir%\Qt License" "Kryvos\Qt License.txt"
-mkdir %project_dir%\Kryvos\themes\
-copy "%project_dir%\resources\stylesheets\kryvos.qss" "Kryvos\themes\kryvos.qss"
+copy "%project_dir%\Release Notes" "Kryvo\Release Notes.txt"
+copy "%project_dir%\README.md" "Kryvo\README.md"
+copy "%project_dir%\LICENSE" "Kryvo\LICENSE.txt"
+copy "%project_dir%\Botan License" "Kryvo\Botan License.txt"
+copy "%project_dir%\Qt License" "Kryvo\Qt License.txt"
+mkdir %project_dir%\Kryvo\themes\
+copy "%project_dir%\resources\stylesheets\kryvo.qss" "Kryvo\themes\kryvo.qss"
 
 echo Copying files for installer...
-mkdir %project_dir%\installer\windows\x86_64\packages\com.kryvosproject.kryvos\data\
-robocopy Kryvos\ %project_dir%\installer\windows\x86_64\packages\com.kryvosproject.kryvos\data\ /E
+mkdir %project_dir%\installer\windows\x86_64\packages\io.kryvo.kryvo\data\
+robocopy Kryvo\ %project_dir%\installer\windows\x86_64\packages\io.kryvo.kryvo\data\ /E
 
 echo Packaging portable archive...
-7z a kryvos_%TAG_NAME%_windows_x86_64_portable.zip Kryvos
+7z a kryvo_%TAG_NAME%_windows_x86_64_portable.zip Kryvo
 
 echo Creating installer...
 cd %project_dir%\installer\windows\x86_64\
-binarycreator.exe --offline-only -c config\config.xml -p packages kryvos_%TAG_NAME%_windows_x86_64_installer.exe
+binarycreator.exe --offline-only -c config\config.xml -p packages kryvo_%TAG_NAME%_windows_x86_64_installer.exe

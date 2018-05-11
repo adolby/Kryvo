@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package>
-    <DisplayName>Kryvos</DisplayName>
-    <Description>Install Kryvos.</Description>
+    <DisplayName>Kryvo</DisplayName>
+    <Description>Install Kryvo.</Description>
     <Version>0.9.9</Version>
     <ReleaseDate>2016-09-19</ReleaseDate>
     <Licenses>
-        <License name="MIT License" file="Kryvos License" />
+        <License name="MIT License" file="Kryvo License" />
     </Licenses>
     <Default>true</Default>
 </Package>

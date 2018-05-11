@@ -60,7 +60,7 @@ Component.prototype.createOperations = function()
     }
 
     if (installer.value("os") === "win") {
-        component.addOperation("CreateShortcut", "@TargetDir@/Kryvos.exe", "@StartMenuDir@/Kryvos.lnk");
-        component.addOperation("CreateShortcut", "@TargetDir@/maintenancetool.exe", "@StartMenuDir@/Uninstall Kryvos.lnk");
+        component.addOperation("CreateShortcut", "@TargetDir@/Kryvo.exe", "@StartMenuDir@/Kryvo.lnk");
+        component.addOperation("CreateShortcut", "@TargetDir@/maintenancetool.exe", "@StartMenuDir@/Uninstall Kryvo.lnk");
     }
 }
