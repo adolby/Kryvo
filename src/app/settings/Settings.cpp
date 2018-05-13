@@ -9,8 +9,6 @@
 #include <QStringBuilder>
 #include <QApplication>
 
-#include <QDebug>
-
 namespace Kryvo {
   const QStringList kDefaultPaths =
     QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);

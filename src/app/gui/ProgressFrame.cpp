@@ -5,8 +5,6 @@
 #include <QHBoxLayout>
 #include <QString>
 
-#include <QDebug>
-
 class Kryvo::ProgressFramePrivate {
   Q_DISABLE_COPY(ProgressFramePrivate)
 

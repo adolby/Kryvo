@@ -55,7 +55,7 @@ class BotanProvider : public QObject,
 
  public:
   explicit BotanProvider(QObject* parent = nullptr);
-  virtual ~BotanProvider() Q_DECL_OVERRIDE;
+  ~BotanProvider() Q_DECL_OVERRIDE;
 
  signals:
   /*!
@@ -96,15 +96,15 @@ class BotanProvider : public QObject,
   * \param compress Boolean representing compression mode
   * \param container Boolean representing container mode
   */
-  virtual bool encrypt(CryptoState* state,
-                       const QString& passphrase,
-                       const QStringList& inputFilePaths,
-                       const QString& outputPath = QString{},
-                       const QString& cipher = QString{"AES"},
-                       const std::size_t keySize = std::size_t{128},
-                       const QString& modeOfOperation = QString{"GCM"},
-                       const bool compress = true,
-                       const bool container = true) Q_DECL_OVERRIDE;
+  bool encrypt(CryptoState* state,
+               const QString& passphrase,
+               const QStringList& inputFilePaths,
+               const QString& outputPath = QString{},
+               const QString& cipher = QString{"AES"},
+               const std::size_t keySize = std::size_t{128},
+               const QString& modeOfOperation = QString{"GCM"},
+               const bool compress = true,
+               const bool container = true) Q_DECL_OVERRIDE;
 
   /*!
    * \brief decrypt Decrypt a list of files. The algorithm is determined from
@@ -115,10 +115,10 @@ class BotanProvider : public QObject,
    * the files to decrypt
    * \param outputPath String containing output file path
    */
-  virtual bool decrypt(CryptoState* state,
-                       const QString& passphrase,
-                       const QStringList& inputFilePaths,
-                       const QString& outputPath) Q_DECL_OVERRIDE;
+  bool decrypt(CryptoState* state,
+               const QString& passphrase,
+               const QStringList& inputFilePaths,
+               const QString& outputPath) Q_DECL_OVERRIDE;
 
   /*!
    * \brief encryptFile Encrypts a single file with the input passphrase and
@@ -150,10 +150,10 @@ class BotanProvider : public QObject,
    * \param inputFilePath String containing the file path of the file to decrypt
    * \param outputPath String containing output file path
    */
-  virtual bool decryptFile(CryptoState* state,
-                           const QString& passphrase,
-                           const QString& inputFilePath,
-                           const QString& outputFilePath);
+  bool decryptFile(CryptoState* state,
+                   const QString& passphrase,
+                   const QString& inputFilePath,
+                   const QString& outputFilePath);
 
   /*!
    * \brief executeCipher Executes a cipher on a file with the a key,
@@ -177,7 +177,7 @@ class BotanProvider : public QObject,
    * \brief qObject Provide a constant cost QObject conversion
    * \return
    */
-  QObject* qObject();
+  QObject* qObject() Q_DECL_OVERRIDE;
 };
 
 }

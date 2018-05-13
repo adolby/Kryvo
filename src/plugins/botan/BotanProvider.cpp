@@ -2,12 +2,10 @@
 #include "constants.h"
 #include <QMimeDatabase>
 #include <QMimeType>
-#include <QDir>
 #include <QFileInfo>
+#include <QDir>
 #include <string>
 #include <stdexcept>
-
-#include <QDebug>
 
 namespace Kryvo {
 
@@ -82,8 +80,6 @@ bool Kryvo::BotanProvider::encrypt(CryptoState* state,
                                         inputFileInfo.fileName() %
                                         Constants::kDot %
                                         Constants::kExtension};
-
-    qDebug() << Q_FUNC_INFO << "Out file path encrypt: " << outFilePath;
 
     outputFilePaths << outFilePath;
 
@@ -171,8 +167,6 @@ bool Kryvo::BotanProvider::decrypt(CryptoState* state,
 
     const QString outFilePath = QString{outPath % QDir::separator() %
                                         inputFileInfo.fileName() };
-
-    qDebug() << Q_FUNC_INFO << "Out file path decrypt: " << outFilePath;
 
 // TODO: Fix container
 //    if (mime.inherits(QStringLiteral("application/zip"))) { // Container file

@@ -38,8 +38,6 @@ class Kryvo::CryptoPrivate {
 
 Kryvo::Crypto::Crypto(QObject* parent)
   : QObject{parent}, d_ptr{std::make_unique<CryptoPrivate>()} {
-  Q_D(Crypto);
-
   loadProviders();
 }
 
@@ -125,10 +123,6 @@ void Kryvo::Crypto::encrypt(const QString& passphrase,
                             const QString& modeOfOperation,
                             const bool compress, const bool container) {
   Q_D(Crypto);
-
-  qDebug() << Q_FUNC_INFO << passphrase << inputFilePaths << outputPath <<
-              cipher << inputKeySize << modeOfOperation << compress <<
-              container;
 
   if ( !d->provider ) {
     return;
