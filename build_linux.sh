@@ -46,14 +46,8 @@ PATH=${qt_install_dir}/Qt/5.7/gcc_64/bin/:${qt_install_dir}/Qt/QtIFW2.0.3/bin/:$
 
 # Build Kryvo
 echo "Building Kryvo..."
-cd ${project_dir}
+cd ${project_dir}/src/
 qmake -v
-qmake -config release -spec linux-g++-64
-make
-
-# Build tests
-echo "Building tests..."
-cd ${project_dir}/tests/
 qmake -config release -spec linux-g++-64
 make
 
@@ -65,7 +59,7 @@ cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Test.so.5.7.0" "libQt5Test.so.5"
 # Copy test data
 echo "Copying test data..."
 cd ${project_dir}/build/linux/gcc/x86_64/release/test/
-cp ${project_dir}/tests/data/test-data.zip test-data.zip
+cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
 7z x test-data.zip &> /dev/null
 
 # Run tests

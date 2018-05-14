@@ -38,27 +38,20 @@ PATH=/usr/local/opt/qt/bin/:${PATH}
 
 # Build Kryvo
 echo "Building Kryvo..."
-cd ${project_dir}
-qmake -config release
-make
-
-# Build tests
-echo "Building tests..."
-cd ${project_dir}/tests/
+cd ${project_dir}/src/
 qmake -config release
 make
 
 # Copy test data
 echo "Copying test data..."
 cd ${project_dir}/build/macOS/clang/x86_64/release/test/CryptoTests.app/Contents/MacOS/
-cp ${project_dir}/tests/data/test-data.zip test-data.zip
+cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
 7z x test-data.zip &>/dev/null
 
 # Run tests
 echo "Running tests..."
 sudo chmod +x CryptoTests
-# Disable running tests until Travis adds support for macOS 10.12
-# ./CryptoTests
+./CryptoTests
 
 # Package Kryvo
 echo "Packaging..."
