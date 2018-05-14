@@ -147,8 +147,8 @@ android|ios {
 
     mkpath($${DESTDIR}/../../Kryvo/plugins/)
     mkpath($${DESTDIR}/../../test/plugins/)
-    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/botan/ $${DESTDIR}/../../Kryvo/plugins/)
-    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/botan/ $${DESTDIR}/../../test/plugins/)
+    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../Kryvo/plugins/)
+    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../test/plugins/)
   } # End Linux
 
   macx {
@@ -253,7 +253,7 @@ android|ios {
 
     mkpath($${DESTDIR}/../../Kryvo/plugins/)
     mkpath($${DESTDIR}/../../test/plugins/)
-    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/botan/libbotan.dll $${DESTDIR}/../Kryvo/plugins/)
-    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/botan/libbotan.dll $${DESTDIR}/../test/plugins/)
+    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../Kryvo/plugins/)
+    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../test/plugins/)
   } # End win32
 } # End desktop
