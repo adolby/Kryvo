@@ -60,7 +60,7 @@ cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Test.so.5.7.0" "libQt5Test.so.5"
 echo "Copying test data..."
 cd ${project_dir}/build/linux/gcc/x86_64/release/test/
 cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
-7z x test-data.zip &> /dev/null
+7z x test-data.zip
 
 # Run tests
 echo "Running tests..."
