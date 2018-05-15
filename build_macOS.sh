@@ -42,6 +42,10 @@ cd ${project_dir}/src/
 qmake -config release
 make
 
+# Copy dependencies for test app
+cd ${project_dir}/build/macOS/clang/x86_64/release/test/
+macdeployqt CryptoTests.app
+
 # Copy test data
 echo "Copying test data..."
 cd ${project_dir}/build/macOS/clang/x86_64/release/test/CryptoTests.app/Contents/MacOS/
