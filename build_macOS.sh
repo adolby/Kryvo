@@ -46,7 +46,7 @@ make
 echo "Copying test data..."
 cd ${project_dir}/build/macOS/clang/x86_64/release/test/CryptoTests.app/Contents/MacOS/
 cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
-7z x test-data.zip
+7z x test-data.zip &> /dev/null
 
 # Run tests
 echo "Running tests..."
@@ -55,7 +55,7 @@ sudo chmod +x CryptoTests
 
 # Package Kryvo
 echo "Packaging..."
-cd ${project_dir}/build/macOS/clang/x86_64/release/
+cd ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/
 
 rm -rf moc
 rm -rf obj

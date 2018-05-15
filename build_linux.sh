@@ -51,16 +51,16 @@ qmake -v
 qmake -config release -spec linux-g++-64
 make
 
-# Copy test dependencies
-echo "Copying test dependencies..."
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Core.so.5.7.0" "libQt5Core.so.5"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Test.so.5.7.0" "libQt5Test.so.5"
-
 # Copy test data
 echo "Copying test data..."
 cd ${project_dir}/build/linux/gcc/x86_64/release/test/
 cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
-7z x test-data.zip
+7z x test-data.zip &> /dev/null
+
+# Copy test dependencies
+echo "Copying test dependencies..."
+cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Core.so.5.7.0" "libQt5Core.so.5"
+cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Test.so.5.7.0" "libQt5Test.so.5"
 
 # Run tests
 echo "Running tests..."
