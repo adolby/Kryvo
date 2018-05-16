@@ -1,5 +1,3 @@
-sudo: required
-
 git:
   depth: 1
 
@@ -18,6 +16,8 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
+            - chrpath
+            - p7zip
           env:
             - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 

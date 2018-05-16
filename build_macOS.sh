@@ -22,9 +22,9 @@ PATH=/usr/local/opt/qt/bin/:${PATH}
 
 # Get Botan
 # echo "Installing Botan..."
-# sudo wget https://github.com/randombit/botan/archive/1.11.32.zip
-# sudo 7z x 1.11.32.zip &>/dev/null
-# sudo chmod -R +x /usr/local/botan-1.11.32/
+# wget https://github.com/randombit/botan/archive/1.11.32.zip
+# 7z x 1.11.32.zip &>/dev/null
+# chmod -R +x /usr/local/botan-1.11.32/
 # cd /usr/local/botan-1.11.32/
 # ./configure.py --cc=clang --amalgamation --disable-shared --with-zlib
 # cp botan_all_aesni.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all_aesni.cpp
@@ -54,7 +54,7 @@ cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
 
 # Run tests
 echo "Running tests..."
-sudo chmod +x CryptoTests
+chmod +x CryptoTests
 ./CryptoTests
 
 # Package Kryvo
