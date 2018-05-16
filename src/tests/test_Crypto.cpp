@@ -124,8 +124,11 @@ void TestCrypto::testEncryptDecrypt() {
     QSKIP(messageString);
   }
 
-  const QStringList inputFileNames = {inputFileName};
-  const QStringList encryptedFileNames = {encryptedFileName};
+  QStringList inputFileNames;
+  inputFileNames.append(inputFileName);
+
+  QStringList encryptedFileNames;
+  encryptedFileNames.append(encryptedFileName);
 
   Kryvo::Crypto cryptography;
 

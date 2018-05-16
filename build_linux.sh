@@ -58,7 +58,7 @@ cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
 7z x test-data.zip &> /dev/null
 
 # Copy test dependencies
-echo "Copying test dependencies..."
+echo "Copying test app dependencies..."
 cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
 cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
 cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
