@@ -12,7 +12,7 @@ cd ${qt_install_dir}
 echo "Downloading Qt files..."
 wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-linux-x86_64.7z
 echo "Extracting Qt files..."
-7z x qt-opensource-5.7.0-linux-x86_64.7z
+7z x qt-opensource-5.7.0-linux-x86_64.7z &> /dev/null
 
 # Install Qt Installer Framework
 echo "Installing Qt Installer Framework..."
