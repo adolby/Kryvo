@@ -17,7 +17,7 @@ matrix:
           packages:
             - g++-7
             - chrpath
-            - p7zip
+            - p7zip-full
           env:
             - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
