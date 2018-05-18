@@ -19,11 +19,17 @@ matrix:
             - chrpath
             - p7zip-full
 
+install:
+  - mkdir -p latest-gcc-symlinks
+  - ln -s /usr/bin/g++-7 latest-gcc-symlinks/g++
+  - ln -s /usr/bin/gcc-7 latest-gcc-symlinks/gcc
+  - export PATH=$PWD/latest-gcc-symlinks:$PATH
+
 script:
   - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_macOS.sh ; fi
   - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_macOS.sh ; fi
   - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then chmod +x build_linux.sh ; fi
-  - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then TAG_NAME=${TRAVIS_TAG} CXX="g++-7" CC="gcc-7" ./build_linux.sh ; fi
+  - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_linux.sh ; fi
 
 deploy:
   - provider: releases
