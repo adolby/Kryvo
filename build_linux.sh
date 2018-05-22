@@ -63,6 +63,9 @@ cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Test.so.5.7.0" "libQt5Test.so.5"
 # Run tests
 echo "Running tests..."
 chmod +x CryptoTests
+cd plugins
+ls
+cd ..
 ls
 ./CryptoTests
 
