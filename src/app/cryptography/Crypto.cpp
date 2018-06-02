@@ -18,7 +18,7 @@ class Kryvo::CryptoPrivate {
   /*!
    * \brief CryptoPrivate Constructs the Crypto private implementation
    */
-  CryptoPrivate();
+  CryptoPrivate(Crypto* crypto);
 
   /*!
    * \brief errorMessage Returns error message
@@ -37,7 +37,7 @@ class Kryvo::CryptoPrivate {
 };
 
 Kryvo::Crypto::Crypto(QObject* parent)
-  : QObject{parent}, d_ptr{std::make_unique<CryptoPrivate>()} {
+  : QObject{parent}, d_ptr{std::make_unique<CryptoPrivate>(this)} {
   loadProviders();
 }
 
@@ -192,6 +192,6 @@ void Kryvo::Crypto::stop(const QString& filePath) {
   }
 }
 
-Kryvo::CryptoPrivate::CryptoPrivate()
+Kryvo::CryptoPrivate::CryptoPrivate(Crypto* crypto)
   : provider{nullptr} {
 }

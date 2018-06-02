@@ -13,7 +13,8 @@ namespace Kryvo {
 class ApplicationPrivate;
 
 /*!
- * \brief The Application class controls the functionality of the application.
+ * \brief The Application class controls the functionality of the
+ * application.
  */
 class Application : public QObject {
   Q_OBJECT
