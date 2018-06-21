@@ -302,7 +302,7 @@ void Kryvo::SettingsPrivate::exportSettings() const {
     settings[QStringLiteral("compressionMode")] = compressionMode;
     settings[QStringLiteral("containerMode")] = containerMode;
 
-    auto addPathSeparator = [] (const QString& inPath) {
+    const auto addPathSeparator = [] (const QString& inPath) {
       const QString cleanedPath = QDir::cleanPath(inPath);
 
       const QFileInfo cleanedPathInfo{cleanedPath};
