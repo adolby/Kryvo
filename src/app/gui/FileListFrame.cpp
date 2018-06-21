@@ -28,7 +28,7 @@ class Kryvo::FileListFramePrivate {
    */
   void addFileToModel(const QString& filePath);
 
-  std::unique_ptr<QStandardItemModel> fileListModel;
+  QStandardItemModel fileListModel;
   QTableView* fileListView;
 };
 
@@ -39,10 +39,10 @@ Kryvo::FileListFrame::FileListFrame(QWidget* parent)
   // File list header
   const QStringList headerList = {tr("File"), tr("Task"), tr("Progress"),
                                   tr("Remove")};
-  d->fileListModel->setHorizontalHeaderLabels(headerList);
+  d->fileListModel.setHorizontalHeaderLabels(headerList);
 
   d->fileListView = new QTableView{this};
-  d->fileListView->setModel(d->fileListModel.get());
+  d->fileListView->setModel(&d->fileListModel);
   d->fileListView->setShowGrid(false);
   d->fileListView->verticalHeader()->hide();
   d->fileListView->horizontalHeader()->hide();
@@ -72,28 +72,25 @@ Kryvo::FileListFrame::~FileListFrame() {
 
 QStandardItem* Kryvo::FileListFrame::item(const int row) {
   Q_D(FileListFrame);
-  Q_ASSERT(d->fileListModel);
 
-  return d->fileListModel->item(row, 0);
+  return d->fileListModel.item(row, 0);
 }
 
 int Kryvo::FileListFrame::rowCount() const {
   Q_D(const FileListFrame);
-  Q_ASSERT(d->fileListModel);
 
-  return d->fileListModel->rowCount();
+  return d->fileListModel.rowCount();
 }
 
 void Kryvo::FileListFrame::clear() {
   Q_D(FileListFrame);
-  Q_ASSERT(d->fileListModel);
 
-  d->fileListModel->clear();
+  d->fileListModel.clear();
 
   // File list header
   const QStringList headerList = {tr("File"), tr("Task"), tr("Progress"),
                                   tr("Remove")};
-  d->fileListModel->setHorizontalHeaderLabels(headerList);
+  d->fileListModel.setHorizontalHeaderLabels(headerList);
 
   QHeaderView* header = d->fileListView->horizontalHeader();
   header->setStretchLastSection(false);
@@ -108,12 +105,11 @@ void Kryvo::FileListFrame::updateProgress(const QString& path,
                                           const QString& task,
                                           const qint64 percent) {
   Q_D(FileListFrame);
-  Q_ASSERT(d->fileListModel);
 
   qDebug() << path << " " << task << " " << percent;
 
   if (!path.isEmpty()) {
-    const QList<QStandardItem*> items = d->fileListModel->findItems(path);
+    const QList<QStandardItem*> items = d->fileListModel.findItems(path);
 
     if (items.size() > 0) {
       QStandardItem* item = items[0];
@@ -121,12 +117,12 @@ void Kryvo::FileListFrame::updateProgress(const QString& path,
       if (item) {
         const int index = item->row();
 
-        QStandardItem* taskItem = d->fileListModel->item(index, 1);
+        QStandardItem* taskItem = d->fileListModel.item(index, 1);
         if (taskItem) {
           taskItem->setData(task, Qt::DisplayRole);
         }
 
-        QStandardItem* progressItem = d->fileListModel->item(index, 2);
+        QStandardItem* progressItem = d->fileListModel.item(index, 2);
         if (progressItem) {
           progressItem->setData(percent, Qt::DisplayRole);
         }
@@ -176,9 +172,9 @@ void Kryvo::FileListFrame::addFileToModel(const QString& path) {
     // Search to see if this item is already in the model
     bool addNewItem = true;
 
-    const int rowCount = d->fileListModel->rowCount();
+    const int rowCount = d->fileListModel.rowCount();
     for (int row = 0; row < rowCount; ++row) {
-      const auto testItem = d->fileListModel->item(row, 0);
+      const auto testItem = d->fileListModel.item(row, 0);
 
       const QVariant testItemData = testItem->data();
       const QVariant pathItemData = pathItem->data();
@@ -189,22 +185,21 @@ void Kryvo::FileListFrame::addFileToModel(const QString& path) {
     }
 
     if (addNewItem) { // Add the item to the model if it's new
-      d->fileListModel->appendRow(items);
+      d->fileListModel.appendRow(items);
     }
-  } // End if file exists and is a file
+  }
 }
 
 void Kryvo::FileListFrame::removeFileFromModel(const QModelIndex& index) {
   Q_D(FileListFrame);
-  Q_ASSERT(d->fileListModel);
 
-  QStandardItem* testItem = d->fileListModel->item(index.row(), 0);
+  QStandardItem* testItem = d->fileListModel.item(index.row(), 0);
 
   // Signal that this file shouldn't be encrypted or decrypted
   emit stopFile(testItem->data().toString());
 
   // Remove row from model
-  d->fileListModel->removeRow(index.row());
+  d->fileListModel.removeRow(index.row());
 }
 
 void Kryvo::FileListFrame::resizeEvent(QResizeEvent* event) {
@@ -221,6 +216,5 @@ void Kryvo::FileListFrame::resizeEvent(QResizeEvent* event) {
 }
 
 Kryvo::FileListFramePrivate::FileListFramePrivate()
-  : fileListModel{std::make_unique<QStandardItemModel>()},
-    fileListView{nullptr} {
+  : fileListView{nullptr} {
 }
