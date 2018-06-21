@@ -38,7 +38,7 @@ QString splitToolTip(const QString& text, const int width) {
 
         result += temp.left(i);
         result += '\n';
-        temp = temp.mid(i+1);
+        temp = temp.mid(i + 1);
 
         break;
       }
@@ -119,7 +119,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   auto cipherFrame = new QFrame{cryptoSettingsFrame};
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  auto cipherLabel = new QLabel{tr("Cipher: "), cipherFrame};
+  auto cipherLabel = new QLabel{tr("Cipher:"), cipherFrame};
   cipherLabel->setObjectName(QStringLiteral("text"));
 
   d->cipherComboBox = new QComboBox{cipherFrame};
@@ -136,18 +136,19 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   keySizeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   const QString keySizeToolTip = QString{tr("The cipher key size is the number "
-                                            "of bits in the key that is created "
-                                          "from your password via a secure "
-                                          "hash function. A larger key size "
-                                          "does not necessarily yield a more "
-                                          "secure encrypted output. Key sizes "
-                                          "of 128, 192, and 256 are all "
-                                          "currently considered to be secure "
-                                          "key sizes.")};
+                                            "of bits in the key that is "
+                                            "created from your password via a "
+                                            "secure hash function. A larger "
+                                            "key size does not necessarily "
+                                            "yield a more secure encrypted "
+                                            "output. Key sizes of 128, 192, "
+                                            "and 256 are all currently "
+                                            "considered to be secure key "
+                                            "sizes.")};
   const QString keySizeSplitToolTip = splitToolTip(keySizeToolTip,
                                                    d->toolTipWidth);
 
-  auto keySizeLabel = new QLabel{tr("Key size (bits): "), keySizeFrame};
+  auto keySizeLabel = new QLabel{tr("Key size (bits):"), keySizeFrame};
   keySizeLabel->setObjectName(QStringLiteral("text"));
   keySizeLabel->setToolTip(keySizeSplitToolTip);
 
@@ -173,7 +174,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
                                "modes of operation.")};
   const QString modeSplitToolTip = splitToolTip(modeToolTip, d->toolTipWidth);
 
-  auto modeLabel = new QLabel{tr("Mode of operation: "), modeFrame};
+  auto modeLabel = new QLabel{tr("Mode of operation:"), modeFrame};
   modeLabel->setObjectName(QStringLiteral("text"));
   modeLabel->setToolTip(modeSplitToolTip);
 
@@ -204,7 +205,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   auto compressionFrame = new QFrame{fileSettingsFrame};
   compressionFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  d->compressionCheckBox = new QCheckBox{"Compress files before encryption",
+  d->compressionCheckBox = new QCheckBox{tr("Compress files before encryption"),
                                          compressionFrame};
   d->compressionCheckBox->setObjectName("settingsCheckBox");
   d->compressionCheckBox->setChecked(compressionMode);
@@ -215,7 +216,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   auto containerFrame = new QFrame{fileSettingsFrame};
   containerFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  d->containerCheckBox = new QCheckBox{"Archive encrypted files",
+  d->containerCheckBox = new QCheckBox{tr("Archive encrypted files"),
                                        containerFrame};
   d->containerCheckBox->setObjectName("settingsCheckBox");
   d->containerCheckBox->setChecked(containerMode);
