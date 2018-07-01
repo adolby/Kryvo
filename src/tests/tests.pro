@@ -64,6 +64,9 @@ android {
   message(iOS)
   message(clang)
 
+  QMAKE_MAC_SDK = macosx10.13
+  QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
+
   debug {
     message(Debug)
     DESTDIR = ../../build/iOS/debug/test/
@@ -112,7 +115,8 @@ android {
     message(macOS)
     message(clang x86_64)
 
-    QMAKE_MAC_SDK = macosx10.12
+    QMAKE_MAC_SDK = macosx10.13
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
 
     LIBS += -lz
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
