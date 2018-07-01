@@ -43,8 +43,8 @@ class FileListDelegate : public QStyledItemDelegate {
    * \param option Style view options
    * \param index Index of the current cell in the model
    */
-  virtual void initStyleOption(QStyleOptionViewItem* option,
-                               const QModelIndex& index) const;
+  void initStyleOption(QStyleOptionViewItem* option,
+                       const QModelIndex& index) const override;
 
   /*!
    * \brief paint Paints the progress bar and the close button
@@ -52,8 +52,8 @@ class FileListDelegate : public QStyledItemDelegate {
    * \param option Style view options object. Passed on to parent's paint
    * \param index Index of the current cell in the model to paint
    */
-  virtual void paint(QPainter* painter, const QStyleOptionViewItem& option,
-                     const QModelIndex& index) const;
+  void paint(QPainter* painter, const QStyleOptionViewItem& option,
+             const QModelIndex& index) const override;
 
   /*!
    * \brief editorEvent Event to handle mouse clicks on the remove button
@@ -63,10 +63,9 @@ class FileListDelegate : public QStyledItemDelegate {
    * \param index Index of the current cell in the model
    * \return
    */
-  virtual bool editorEvent(QEvent* event,
-                           QAbstractItemModel* model,
-                           const QStyleOptionViewItem& option,
-                           const QModelIndex& index);
+  bool editorEvent(QEvent* event, QAbstractItemModel* model,
+                   const QStyleOptionViewItem& option,
+                   const QModelIndex& index) override;
 
  protected:
   bool focusBorderEnabled;
