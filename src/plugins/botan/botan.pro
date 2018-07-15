@@ -1,10 +1,10 @@
+QT += core
+
 TARGET = botan
 
 TEMPLATE = lib
 
 CONFIG += c++14 plugin
-
-QT += core
 
 # Qt Creator Debug/Release Differentiation
 # Ensure one "debug_and_release" in CONFIG, for clarity.
@@ -34,8 +34,12 @@ HEADERS += \
 INCLUDEPATH = ../../app/
 
 # Platform-specific configuration
-android|ios {
-  message(Mobile)
+linux {
+  message(Linux)
+
+  LIBS += -lz
+  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+  QMAKE_LFLAGS += -fstack-protector
 
   android {
     message(Android)
@@ -57,20 +61,88 @@ android|ios {
       message(Release)
       DESTDIR = ../../../build/android/release/plugins/botan
     }
-  }
+  } # End Android
+
+  linux-clang {
+    message(clang)
+
+    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
+
+    SOURCES += \
+      botan/linux/clang/x86_64/botan_all.cpp \
+      botan/linux/clang/x86_64/botan_all_aesni.cpp \
+      botan/linux/clang/x86_64/botan_all_avx2.cpp \
+      botan/linux/clang/x86_64/botan_all_rdrand.cpp \
+      botan/linux/clang/x86_64/botan_all_rdseed.cpp \
+      botan/linux/clang/x86_64/botan_all_ssse3.cpp
+
+    HEADERS += \
+      botan/linux/clang/x86_64/botan_all.h \
+      botan/linux/clang/x86_64/botan_all_internal.h
+
+    debug {
+      message(Debug)
+      DESTDIR = ../../../build/linux/clang/x86_64/debug/plugins/botan
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../../build/linux/clang/x86_64/release/plugins/botan
+    }
+
+    mkpath($${DESTDIR}/../../Kryvo/plugins/)
+    mkpath($${DESTDIR}/../../test/plugins/)
+    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../Kryvo/plugins/)
+    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../test/plugins/)
+  } # End clang
+
+  linux-g++ {
+    message(g++)
+
+    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
+
+    SOURCES += \
+      botan/linux/gcc/x86_64/botan_all.cpp \
+      botan/linux/gcc/x86_64/botan_all_aesni.cpp \
+      botan/linux/gcc/x86_64/botan_all_avx2.cpp \
+      botan/linux/gcc/x86_64/botan_all_rdrand.cpp \
+      botan/linux/gcc/x86_64/botan_all_rdseed.cpp \
+      botan/linux/gcc/x86_64/botan_all_ssse3.cpp
+
+    HEADERS += \
+      botan/linux/gcc/x86_64/botan_all.h \
+      botan/linux/gcc/x86_64/botan_all_internal.h
+
+    debug {
+      message(Debug)
+      DESTDIR = ../../../build/linux/gcc/x86_64/debug/plugins/botan
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../../build/linux/gcc/x86_64/release/plugins/botan
+    }
+
+    mkpath($${DESTDIR}/../../Kryvo/plugins/)
+    mkpath($${DESTDIR}/../../test/plugins/)
+    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../Kryvo/plugins/)
+    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../test/plugins/)
+  } # End g++
+} # End Linux
+
+mac {
+  QMAKE_MAC_SDK = macosx10.13
+  QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
+
+  LIBS += -lz
+  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+  QMAKE_LFLAGS += -fstack-protector
 
   ios {
     message(iOS)
     message(clang)
 
-    QMAKE_MAC_SDK = macosx10.13
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
+    SOURCES += botan/iOS/botan_all.cpp
 
-    SOURCES += \
-      botan/iOS/botan_all.cpp
-
-    HEADERS += \
-      botan/iOS/botan_all.h
+    HEADERS += botan/iOS/botan_all.h
 
     debug {
       message(Debug)
@@ -80,90 +152,11 @@ android|ios {
       message(Release)
       DESTDIR = ../../../build/iOS/release/plugins/botan
     }
-  }
-
-  OBJECTS_DIR = $${DESTDIR}/obj
-  MOC_DIR = $${DESTDIR}/moc
-} else { # Desktop OS
-  message(Desktop)
-
-  linux {
-    message(Linux)
-
-    LIBS += -lz
-    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-    QMAKE_LFLAGS += -fstack-protector
-    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
-
-    linux-clang {
-      message(clang x86_64)
-
-      SOURCES += \
-        botan/linux/clang/x86_64/botan_all.cpp \
-        botan/linux/clang/x86_64/botan_all_aesni.cpp \
-        botan/linux/clang/x86_64/botan_all_avx2.cpp \
-        botan/linux/clang/x86_64/botan_all_rdrand.cpp \
-        botan/linux/clang/x86_64/botan_all_rdseed.cpp \
-        botan/linux/clang/x86_64/botan_all_ssse3.cpp
-
-      HEADERS += \
-        botan/linux/clang/x86_64/botan_all.h \
-        botan/linux/clang/x86_64/botan_all_internal.h
-
-      debug {
-        message(Debug)
-        DESTDIR = ../../../build/linux/clang/x86_64/debug/plugins/botan
-      }
-      release {
-        message(Release)
-        DESTDIR = ../../../build/linux/clang/x86_64/release/plugins/botan
-      }
-    }
-
-    linux-g++-64 {
-      message(g++ x86_64)
-
-      SOURCES += \
-        botan/linux/gcc/x86_64/botan_all.cpp \
-        botan/linux/gcc/x86_64/botan_all_aesni.cpp \
-        botan/linux/gcc/x86_64/botan_all_avx2.cpp \
-        botan/linux/gcc/x86_64/botan_all_rdrand.cpp \
-        botan/linux/gcc/x86_64/botan_all_rdseed.cpp \
-        botan/linux/gcc/x86_64/botan_all_ssse3.cpp
-
-      HEADERS += \
-        botan/linux/gcc/x86_64/botan_all.h \
-        botan/linux/gcc/x86_64/botan_all_internal.h
-
-      debug {
-        message(Debug)
-        DESTDIR = ../../../build/linux/gcc/x86_64/debug/plugins/botan
-      }
-      release {
-        message(Release)
-        DESTDIR = ../../../build/linux/gcc/x86_64/release/plugins/botan
-      }
-    }
-
-    OBJECTS_DIR = $${DESTDIR}/obj
-    MOC_DIR = $${DESTDIR}/moc
-
-    mkpath($${DESTDIR}/../../Kryvo/plugins/)
-    mkpath($${DESTDIR}/../../test/plugins/)
-    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../Kryvo/plugins/)
-    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../test/plugins/)
-  } # End Linux
+  } # End iOS
 
   macx {
     message(macOS)
-    message(clang x86_64)
-
-    QMAKE_MAC_SDK = macosx10.13
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
-
-    LIBS += -lz
-    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-    QMAKE_LFLAGS += -fstack-protector
+    message(clang)
 
     SOURCES += \
       botan/macOS/clang/x86_64/botan_all.cpp \
@@ -186,78 +179,75 @@ android|ios {
       DESTDIR = ../../../build/macOS/clang/x86_64/release/plugins/botan
     }
 
-    OBJECTS_DIR = $${DESTDIR}/obj
-    MOC_DIR = $${DESTDIR}/moc
-
     mkpath($${DESTDIR}/../../Kryvo/Kryvo.app/Contents/plugins/)
     mkpath($${DESTDIR}/../../test/CryptoTests.app/Contents/plugins/)
     QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dylib $${DESTDIR}/../../Kryvo/Kryvo.app/Contents/plugins/)
     QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.dylib $${DESTDIR}/../../test/CryptoTests.app/Contents/plugins/)
   } # End macOS
+} # End Mac
 
-  win32 {
-    message(Windows)
+win32 {
+  message(Windows)
 
-    win32-msvc2015 {
-      LIBS += advapi32.lib user32.lib
+  win32-msvc2015 {
+    LIBS += advapi32.lib user32.lib
 
-      QMAKE_CXXFLAGS += -bigobj -arch:AVX2
+    QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
-      contains(QT_ARCH, x86_64) {
-        message(MSVC x86_64)
+    contains(QT_ARCH, x86_64) {
+      message(MSVC x86_64)
 
-        SOURCES += \
-          botan/windows/msvc/x86_64/botan_all.cpp \
-          botan/windows/msvc/x86_64/botan_all_aesni.cpp \
-          botan/windows/msvc/x86_64/botan_all_avx2.cpp \
-          botan/windows/msvc/x86_64/botan_all_rdrand.cpp \
-          botan/windows/msvc/x86_64/botan_all_rdseed.cpp \
-          botan/windows/msvc/x86_64/botan_all_ssse3.cpp
+      SOURCES += \
+        botan/windows/msvc/x86_64/botan_all.cpp \
+        botan/windows/msvc/x86_64/botan_all_aesni.cpp \
+        botan/windows/msvc/x86_64/botan_all_avx2.cpp \
+        botan/windows/msvc/x86_64/botan_all_rdrand.cpp \
+        botan/windows/msvc/x86_64/botan_all_rdseed.cpp \
+        botan/windows/msvc/x86_64/botan_all_ssse3.cpp
 
-        HEADERS += \
-          botan/windows/msvc/x86_64/botan_all.h \
-          botan/windows/msvc/x86_64/botan_all_internal.h
+      HEADERS += \
+        botan/windows/msvc/x86_64/botan_all.h \
+        botan/windows/msvc/x86_64/botan_all_internal.h
 
-        debug {
-          message(Debug)
-          DESTDIR = ../../../build/windows/msvc/x86_64/debug/plugins/botan
-        }
-        release {
-          message(Release)
-          DESTDIR = ../../../build/windows/msvc/x86_64/release/plugins/botan
-        }
-      } else {
-        message(MSVC x86)
+      debug {
+        message(Debug)
+        DESTDIR = ../../../build/windows/msvc/x86_64/debug/plugins/botan
+      }
+      release {
+        message(Release)
+        DESTDIR = ../../../build/windows/msvc/x86_64/release/plugins/botan
+      }
+    } else {
+      message(MSVC x86)
 
-        SOURCES += \
-          botan/windows/msvc/x86/botan_all.cpp \
-          botan/windows/msvc/x86/botan_all_aesni.cpp \
-          botan/windows/msvc/x86/botan_all_avx2.cpp \
-          botan/windows/msvc/x86/botan_all_rdrand.cpp \
-          botan/windows/msvc/x86/botan_all_rdseed.cpp \
-          botan/windows/msvc/x86/botan_all_ssse3.cpp
+      SOURCES += \
+        botan/windows/msvc/x86/botan_all.cpp \
+        botan/windows/msvc/x86/botan_all_aesni.cpp \
+        botan/windows/msvc/x86/botan_all_avx2.cpp \
+        botan/windows/msvc/x86/botan_all_rdrand.cpp \
+        botan/windows/msvc/x86/botan_all_rdseed.cpp \
+        botan/windows/msvc/x86/botan_all_ssse3.cpp
 
-        HEADERS += \
-          botan/windows/msvc/x86/botan_all.h \
-          botan/windows/msvc/x86/botan_all_internal.h
+      HEADERS += \
+        botan/windows/msvc/x86/botan_all.h \
+        botan/windows/msvc/x86/botan_all_internal.h
 
-        debug {
-          message(Debug)
-          DESTDIR = ../../../build/windows/msvc/x86/debug/plugins/botan
-        }
-        release {
-          message(Release)
-          DESTDIR = ../../../build/windows/msvc/x86/release/plugins/botan
-        }
+      debug {
+        message(Debug)
+        DESTDIR = ../../../build/windows/msvc/x86/debug/plugins/botan
+      }
+      release {
+        message(Release)
+        DESTDIR = ../../../build/windows/msvc/x86/release/plugins/botan
       }
     }
+  }
 
-    OBJECTS_DIR = $${DESTDIR}/obj
-    MOC_DIR = $${DESTDIR}/moc
+  mkpath($${DESTDIR}/../../Kryvo/plugins/)
+  mkpath($${DESTDIR}/../../test/plugins/)
+  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../Kryvo/plugins/)
+  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../test/plugins/)
+} # End win32
 
-    mkpath($${DESTDIR}/../../Kryvo/plugins/)
-    mkpath($${DESTDIR}/../../test/plugins/)
-    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../Kryvo/plugins/)
-    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../test/plugins/)
-  } # End win32
-} # End desktop
+OBJECTS_DIR = $${DESTDIR}/obj
+MOC_DIR = $${DESTDIR}/moc

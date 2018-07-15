@@ -70,8 +70,12 @@ HEADERS += \
   utility/pimpl.h
 
 # Platform-specific configuration
-android|ios {
-  message(Mobile)
+linux {
+  message(Linux)
+
+  LIBS += -lz
+  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+  QMAKE_LFLAGS += -fstack-protector
 
   android {
     message(Android)
@@ -88,12 +92,58 @@ android|ios {
     }
   }
 
+  linux-clang {
+    message(clang)
+
+    QT += widgets
+
+    SOURCES += gui/DesktopMainWindow.cpp
+    HEADERS += gui/DesktopMainWindow.hpp
+
+    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
+
+    debug {
+      message(Debug)
+      DESTDIR = ../../build/linux/clang/x86_64/debug/Kryvo
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../build/linux/clang/x86_64/release/Kryvo
+    }
+  }
+
+  linux-g++ {
+    message(g++)
+
+    QT += widgets
+
+    SOURCES += gui/DesktopMainWindow.cpp
+    HEADERS += gui/DesktopMainWindow.hpp
+
+    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
+
+    debug {
+      message(Debug)
+      DESTDIR = ../../build/linux/gcc/x86_64/debug/Kryvo
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../build/linux/gcc/x86_64/release/Kryvo
+    }
+  }
+} # End Linux
+
+mac {
+  QMAKE_MAC_SDK = macosx10.13
+  QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
+
+  LIBS += -lz
+  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+  QMAKE_LFLAGS += -fstack-protector
+
   ios {
     message(iOS)
     message(clang)
-
-    QMAKE_MAC_SDK = macosx10.13
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
 
     debug {
       message(Debug)
@@ -104,59 +154,15 @@ android|ios {
       DESTDIR = ../../build/iOS/release/Kryvo
     }
   }
-} else { # Desktop OS
-  message(Desktop)
-
-  QT += widgets
-
-  SOURCES += gui/DesktopMainWindow.cpp
-  HEADERS += gui/DesktopMainWindow.hpp
-
-  linux {
-    message(Linux)
-
-    LIBS += -lz
-    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-    QMAKE_LFLAGS += -fstack-protector
-    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
-
-    linux-clang {
-      message(clang x86_64)
-
-      debug {
-        message(Debug)
-        DESTDIR = ../../build/linux/clang/x86_64/debug/Kryvo
-      }
-      release {
-        message(Release)
-        DESTDIR = ../../build/linux/clang/x86_64/release/Kryvo
-      }
-    }
-
-    linux-g++-64 {
-      message(g++ x86_64)
-
-      debug {
-        message(Debug)
-        DESTDIR = ../../build/linux/gcc/x86_64/debug/Kryvo
-      }
-      release {
-        message(Release)
-        DESTDIR = ../../build/linux/gcc/x86_64/release/Kryvo
-      }
-    }
-  } # End Linux
 
   macx {
     message(macOS)
-    message(clang x86_64)
+    message(clang)
 
-    QMAKE_MAC_SDK = macosx10.13
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
+    QT += widgets
 
-    LIBS += -lz
-    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-    QMAKE_LFLAGS += -fstack-protector
+    SOURCES += gui/DesktopMainWindow.cpp
+    HEADERS += gui/DesktopMainWindow.hpp
 
     QMAKE_TARGET_BUNDLE_PREFIX = io.kryvo
     ICON = ../../resources/icons/kryvo.icns
@@ -170,46 +176,51 @@ android|ios {
       DESTDIR = ../../build/macOS/clang/x86_64/release/Kryvo
     }
   }
+}
 
-  win32 {
-    message(Windows)
+win32 {
+  message(Windows)
 
-    win32-msvc2015 {
-      LIBS += advapi32.lib user32.lib
+  QT += widgets
 
-      QMAKE_CXXFLAGS += -bigobj -arch:AVX2
+  SOURCES += gui/DesktopMainWindow.cpp
+  HEADERS += gui/DesktopMainWindow.hpp
 
-      contains(QT_ARCH, x86_64) {
-        message(MSVC x86_64)
+  win32-msvc2015 {
+    LIBS += advapi32.lib user32.lib
 
-        debug {
-          message(Debug)
-          DESTDIR = ../../build/windows/msvc/x86_64/debug/Kryvo
-        }
-        release {
-          message(Release)
-          DESTDIR = ../../build/windows/msvc/x86_64/release/Kryvo
-        }
-      } else {
-        message(MSVC x86)
+    QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
-        debug {
-          message(Debug)
-          DESTDIR = ../../build/windows/msvc/x86/debug/Kryvo/
-        }
-        release {
-          message(Release)
-          DESTDIR = ../../build/windows/msvc/x86/release/Kryvo/
-        }
+    contains(QT_ARCH, x86_64) {
+      message(MSVC x86_64)
+
+      debug {
+        message(Debug)
+        DESTDIR = ../../build/windows/msvc/x86_64/debug/Kryvo
+      }
+      release {
+        message(Release)
+        DESTDIR = ../../build/windows/msvc/x86_64/release/Kryvo
+      }
+    } else {
+      message(MSVC x86)
+
+      debug {
+        message(Debug)
+        DESTDIR = ../../build/windows/msvc/x86/debug/Kryvo
+      }
+      release {
+        message(Release)
+        DESTDIR = ../../build/windows/msvc/x86/release/Kryvo
       }
     }
+  }
 
-    RC_ICONS += ../../resources/icons/kryvo.ico
-  } # End win32
-} # End desktop
+  RC_ICONS += ../../resources/icons/kryvo.ico
+} # End win32
 
-OBJECTS_DIR = $$DESTDIR/obj
-MOC_DIR = $$DESTDIR/moc
-RCC_DIR = $$DESTDIR/qrc
+OBJECTS_DIR = $${DESTDIR}/obj
+MOC_DIR = $${DESTDIR}/moc
+RCC_DIR = $${DESTDIR}/qrc
 
 RESOURCES += ../../resources/assets.qrc

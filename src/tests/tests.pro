@@ -41,86 +41,89 @@ HEADERS += \
   FileOperations.h
 
 # Platform-specific configuration
-android {
-  message(Android)
+linux {
+  message(Linux)
 
-  # You'll need to place your Boost path here.
-  INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
+  LIBS += -lz
+  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+  QMAKE_LFLAGS += -fstack-protector
 
-  HEADERS += \
-    src/libs/botan/android/android_to_string.h
+  android {
+    message(Android)
 
-  ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../resources/android
+    # You'll need to place your Boost path here.
+    INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
 
-  debug {
-    message(Debug)
-    DESTDIR = ../../build/android/debug/test/
-  }
-  release {
-    message(Release)
-    DESTDIR = ../../build/android/release/test/
-  }
-} else:ios {
-  message(iOS)
-  message(clang)
+    HEADERS += src/libs/botan/android/android_to_string.h
 
+    ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../resources/android
+
+    debug {
+      message(Debug)
+      DESTDIR = ../../build/android/debug/test/
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../build/android/release/test/
+    }
+  } # End Android
+
+  linux-clang {
+    message(clang)
+
+    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
+
+    debug {
+      message(Debug)
+      DESTDIR = ../../build/linux/clang/x86_64/debug/test/
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../build/linux/clang/x86_64/release/test/
+    }
+  } # End clang
+
+  linux-g++ {
+    message(g++)
+
+    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
+
+    debug {
+      message(Debug)
+      DESTDIR = ../../build/linux/gcc/x86_64/debug/test/
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../build/linux/gcc/x86_64/release/test/
+    }
+  } # End g++
+} # End Linux
+
+mac {
   QMAKE_MAC_SDK = macosx10.13
   QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
 
-  debug {
-    message(Debug)
-    DESTDIR = ../../build/iOS/debug/test/
-  }
-  release {
-    message(Release)
-    DESTDIR = ../../build/iOS/release/test/
-  }
-} else { # Desktop OS
-  linux {
-    message(Linux)
+  LIBS += -lz
+  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+  QMAKE_LFLAGS += -fstack-protector
 
-    LIBS += -lz
-    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-    QMAKE_LFLAGS += -fstack-protector
-    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
+  ios {
+    message(iOS)
+    message(clang)
 
-    linux-clang {
-      message(clang x86_64)
-
-      debug {
-        message(Debug)
-        DESTDIR = ../../build/linux/clang/x86_64/debug/test/
-      }
-      release {
-        message(Release)
-        DESTDIR = ../../build/linux/clang/x86_64/release/test/
-      }
+    debug {
+      message(Debug)
+      DESTDIR = ../../build/iOS/debug/test/
     }
-
-    linux-g++-64 {
-      message(g++ x86_64)
-
-      debug {
-        message(Debug)
-        DESTDIR = ../../build/linux/gcc/x86_64/debug/test/
-      }
-      release {
-        message(Release)
-        DESTDIR = ../../build/linux/gcc/x86_64/release/test/
-      }
+    release {
+      message(Release)
+      DESTDIR = ../../build/iOS/release/test/
     }
-  } # End Linux
+  } # End iOS
 
   macx {
     message(macOS)
-    message(clang x86_64)
-
-    QMAKE_MAC_SDK = macosx10.13
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
-
-    LIBS += -lz
-    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-    QMAKE_LFLAGS += -fstack-protector
+    message(clang)
 
     debug {
       message(Debug)
@@ -130,43 +133,43 @@ android {
       message(Release)
       DESTDIR = ../../build/macOS/clang/x86_64/release/test/
     }
-  }
+  } # End macOS
+} # End Mac
 
-  win32 {
-    message(Windows)
+win32 {
+  message(Windows)
 
-    win32-msvc2015 {
-      LIBS += advapi32.lib user32.lib
+  win32-msvc2015 {
+    LIBS += advapi32.lib user32.lib
 
-      QMAKE_CXXFLAGS += -bigobj -arch:AVX2
+    QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
-      contains(QT_ARCH, x86_64) {
-        message(MSVC x86_64)
+    contains(QT_ARCH, x86_64) {
+      message(MSVC x86_64)
 
-        debug {
-          message(Debug)
-          DESTDIR = ../../build/windows/msvc/x86_64/debug/test/
-        }
-        release {
-          message(Release)
-          DESTDIR = ../../build/windows/msvc/x86_64/release/test/
-        }
-      } else {
-        message(MSVC x86)
+      debug {
+        message(Debug)
+        DESTDIR = ../../build/windows/msvc/x86_64/debug/test/
+      }
+      release {
+        message(Release)
+        DESTDIR = ../../build/windows/msvc/x86_64/release/test/
+      }
+    } else {
+      message(MSVC x86)
 
-        debug {
-          message(Debug)
-          DESTDIR = ../../build/windows/msvc/x86/debug/test/
-        }
-        release {
-          message(Release)
-          DESTDIR = ../../build/windows/msvc/x86/release/test/
-        }
+      debug {
+        message(Debug)
+        DESTDIR = ../../build/windows/msvc/x86/debug/test/
+      }
+      release {
+        message(Release)
+        DESTDIR = ../../build/windows/msvc/x86/release/test/
       }
     }
-  } # End win32
-} # End desktop
+  }
+} # End win32
 
-OBJECTS_DIR = $$DESTDIR/obj
-MOC_DIR = $$DESTDIR/moc
-RCC_DIR = $$DESTDIR/qrc
+OBJECTS_DIR = $${DESTDIR}/obj
+MOC_DIR = $${DESTDIR}/moc
+RCC_DIR = $${DESTDIR}/qrc
