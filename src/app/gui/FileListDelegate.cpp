@@ -61,8 +61,8 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
       progressBarOption.textVisible = true;
 
       // Set the progress and text values of the style option
-      const int progress =
-          index.model()->data(index, Qt::DisplayRole).toInt();
+      const int progress = index.data(Qt::DisplayRole).toInt();
+
       progressBarOption.progress = progress < 0 ? 0 : progress;
       progressBarOption.text = QString{"%1%"}.arg(progressBarOption.progress);
 
@@ -76,10 +76,8 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
       QStyleOptionButton buttonOption;
       buttonOption.state = QStyle::State_Enabled;
       buttonOption.direction = QApplication::layoutDirection();
-      buttonOption.rect = QRect{option.rect.x(),
-                                option.rect.y(),
-                                option.rect.width(),
-                                option.rect.height()};
+      buttonOption.rect = QRect{option.rect.x(), option.rect.y(),
+                                option.rect.width(), option.rect.height()};
       buttonOption.fontMetrics = QApplication::fontMetrics();
       buttonOption.features = QStyleOptionButton::Flat;
       const QIcon closeIcon{QStringLiteral(":/images/closeFileIcon.png")};
@@ -91,10 +89,12 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
       const QSize iconSize = QSize{iconDimension, iconDimension};
       buttonOption.iconSize = iconSize;
 
-      QApplication::style()->drawControl(QStyle::CE_PushButton,
-                                         &buttonOption,
+      QApplication::style()->drawControl(QStyle::CE_PushButton, &buttonOption,
                                          painter);
       break;
+    }
+    default: {
+      QStyledItemDelegate::paint(painter, option, index);
     }
   }
 }

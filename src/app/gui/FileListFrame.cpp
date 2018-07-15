@@ -109,17 +109,18 @@ void Kryvo::FileListFrame::updateProgress(const QString& path,
   qDebug() << path << " " << task << " " << percent;
 
   if (!path.isEmpty()) {
-    const QList<QStandardItem*> items = d->fileListModel.findItems(path);
+    const QList<QStandardItem*> items =
+            d->fileListModel.findItems(path, Qt::MatchExactly, 0);
 
     if (items.size() > 0) {
-      QStandardItem* item = items[0];
+      QStandardItem* item = items.first();
 
       if (item) {
         const int index = item->row();
 
         QStandardItem* taskItem = d->fileListModel.item(index, 1);
         if (taskItem) {
-          taskItem->setData(task, Qt::DisplayRole);
+          taskItem->setText(task);
         }
 
         QStandardItem* progressItem = d->fileListModel.item(index, 2);
@@ -174,13 +175,18 @@ void Kryvo::FileListFrame::addFileToModel(const QString& path) {
 
     const int rowCount = d->fileListModel.rowCount();
     for (int row = 0; row < rowCount; ++row) {
-      const auto testItem = d->fileListModel.item(row, 0);
+      const QStandardItem* testItem = d->fileListModel.item(row, 0);
+
+      if (!testItem) {
+          return;
+      }
 
       const QVariant testItemData = testItem->data();
       const QVariant pathItemData = pathItem->data();
 
       if (testItemData.toString() == pathItemData.toString()) {
         addNewItem = false;
+        break;
       }
     }
 
@@ -195,8 +201,14 @@ void Kryvo::FileListFrame::removeFileFromModel(const QModelIndex& index) {
 
   QStandardItem* testItem = d->fileListModel.item(index.row(), 0);
 
+  if (!testItem) {
+      return;
+  }
+
+  const QVariant& data = testItem->data();
+
   // Signal that this file shouldn't be encrypted or decrypted
-  emit stopFile(testItem->data().toString());
+  emit stopFile(data.toString());
 
   // Remove row from model
   d->fileListModel.removeRow(index.row());
