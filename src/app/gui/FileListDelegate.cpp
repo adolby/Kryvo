@@ -6,7 +6,7 @@
 #include <QDebug>
 
 Kryvo::FileListDelegate::FileListDelegate(QObject* parent)
-  : QStyledItemDelegate{parent}, focusBorderEnabled{false} {
+  : QStyledItemDelegate(parent), focusBorderEnabled(false) {
 }
 
 void Kryvo::FileListDelegate::setFocusBorderEnabled(bool enabled) {
@@ -50,10 +50,10 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
       QStyleOptionProgressBar progressBarOption;
       progressBarOption.state = QStyle::State_Enabled;
       progressBarOption.direction = QApplication::layoutDirection();
-      progressBarOption.rect = QRect{option.rect.x(),
+      progressBarOption.rect = QRect(option.rect.x(),
                                      option.rect.y() + 1,
                                      option.rect.width(),
-                                     option.rect.height() - 1};
+                                     option.rect.height() - 1);
       progressBarOption.fontMetrics = QApplication::fontMetrics();
       progressBarOption.minimum = 0;
       progressBarOption.maximum = 100;
@@ -61,10 +61,12 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
       progressBarOption.textVisible = true;
 
       // Set the progress and text values of the style option
-      const int progress = index.data(Qt::DisplayRole).toInt();
+      const QVariant& progressVariant = index.data(Qt::DisplayRole);
+      const int progress = progressVariant.toInt();
 
       progressBarOption.progress = progress < 0 ? 0 : progress;
-      progressBarOption.text = QString{"%1%"}.arg(progressBarOption.progress);
+      progressBarOption.text =
+        QStringLiteral("%1%").arg(progressBarOption.progress);
 
       // Draw the progress bar onto the view
       QApplication::style()->drawControl(QStyle::CE_ProgressBar,
@@ -80,13 +82,13 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
                                 option.rect.width(), option.rect.height()};
       buttonOption.fontMetrics = QApplication::fontMetrics();
       buttonOption.features = QStyleOptionButton::Flat;
-      const QIcon closeIcon{QStringLiteral(":/images/closeFileIcon.png")};
+      const QIcon closeIcon(QStringLiteral(":/images/closeFileIcon.png"));
       buttonOption.icon = closeIcon;
-      const auto iconDimension =
+      const int iconDimension =
         qMax(qMin(option.rect.width() / 2, option.rect.height() / 2), 6) -
         4;
 
-      const QSize iconSize = QSize{iconDimension, iconDimension};
+      const QSize iconSize(iconDimension, iconDimension);
       buttonOption.iconSize = iconSize;
 
       QApplication::style()->drawControl(QStyle::CE_PushButton, &buttonOption,

@@ -11,7 +11,7 @@
 #include "botan/android/botan_all.h"
 #elif defined(Q_OS_IOS)
 #include "botan/iOS/botan_all.h"
-#elif defined(Q_OS_MACX)
+#elif defined(Q_OS_MACOS)
 #include "botan/macOS/clang/x86_64/botan_all.h"
 #elif defined(Q_OS_LINUX)
   #if defined(__clang__)

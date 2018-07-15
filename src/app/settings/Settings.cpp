@@ -217,8 +217,8 @@ void Kryvo::SettingsPrivate::importSettings() {
 
     if (!maximized) {
       const QJsonObject sizeObject = settings["size"].toObject();
-      size = QSize{sizeObject[QStringLiteral("width")].toInt(800),
-                   sizeObject[QStringLiteral("height")].toInt(600)};
+      size = QSize(sizeObject[QStringLiteral("width")].toInt(800),
+                   sizeObject[QStringLiteral("height")].toInt(600));
     }
 
     cipher = settings[QStringLiteral("cipher")].toString(QStringLiteral("AES"));
@@ -252,11 +252,11 @@ void Kryvo::SettingsPrivate::importSettings() {
     styleSheetPath = styleObject.toString(QStringLiteral("kryvo.qss"));
   }
   else { // Settings file couldn't be opened, so use defaults
-    position = QPoint{100, 100};
+    position = QPoint(100, 100);
     maximized = false;
-    size = QSize{800, 600};
+    size = QSize(800, 600);
     cipher = QStringLiteral("AES");
-    keySize = std::size_t{128};
+    keySize = std::size_t(128);
     modeOfOperation = QStringLiteral("GCM");
     compressionMode = true;
     containerMode = true;
@@ -267,7 +267,7 @@ void Kryvo::SettingsPrivate::importSettings() {
 }
 
 void Kryvo::SettingsPrivate::exportSettings() const {
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
   const QString settingsPath = QCoreApplication::applicationDirPath() %
                                QDir::separator() %
                                QStringLiteral("settings.json");
