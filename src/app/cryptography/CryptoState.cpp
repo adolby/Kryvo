@@ -1,7 +1,7 @@
 #include "cryptography/CryptoState.hpp"
 
 Kryvo::CryptoState::CryptoState()
-  : aborted{false}, paused{false}, busyStatus{false} {
+  : aborted(false), paused(false), busyStatus(false) {
   // Reserve a small number of elements to improve dictionary performance
   stopped.reserve(100);
 }

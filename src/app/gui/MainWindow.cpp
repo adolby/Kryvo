@@ -48,10 +48,10 @@ class Kryvo::MainWindowPrivate {
 };
 
 Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
-  : QMainWindow{parent}, d_ptr{std::make_unique<MainWindowPrivate>()},
-    headerFrame{nullptr}, fileListFrame{nullptr}, messageFrame{nullptr},
-    outputFrame{nullptr}, passwordFrame{nullptr}, controlButtonFrame{nullptr},
-    contentLayout{nullptr} {
+  : QMainWindow(parent), d_ptr(std::make_unique<MainWindowPrivate>()),
+    headerFrame(nullptr), fileListFrame(nullptr), messageFrame(nullptr),
+    outputFrame(nullptr), passwordFrame(nullptr), controlButtonFrame(nullptr),
+    contentLayout(nullptr) {
   // Set object name
   this->setObjectName(QStringLiteral("mainWindow"));
 
@@ -61,41 +61,41 @@ Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
   // Keep settings object
   settings = s;
 
-  auto slidingStackedWidget = new SlidingStackedWidget{this};
+  auto slidingStackedWidget = new SlidingStackedWidget(this);
 
-  auto contentFrame = new QFrame{slidingStackedWidget};
+  auto contentFrame = new QFrame(slidingStackedWidget);
   contentFrame->setObjectName(QStringLiteral("contentFrame"));
 
   // Header label and operation button frame
-  headerFrame = new HeaderFrame{contentFrame};
+  headerFrame = new HeaderFrame(contentFrame);
   headerFrame->setObjectName(QStringLiteral("headerFrame"));
   headerFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
   // File list frame
-  fileListFrame = new FileListFrame{contentFrame};
+  fileListFrame = new FileListFrame(contentFrame);
   fileListFrame->setObjectName(QStringLiteral("fileListFrame"));
   fileListFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
   // Message text edit display frame
-  messageFrame = new MessageFrame{contentFrame};
+  messageFrame = new MessageFrame(contentFrame);
   messageFrame->setObjectName(QStringLiteral("messageFrame"));
   messageFrame->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   messageFrame->setMinimumHeight(36);
 
   // Archive file name frame
-  outputFrame = new OutputFrame{contentFrame};
+  outputFrame = new OutputFrame(contentFrame);
   outputFrame->setObjectName(QStringLiteral("outputFrame"));
   outputFrame->outputPath(settings->outputPath());
 
   // Password entry frame
-  passwordFrame = new PasswordFrame{contentFrame};
+  passwordFrame = new PasswordFrame(contentFrame);
   passwordFrame->setObjectName(QStringLiteral("passwordFrame"));
 
   // Encrypt and decrypt control button frame
-  controlButtonFrame = new ControlButtonFrame{contentFrame};
+  controlButtonFrame = new ControlButtonFrame(contentFrame);
   controlButtonFrame->setObjectName(QStringLiteral("controlButtonFrame"));
 
-  contentLayout = new QVBoxLayout{contentFrame};
+  contentLayout = new QVBoxLayout(contentFrame);
   contentLayout->addWidget(headerFrame);
   contentLayout->addWidget(fileListFrame);
   contentLayout->addWidget(messageFrame);
@@ -106,12 +106,12 @@ Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
 
   slidingStackedWidget->addWidget(contentFrame);
 
-  settingsFrame = new SettingsFrame{settings->cipher(),
+  settingsFrame = new SettingsFrame(settings->cipher(),
                                     settings->keySize(),
                                     settings->modeOfOperation(),
                                     settings->compressionMode(),
                                     settings->containerMode(),
-                                    slidingStackedWidget};
+                                    slidingStackedWidget);
   settingsFrame->setObjectName(QStringLiteral("settingsFrame"));
 
   slidingStackedWidget->addWidget(settingsFrame);
@@ -171,12 +171,12 @@ void Kryvo::MainWindow::addFiles() {
 
   if (!fileNames.isEmpty()) { // If files were selected, add them to the model
     for (const QString& fileName : fileNames) {
-      const QFileInfo fileInfo{fileName};
+      const QFileInfo fileInfo(fileName);
       fileListFrame->addFileToModel(fileInfo.absoluteFilePath());
     }
 
     // Save this directory for returning to later
-    const QFileInfo lastFileInfo{fileNames.last()};
+    const QFileInfo lastFileInfo(fileNames.last());
     settings->lastOpenPath(lastFileInfo.absolutePath());
   }
 }
@@ -197,8 +197,8 @@ void Kryvo::MainWindow::processFiles(const bool cryptDirection) {
   Q_ASSERT(fileListFrame);
 
   if (!d->isBusy()) {
-    const QString outputPath = outputFrame->outputPath();
-    const QString passphrase = passwordFrame->password();
+    const QString& outputPath = outputFrame->outputPath();
+    const QString& passphrase = passwordFrame->password();
 
     if (!passphrase.isEmpty()) {
       const int rowCount = fileListFrame->rowCount();
@@ -259,7 +259,7 @@ void Kryvo::MainWindow::updateError(const QString& message,
     updateStatusMessage(message);
   }
 
-  updateFileProgress(fileName, QString{}, 0);
+  updateFileProgress(fileName, QString(), 0);
 }
 
 void Kryvo::MainWindow::updateBusyStatus(const bool busy) {
@@ -292,7 +292,7 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
   // Try to load user theme, if it exists
   const QString styleSheetPath = QStringLiteral("themes") %
                                  QDir::separator() % styleFile;
-  QFile userTheme{styleSheetPath};
+  QFile userTheme(styleSheetPath);
 
   QString styleSheet;
 
@@ -300,18 +300,18 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
     const bool themeOpen = userTheme.open(QFile::ReadOnly);
 
     if (themeOpen) {
-      styleSheet = QString{QLatin1String{userTheme.readAll()}};
+      styleSheet = QString(userTheme.readAll());
       userTheme.close();
     }
   }
   else { // Otherwise, load default theme
     const QString localPath = QStringLiteral(":/stylesheets/") % defaultFile;
-    QFile defaultTheme{localPath};
+    QFile defaultTheme(localPath);
 
     const bool defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
 
     if (defaultThemeOpen) {
-      styleSheet = QString{QLatin1String{defaultTheme.readAll()}};
+      styleSheet = QString(defaultTheme.readAll());
       defaultTheme.close();
     }
   }
@@ -320,13 +320,13 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
 }
 
 Kryvo::MainWindowPrivate::MainWindowPrivate()
-  : messages{std::initializer_list<QString>(
+  : messages(std::initializer_list<QString>(
                {QObject::tr("A password is required to encrypt or decrypt "
                             "files. Please enter one to continue."),
                 QObject::tr("Encryption/decryption is already in progress. "
                             "Please wait until the current operation "
-                            "finishes.")})},
-    busyStatus{false} {
+                            "finishes.")})),
+    busyStatus(false) {
 }
 
 void Kryvo::MainWindowPrivate::busy(const bool busy) {

@@ -134,7 +134,7 @@ class MainWindow : public QMainWindow {
    * \param message String containing the error message
    * \param path String containing the error file name path
    */
-  void updateError(const QString& message, const QString& fileName = QString{});
+  void updateError(const QString& message, const QString& fileName = QString());
 
   /*!
    * \brief updateBusyStatus Executed when the cipher operation updates its busy

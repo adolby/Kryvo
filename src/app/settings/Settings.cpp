@@ -12,8 +12,8 @@
 namespace Kryvo {
   const QStringList kDefaultPaths =
     QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
-  const QString kDefaultPath = QString{kDefaultPaths.first() %
-                                       QDir::separator()};
+  const QString kDefaultPath = QString(kDefaultPaths.first() %
+                                       QDir::separator());
 }
 
 class Kryvo::SettingsPrivate {
@@ -185,30 +185,29 @@ QString Kryvo::Settings::styleSheetPath() const {
 }
 
 Kryvo::SettingsPrivate::SettingsPrivate()
-  : maximized{false}, keySize{std::size_t{128}}, compressionMode{true},
-    containerMode{false}, outputPath{kDefaultPath},
-    lastOpenPath{kDefaultPath} {
+  : maximized(false), keySize(128), compressionMode(true),
+    containerMode(false), outputPath(kDefaultPath), lastOpenPath(kDefaultPath) {
 }
 
 void Kryvo::SettingsPrivate::importSettings() {
 #if defined(Q_OS_MACOS)
-  const QString settingsPath = qApp->applicationDirPath() %
-                               QDir::separator() %
-                               QStringLiteral("settings.json");
+  const QString& settingsPath = QString(qApp->applicationDirPath() %
+                                       QDir::separator() %
+                                       QStringLiteral("settings.json"));
 #else
-  const QString settingsPath = QStringLiteral("settings.json");
+  const QString& settingsPath = QStringLiteral("settings.json");
 #endif
 
   QFile settingsFile{settingsPath};
   const bool fileOpen = settingsFile.open(QIODevice::ReadOnly);
 
   if (fileOpen) {
-    const QByteArray settingsData = settingsFile.readAll();
+    const QByteArray& settingsData = settingsFile.readAll();
 
-    const QJsonDocument settingsDoc = QJsonDocument::fromJson(settingsData);
-    const QJsonObject settings = settingsDoc.object();
+    const QJsonDocument& settingsDoc = QJsonDocument::fromJson(settingsData);
+    const QJsonObject& settings = settingsDoc.object();
 
-    const QJsonObject positionObject =
+    const QJsonObject& positionObject =
       settings[QStringLiteral("position")].toObject();
     position = QPoint{positionObject[QStringLiteral("x")].toInt(100),
                       positionObject[QStringLiteral("y")].toInt(100)};
@@ -216,7 +215,7 @@ void Kryvo::SettingsPrivate::importSettings() {
     maximized = settings[QStringLiteral("maximized")].toBool(false);
 
     if (!maximized) {
-      const QJsonObject sizeObject = settings["size"].toObject();
+      const QJsonObject& sizeObject = settings["size"].toObject();
       size = QSize(sizeObject[QStringLiteral("width")].toInt(800),
                    sizeObject[QStringLiteral("height")].toInt(600));
     }
@@ -226,7 +225,7 @@ void Kryvo::SettingsPrivate::importSettings() {
     keySize =
       static_cast<std::size_t>(settings[QStringLiteral("keySize")].toInt(128));
 
-    const QJsonValue modeOfOperationObject =
+    const QJsonValue& modeOfOperationObject =
         settings[QStringLiteral("modeOfOperation")];
     modeOfOperation = modeOfOperationObject.toString(QStringLiteral("GCM"));
 
@@ -236,7 +235,7 @@ void Kryvo::SettingsPrivate::importSettings() {
 
     outputPath = settings[QStringLiteral("outputPath")].toString(kDefaultPath);
 
-    const QString lastOpen =
+    const QString& lastOpen =
       settings[QStringLiteral("lastOpenPath")].toString(kDefaultPath);
 
     const QFileInfo lastOpenInfo{lastOpen};
@@ -248,7 +247,7 @@ void Kryvo::SettingsPrivate::importSettings() {
       lastOpenPath = kDefaultPath;
     }
 
-    const QJsonValue styleObject = settings[QStringLiteral("styleSheetPath")];
+    const QJsonValue& styleObject = settings[QStringLiteral("styleSheetPath")];
     styleSheetPath = styleObject.toString(QStringLiteral("kryvo.qss"));
   }
   else { // Settings file couldn't be opened, so use defaults
@@ -268,14 +267,14 @@ void Kryvo::SettingsPrivate::importSettings() {
 
 void Kryvo::SettingsPrivate::exportSettings() const {
 #if defined(Q_OS_MACOS)
-  const QString settingsPath = QCoreApplication::applicationDirPath() %
-                               QDir::separator() %
-                               QStringLiteral("settings.json");
+  const QString& settingsPath = QString(QCoreApplication::applicationDirPath() %
+                                        QDir::separator() %
+                                        QStringLiteral("settings.json"));
 #else
-  const QString settingsPath = QStringLiteral("settings.json");
+  const QString& settingsPath = QStringLiteral("settings.json");
 #endif
 
-  QSaveFile settingsFile{settingsPath};
+  QSaveFile settingsFile(settingsPath);
   settingsFile.setDirectWriteFallback(true);
   const bool fileOpen = settingsFile.open(QIODevice::WriteOnly);
 
@@ -302,8 +301,8 @@ void Kryvo::SettingsPrivate::exportSettings() const {
     settings[QStringLiteral("compressionMode")] = compressionMode;
     settings[QStringLiteral("containerMode")] = containerMode;
 
-    const auto addPathSeparator = [] (const QString& inPath) {
-      const QString cleanedPath = QDir::cleanPath(inPath);
+    const auto addPathSeparator = [](const QString& inPath) {
+      const QString& cleanedPath = QDir::cleanPath(inPath);
 
       const QFileInfo cleanedPathInfo{cleanedPath};
 
@@ -323,7 +322,7 @@ void Kryvo::SettingsPrivate::exportSettings() const {
     settings[QStringLiteral("styleSheetPath")] =
       addPathSeparator(styleSheetPath);
 
-    const QJsonDocument settingsDoc{settings};
+    const QJsonDocument settingsDoc(settings);
     settingsFile.write(settingsDoc.toJson());
   }
 

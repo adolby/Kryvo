@@ -80,7 +80,7 @@ class BotanProvider : public QObject,
    * \param filePath String containing the file path which encountered an error
    */
   void errorMessage(const QString& message,
-                    const QString& filePath = QString{}) Q_DECL_OVERRIDE;
+                    const QString& filePath = QString()) Q_DECL_OVERRIDE;
 
  public:
  /*!
@@ -99,10 +99,10 @@ class BotanProvider : public QObject,
   bool encrypt(CryptoState* state,
                const QString& passphrase,
                const QStringList& inputFilePaths,
-               const QString& outputPath = QString{},
-               const QString& cipher = QString{"AES"},
-               const std::size_t keySize = std::size_t{128},
-               const QString& modeOfOperation = QString{"GCM"},
+               const QString& outputPath = QString(),
+               const QString& cipher = QString("AES"),
+               const std::size_t keySize = 128,
+               const QString& modeOfOperation = QString("GCM"),
                const bool compress = true,
                const bool container = true) Q_DECL_OVERRIDE;
 

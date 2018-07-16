@@ -14,7 +14,7 @@ namespace Constants {
 
 const QString kDot = QStringLiteral(".");
 const QString kExtension = QStringLiteral("enc");
-const QString kArchiveExtension = QStringLiteral("zip");
+const QString kArchiveExtension = QStringLiteral("7z");
 
 const QStringList messages {
   QObject::tr("File %1 encrypted."), // 0
@@ -48,12 +48,12 @@ inline QString removeExtension(const QString& filePath,
   const QFileInfo firstSuffixFileInfo{filePath};
   QString newFilePath = filePath;
 
-  if (QStringLiteral("zip") == firstSuffixFileInfo.suffix()) {
+  if (QStringLiteral("7z") == firstSuffixFileInfo.suffix()) {
     newFilePath = firstSuffixFileInfo.absolutePath() % QDir::separator() %
                   firstSuffixFileInfo.completeBaseName();
   }
 
-  const QFileInfo secondSuffixFileInfo{newFilePath};
+  const QFileInfo secondSuffixFileInfo(newFilePath);
 
   if (secondSuffixFileInfo.suffix() == extension) {
     newFilePath = secondSuffixFileInfo.absolutePath() % QDir::separator() %
@@ -83,14 +83,14 @@ inline QString uniqueFilePath(const QString& filePath) {
 
     if (uniqueFile.exists() && uniqueFile.isFile()) {
       // Write number of copies before file extension
-      uniqueFilePath = QString{inputFile.absolutePath() % QDir::separator() %
+      uniqueFilePath = QString(inputFile.absolutePath() % QDir::separator() %
                                inputFile.baseName() %
-                               QString{" (%1)"}.arg(i + 2)};
+                               QStringLiteral(" (%1)").arg(i + 2));
 
       const QString suffix = inputFile.completeSuffix();
       if (!suffix.isEmpty()) {
         // Add the file extension if there is one
-        uniqueFilePath += QString{Constants::kDot % suffix};
+        uniqueFilePath += QString(Constants::kDot % suffix);
       }
 
       ++i;

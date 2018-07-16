@@ -37,7 +37,7 @@ class Kryvo::CryptoPrivate {
 };
 
 Kryvo::Crypto::Crypto(QObject* parent)
-  : QObject{parent}, d_ptr{std::make_unique<CryptoPrivate>(this)} {
+  : QObject(parent), d_ptr(std::make_unique<CryptoPrivate>(this)) {
   loadProviders();
 }
 
@@ -56,7 +56,7 @@ void Kryvo::Crypto::loadProviders() {
   const QFileInfoList fileInfoList = pluginsDir.entryInfoList(QDir::Files);
 
   for (const QFileInfo& fileInfo : fileInfoList) {
-    const QString filePath = fileInfo.absoluteFilePath();
+    const QString& filePath = fileInfo.absoluteFilePath();
 
     const bool isLibrary = QLibrary::isLibrary(filePath);
 
@@ -66,21 +66,21 @@ void Kryvo::Crypto::loadProviders() {
       QObject* plugin = loader.instance();
 
       if (plugin) {
-        const QJsonObject metaData = loader.metaData();
+        const QJsonObject& metaData = loader.metaData();
 
-        const QJsonValue metaDataValue =
+        const QJsonValue& metaDataValue =
             metaData.value(QStringLiteral("MetaData"));
 
-        const QJsonObject metaDataObject = metaDataValue.toObject();
+        const QJsonObject& metaDataObject = metaDataValue.toObject();
 
-        const QJsonValue keys =
+        const QJsonValue& keys =
             metaDataObject.value(QStringLiteral("Keys"));
 
-        const QJsonArray keysArray = keys.toArray();
+        const QJsonArray& keysArray = keys.toArray();
 
-        const QJsonValue pluginNameValue = keysArray.first();
+        const QJsonValue& pluginNameValue = keysArray.first();
 
-        const QString pluginName = pluginNameValue.toString();
+        const QString& pluginName = pluginNameValue.toString();
 
         CryptoProviderInterface* cp =
           qobject_cast<CryptoProviderInterface*>(plugin);
@@ -131,8 +131,8 @@ void Kryvo::Crypto::encrypt(const QString& passphrase,
   d->state.busy(true);
   emit busyStatus(d->state.isBusy());
 
-  const std::size_t keySize = [&inputKeySize] {
-    std::size_t size = std::size_t{128};
+  const std::size_t keySize = [&inputKeySize]() {
+    std::size_t size = 128;
 
     if (inputKeySize > 0) {
       size = inputKeySize;
@@ -178,7 +178,7 @@ void Kryvo::Crypto::abort() {
   }
 }
 
-void Kryvo::Crypto::pause(bool pause) {
+void Kryvo::Crypto::pause(const bool pause) {
   Q_D(Crypto);
 
   d->state.pause(pause);
@@ -193,5 +193,5 @@ void Kryvo::Crypto::stop(const QString& filePath) {
 }
 
 Kryvo::CryptoPrivate::CryptoPrivate(Crypto* crypto)
-  : provider{nullptr} {
+  : provider(nullptr) {
 }

@@ -18,12 +18,12 @@ class Kryvo::ElidedLabelPrivate {
 };
 
 Kryvo::ElidedLabel::ElidedLabel(QWidget* parent, Qt::WindowFlags f)
-  : QFrame{parent, f}, d_ptr{std::make_unique<ElidedLabelPrivate>()} {
+  : QFrame(parent, f), d_ptr(std::make_unique<ElidedLabelPrivate>()) {
 }
 
 Kryvo::ElidedLabel::ElidedLabel(const QString& text, QWidget* parent,
                                 Qt::WindowFlags f)
-  : QFrame{parent, f}, d_ptr{std::make_unique<ElidedLabelPrivate>()} {
+  : QFrame(parent, f), d_ptr(std::make_unique<ElidedLabelPrivate>()) {
   Q_D(ElidedLabel);
 
   d->text = text;
@@ -84,8 +84,8 @@ void Kryvo::ElidedLabel::setElideMode(const Qt::TextElideMode mode) {
 QSize Kryvo::ElidedLabel::sizeHint() const {
   Q_D(const ElidedLabel);
 
-  const QFontMetrics fm = fontMetrics();
-  QSize size{fm.width(d->text), fm.height()};
+  const QFontMetrics& fm = fontMetrics();
+  const QSize size(fm.width(d->text), fm.height());
   return size;
 }
 
@@ -96,8 +96,8 @@ QSize Kryvo::ElidedLabel::minimumSizeHint() const {
     case Qt::ElideNone:
       return sizeHint();
     default: {
-      const QFontMetrics fm = fontMetrics();
-      QSize size{fm.width("..."), fm.height()};
+      const QFontMetrics& fm = fontMetrics();
+      const QSize size{fm.width(QStringLiteral("...")), fm.height()};
       return size;
     }
   }
@@ -108,8 +108,8 @@ void Kryvo::ElidedLabel::paintEvent(QPaintEvent* event) {
 
   QFrame::paintEvent(event);
 
-  QPainter p{this};
-  const QRect r = contentsRect();
+  QPainter p(this);
+  const QRect& r = contentsRect();
 
   const QString elidedText =
     fontMetrics().elidedText(d->text, d->mode, r.width());
@@ -132,5 +132,5 @@ void Kryvo::ElidedLabel::changeEvent(QEvent* event) {
 }
 
 Kryvo::ElidedLabelPrivate::ElidedLabelPrivate()
-  : align{Qt::AlignLeft | Qt::AlignVCenter}, mode{Qt::ElideLeft} {
+  : align(Qt::AlignLeft | Qt::AlignVCenter), mode(Qt::ElideLeft) {
 }

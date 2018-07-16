@@ -17,17 +17,16 @@ class Kryvo::OutputFramePrivate {
 };
 
 Kryvo::OutputFrame::OutputFrame(QWidget* parent)
-  : QFrame{parent}, d_ptr{std::make_unique<OutputFramePrivate>()} {
+  : QFrame(parent), d_ptr(std::make_unique<OutputFramePrivate>()) {
   Q_D(OutputFrame);
 
-  auto outputLabel = new QLabel{tr("Output path "), this};
+  auto outputLabel = new QLabel(tr("Output path "), this);
   outputLabel->setObjectName(QStringLiteral("text"));
 
-  d->outputLineEdit = new QLineEdit{this};
-  d->outputLineEdit->setParent(this);
+  d->outputLineEdit = new QLineEdit(this);
   d->outputLineEdit->setObjectName(QStringLiteral("outputLineEdit"));
 
-  auto outputLayout = new QHBoxLayout{this};
+  auto outputLayout = new QHBoxLayout(this);
   outputLayout->addWidget(outputLabel);
   outputLayout->addWidget(d->outputLineEdit);
   outputLayout->setContentsMargins(0, 0, 0, 0);
@@ -47,11 +46,9 @@ QString Kryvo::OutputFrame::outputPath() const {
   Q_D(const OutputFrame);
   Q_ASSERT(d->outputLineEdit);
 
-  const QString fileName = d->outputLineEdit->text();
-
-  return fileName;
+  return d->outputLineEdit->text();
 }
 
 Kryvo::OutputFramePrivate::OutputFramePrivate()
-  : outputLineEdit{nullptr} {
+  : outputLineEdit(nullptr) {
 }

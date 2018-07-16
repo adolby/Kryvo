@@ -24,30 +24,28 @@ class Kryvo::MessageFramePrivate {
 };
 
 Kryvo::MessageFrame::MessageFrame(QWidget* parent)
-  : QFrame{parent}, d_ptr{std::make_unique<MessageFramePrivate>()} {
+  : QFrame(parent), d_ptr(std::make_unique<MessageFramePrivate>()) {
   Q_D(MessageFrame);
 
-  auto leftAction = new QAction{this};
+  auto leftAction = new QAction(this);
   connect(leftAction, &QAction::triggered, this, &MessageFrame::pageLeft);
-  const QIcon leftIcon{QStringLiteral(":/images/leftArrowIcon.png")};
-  leftAction->setIcon(leftIcon);
-  auto leftButton = new QToolButton{this};
+  leftAction->setIcon(QIcon(QStringLiteral(":/images/leftArrowIcon.png")));
+  auto leftButton = new QToolButton(this);
   leftButton->setObjectName(QStringLiteral("messageNavButton"));
   leftButton->setDefaultAction(leftAction);
 
-  d->messageLabel = new QLabel{this};
+  d->messageLabel = new QLabel(this);
   d->messageLabel->setObjectName(QStringLiteral("message"));
   d->messageLabel->setWordWrap(true);
 
-  auto rightAction = new QAction{this};
+  auto rightAction = new QAction(this);
   connect(rightAction, &QAction::triggered, this, &MessageFrame::pageRight);
-  const QIcon rightIcon{QStringLiteral(":/images/rightArrowIcon.png")};
-  rightAction->setIcon(rightIcon);
-  auto rightButton = new QToolButton{this};
+  rightAction->setIcon(QIcon(QStringLiteral(":/images/rightArrowIcon.png")));
+  auto rightButton = new QToolButton(this);
   rightButton->setObjectName(QStringLiteral("messageNavButton"));
   rightButton->setDefaultAction(rightAction);
 
-  auto messageLayout = new QHBoxLayout{this};
+  auto messageLayout = new QHBoxLayout(this);
   messageLayout->addWidget(leftButton, 1);
   messageLayout->addWidget(d->messageLabel, 20);
   messageLayout->addWidget(rightButton, 1);
@@ -91,5 +89,5 @@ void Kryvo::MessageFrame::pageRight()
 }
 
 Kryvo::MessageFramePrivate::MessageFramePrivate()
-  : messageLabel{nullptr} {
+  : messageLabel(nullptr) {
 }

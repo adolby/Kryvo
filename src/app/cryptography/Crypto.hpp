@@ -48,7 +48,7 @@ class Crypto : public QObject {
    * \param filePath String containing the file path which encountered an error
    */
   void errorMessage(const QString& message,
-                    const QString& filePath = QString{});
+                    const QString& filePath = QString());
 
   /*!
    * \brief busyStatus Emitted when a cipher operation starts and ends
@@ -75,9 +75,9 @@ class Crypto : public QObject {
    */
   void encrypt(const QString& passphrase,
                const QStringList& inputFilePaths,
-               const QString& outputPath = QString{},
+               const QString& outputPath = QString(),
                const QString& cipher = QStringLiteral("AES"),
-               const std::size_t inputKeySize = std::size_t{128},
+               const std::size_t inputKeySize = 128,
                const QString& modeOfOperation = QStringLiteral("GCM"),
                const bool compress = true,
                const bool container = true);
@@ -92,7 +92,7 @@ class Crypto : public QObject {
    */
   void decrypt(const QString& passphrase,
                const QStringList& inputFilePaths,
-               const QString& outputPath = QString{});
+               const QString& outputPath = QString());
 
   /*!
    * \brief abort Executed when a signal is received to set the abort status.
@@ -112,7 +112,7 @@ class Crypto : public QObject {
    * execution.
    * \param pause Boolean representing the pause state
    */
-  void pause(bool pause);
+  void pause(const bool pause);
 
   /*!
    * \brief stop Executed when a signal is received to set the stop status for

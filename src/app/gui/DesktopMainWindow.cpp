@@ -6,7 +6,7 @@
 
 Kryvo::DesktopMainWindow::DesktopMainWindow(Settings* s,
                                             QWidget* parent)
-  : MainWindow{s, parent}, settings{s} {
+  : MainWindow(s, parent), settings(s) {
   messageFrame->appendText(tr("To begin, click the Add Files button or drag "
                               "and drop files. Next, enter a file path for the "
                               "output files. Enter a password. Finally, click "
@@ -19,14 +19,14 @@ Kryvo::DesktopMainWindow::DesktopMainWindow(Settings* s,
   contentLayout->setStretch(2, 0);
 
   // Add files action
-  auto addFilesAction = new QAction{this};
+  auto addFilesAction = new QAction(this);
   addFilesAction->setShortcut(Qt::Key_O | Qt::CTRL);
   connect(addFilesAction, &QAction::triggered,
           this, &MainWindow::addFiles);
   this->addAction(addFilesAction);
 
   // Quit action
-  auto quitAction = new QAction{this};
+  auto quitAction = new QAction(this);
   quitAction->setShortcut(Qt::Key_Q | Qt::CTRL);
   connect(quitAction, &QAction::triggered,
           this, &QMainWindow::close);

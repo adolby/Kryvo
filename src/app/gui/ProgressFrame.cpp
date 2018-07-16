@@ -20,18 +20,18 @@ class Kryvo::ProgressFramePrivate {
 };
 
 Kryvo::ProgressFrame::ProgressFrame(QWidget* parent)
-  : QFrame{parent}, d_ptr{std::make_unique<ProgressFramePrivate>()} {
+  : QFrame(parent), d_ptr(std::make_unique<ProgressFramePrivate>()) {
   Q_D(ProgressFrame);
 
-  d->progressTaskLabel = new ElidedLabel{tr("Archive progress"), this};
+  d->progressTaskLabel = new ElidedLabel(tr("Archive progress"), this);
   d->progressTaskLabel->setElideMode(Qt::ElideMiddle);
   d->progressTaskLabel->setObjectName(QStringLiteral("progressLabel"));
 
-  d->progressBar = new QProgressBar{this};
+  d->progressBar = new QProgressBar(this);
   d->progressBar->setRange(0, 100);
   d->progressBar->setValue(0);
 
-  auto progressLayout = new QHBoxLayout{this};
+  auto progressLayout = new QHBoxLayout(this);
   progressLayout->addWidget(d->progressTaskLabel, 3);
   progressLayout->addWidget(d->progressBar, 2);
   progressLayout->setContentsMargins(5, 5, 5, 5);
@@ -50,7 +50,7 @@ void Kryvo::ProgressFrame::updateTask(const QString& task,
     d->progressTaskLabel->setText(task);
   }
 
-  const bool visibleStatus = 100 != percentProgress;
+  const bool visibleStatus = (100 != percentProgress);
 
   this->setVisible(visibleStatus);
 
@@ -58,5 +58,5 @@ void Kryvo::ProgressFrame::updateTask(const QString& task,
 }
 
 Kryvo::ProgressFramePrivate::ProgressFramePrivate()
-  : progressTaskLabel{nullptr}, progressBar{nullptr} {
+  : progressTaskLabel(nullptr), progressBar(nullptr) {
 }

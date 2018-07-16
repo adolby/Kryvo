@@ -1,7 +1,7 @@
 #include "Thread.hpp"
 
 Kryvo::Thread::Thread(QObject* parent)
-  : QThread{parent} {
+  : QThread(parent) {
 }
 
 Kryvo::Thread::~Thread() {

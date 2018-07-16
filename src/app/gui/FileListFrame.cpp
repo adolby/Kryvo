@@ -33,7 +33,7 @@ class Kryvo::FileListFramePrivate {
 };
 
 Kryvo::FileListFrame::FileListFrame(QWidget* parent)
-  : QFrame{parent}, d_ptr{std::make_unique<FileListFramePrivate>()} {
+  : QFrame(parent), d_ptr(std::make_unique<FileListFramePrivate>()) {
   Q_D(FileListFrame);
 
   // File list header
@@ -41,7 +41,7 @@ Kryvo::FileListFrame::FileListFrame(QWidget* parent)
                                   tr("Remove")};
   d->fileListModel.setHorizontalHeaderLabels(headerList);
 
-  d->fileListView = new QTableView{this};
+  d->fileListView = new QTableView(this);
   d->fileListView->setModel(&d->fileListModel);
   d->fileListView->setShowGrid(false);
   d->fileListView->verticalHeader()->hide();
@@ -55,11 +55,11 @@ Kryvo::FileListFrame::FileListFrame(QWidget* parent)
   header->setSectionResizeMode(QHeaderView::Fixed);
 
   // Custom delegate paints progress bar and file close button for each file
-  auto delegate = new FileListDelegate{this};
+  auto delegate = new FileListDelegate(this);
   d->fileListView->setItemDelegate(delegate);
   d->fileListView->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 
-  auto fileListLayout = new QVBoxLayout{this};
+  auto fileListLayout = new QVBoxLayout(this);
   fileListLayout->addWidget(d->fileListView);
   fileListLayout->setContentsMargins(0, 0, 0, 0);
 
@@ -139,29 +139,29 @@ void Kryvo::FileListFrame::addFileToModel(const QString& path) {
 
   if (fileInfo.exists() && fileInfo.isFile()) {
     // If the file exists, add it to the model
-    auto pathItem = new QStandardItem{path};
+    auto pathItem = new QStandardItem(path);
     pathItem->setDragEnabled(false);
     pathItem->setDropEnabled(false);
     pathItem->setEditable(false);
     pathItem->setSelectable(false);
     pathItem->setToolTip(path);
 
-    const QVariant pathVariant = QVariant::fromValue(path);
+    const QVariant& pathVariant = QVariant::fromValue(path);
     pathItem->setData(pathVariant);
 
-    auto taskItem = new QStandardItem{};
+    auto taskItem = new QStandardItem();
     pathItem->setDragEnabled(false);
     pathItem->setDropEnabled(false);
     pathItem->setEditable(false);
     pathItem->setSelectable(false);
 
-    auto progressItem = new QStandardItem{};
+    auto progressItem = new QStandardItem();
     progressItem->setDragEnabled(false);
     progressItem->setDropEnabled(false);
     progressItem->setEditable(false);
     progressItem->setSelectable(false);
 
-    auto closeFileItem = new QStandardItem{};
+    auto closeFileItem = new QStandardItem();
     closeFileItem->setDragEnabled(false);
     closeFileItem->setDropEnabled(false);
     closeFileItem->setEditable(false);
@@ -181,8 +181,8 @@ void Kryvo::FileListFrame::addFileToModel(const QString& path) {
           return;
       }
 
-      const QVariant testItemData = testItem->data();
-      const QVariant pathItemData = pathItem->data();
+      const QVariant& testItemData = testItem->data();
+      const QVariant& pathItemData = pathItem->data();
 
       if (testItemData.toString() == pathItemData.toString()) {
         addNewItem = false;
@@ -228,5 +228,5 @@ void Kryvo::FileListFrame::resizeEvent(QResizeEvent* event) {
 }
 
 Kryvo::FileListFramePrivate::FileListFramePrivate()
-  : fileListView{nullptr} {
+  : fileListView(nullptr) {
 }

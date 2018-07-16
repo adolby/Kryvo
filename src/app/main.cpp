@@ -10,7 +10,7 @@
 int main(int argc, char* argv[]) {
   QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-  QApplication app{argc, argv};
+  QApplication app(argc, argv);
   app.setOrganizationName(QStringLiteral("The Kryvo Project"));
   app.setOrganizationDomain(QStringLiteral("kryvo.io"));
   app.setApplicationName(QStringLiteral("Kryvo"));

@@ -32,11 +32,11 @@ class Kryvo::ApplicationPrivate {
 };
 
 Kryvo::ApplicationPrivate::ApplicationPrivate()
-  : gui{&settings} {
+  : gui(&settings) {
 }
 
 Kryvo::Application::Application(QObject* parent)
-  : QObject{parent}, d_ptr{std::make_unique<ApplicationPrivate>()} {
+  : QObject(parent), d_ptr(std::make_unique<ApplicationPrivate>()) {
   Q_D(Application);
 
   qRegisterMetaType<std::size_t>("std::size_t");

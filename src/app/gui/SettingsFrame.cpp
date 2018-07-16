@@ -17,7 +17,7 @@
 #include <memory>
 
 QString splitToolTip(const QString& text, const int width) {
-  const QFontMetrics fm{QToolTip::font()};
+  const QFontMetrics fm(QToolTip::font());
   QString result;
 
   QString temp = text;
@@ -48,7 +48,7 @@ QString splitToolTip(const QString& text, const int width) {
       break;
     }
 
-    ++k;
+    k = k + 1;
   }
 
   return result + temp;
@@ -82,60 +82,60 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
                                     const bool compressionMode,
                                     const bool containerMode,
                                     QWidget* parent)
-  : QFrame{parent}, d_ptr{std::make_unique<SettingsFramePrivate>()} {
+  : QFrame(parent), d_ptr(std::make_unique<SettingsFramePrivate>()) {
   Q_D(SettingsFrame);
 
-  auto headerFrame = new QFrame{this};
+  auto headerFrame = new QFrame(this);
   headerFrame->setObjectName(QStringLiteral("headerFrame"));
   headerFrame->setContentsMargins(0, 0, 0, 0);
   headerFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-  auto settingsIcon = new QLabel{headerFrame};
-  settingsIcon->setPixmap(QPixmap{QStringLiteral(":/images/settingsIcon.png")});
+  auto settingsIcon = new QLabel(headerFrame);
+  settingsIcon->setPixmap(QPixmap(QStringLiteral(":/images/settingsIcon.png")));
 
-  const QIcon backIcon{QStringLiteral(":/images/backIcon.png")};
+  const QIcon backIcon(QStringLiteral(":/images/backIcon.png"));
   auto backButton = new QPushButton{backIcon, tr(" Back"), headerFrame};
   backButton->setObjectName(QStringLiteral("backButton"));
   backButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  auto headerLayout = new QHBoxLayout{headerFrame};
+  auto headerLayout = new QHBoxLayout(headerFrame);
   headerLayout->addWidget(settingsIcon);
   headerLayout->addStretch();
   headerLayout->addWidget(backButton);
   headerLayout->setContentsMargins(0, 0, 0, 0);
   headerLayout->setSpacing(0);
 
-  auto contentFrame = new QFrame{this};
+  auto contentFrame = new QFrame(this);
   contentFrame->setContentsMargins(0, 0, 0, 0);
 
   // Cryptography settings
-  auto cryptoSettingsFrame = new QFrame{contentFrame};
+  auto cryptoSettingsFrame = new QFrame(contentFrame);
   cryptoSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
 
-  auto cryptoSettingsLabel = new QLabel{tr("Cryptography Settings"),
-                                        cryptoSettingsFrame};
+  auto cryptoSettingsLabel = new QLabel(tr("Cryptography Settings"),
+                                        cryptoSettingsFrame);
   cryptoSettingsLabel->setObjectName(QStringLiteral("text"));
 
-  auto cipherFrame = new QFrame{cryptoSettingsFrame};
+  auto cipherFrame = new QFrame(cryptoSettingsFrame);
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  auto cipherLabel = new QLabel{tr("Cipher:"), cipherFrame};
+  auto cipherLabel = new QLabel(tr("Cipher:"), cipherFrame);
   cipherLabel->setObjectName(QStringLiteral("text"));
 
-  d->cipherComboBox = new QComboBox{cipherFrame};
+  d->cipherComboBox = new QComboBox(cipherFrame);
   d->cipherComboBox->setObjectName(QStringLiteral("settingsComboBox"));
   d->cipherComboBox->addItem(tr("AES"));
   d->cipherComboBox->addItem(tr("Serpent"));
   d->cipherComboBox->setCurrentText(cipher);
 
-  auto cipherLayout = new QHBoxLayout{cipherFrame};
+  auto cipherLayout = new QHBoxLayout(cipherFrame);
   cipherLayout->addWidget(cipherLabel);
   cipherLayout->addWidget(d->cipherComboBox);
 
-  auto keySizeFrame = new QFrame{cryptoSettingsFrame};
+  auto keySizeFrame = new QFrame(cryptoSettingsFrame);
   keySizeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  const QString keySizeToolTip = QString{tr("The cipher key size is the number "
+  const QString keySizeToolTip = QString(tr("The cipher key size is the number "
                                             "of bits in the key that is "
                                             "created from your password via a "
                                             "secure hash function. A larger "
@@ -144,15 +144,15 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
                                             "output. Key sizes of 128, 192, "
                                             "and 256 are all currently "
                                             "considered to be secure key "
-                                            "sizes.")};
+                                            "sizes."));
   const QString keySizeSplitToolTip = splitToolTip(keySizeToolTip,
                                                    d->toolTipWidth);
 
-  auto keySizeLabel = new QLabel{tr("Key size (bits):"), keySizeFrame};
+  auto keySizeLabel = new QLabel(tr("Key size (bits):"), keySizeFrame);
   keySizeLabel->setObjectName(QStringLiteral("text"));
   keySizeLabel->setToolTip(keySizeSplitToolTip);
 
-  d->keySizeComboBox = new QComboBox{keySizeFrame};
+  d->keySizeComboBox = new QComboBox(keySizeFrame);
   d->keySizeComboBox->setObjectName(QStringLiteral("settingsComboBox"));
   d->keySizeComboBox->addItem(tr("128"));
   d->keySizeComboBox->addItem(tr("192"));
@@ -160,92 +160,92 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   d->keySizeComboBox->setCurrentText(QString::number(keySize));
   d->keySizeComboBox->setToolTip(keySizeSplitToolTip);
 
-  auto keySizeLayout = new QHBoxLayout{keySizeFrame};
+  auto keySizeLayout = new QHBoxLayout(keySizeFrame);
   keySizeLayout->addWidget(keySizeLabel);
   keySizeLayout->addWidget(d->keySizeComboBox);
 
-  auto modeFrame = new QFrame{cryptoSettingsFrame};
+  auto modeFrame = new QFrame(cryptoSettingsFrame);
   modeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  const QString modeToolTip{tr("The mode of operation is the algorithm that "
+  const QString modeToolTip(tr("The mode of operation is the algorithm that "
                                "repeatedly applies the cipher's single-block "
                                "operation to securely transform data. GCM and "
                                "EAX are both currently considered to be secure "
-                               "modes of operation.")};
+                               "modes of operation."));
   const QString modeSplitToolTip = splitToolTip(modeToolTip, d->toolTipWidth);
 
-  auto modeLabel = new QLabel{tr("Mode of operation:"), modeFrame};
+  auto modeLabel = new QLabel(tr("Mode of operation:"), modeFrame);
   modeLabel->setObjectName(QStringLiteral("text"));
   modeLabel->setToolTip(modeSplitToolTip);
 
-  d->modeComboBox = new QComboBox{modeFrame};
+  d->modeComboBox = new QComboBox(modeFrame);
   d->modeComboBox->setObjectName(QStringLiteral("settingsComboBox"));
   d->modeComboBox->addItem(tr("GCM"));
   d->modeComboBox->addItem(tr("EAX"));
   d->modeComboBox->setCurrentText(mode);
   d->modeComboBox->setToolTip(modeSplitToolTip);
 
-  auto modeLayout = new QHBoxLayout{modeFrame};
+  auto modeLayout = new QHBoxLayout(modeFrame);
   modeLayout->addWidget(modeLabel);
   modeLayout->addWidget(d->modeComboBox);
 
-  auto cryptoSettingsLayout = new QVBoxLayout{cryptoSettingsFrame};
+  auto cryptoSettingsLayout = new QVBoxLayout(cryptoSettingsFrame);
   cryptoSettingsLayout->addWidget(cryptoSettingsLabel);
   cryptoSettingsLayout->addWidget(cipherFrame);
   cryptoSettingsLayout->addWidget(keySizeFrame);
   cryptoSettingsLayout->addWidget(modeFrame);
 
   // File settings
-  auto fileSettingsFrame = new QFrame{contentFrame};
+  auto fileSettingsFrame = new QFrame(contentFrame);
   fileSettingsFrame->setObjectName(QStringLiteral("settingsSubFrame"));
 
-  auto fileSettingsLabel = new QLabel{tr("File Settings"), cryptoSettingsFrame};
+  auto fileSettingsLabel = new QLabel(tr("File Settings"), cryptoSettingsFrame);
   fileSettingsLabel->setObjectName(QStringLiteral("text"));
 
-  auto compressionFrame = new QFrame{fileSettingsFrame};
+  auto compressionFrame = new QFrame(fileSettingsFrame);
   compressionFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  d->compressionCheckBox = new QCheckBox{tr("Compress files before encryption"),
-                                         compressionFrame};
-  d->compressionCheckBox->setObjectName("settingsCheckBox");
+  d->compressionCheckBox = new QCheckBox(tr("Compress files before encryption"),
+                                         compressionFrame);
+  d->compressionCheckBox->setObjectName(QStringLiteral("settingsCheckBox"));
   d->compressionCheckBox->setChecked(compressionMode);
 
-  auto compressionLayout = new QHBoxLayout{compressionFrame};
+  auto compressionLayout = new QHBoxLayout(compressionFrame);
   compressionLayout->addWidget(d->compressionCheckBox);
 
-  auto containerFrame = new QFrame{fileSettingsFrame};
+  auto containerFrame = new QFrame(fileSettingsFrame);
   containerFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  d->containerCheckBox = new QCheckBox{tr("Archive encrypted files"),
-                                       containerFrame};
-  d->containerCheckBox->setObjectName("settingsCheckBox");
+  d->containerCheckBox = new QCheckBox(tr("Archive encrypted files"),
+                                       containerFrame);
+  d->containerCheckBox->setObjectName(QStringLiteral("settingsCheckBox"));
   d->containerCheckBox->setChecked(containerMode);
 
-  auto containerLayout = new QHBoxLayout{containerFrame};
+  auto containerLayout = new QHBoxLayout(containerFrame);
   containerLayout->addWidget(d->containerCheckBox);
 
-  auto fileSettingsLayout = new QVBoxLayout{fileSettingsFrame};
+  auto fileSettingsLayout = new QVBoxLayout(fileSettingsFrame);
   fileSettingsLayout->addWidget(fileSettingsLabel);
   fileSettingsLayout->addWidget(compressionFrame);
   fileSettingsLayout->addWidget(containerFrame);
 
-  auto contentLayout = new QVBoxLayout{contentFrame};
+  auto contentLayout = new QVBoxLayout(contentFrame);
   contentLayout->addWidget(cryptoSettingsFrame);
   contentLayout->addStretch();
   contentLayout->addWidget(fileSettingsFrame);
   contentLayout->addStretch();
   contentLayout->setSpacing(0);
 
-  auto centerFrame = new QFrame{this};
+  auto centerFrame = new QFrame(this);
   centerFrame->setContentsMargins(0, 0, 0, 0);
 
-  auto centerLayout = new QHBoxLayout{centerFrame};
+  auto centerLayout = new QHBoxLayout(centerFrame);
   centerLayout->addWidget(contentFrame);
   centerLayout->addStretch();
   centerLayout->setContentsMargins(0, 0, 0, 0);
   centerLayout->setSpacing(0);
 
-  auto settingsLayout = new QVBoxLayout{this};
+  auto settingsLayout = new QVBoxLayout(this);
   settingsLayout->addWidget(headerFrame, 0);
   settingsLayout->addWidget(centerFrame, 1);
   settingsLayout->setSpacing(0);
@@ -275,7 +275,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
           this, &SettingsFrame::changeContainerMode);
 
   // Return to previous GUI state
-  auto returnAction = new QAction{this};
+  auto returnAction = new QAction(this);
   returnAction->setShortcut(Qt::Key_Escape);
   connect(returnAction, &QAction::triggered, this, &SettingsFrame::switchFrame);
 
@@ -328,7 +328,7 @@ void Kryvo::SettingsFrame::changeContainerMode() {
 }
 
 Kryvo::SettingsFramePrivate::SettingsFramePrivate()
-  : cipherComboBox{nullptr}, keySizeComboBox{nullptr},
-    modeComboBox{nullptr}, compressionCheckBox{nullptr},
-    containerCheckBox{nullptr}, toolTipWidth{250} {
+  : cipherComboBox(nullptr), keySizeComboBox(nullptr),
+    modeComboBox(nullptr), compressionCheckBox(nullptr),
+    containerCheckBox(nullptr), toolTipWidth(250) {
 }

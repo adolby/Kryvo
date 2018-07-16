@@ -24,44 +24,44 @@ class Kryvo::HeaderFramePrivate {
 };
 
 Kryvo::HeaderFrame::HeaderFrame(QWidget* parent)
-  : QFrame{parent}, d_ptr{std::make_unique<HeaderFramePrivate>()} {
+  : QFrame(parent), d_ptr(std::make_unique<HeaderFramePrivate>()) {
   Q_D(HeaderFrame);
 
-  auto headerImageLabel = new QLabel{this};
-  headerImageLabel->setPixmap(QPixmap{QStringLiteral(":/images/kryvo.png")});
+  auto headerImageLabel = new QLabel(this);
+  headerImageLabel->setPixmap(QPixmap(QStringLiteral(":/images/kryvo.png")));
   headerImageLabel->setObjectName(QStringLiteral("headerImageLabel"));
 
-  auto buttonFrame = new QFrame{this};
+  auto buttonFrame = new QFrame(this);
   buttonFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-  const QIcon pauseIcon{QStringLiteral(":/images/pauseIcon.png")};
-  d->pauseButton = new QPushButton{pauseIcon, tr(" Pause"), buttonFrame};
+  const QIcon pauseIcon(QStringLiteral(":/images/pauseIcon.png"));
+  d->pauseButton = new QPushButton(pauseIcon, tr(" Pause"), buttonFrame);
   d->pauseButton->setObjectName(QStringLiteral("pauseButton"));
   d->pauseButton->setCheckable(true);
   d->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  const QIcon addFilesIcon{QStringLiteral(":/images/addFilesIcon.png")};
-  d->addFilesButton = new QPushButton{addFilesIcon,
+  const QIcon addFilesIcon(QStringLiteral(":/images/addFilesIcon.png"));
+  d->addFilesButton = new QPushButton(addFilesIcon,
                                       tr(" Add files"),
-                                      buttonFrame};
+                                      buttonFrame);
   d->addFilesButton->setObjectName(QStringLiteral("addButton"));
   d->addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const QIcon clearFilesIcon{QStringLiteral(":/images/clearFilesIcon.png")};
-  d->clearFilesButton = new QPushButton{clearFilesIcon,
+  d->clearFilesButton = new QPushButton(clearFilesIcon,
                                         tr(" Remove all files"),
-                                        buttonFrame};
+                                        buttonFrame);
   d->clearFilesButton->setObjectName(QStringLiteral("clearButton"));
   d->clearFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const QIcon settingsIcon{QStringLiteral(":/images/gearIcon.png")};
-  d->settingsButton = new QPushButton{settingsIcon,
+  d->settingsButton = new QPushButton(settingsIcon,
                                       tr(" Settings"),
-                                      buttonFrame};
+                                      buttonFrame);
   d->settingsButton->setObjectName(QStringLiteral("settingsButton"));
   d->settingsButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  auto buttonLayout = new FlowLayout{this, 2};
+  auto buttonLayout = new FlowLayout(this, 2);
   buttonLayout->addWidget(headerImageLabel);
   buttonLayout->addWidget(d->pauseButton);
   buttonLayout->addWidget(d->addFilesButton);
@@ -101,18 +101,16 @@ void Kryvo::HeaderFrame::togglePauseIcon(const bool toggle) {
   Q_ASSERT(d->pauseButton);
 
   if (toggle) {
-    const QIcon resumeIcon{QStringLiteral(":/images/resumeIcon.png")};
-    d->pauseButton->setIcon(resumeIcon);
+    d->pauseButton->setIcon(QIcon(QStringLiteral(":/images/resumeIcon.png")));
     d->pauseButton->setText(tr(" Resume"));
   }
   else {
-    const QIcon pauseIcon{QStringLiteral(":/images/pauseIcon.png")};
-    d->pauseButton->setIcon(pauseIcon);
+    d->pauseButton->setIcon(QIcon(QStringLiteral(":/images/pauseIcon.png")));
     d->pauseButton->setText(tr(" Pause"));
   }
 }
 
 Kryvo::HeaderFramePrivate::HeaderFramePrivate()
-  : pauseButton{nullptr}, addFilesButton{nullptr}, clearFilesButton{nullptr},
-    settingsButton{nullptr} {
+  : pauseButton(nullptr), addFilesButton(nullptr), clearFilesButton(nullptr),
+    settingsButton(nullptr) {
 }

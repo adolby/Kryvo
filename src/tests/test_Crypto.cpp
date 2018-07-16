@@ -12,8 +12,8 @@ void TestCrypto::testComparatorSameFile() {
   const QString fileName1 = QStringLiteral("file1.png");
   const QString fileName2 = QStringLiteral("file2.png");
 
-  const QFile file1{fileName1};
-  const QFile file2{fileName2};
+  const QFile file1(fileName1);
+  const QFile file2(fileName2);
 
   if (!file1.exists() || !file2.exists()) {
     const QString msg = QStringLiteral("Test file %1 is missing. ");
@@ -43,8 +43,8 @@ void TestCrypto::testComparatorDifferentFile() {
   const QString fileName1 = QStringLiteral("file1.png");
   const QString fileName2 = QStringLiteral("file3.png");
 
-  const QFile file1{fileName1};
-  const QFile file2{fileName2};
+  const QFile file1(fileName1);
+  const QFile file2(fileName2);
 
   if (!file1.exists() || !file2.exists()) {
     QString message;
@@ -113,7 +113,7 @@ void TestCrypto::testEncryptDecrypt() {
   QFETCH(QString, encryptedFileName);
   QFETCH(QString, decryptedFileName);
 
-  const QFile inputFile{inputFileName};
+  const QFile inputFile(inputFileName);
 
   if (!inputFile.exists()) {
     const QString msg = QStringLiteral("Test file %1 is missing.");
@@ -145,13 +145,13 @@ void TestCrypto::testEncryptDecrypt() {
         FileOperations::filesEqual(inputFileName, decryptedFileName);
 
   // Clean up test files
-  QFile encryptedFile{encryptedFileName};
+  QFile encryptedFile(encryptedFileName);
 
   if (encryptedFile.exists()) {
     encryptedFile.remove();
   }
 
-  QFile decryptedFile{decryptedFileName};
+  QFile decryptedFile(decryptedFileName);
 
   if (decryptedFile.exists()) {
     decryptedFile.remove();
@@ -176,10 +176,11 @@ void TestCrypto::testEncryptDecryptAll() {
   QString message;
 
   for (const QString& inputFileName : inputFileNames) {
-    const QFile inputFile{inputFileName};
+    const QFile inputFile(inputFileName);
 
     if (!inputFile.exists()) {
-      message += QString{"\nTest file %1 is missing."}.arg(inputFileName);
+      message +=
+        QStringLiteral("\nTest file %1 is missing.").arg(inputFileName);
       skip = true;
     }
   }
@@ -211,8 +212,8 @@ void TestCrypto::testEncryptDecryptAll() {
 
   const int inputFilesSize = inputFileNames.size();
   for (int i = 0; i < inputFilesSize; ++i) {
-    const QString inputFileName = inputFileNames[i];
-    const QString decryptedFileName = decryptedFileNames[i];
+    const QString& inputFileName = inputFileNames[i];
+    const QString& decryptedFileName = decryptedFileNames[i];
 
     // Compare initial file to decrypted file
     equivalentTest =
@@ -225,15 +226,15 @@ void TestCrypto::testEncryptDecryptAll() {
 
   // Clean up test files
   for (int i = 0; i < inputFilesSize; ++i) {
-    const QString encryptedFileName = encryptedFileNames[i];
-    QFile encryptedFile{encryptedFileName};
+    const QString& encryptedFileName = encryptedFileNames[i];
+    QFile encryptedFile(encryptedFileName);
 
     if (encryptedFile.exists()) {
       encryptedFile.remove();
     }
 
-    const QString decryptedFileName = decryptedFileNames[i];
-    QFile decryptedFile{decryptedFileName};
+    const QString& decryptedFileName = decryptedFileNames[i];
+    QFile decryptedFile(decryptedFileName);
 
     if (decryptedFile.exists()) {
       decryptedFile.remove();

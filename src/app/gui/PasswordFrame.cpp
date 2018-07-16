@@ -17,18 +17,17 @@ class Kryvo::PasswordFramePrivate {
 };
 
 Kryvo::PasswordFrame::PasswordFrame(QWidget* parent)
-  : QFrame{parent}, d_ptr{std::make_unique<PasswordFramePrivate>()} {
+  : QFrame(parent), d_ptr(std::make_unique<PasswordFramePrivate>()) {
   Q_D(PasswordFrame);
 
-  auto passwordLabel = new QLabel{tr("Password "), this};
+  auto passwordLabel = new QLabel(tr("Password "), this);
   passwordLabel->setObjectName(QStringLiteral("text"));
 
-  d->passwordLineEdit = new QLineEdit{this};
-  d->passwordLineEdit->setParent(this);
+  d->passwordLineEdit = new QLineEdit(this);
   d->passwordLineEdit->setObjectName(QStringLiteral("passwordLineEdit"));
   d->passwordLineEdit->setEchoMode(QLineEdit::PasswordEchoOnEdit);
 
-  auto passwordLayout = new QHBoxLayout{this};
+  auto passwordLayout = new QHBoxLayout(this);
   passwordLayout->addWidget(passwordLabel);
   passwordLayout->addWidget(d->passwordLineEdit);
   passwordLayout->setContentsMargins(0, 0, 0, 0);
@@ -41,11 +40,9 @@ QString Kryvo::PasswordFrame::password() const {
   Q_D(const PasswordFrame);
   Q_ASSERT(d->passwordLineEdit);
 
-  const QString password = d->passwordLineEdit->text();
-
-  return password;
+  return d->passwordLineEdit->text();
 }
 
 Kryvo::PasswordFramePrivate::PasswordFramePrivate()
-  : passwordLineEdit{nullptr} {
+  : passwordLineEdit(nullptr) {
 }

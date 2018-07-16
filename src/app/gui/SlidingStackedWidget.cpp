@@ -28,8 +28,8 @@ class Kryvo::SlidingStackedWidgetPrivate {
 };
 
 Kryvo::SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
-  : QStackedWidget{parent},
-    d_ptr{std::make_unique<SlidingStackedWidgetPrivate>()} {
+  : QStackedWidget(parent),
+    d_ptr(std::make_unique<SlidingStackedWidgetPrivate>()) {
   Q_D(SlidingStackedWidget);
 
   d->animationGroup->setParent(this);
@@ -182,18 +182,18 @@ void Kryvo::SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
     d->currentWidgetAnimation->setDuration(d->speed);
     d->currentWidgetAnimation->setEasingCurve(d->animationType);
     d->currentWidgetAnimation->setStartValue(currentWidgetPos);
-    d->currentWidgetAnimation->setEndValue(QPoint{offsetX +
+    d->currentWidgetAnimation->setEndValue(QPoint(offsetX +
                                                   currentWidgetPos.x(),
                                                   offsetY +
-                                                  currentWidgetPos.y()});
+                                                  currentWidgetPos.y()));
 
     d->nextWidgetAnimation->setTargetObject(nextWidget);
     d->nextWidgetAnimation->setDuration(d->speed);
     d->nextWidgetAnimation->setEasingCurve(d->animationType);
-    d->nextWidgetAnimation->setStartValue(QPoint{-offsetX +
+    d->nextWidgetAnimation->setStartValue(QPoint(-offsetX +
                                                  nextWidgetPos.x(),
                                                  offsetY +
-                                                 nextWidgetPos.y()});
+                                                 nextWidgetPos.y()));
     d->nextWidgetAnimation->setEndValue(nextWidgetPos);
 
     d->nextIndex = nextIdx;
@@ -217,16 +217,16 @@ void Kryvo::SlidingStackedWidget::stopAnimation() {
 }
 
 Kryvo::SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate()
-  : speed{500}, animationType{QEasingCurve::InOutSine}, vertical{false},
-    currentIndex{0}, nextIndex{0}, wrap{false}, currentWidgetAnimation{nullptr},
-    nextWidgetAnimation{nullptr}, animationGroup{nullptr} {
-  currentWidgetAnimation = new QPropertyAnimation{};
+  : speed(500), animationType(QEasingCurve::InOutSine), vertical(false),
+    currentIndex(0), nextIndex(0), wrap(false), currentWidgetAnimation(nullptr),
+    nextWidgetAnimation(nullptr), animationGroup(nullptr) {
+  currentWidgetAnimation = new QPropertyAnimation();
   currentWidgetAnimation->setPropertyName(QByteArrayLiteral("pos"));
 
-  nextWidgetAnimation = new QPropertyAnimation{};
+  nextWidgetAnimation = new QPropertyAnimation();
   nextWidgetAnimation->setPropertyName(QByteArrayLiteral("pos"));
 
-  animationGroup = new QParallelAnimationGroup{};
+  animationGroup = new QParallelAnimationGroup();
 
   animationGroup->addAnimation(currentWidgetAnimation);
   animationGroup->addAnimation(nextWidgetAnimation);
