@@ -24,8 +24,12 @@ class Kryvo::BotanProviderPrivate {
   Q_DISABLE_COPY(BotanProviderPrivate)
 
  public:
+  BotanProviderPrivate();
+
   QMimeDatabase db;
 };
+
+Kryvo::BotanProviderPrivate::BotanProviderPrivate() = default;
 
 Kryvo::BotanProvider::BotanProvider(QObject* parent)
   : QObject(parent), d_ptr(std::make_unique<BotanProviderPrivate>()) {

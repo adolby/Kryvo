@@ -12,10 +12,14 @@ class Kryvo::MessageFramePrivate {
   Q_DISABLE_COPY(MessageFramePrivate)
 
  public:
+  MessageFramePrivate();
+
   QVector<QString> messages;
   QVector<QString>::ConstIterator it{};
   QLabel* messageLabel{nullptr};
 };
+
+Kryvo::MessageFramePrivate::MessageFramePrivate() = default;
 
 Kryvo::MessageFrame::MessageFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<MessageFramePrivate>()) {

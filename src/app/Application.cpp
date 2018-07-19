@@ -28,12 +28,10 @@ class Kryvo::ApplicationPrivate {
   Archiver archiver;
   Thread cryptographyThread;
   Thread archiverThread;
-  DesktopMainWindow gui;
+  DesktopMainWindow gui{&settings};
 };
 
-Kryvo::ApplicationPrivate::ApplicationPrivate()
-  : gui(&settings) {
-}
+Kryvo::ApplicationPrivate::ApplicationPrivate() = default;
 
 Kryvo::Application::Application(QObject* parent)
   : QObject(parent), d_ptr(std::make_unique<ApplicationPrivate>()) {

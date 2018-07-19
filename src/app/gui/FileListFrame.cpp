@@ -16,6 +16,8 @@ class Kryvo::FileListFramePrivate {
   Q_DISABLE_COPY(FileListFramePrivate)
 
  public:
+  FileListFramePrivate();
+
   /*!
    * \brief addFileToModel Adds a file to the file list model.
    * \param filePath String containing the file path.
@@ -25,6 +27,8 @@ class Kryvo::FileListFramePrivate {
   QStandardItemModel fileListModel;
   QTableView* fileListView{nullptr};
 };
+
+Kryvo::FileListFramePrivate::FileListFramePrivate() = default;
 
 Kryvo::FileListFrame::FileListFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<FileListFramePrivate>()) {

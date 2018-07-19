@@ -13,9 +13,11 @@ class Kryvo::ControlButtonFramePrivate {
    */
   ControlButtonFramePrivate();
 
-  QPushButton* encryptButton;
-  QPushButton* decryptButton;
+  QPushButton* encryptButton{nullptr};
+  QPushButton* decryptButton{nullptr};
 };
+
+Kryvo::ControlButtonFramePrivate::ControlButtonFramePrivate() = default;
 
 Kryvo::ControlButtonFrame::ControlButtonFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<ControlButtonFramePrivate>()) {
@@ -64,8 +66,4 @@ void Kryvo::ControlButtonFrame::encryptFiles() {
 
 void Kryvo::ControlButtonFrame::decryptFiles() {
   emit processFiles(false);
-}
-
-Kryvo::ControlButtonFramePrivate::ControlButtonFramePrivate()
-  : encryptButton(nullptr), decryptButton(nullptr) {
 }

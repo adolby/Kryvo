@@ -33,161 +33,19 @@ class Kryvo::SettingsPrivate {
   void exportSettings() const;
 
   QPoint position;
-  bool maximized;
+  bool maximized{false};
   QSize size;
   QString cipher;
-  std::size_t keySize;
+  std::size_t keySize{128};
   QString modeOfOperation;
-  bool compressionMode;
-  bool containerMode;
-  QString outputPath;
-  QString lastOpenPath;
+  bool compressionMode{true};
+  bool containerMode{false};
+  QString outputPath{kDefaultPath};
+  QString lastOpenPath{kDefaultPath};
   QString styleSheetPath;
 };
 
-Kryvo::Settings::Settings()
-  : d_ptr{std::make_unique<SettingsPrivate>()} {
-  Q_D(Settings);
-
-  d->importSettings();
-}
-
-Kryvo::Settings::~Settings() {
-  Q_D(Settings);
-
-  d->exportSettings();
-}
-
-void Kryvo::Settings::position(const QPoint& position) {
-  Q_D(Settings);
-
-  d->position = position;
-}
-
-QPoint Kryvo::Settings::position() const {
-  Q_D(const Settings);
-
-  return d->position;
-}
-
-void Kryvo::Settings::maximized(const bool maximized) {
-  Q_D(Settings);
-
-  d->maximized = maximized;
-}
-
-bool Kryvo::Settings::maximized() const {
-  Q_D(const Settings);
-
-  return d->maximized;
-}
-
-void Kryvo::Settings::size(const QSize& size) {
-  Q_D(Settings);
-
-  d->size = size;
-}
-
-QSize Kryvo::Settings::size() const {
-  Q_D(const Settings);
-
-  return d->size;
-}
-
-void Kryvo::Settings::cipher(const QString& cipherName) {
-  Q_D(Settings);
-
-  d->cipher = cipherName;
-}
-
-QString Kryvo::Settings::cipher() const {
-  Q_D(const Settings);
-
-  return d->cipher;
-}
-
-void Kryvo::Settings::keySize(const std::size_t keySize) {
-  Q_D(Settings);
-
-  d->keySize = keySize;
-}
-
-std::size_t Kryvo::Settings::keySize() const {
-  Q_D(const Settings);
-
-  return d->keySize;
-}
-
-void Kryvo::Settings::modeOfOperation(const QString& modeOfOperation) {
-  Q_D(Settings);
-
-  d->modeOfOperation = modeOfOperation;
-}
-
-QString Kryvo::Settings::modeOfOperation() const {
-  Q_D(const Settings);
-
-  return d->modeOfOperation;
-}
-
-void Kryvo::Settings::compressionMode(const bool compress) {
-  Q_D(Settings);
-
-  d->compressionMode = compress;
-}
-
-bool Kryvo::Settings::compressionMode() const {
-  Q_D(const Settings);
-
-  return d->compressionMode;
-}
-
-void Kryvo::Settings::containerMode(const bool container) {
-  Q_D(Settings);
-
-  d->containerMode = container;
-}
-
-bool Kryvo::Settings::containerMode() const {
-  Q_D(const Settings);
-
-  return d->containerMode;
-}
-
-void Kryvo::Settings::outputPath(const QString& path) {
-  Q_D(Settings);
-
-  d->outputPath = path;
-}
-
-QString Kryvo::Settings::outputPath() const {
-  Q_D(const Settings);
-
-  return d->outputPath;
-}
-
-void Kryvo::Settings::lastOpenPath(const QString& path) {
-  Q_D(Settings);
-
-  d->lastOpenPath = path;
-}
-
-QString Kryvo::Settings::lastOpenPath() const {
-  Q_D(const Settings);
-
-  return d->lastOpenPath;
-}
-
-QString Kryvo::Settings::styleSheetPath() const {
-  Q_D(const Settings);
-
-  return d->styleSheetPath;
-}
-
-Kryvo::SettingsPrivate::SettingsPrivate()
-  : maximized(false), keySize(128), compressionMode(true),
-    containerMode(false), outputPath(kDefaultPath), lastOpenPath(kDefaultPath) {
-}
+Kryvo::SettingsPrivate::SettingsPrivate() = default;
 
 void Kryvo::SettingsPrivate::importSettings() {
 #if defined(Q_OS_MACOS)
@@ -327,4 +185,143 @@ void Kryvo::SettingsPrivate::exportSettings() const {
   }
 
   settingsFile.commit();
+}
+
+Kryvo::Settings::Settings()
+  : d_ptr{std::make_unique<SettingsPrivate>()} {
+  Q_D(Settings);
+
+  d->importSettings();
+}
+
+Kryvo::Settings::~Settings() {
+  Q_D(Settings);
+
+  d->exportSettings();
+}
+
+void Kryvo::Settings::position(const QPoint& position) {
+  Q_D(Settings);
+
+  d->position = position;
+}
+
+QPoint Kryvo::Settings::position() const {
+  Q_D(const Settings);
+
+  return d->position;
+}
+
+void Kryvo::Settings::maximized(const bool maximized) {
+  Q_D(Settings);
+
+  d->maximized = maximized;
+}
+
+bool Kryvo::Settings::maximized() const {
+  Q_D(const Settings);
+
+  return d->maximized;
+}
+
+void Kryvo::Settings::size(const QSize& size) {
+  Q_D(Settings);
+
+  d->size = size;
+}
+
+QSize Kryvo::Settings::size() const {
+  Q_D(const Settings);
+
+  return d->size;
+}
+
+void Kryvo::Settings::cipher(const QString& cipherName) {
+  Q_D(Settings);
+
+  d->cipher = cipherName;
+}
+
+QString Kryvo::Settings::cipher() const {
+  Q_D(const Settings);
+
+  return d->cipher;
+}
+
+void Kryvo::Settings::keySize(const std::size_t keySize) {
+  Q_D(Settings);
+
+  d->keySize = keySize;
+}
+
+std::size_t Kryvo::Settings::keySize() const {
+  Q_D(const Settings);
+
+  return d->keySize;
+}
+
+void Kryvo::Settings::modeOfOperation(const QString& modeOfOperation) {
+  Q_D(Settings);
+
+  d->modeOfOperation = modeOfOperation;
+}
+
+QString Kryvo::Settings::modeOfOperation() const {
+  Q_D(const Settings);
+
+  return d->modeOfOperation;
+}
+
+void Kryvo::Settings::compressionMode(const bool compress) {
+  Q_D(Settings);
+
+  d->compressionMode = compress;
+}
+
+bool Kryvo::Settings::compressionMode() const {
+  Q_D(const Settings);
+
+  return d->compressionMode;
+}
+
+void Kryvo::Settings::containerMode(const bool container) {
+  Q_D(Settings);
+
+  d->containerMode = container;
+}
+
+bool Kryvo::Settings::containerMode() const {
+  Q_D(const Settings);
+
+  return d->containerMode;
+}
+
+void Kryvo::Settings::outputPath(const QString& path) {
+  Q_D(Settings);
+
+  d->outputPath = path;
+}
+
+QString Kryvo::Settings::outputPath() const {
+  Q_D(const Settings);
+
+  return d->outputPath;
+}
+
+void Kryvo::Settings::lastOpenPath(const QString& path) {
+  Q_D(Settings);
+
+  d->lastOpenPath = path;
+}
+
+QString Kryvo::Settings::lastOpenPath() const {
+  Q_D(const Settings);
+
+  return d->lastOpenPath;
+}
+
+QString Kryvo::Settings::styleSheetPath() const {
+  Q_D(const Settings);
+
+  return d->styleSheetPath;
 }

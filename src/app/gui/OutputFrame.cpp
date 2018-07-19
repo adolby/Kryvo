@@ -7,8 +7,12 @@ class Kryvo::OutputFramePrivate {
   Q_DISABLE_COPY(OutputFramePrivate)
 
  public:
+  OutputFramePrivate();
+
   QLineEdit* outputLineEdit{nullptr};
 };
+
+Kryvo::OutputFramePrivate::OutputFramePrivate() = default;
 
 Kryvo::OutputFrame::OutputFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<OutputFramePrivate>()) {

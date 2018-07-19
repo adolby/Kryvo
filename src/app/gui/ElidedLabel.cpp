@@ -7,10 +7,14 @@ class Kryvo::ElidedLabelPrivate {
   Q_DISABLE_COPY(ElidedLabelPrivate)
 
  public:
+  ElidedLabelPrivate();
+
   QString text;
   Qt::Alignment align{Qt::AlignLeft | Qt::AlignVCenter};
   Qt::TextElideMode mode{Qt::ElideLeft};
 };
+
+Kryvo::ElidedLabelPrivate::ElidedLabelPrivate() = default;
 
 Kryvo::ElidedLabel::ElidedLabel(QWidget* parent, Qt::WindowFlags f)
   : QFrame(parent, f), d_ptr(std::make_unique<ElidedLabelPrivate>()) {

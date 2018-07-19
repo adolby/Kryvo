@@ -15,6 +15,8 @@ class Kryvo::CryptoPrivate {
   Q_DISABLE_COPY(CryptoPrivate)
 
  public:
+  CryptoPrivate();
+
   /*!
    * \brief errorMessage Returns error message
    * \return String containing error message
@@ -30,6 +32,8 @@ class Kryvo::CryptoPrivate {
   // The list of status messages that can be displayed to the user
   const QStringList messages;
 };
+
+Kryvo::CryptoPrivate::CryptoPrivate() = default;
 
 Kryvo::Crypto::Crypto(QObject* parent)
   : QObject(parent), d_ptr(std::make_unique<CryptoPrivate>()) {

@@ -7,8 +7,12 @@ class Kryvo::PasswordFramePrivate {
   Q_DISABLE_COPY(PasswordFramePrivate)
 
  public:
+  PasswordFramePrivate();
+
   QLineEdit* passwordLineEdit{nullptr};
 };
+
+Kryvo::PasswordFramePrivate::PasswordFramePrivate() = default;
 
 Kryvo::PasswordFrame::PasswordFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<PasswordFramePrivate>()) {

@@ -19,6 +19,8 @@ class Kryvo::MainWindowPrivate {
   Q_DISABLE_COPY(MainWindowPrivate)
 
  public:
+  MainWindowPrivate();
+
   /*!
    * \brief busy Sets the busy status received from the cipher operation.
    * \param busy Boolean representing the busy status.
@@ -45,6 +47,17 @@ class Kryvo::MainWindowPrivate {
   // decide whether to send new encryption/decryption requests.
   bool busyStatus{false};
 };
+
+
+Kryvo::MainWindowPrivate::MainWindowPrivate() = default;
+
+void Kryvo::MainWindowPrivate::busy(const bool busy) {
+  busyStatus = busy;
+}
+
+bool Kryvo::MainWindowPrivate::isBusy() const {
+  return busyStatus;
+}
 
 Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
   : QMainWindow(parent), d_ptr(std::make_unique<MainWindowPrivate>()),
@@ -316,12 +329,4 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
   }
 
   return styleSheet;
-}
-
-void Kryvo::MainWindowPrivate::busy(const bool busy) {
-  busyStatus = busy;
-}
-
-bool Kryvo::MainWindowPrivate::isBusy() const {
-  return busyStatus;
 }

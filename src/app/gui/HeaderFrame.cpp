@@ -15,13 +15,15 @@ class Kryvo::HeaderFramePrivate {
    */
   HeaderFramePrivate();
 
-  QPushButton* pauseButton;
-  QPushButton* addFilesButton;
-  QPushButton* clearFilesButton;
-  QPushButton* settingsButton;
+  QPushButton* pauseButton{nullptr};
+  QPushButton* addFilesButton{nullptr};
+  QPushButton* clearFilesButton{nullptr};
+  QPushButton* settingsButton{nullptr};
 
   QSize iconSize;
 };
+
+Kryvo::HeaderFramePrivate::HeaderFramePrivate() = default;
 
 Kryvo::HeaderFrame::HeaderFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<HeaderFramePrivate>()) {
@@ -80,8 +82,7 @@ Kryvo::HeaderFrame::HeaderFrame(QWidget* parent)
           this, &HeaderFrame::switchFrame);
 }
 
-Kryvo::HeaderFrame::~HeaderFrame() {
-}
+Kryvo::HeaderFrame::~HeaderFrame() = default;
 
 void Kryvo::HeaderFrame::setIconSize(const QSize& iconSize) {
   Q_D(HeaderFrame);
@@ -108,9 +109,4 @@ void Kryvo::HeaderFrame::togglePauseIcon(const bool toggle) {
     d->pauseButton->setIcon(QIcon(QStringLiteral(":/images/pauseIcon.png")));
     d->pauseButton->setText(tr(" Pause"));
   }
-}
-
-Kryvo::HeaderFramePrivate::HeaderFramePrivate()
-  : pauseButton(nullptr), addFilesButton(nullptr), clearFilesButton(nullptr),
-    settingsButton(nullptr) {
 }

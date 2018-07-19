@@ -36,7 +36,7 @@ QString splitToolTip(const QString& text, const int width) {
           i = j;
         }
 
-        result += temp.left(i);
+        result += temp.leftRef(i);
         result += '\n';
         temp = temp.mid(i + 1);
 
@@ -65,16 +65,18 @@ class Kryvo::SettingsFramePrivate {
   SettingsFramePrivate();
 
   // Cryptography settings
-  QComboBox* cipherComboBox;
-  QComboBox* keySizeComboBox;
-  QComboBox* modeComboBox;
+  QComboBox* cipherComboBox{nullptr};
+  QComboBox* keySizeComboBox{nullptr};
+  QComboBox* modeComboBox{nullptr};
 
   // File settings
-  QCheckBox* compressionCheckBox;
-  QCheckBox* containerCheckBox;
+  QCheckBox* compressionCheckBox{nullptr};
+  QCheckBox* containerCheckBox{nullptr};
 
-  int toolTipWidth;
+  int toolTipWidth{250};
 };
+
+Kryvo::SettingsFramePrivate::SettingsFramePrivate() = default;
 
 Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
                                     const std::size_t keySize,
@@ -285,8 +287,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   this->addAction(returnAction);
 }
 
-Kryvo::SettingsFrame::~SettingsFrame() {
-}
+Kryvo::SettingsFrame::~SettingsFrame() = default;
 
 void Kryvo::SettingsFrame::changeCipher() {
   Q_D(SettingsFrame);
@@ -325,10 +326,4 @@ void Kryvo::SettingsFrame::changeContainerMode() {
   Q_ASSERT(d->containerCheckBox);
 
   emit updateContainerMode(d->containerCheckBox->isChecked());
-}
-
-Kryvo::SettingsFramePrivate::SettingsFramePrivate()
-  : cipherComboBox(nullptr), keySizeComboBox(nullptr),
-    modeComboBox(nullptr), compressionCheckBox(nullptr),
-    containerCheckBox(nullptr), toolTipWidth(250) {
 }

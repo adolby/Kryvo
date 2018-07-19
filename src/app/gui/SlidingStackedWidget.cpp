@@ -14,18 +14,31 @@ class Kryvo::SlidingStackedWidgetPrivate {
    */
   SlidingStackedWidgetPrivate();
 
-  int speed;
-  QEasingCurve::Type animationType;
-  bool vertical;
-  int currentIndex;
-  int nextIndex;
-  bool wrap;
+  int speed{500};
+  QEasingCurve::Type animationType{QEasingCurve::InOutSine};
+  bool vertical{false};
+  int currentIndex{0};
+  int nextIndex{0};
+  bool wrap{false};
   QPoint lastWidgetPos;
 
   QPropertyAnimation* currentWidgetAnimation{nullptr};
   QPropertyAnimation* nextWidgetAnimation{nullptr};
   QParallelAnimationGroup* animationGroup{nullptr};
 };
+
+Kryvo::SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate() {
+  currentWidgetAnimation = new QPropertyAnimation();
+  currentWidgetAnimation->setPropertyName(QByteArrayLiteral("pos"));
+
+  nextWidgetAnimation = new QPropertyAnimation();
+  nextWidgetAnimation->setPropertyName(QByteArrayLiteral("pos"));
+
+  animationGroup = new QParallelAnimationGroup();
+
+  animationGroup->addAnimation(currentWidgetAnimation);
+  animationGroup->addAnimation(nextWidgetAnimation);
+}
 
 Kryvo::SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
   : QStackedWidget(parent),
@@ -38,8 +51,7 @@ Kryvo::SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
           this, &SlidingStackedWidget::animationDone);
 }
 
-Kryvo::SlidingStackedWidget::~SlidingStackedWidget() {
-}
+Kryvo::SlidingStackedWidget::~SlidingStackedWidget() = default;
 
 void Kryvo::SlidingStackedWidget::setSpeed(const int speed) {
   Q_D(SlidingStackedWidget);
@@ -214,19 +226,4 @@ void Kryvo::SlidingStackedWidget::stopAnimation() {
     widget(d->currentIndex)->move(d->lastWidgetPos);
     widget(d->nextIndex)->move(d->lastWidgetPos);
   }
-}
-
-Kryvo::SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate()
-  : speed(500), animationType(QEasingCurve::InOutSine), vertical(false),
-    currentIndex(0), nextIndex(0), wrap(false) {
-  currentWidgetAnimation = new QPropertyAnimation();
-  currentWidgetAnimation->setPropertyName(QByteArrayLiteral("pos"));
-
-  nextWidgetAnimation = new QPropertyAnimation();
-  nextWidgetAnimation->setPropertyName(QByteArrayLiteral("pos"));
-
-  animationGroup = new QParallelAnimationGroup();
-
-  animationGroup->addAnimation(currentWidgetAnimation);
-  animationGroup->addAnimation(nextWidgetAnimation);
 }
