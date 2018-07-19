@@ -7,13 +7,7 @@ class Kryvo::OutputFramePrivate {
   Q_DISABLE_COPY(OutputFramePrivate)
 
  public:
-  /*!
-   * \brief OutputFramePrivate Constructs the output frame private
-   * implementation.
-   */
-  OutputFramePrivate();
-
-  QLineEdit* outputLineEdit;
+  QLineEdit* outputLineEdit{nullptr};
 };
 
 Kryvo::OutputFrame::OutputFrame(QWidget* parent)
@@ -32,8 +26,7 @@ Kryvo::OutputFrame::OutputFrame(QWidget* parent)
   outputLayout->setContentsMargins(0, 0, 0, 0);
 }
 
-Kryvo::OutputFrame::~OutputFrame() {
-}
+Kryvo::OutputFrame::~OutputFrame() = default;
 
 void Kryvo::OutputFrame::outputPath(const QString& path) {
   Q_D(OutputFrame);
@@ -47,8 +40,4 @@ QString Kryvo::OutputFrame::outputPath() const {
   Q_ASSERT(d->outputLineEdit);
 
   return d->outputLineEdit->text();
-}
-
-Kryvo::OutputFramePrivate::OutputFramePrivate()
-  : outputLineEdit(nullptr) {
 }

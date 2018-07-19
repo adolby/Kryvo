@@ -108,7 +108,7 @@ bool Kryvo::FileListDelegate::editorEvent(QEvent* event,
   if (3 == index.column()) {
     if (QEvent::MouseButtonRelease == event->type() ||
         QEvent::MouseButtonDblClick == event->type()) {
-      QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+      auto* mouseEvent = dynamic_cast<QMouseEvent*>(event);
 
       if (Qt::LeftButton == mouseEvent->button() &&
           option.rect.contains(mouseEvent->pos())) {

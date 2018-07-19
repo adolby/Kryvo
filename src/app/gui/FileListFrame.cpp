@@ -17,19 +17,13 @@ class Kryvo::FileListFramePrivate {
 
  public:
   /*!
-   * \brief FileListFramePrivate Constructs the FileListFrame private
-   * implementation.
-   */
-  FileListFramePrivate();
-
-  /*!
    * \brief addFileToModel Adds a file to the file list model.
    * \param filePath String containing the file path.
    */
   void addFileToModel(const QString& filePath);
 
   QStandardItemModel fileListModel;
-  QTableView* fileListView;
+  QTableView* fileListView{nullptr};
 };
 
 Kryvo::FileListFrame::FileListFrame(QWidget* parent)
@@ -67,8 +61,7 @@ Kryvo::FileListFrame::FileListFrame(QWidget* parent)
           this, &FileListFrame::removeFileFromModel);
 }
 
-Kryvo::FileListFrame::~FileListFrame() {
-}
+Kryvo::FileListFrame::~FileListFrame() = default;
 
 QStandardItem* Kryvo::FileListFrame::item(const int row) {
   Q_D(FileListFrame);
@@ -112,7 +105,7 @@ void Kryvo::FileListFrame::updateProgress(const QString& path,
     const QList<QStandardItem*> items =
             d->fileListModel.findItems(path, Qt::MatchExactly, 0);
 
-    if (items.size() > 0) {
+    if (!items.empty()) {
       QStandardItem* item = items.first();
 
       if (item) {
@@ -221,12 +214,8 @@ void Kryvo::FileListFrame::resizeEvent(QResizeEvent* event) {
 
   const int width = this->width();
 
-  d->fileListView->setColumnWidth(0, width * 0.6);
-  d->fileListView->setColumnWidth(1, width * 0.15);
-  d->fileListView->setColumnWidth(2, width * 0.2);
-  d->fileListView->setColumnWidth(3, width * 0.04);
-}
-
-Kryvo::FileListFramePrivate::FileListFramePrivate()
-  : fileListView(nullptr) {
+  d->fileListView->setColumnWidth(0, static_cast<int>(width * 0.6));
+  d->fileListView->setColumnWidth(1, static_cast<int>(width * 0.15));
+  d->fileListView->setColumnWidth(2, static_cast<int>(width * 0.2));
+  d->fileListView->setColumnWidth(3, static_cast<int>(width * 0.04));
 }

@@ -28,7 +28,7 @@ void TestCrypto::testComparatorSameFile() {
       message += msg.arg(fileName2);
     }
 
-    const char* messages = reinterpret_cast<const char*>(message.constData());
+    const auto* messages = reinterpret_cast<const char*>(message.constData());
 
     QSKIP(messages);
   }
@@ -58,7 +58,7 @@ void TestCrypto::testComparatorDifferentFile() {
       message += msg.arg(fileName2);
     }
 
-    const char* messages = reinterpret_cast<const char*>(message.constData());
+    const auto* messages = reinterpret_cast<const char*>(message.constData());
 
     QSKIP(messages);
   }
@@ -118,7 +118,7 @@ void TestCrypto::testEncryptDecrypt() {
   if (!inputFile.exists()) {
     const QString msg = QStringLiteral("Test file %1 is missing.");
     const QString message = msg.arg(inputFileName);
-    const char* messageString =
+    const auto* messageString =
         reinterpret_cast<const char*>(message.constData());
 
     QSKIP(messageString);
@@ -186,7 +186,7 @@ void TestCrypto::testEncryptDecryptAll() {
   }
 
   if (skip) {
-    const char* msg = reinterpret_cast<const char*>(message.constData());
+    const auto* msg = reinterpret_cast<const char*>(message.constData());
 
     QSKIP(msg);
   }

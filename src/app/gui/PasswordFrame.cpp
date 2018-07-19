@@ -7,13 +7,7 @@ class Kryvo::PasswordFramePrivate {
   Q_DISABLE_COPY(PasswordFramePrivate)
 
  public:
-  /*!
-   * \brief PasswordFramePrivate Constructs the password frame private
-   * implementation.
-   */
-  PasswordFramePrivate();
-
-  QLineEdit* passwordLineEdit;
+  QLineEdit* passwordLineEdit{nullptr};
 };
 
 Kryvo::PasswordFrame::PasswordFrame(QWidget* parent)
@@ -33,16 +27,11 @@ Kryvo::PasswordFrame::PasswordFrame(QWidget* parent)
   passwordLayout->setContentsMargins(0, 0, 0, 0);
 }
 
-Kryvo::PasswordFrame::~PasswordFrame() {
-}
+Kryvo::PasswordFrame::~PasswordFrame() = default;
 
 QString Kryvo::PasswordFrame::password() const {
   Q_D(const PasswordFrame);
   Q_ASSERT(d->passwordLineEdit);
 
   return d->passwordLineEdit->text();
-}
-
-Kryvo::PasswordFramePrivate::PasswordFramePrivate()
-  : passwordLineEdit(nullptr) {
 }

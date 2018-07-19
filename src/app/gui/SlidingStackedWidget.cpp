@@ -22,9 +22,9 @@ class Kryvo::SlidingStackedWidgetPrivate {
   bool wrap;
   QPoint lastWidgetPos;
 
-  QPropertyAnimation* currentWidgetAnimation;
-  QPropertyAnimation* nextWidgetAnimation;
-  QParallelAnimationGroup* animationGroup;
+  QPropertyAnimation* currentWidgetAnimation{nullptr};
+  QPropertyAnimation* nextWidgetAnimation{nullptr};
+  QParallelAnimationGroup* animationGroup{nullptr};
 };
 
 Kryvo::SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
@@ -218,8 +218,7 @@ void Kryvo::SlidingStackedWidget::stopAnimation() {
 
 Kryvo::SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate()
   : speed(500), animationType(QEasingCurve::InOutSine), vertical(false),
-    currentIndex(0), nextIndex(0), wrap(false), currentWidgetAnimation(nullptr),
-    nextWidgetAnimation(nullptr), animationGroup(nullptr) {
+    currentIndex(0), nextIndex(0), wrap(false) {
   currentWidgetAnimation = new QPropertyAnimation();
   currentWidgetAnimation->setPropertyName(QByteArrayLiteral("pos"));
 

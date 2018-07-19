@@ -7,6 +7,8 @@
 #include <string>
 #include <stdexcept>
 
+#include <QDebug>
+
 namespace Kryvo {
 
 namespace Constants {
@@ -22,8 +24,6 @@ class Kryvo::BotanProviderPrivate {
   Q_DISABLE_COPY(BotanProviderPrivate)
 
  public:
-  BotanProviderPrivate();
-
   QMimeDatabase db;
 };
 
@@ -33,8 +33,7 @@ Kryvo::BotanProvider::BotanProvider(QObject* parent)
   Botan::LibraryInitializer init(std::string("thread_safe=true"));
 }
 
-Kryvo::BotanProvider::~BotanProvider() {
-}
+Kryvo::BotanProvider::~BotanProvider() = default;
 
 bool Kryvo::BotanProvider::encrypt(CryptoState* state,
                                    const QString& passphrase,
@@ -82,6 +81,8 @@ bool Kryvo::BotanProvider::encrypt(CryptoState* state,
                                          Constants::kExtension);
 
     outputFilePaths << outFilePath;
+
+    qDebug() << inputFilePath;
 
     try {
       encryptFile(state, passphrase, inFilePath, outFilePath, algorithm,
@@ -249,7 +250,7 @@ bool Kryvo::BotanProvider::encryptFile(CryptoState* state,
 
   // Key is constrained to sizes allowed by algorithm
   const std::size_t keySizeInBytes = keySize / 8;
-  const Botan::byte* keyLabelVector =
+  const auto* keyLabelVector =
     reinterpret_cast<const Botan::byte*>(Constants::kKeyLabel.data());
   Botan::SymmetricKey key(kdf->derive_key(keySizeInBytes,
                                           pbkdfKey.data(),
@@ -266,7 +267,7 @@ bool Kryvo::BotanProvider::encryptFile(CryptoState* state,
   rng.randomize(&ivSalt[0], ivSalt.size());
 
   const std::size_t ivSize = 256;
-  const Botan::byte* ivLabelVector =
+  const auto* ivLabelVector =
     reinterpret_cast<const Botan::byte*>(Constants::kIVLabel.data());
   Botan::InitializationVector iv(kdf->derive_key(ivSize,
                                                  pbkdfKey.data(),
@@ -298,7 +299,7 @@ bool Kryvo::BotanProvider::encryptFile(CryptoState* state,
   const std::string& headerTextString= headerText.toStdString();
   const std::string& compressedTextString = compressedText.toStdString();
 
-  const std::string& newLine("\n");
+  const std::string newLine("\n");
 
   out << headerTextString << newLine;
   out << algorithmNameStd << newLine;
@@ -405,11 +406,11 @@ bool Kryvo::BotanProvider::decryptFile(CryptoState* state,
     Botan::base64_decode(keySaltString);
 
   const QString& keySizeString = QString::fromStdString(keySizeStringStd);
-  const std::size_t keySize = static_cast<std::size_t>(keySizeString.toInt());
+  const auto keySize = static_cast<std::size_t>(keySizeString.toInt());
 
   const std::size_t keySizeInBytes = keySize / 8;
 
-  const Botan::byte* keyLabelVector =
+  const auto* keyLabelVector =
     reinterpret_cast<const Botan::byte*>(Constants::kKeyLabel.data());
 
   Botan::SymmetricKey key(kdf->derive_key(keySizeInBytes,
@@ -423,7 +424,7 @@ bool Kryvo::BotanProvider::decryptFile(CryptoState* state,
   const Botan::secure_vector<Botan::byte>& ivSalt =
     Botan::base64_decode(ivSaltString);
   const std::size_t ivSize = 256;
-  const Botan::byte* ivLabelVector =
+  const auto* ivLabelVector =
     reinterpret_cast<const Botan::byte*>(Constants::kIVLabel.data());
   Botan::InitializationVector iv(kdf->derive_key(ivSize,
                                                  pbkdfKey.data(),
@@ -506,7 +507,7 @@ bool Kryvo::BotanProvider::executeCipher(CryptoState* state,
       fileIndex += readSize;
       const double nextFraction = static_cast<double>(fileIndex) /
                                   static_cast<double>(size);
-      const int nextPercent = static_cast<int>(nextFraction * 100);
+      const auto nextPercent = static_cast<int>(nextFraction * 100);
 
       if (nextPercent > percent && nextPercent < 100) {
         percent = nextPercent;
@@ -541,7 +542,4 @@ bool Kryvo::BotanProvider::executeCipher(CryptoState* state,
 
 QObject* Kryvo::BotanProvider::qObject() {
   return this;
-}
-
-Kryvo::BotanProviderPrivate::BotanProviderPrivate() {
 }

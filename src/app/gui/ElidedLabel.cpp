@@ -7,14 +7,9 @@ class Kryvo::ElidedLabelPrivate {
   Q_DISABLE_COPY(ElidedLabelPrivate)
 
  public:
-  /*!
-   * \brief ElidedLabelPrivate Constructs the ElidedLabel private implementation
-   */
-  ElidedLabelPrivate();
-
   QString text;
-  Qt::Alignment align;
-  Qt::TextElideMode mode;
+  Qt::Alignment align{Qt::AlignLeft | Qt::AlignVCenter};
+  Qt::TextElideMode mode{Qt::ElideLeft};
 };
 
 Kryvo::ElidedLabel::ElidedLabel(QWidget* parent, Qt::WindowFlags f)
@@ -29,8 +24,7 @@ Kryvo::ElidedLabel::ElidedLabel(const QString& text, QWidget* parent,
   d->text = text;
 }
 
-Kryvo::ElidedLabel::~ElidedLabel() {
-}
+Kryvo::ElidedLabel::~ElidedLabel() = default;
 
 void Kryvo::ElidedLabel::updateLabel() {
   this->updateGeometry();
@@ -129,8 +123,4 @@ void Kryvo::ElidedLabel::changeEvent(QEvent* event) {
       // nothing to do
     break;
   }
-}
-
-Kryvo::ElidedLabelPrivate::ElidedLabelPrivate()
-  : align(Qt::AlignLeft | Qt::AlignVCenter), mode(Qt::ElideLeft) {
 }

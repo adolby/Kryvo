@@ -12,15 +12,9 @@ class Kryvo::MessageFramePrivate {
   Q_DISABLE_COPY(MessageFramePrivate)
 
  public:
-  /*!
-   * \brief MessageFramePrivate Constructs the MessageFrame private
-   * implementation.
-   */
-  MessageFramePrivate();
-
   QVector<QString> messages;
-  QVector<QString>::ConstIterator it;
-  QLabel* messageLabel;
+  QVector<QString>::ConstIterator it{};
+  QLabel* messageLabel{nullptr};
 };
 
 Kryvo::MessageFrame::MessageFrame(QWidget* parent)
@@ -53,8 +47,7 @@ Kryvo::MessageFrame::MessageFrame(QWidget* parent)
   messageLayout->setSpacing(8);
 }
 
-Kryvo::MessageFrame::~MessageFrame() {
-}
+Kryvo::MessageFrame::~MessageFrame() = default;
 
 void Kryvo::MessageFrame::appendText(const QString& message) {
   Q_D(MessageFrame);
@@ -86,8 +79,4 @@ void Kryvo::MessageFrame::pageRight()
     d->it = std::next(d->it, 1);
     d->messageLabel->setText(*d->it);
   }
-}
-
-Kryvo::MessageFramePrivate::MessageFramePrivate()
-  : messageLabel(nullptr) {
 }

@@ -20,16 +20,10 @@ class Kryvo::MainWindowPrivate {
 
  public:
   /*!
-   * \brief MainWindowPrivate Constructs the MainWindow private implementation.
-   * Initializes widgets, layouts, and settings.
-   */
-  MainWindowPrivate();
-
-  /*!
    * \brief busy Sets the busy status received from the cipher operation.
    * \param busy Boolean representing the busy status.
    */
-  void busy(const bool busy);
+  void busy(bool busy);
 
   /*!
    * \brief isBusy Returns the busy status received from the cipher operation.
@@ -38,13 +32,18 @@ class Kryvo::MainWindowPrivate {
   bool isBusy() const;
 
   // Messages to display to user
-  const QStringList messages;
+  const QStringList messages{
+    QObject::tr("A password is required to encrypt or decrypt "
+                "files. Please enter one to continue."),
+    QObject::tr("Encryption/decryption is already in progress. "
+                "Please wait until the current operation "
+                "finishes.")};
 
  private:
   // The busy status, when set to true, indicates that the cryptography object
   // is currently executing a cipher operation. The status allows the GUI to
   // decide whether to send new encryption/decryption requests.
-  bool busyStatus;
+  bool busyStatus{false};
 };
 
 Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
@@ -317,16 +316,6 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
   }
 
   return styleSheet;
-}
-
-Kryvo::MainWindowPrivate::MainWindowPrivate()
-  : messages(std::initializer_list<QString>(
-               {QObject::tr("A password is required to encrypt or decrypt "
-                            "files. Please enter one to continue."),
-                QObject::tr("Encryption/decryption is already in progress. "
-                            "Please wait until the current operation "
-                            "finishes.")})),
-    busyStatus(false) {
 }
 
 void Kryvo::MainWindowPrivate::busy(const bool busy) {

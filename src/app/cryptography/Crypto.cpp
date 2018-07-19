@@ -16,33 +16,27 @@ class Kryvo::CryptoPrivate {
 
  public:
   /*!
-   * \brief CryptoPrivate Constructs the Crypto private implementation
-   */
-  CryptoPrivate(Crypto* crypto);
-
-  /*!
    * \brief errorMessage Returns error message
    * \return String containing error message
    */
-  QString errorMessage(const int index) const;
+  QString errorMessage(int index) const;
 
   CryptoState state;
 
   QHash<QString, CryptoProviderInterface*> availableProviders;
 
-  CryptoProviderInterface* provider;
+  CryptoProviderInterface* provider{nullptr};
 
   // The list of status messages that can be displayed to the user
   const QStringList messages;
 };
 
 Kryvo::Crypto::Crypto(QObject* parent)
-  : QObject(parent), d_ptr(std::make_unique<CryptoPrivate>(this)) {
+  : QObject(parent), d_ptr(std::make_unique<CryptoPrivate>()) {
   loadProviders();
 }
 
-Kryvo::Crypto::~Crypto() {
-}
+Kryvo::Crypto::~Crypto() = default;
 
 void Kryvo::Crypto::loadProviders() {
   Q_D(Crypto);
@@ -190,8 +184,4 @@ void Kryvo::Crypto::stop(const QString& filePath) {
   if (d->state.isBusy()) {
     d->state.stop(filePath, true);
   }
-}
-
-Kryvo::CryptoPrivate::CryptoPrivate(Crypto* crypto)
-  : provider(nullptr) {
 }

@@ -11,13 +11,13 @@ int main(int argc, char* argv[]) {
   QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
   QApplication app(argc, argv);
-  app.setOrganizationName(QStringLiteral("The Kryvo Project"));
-  app.setOrganizationDomain(QStringLiteral("kryvo.io"));
-  app.setApplicationName(QStringLiteral("Kryvo"));
+  QApplication::setOrganizationName(QStringLiteral("The Kryvo Project"));
+  QApplication::setOrganizationDomain(QStringLiteral("kryvo.io"));
+  QApplication::setApplicationName(QStringLiteral("Kryvo"));
 
   Kryvo::Application kryvo;
 
-  const int retval = app.exec();
+  const int retval = QApplication::exec();
 
   return retval;
 }
