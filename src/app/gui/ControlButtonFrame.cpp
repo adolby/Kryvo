@@ -48,8 +48,7 @@ Kryvo::ControlButtonFrame::ControlButtonFrame(QWidget* parent)
           this, &ControlButtonFrame::decryptFiles);
 }
 
-Kryvo::ControlButtonFrame::~ControlButtonFrame() {
-}
+Kryvo::ControlButtonFrame::~ControlButtonFrame() = default;
 
 void Kryvo::ControlButtonFrame::setIconSize(const QSize& iconSize) {
   Q_D(ControlButtonFrame);
