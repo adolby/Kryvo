@@ -75,10 +75,10 @@ python configure.py --cc=gcc --amalgamation --disable-shared --disable-modules=p
 python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ### macOS Clang x86_64
-python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom,pkcs11 --with-zlib
+python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ### iOS Clang 32-bit
-python configure.py --cpu=armv7 --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom,pkcs11 --with-zlib
+python configure.py --os=ios --cpu=armv8-a --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ### Windows Visual Studio x86_64
 python configure.py --cpu=x64 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib

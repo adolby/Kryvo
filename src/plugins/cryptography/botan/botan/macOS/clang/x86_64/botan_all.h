@@ -36,7 +36,7 @@
 
 /*
 * This file was automatically generated running
-* 'configure.py --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom,pkcs11 --with-zlib'
+* 'configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib'
 *
 * Target
 *  - Compiler: clang++ -fstack-protector -m64 -pthread -stdlib=libc++ -std=c++11 -D_REENTRANT -O3
@@ -62,7 +62,7 @@
 #define BOTAN_INSTALL_PREFIX R"(/usr/local)"
 #define BOTAN_INSTALL_HEADER_DIR "include/botan-2"
 #define BOTAN_INSTALL_LIB_DIR "lib"
-#define BOTAN_LIB_LINK "-lz"
+#define BOTAN_LIB_LINK "-lz -framework Security"
 #define BOTAN_LINK_FLAGS "-fstack-protector -m64 -pthread -stdlib=libc++"
 
 #ifndef BOTAN_DLL
@@ -183,6 +183,7 @@
 #define BOTAN_HAS_EMSA_RAW 20131128
 #define BOTAN_HAS_EMSA_X931 20140118
 #define BOTAN_HAS_ENTROPY_SOURCE 20151120
+#define BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM 20150925
 #define BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM 20131128
 #define BOTAN_HAS_ENTROPY_SRC_RDRAND 20131128
 #define BOTAN_HAS_ENTROPY_SRC_RDSEED 20151218

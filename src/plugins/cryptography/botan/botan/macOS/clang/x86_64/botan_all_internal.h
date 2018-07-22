@@ -855,6 +855,21 @@ inline secure_vector<uint8_t> strip_leading_zeros(const secure_vector<uint8_t>& 
 namespace Botan {
 
 /**
+* Entropy source using SecRandomCopyBytes from Darwin's Security.framework
+*/
+class Darwin_SecRandom final : public Entropy_Source
+   {
+   public:
+      std::string name() const override { return "darwin_secrandom"; }
+
+      size_t poll(RandomNumberGenerator& rng) override;
+   };
+
+}
+
+namespace Botan {
+
+/**
 * Fixed Window Exponentiator
 */
 class Fixed_Window_Exponentiator final : public Modular_Exponentiator
