@@ -215,21 +215,21 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   auto compressionLayout = new QHBoxLayout(compressionFrame);
   compressionLayout->addWidget(d->compressionCheckBox);
 
-  auto containerFrame = new QFrame(fileSettingsFrame);
-  containerFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+//  auto containerFrame = new QFrame(fileSettingsFrame);
+//  containerFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  d->containerCheckBox = new QCheckBox(tr("Archive encrypted files"),
-                                       containerFrame);
-  d->containerCheckBox->setObjectName(QStringLiteral("settingsCheckBox"));
-  d->containerCheckBox->setChecked(containerMode);
+//  d->containerCheckBox = new QCheckBox(tr("Archive encrypted files"),
+//                                       containerFrame);
+//  d->containerCheckBox->setObjectName(QStringLiteral("settingsCheckBox"));
+//  d->containerCheckBox->setChecked(containerMode);
 
-  auto containerLayout = new QHBoxLayout(containerFrame);
-  containerLayout->addWidget(d->containerCheckBox);
+//  auto containerLayout = new QHBoxLayout(containerFrame);
+//  containerLayout->addWidget(d->containerCheckBox);
 
   auto fileSettingsLayout = new QVBoxLayout(fileSettingsFrame);
   fileSettingsLayout->addWidget(fileSettingsLabel);
   fileSettingsLayout->addWidget(compressionFrame);
-  fileSettingsLayout->addWidget(containerFrame);
+//  fileSettingsLayout->addWidget(containerFrame);
 
   auto contentLayout = new QVBoxLayout(contentFrame);
   contentLayout->addWidget(cryptoSettingsFrame);
