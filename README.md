@@ -65,23 +65,23 @@ Android requires a small patch that implements std::string to_string(), which is
 
 If you would like to update Botan, you'll need to produce a new amalgamation build. The configuration commands used to generate Botan amalgamation files follows for each platform:
 
-### Android (ARM)
-python configure.py --cpu=armv5te --os=linux --amalgamation --disable-shared --with-zlib
+### Android ARM 32-bit
+python configure.py --cpu=armv5te --os=linux --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ### Linux GCC x86_64
-python configure.py --cc=gcc --amalgamation --disable-shared --with-zlib
+python configure.py --cc=gcc --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ### Linux Clang x86_64
-python configure.py --cc=clang --amalgamation --disable-shared --with-zlib
+python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ### macOS Clang x86_64
-python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom --with-zlib
+python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom,pkcs11 --with-zlib
 
-### iOS Clang
-python configure.py --cpu=armv7 --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom --with-zlib
+### iOS Clang 32-bit
+python configure.py --cpu=armv7 --cc=clang --amalgamation --disable-shared --disable-modules=darwin_secrandom,pkcs11 --with-zlib
 
 ### Windows Visual Studio x86_64
-python configure.py --cpu=x64 --cc=msvc --os=windows --amalgamation --disable-shared --with-zlib
+python configure.py --cpu=x64 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ## Contact
 
