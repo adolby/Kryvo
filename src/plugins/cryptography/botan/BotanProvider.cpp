@@ -1,4 +1,4 @@
-#include "BotanProvider.hpp"
+﻿#include "BotanProvider.hpp"
 #include "constants.h"
 #include <QMimeDatabase>
 #include <QMimeType>
@@ -83,38 +83,32 @@ bool Kryvo::BotanProvider::encrypt(CryptoState* state,
     try {
       encryptFile(state, passphrase, inFilePath, outFilePath, algorithm,
                   keySize, compress);
-
-      qDebug() << inputFilePath;
-
-      if (state->isAborted() || state->isStopped(inFilePath)) {
-        emit errorMessage(Constants::messages[2], inFilePath);
-
-        if (state->isAborted()) {
-          state->abort(false);
-          break;
-        }
-      }
     }
     catch (const Botan::Stream_IO_Error&) {
       emit errorMessage(Constants::messages[7], inFilePath);
-      qDebug() << "BOTAN STREAM ERROR";
       return false;
     }
     catch (const Botan::Invalid_Argument&) {
       emit errorMessage(Constants::messages[7], inFilePath);
-      qDebug() << "BOTAN INVALID ARGUMENT";
       return false;
     }
     catch (const std::invalid_argument&) {
       emit errorMessage(Constants::messages[7], inFilePath);
-      qDebug() << "STD INVALID ARGUMENT";
       return false;
     }
     catch (const std::exception& e) {
       const QString error(e.what());
       emit errorMessage(QStringLiteral("Error: ") % error, inFilePath);
-      qDebug() << "ERROROROROR";
       return false;
+    }
+
+    if (state->isAborted() || state->isStopped(inFilePath)) {
+      emit errorMessage(Constants::messages[2], inFilePath);
+
+      if (state->isAborted()) {
+        state->abort(false);
+        break;
+      }
     }
   } // End file loop
 
@@ -176,7 +170,30 @@ bool Kryvo::BotanProvider::decrypt(CryptoState* state,
 //      emit extract(state, passphrase, inFilePath, outPath);
 //    }
 //    else { // Non-container file
+    try {
       decryptFile(state, passphrase, inFilePath, outFilePath);
+    }
+    catch (const Botan::Stream_IO_Error&) {
+      emit errorMessage(Constants::messages[6].arg(inFilePath));
+      return false;
+    }
+    catch (const Botan::Invalid_Argument&) {
+      emit errorMessage(Constants::messages[6], inFilePath);
+      return false;
+    }
+    catch (const Botan::Lookup_Error&) {
+      emit errorMessage(Constants::messages[6], inFilePath);
+      return false;
+    }
+    catch (const std::invalid_argument&) {
+      emit errorMessage(Constants::messages[6], inFilePath);
+      return false;
+    }
+    catch (const std::exception& e) {
+      const QString error(e.what());
+      emit errorMessage(QStringLiteral("Error: ") % error, inFilePath);
+      return false;
+    }
 //    }
 
     if (state->isAborted()) {
@@ -385,6 +402,7 @@ bool Kryvo::BotanProvider::decryptFile(CryptoState* state,
 
   if (headerString != tr("-------- ENCRYPTED FILE --------")) {
     emit errorMessage(Constants::messages[6].arg(inputFilePath));
+    return false;
   }
 
   // Set up the key derive functions

@@ -25,19 +25,45 @@ CONFIG(release, debug|release) {
 
 SOURCES += \
   BotanProvider.cpp \
-  ../../app/cryptography/CryptoState.cpp
+  ../../../app/cryptography/CryptoState.cpp \
+  zlib/adler32.c \
+  zlib/compress.c \
+  zlib/crc32.c \
+  zlib/deflate.c \
+  zlib/gzclose.c \
+  zlib/gzlib.c \
+  zlib/gzread.c \
+  zlib/gzwrite.c \
+  zlib/infback.c \
+  zlib/inffast.c \
+  zlib/inflate.c \
+  zlib/inftrees.c \
+  zlib/trees.c \
+  zlib/uncompr.c \
+  zlib/zutil.c
 
 HEADERS += \
   BotanProvider.hpp \
-  ../../app/cryptography/CryptoState.hpp
+  ../../../app/cryptography/CryptoState.hpp \
+  zlib/crc32.h \
+  zlib/deflate.h \
+  zlib/gzguts.h \
+  zlib/inffast.h \
+  zlib/inffixed.h \
+  zlib/inflate.h \
+  zlib/inftrees.h \
+  zlib/trees.h \
+  zlib/zconf.h \
+  zlib/zlib.h \
+  zlib/zutil.h
 
-INCLUDEPATH = ../../app/
+INCLUDEPATH += \
+  ../../../app/
 
 # Platform-specific configuration
 linux {
   message(Linux)
 
-  LIBS += -lz
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
 
@@ -55,11 +81,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../build/android/debug/plugins/botan
+      DESTDIR = ../../../../build/android/debug/plugins/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../build/android/release/plugins/botan
+      DESTDIR = ../../../../build/android/release/plugins/botan
     }
   } # End Android
 
@@ -82,17 +108,17 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../build/linux/clang/x86_64/debug/plugins/botan
+      DESTDIR = ../../../../build/linux/clang/x86_64/debug/plugins/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../build/linux/clang/x86_64/release/plugins/botan
+      DESTDIR = ../../../../build/linux/clang/x86_64/release/plugins/botan
     }
 
-    mkpath($${DESTDIR}/../../Kryvo/plugins/)
-    mkpath($${DESTDIR}/../../test/plugins/)
-    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../Kryvo/plugins/)
-    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../test/plugins/)
+    mkpath($${DESTDIR}/../../../Kryvo/plugins/)
+    mkpath($${DESTDIR}/../../../test/plugins/)
+    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../../Kryvo/plugins/)
+    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../../test/plugins/)
   } # End clang
 
   linux-g++ {
@@ -114,17 +140,17 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../build/linux/gcc/x86_64/debug/plugins/botan
+      DESTDIR = ../../../../build/linux/gcc/x86_64/debug/plugins/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../build/linux/gcc/x86_64/release/plugins/botan
+      DESTDIR = ../../../../build/linux/gcc/x86_64/release/plugins/botan
     }
 
-    mkpath($${DESTDIR}/../../Kryvo/plugins/)
-    mkpath($${DESTDIR}/../../test/plugins/)
-    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../Kryvo/plugins/)
-    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../test/plugins/)
+    mkpath($${DESTDIR}/../../../Kryvo/plugins/)
+    mkpath($${DESTDIR}/../../../test/plugins/)
+    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../../Kryvo/plugins/)
+    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.so $${DESTDIR}/../../../test/plugins/)
   } # End g++
 } # End Linux
 
@@ -132,7 +158,6 @@ mac {
   QMAKE_MAC_SDK = macosx10.13
   QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
 
-  LIBS += -lz
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
 
@@ -146,11 +171,11 @@ mac {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../build/iOS/debug/plugins/botan
+      DESTDIR = ../../../../build/iOS/debug/plugins/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../build/iOS/release/plugins/botan
+      DESTDIR = ../../../../build/iOS/release/plugins/botan
     }
   } # End iOS
 
@@ -162,8 +187,11 @@ mac {
       botan/macOS/clang/x86_64/botan_all.cpp \
       botan/macOS/clang/x86_64/botan_all_aesni.cpp \
       botan/macOS/clang/x86_64/botan_all_avx2.cpp \
+      botan/macOS/clang/x86_64/botan_all_bmi2.cpp \
       botan/macOS/clang/x86_64/botan_all_rdrand.cpp \
       botan/macOS/clang/x86_64/botan_all_rdseed.cpp \
+      botan/macOS/clang/x86_64/botan_all_sha_sse41_ssse3.cpp \
+      botan/macOS/clang/x86_64/botan_all_sha_ssse3.cpp \
       botan/macOS/clang/x86_64/botan_all_ssse3.cpp
 
     HEADERS += \
@@ -172,17 +200,17 @@ mac {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../build/macOS/clang/x86_64/debug/plugins/botan
+      DESTDIR = ../../../../build/macOS/clang/x86_64/debug/plugins/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../build/macOS/clang/x86_64/release/plugins/botan
+      DESTDIR = ../../../../build/macOS/clang/x86_64/release/plugins/botan
     }
 
-    mkpath($${DESTDIR}/../../Kryvo/Kryvo.app/Contents/plugins/)
-    mkpath($${DESTDIR}/../../test/CryptoTests.app/Contents/plugins/)
-    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dylib $${DESTDIR}/../../Kryvo/Kryvo.app/Contents/plugins/)
-    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.dylib $${DESTDIR}/../../test/CryptoTests.app/Contents/plugins/)
+    mkpath($${DESTDIR}/../../../Kryvo/Kryvo.app/Contents/plugins/)
+    mkpath($${DESTDIR}/../../../test/CryptoTests.app/Contents/plugins/)
+    QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dylib $${DESTDIR}/../../../Kryvo/Kryvo.app/Contents/plugins/)
+    QMAKE_POST_LINK += $$quote(&& $$QMAKE_COPY $${DESTDIR}/libbotan.dylib $${DESTDIR}/../../../test/CryptoTests.app/Contents/plugins/)
   } # End macOS
 } # End Mac
 
@@ -211,11 +239,11 @@ win32 {
 
       debug {
         message(Debug)
-        DESTDIR = ../../../build/windows/msvc/x86_64/debug/plugins/botan
+        DESTDIR = ../../../../build/windows/msvc/x86_64/debug/plugins/botan
       }
       release {
         message(Release)
-        DESTDIR = ../../../build/windows/msvc/x86_64/release/plugins/botan
+        DESTDIR = ../../../../build/windows/msvc/x86_64/release/plugins/botan
       }
     } else {
       message(MSVC x86)
@@ -234,19 +262,19 @@ win32 {
 
       debug {
         message(Debug)
-        DESTDIR = ../../../build/windows/msvc/x86/debug/plugins/botan
+        DESTDIR = ../../../../build/windows/msvc/x86/debug/plugins/botan
       }
       release {
         message(Release)
-        DESTDIR = ../../../build/windows/msvc/x86/release/plugins/botan
+        DESTDIR = ../../../../build/windows/msvc/x86/release/plugins/botan
       }
     }
   }
 
-  mkpath($${DESTDIR}/../../Kryvo/plugins/)
-  mkpath($${DESTDIR}/../../test/plugins/)
-  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../Kryvo/plugins/)
-  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../test/plugins/)
+  mkpath($${DESTDIR}/../../../Kryvo/plugins/)
+  mkpath($${DESTDIR}/../../../test/plugins/)
+  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../../Kryvo/plugins/)
+  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../../test/plugins/)
 } # End win32
 
 OBJECTS_DIR = $${DESTDIR}/obj

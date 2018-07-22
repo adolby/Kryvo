@@ -1,6 +1,6 @@
 /*
-* Botan 1.11.32 Amalgamation
-* (C) 1999-2013,2014,2015 Jack Lloyd and others
+* Botan 2.7.0 Amalgamation
+* (C) 1999-2018 The Botan Authors
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,7 +8,10 @@
 #include "botan_all.h"
 #include "botan_all_internal.h"
 
-/**
+#if defined(__GNUG__) && !defined(__clang__)
+#pragma GCC target ("rdrnd")
+#endif
+/*
 * RDRAND RNG
 * (C) 2016 Jack Lloyd
 *
@@ -31,18 +34,17 @@ RDRAND_RNG::RDRAND_RNG()
 //static
 uint32_t RDRAND_RNG::rdrand()
    {
-   bool ok = false;
-   uint32_t r = rdrand_status(ok);
-
-   while(!ok)
+   for(;;)
       {
-      r = rdrand_status(ok);
+      bool ok = false;
+      uint32_t r = rdrand_status(ok);
+      if(ok)
+         return r;
       }
-
-   return r;
    }
 
 //static
+BOTAN_FUNC_ISA("rdrnd")
 uint32_t RDRAND_RNG::rdrand_status(bool& ok)
    {
    ok = false;
@@ -62,11 +64,11 @@ uint32_t RDRAND_RNG::rdrand_status(bool& ok)
       if(1 == cf)
          {
          ok = true;
-         return r;
+         break;
          }
       }
 
-   return 0;
+   return r;
    }
 
 void RDRAND_RNG::randomize(uint8_t out[], size_t out_len)

@@ -73,7 +73,6 @@ HEADERS += \
 linux {
   message(Linux)
 
-  LIBS += -lz
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
 
@@ -137,7 +136,6 @@ mac {
   QMAKE_MAC_SDK = macosx10.13
   QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
 
-  LIBS += -lz
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
 
