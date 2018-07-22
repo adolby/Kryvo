@@ -151,6 +151,8 @@ mac {
       message(Release)
       DESTDIR = ../../build/iOS/release/Kryvo
     }
+
+    LIBS += -framework Foundation -framework CoreFoundation -framework UIKit
   }
 
   macx {
