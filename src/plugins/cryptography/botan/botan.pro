@@ -161,6 +161,8 @@ mac {
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
 
+  LIBS += -framework Security
+
   ios {
     message(iOS)
     message(clang)
