@@ -273,8 +273,8 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
           this, &SettingsFrame::changeCompressionMode);
 
   // Connect container check box change signal to change container mode slot
-  connect(d->containerCheckBox, &QCheckBox::stateChanged,
-          this, &SettingsFrame::changeContainerMode);
+//  connect(d->containerCheckBox, &QCheckBox::stateChanged,
+//          this, &SettingsFrame::changeContainerMode);
 
   // Return to previous GUI state
   auto returnAction = new QAction(this);
@@ -323,7 +323,7 @@ void Kryvo::SettingsFrame::changeCompressionMode() {
 
 void Kryvo::SettingsFrame::changeContainerMode() {
   Q_D(SettingsFrame);
-  Q_ASSERT(d->containerCheckBox);
+//  Q_ASSERT(d->containerCheckBox);
 
-  emit updateContainerMode(d->containerCheckBox->isChecked());
+//  emit updateContainerMode(d->containerCheckBox->isChecked());
 }
