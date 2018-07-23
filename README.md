@@ -77,7 +77,7 @@ python configure.py --cc=clang --amalgamation --disable-shared --disable-modules
 ### macOS Clang x86_64
 python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
-### iOS Clang 32-bit
+### iOS Clang 64-bit
 python configure.py --os=ios --cpu=armv8-a --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ### Windows Visual Studio x86_64
