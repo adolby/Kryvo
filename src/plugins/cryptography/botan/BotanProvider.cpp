@@ -27,8 +27,6 @@ Kryvo::BotanProviderPrivate::BotanProviderPrivate() = default;
 
 Kryvo::BotanProvider::BotanProvider(QObject* parent)
   : QObject(parent), d_ptr(std::make_unique<BotanProviderPrivate>()) {
-  // Initialize Botan
-  Botan::LibraryInitializer init(std::string("thread_safe=true"));
 }
 
 Kryvo::BotanProvider::~BotanProvider() = default;
@@ -90,6 +88,11 @@ bool Kryvo::BotanProvider::encrypt(CryptoState* state,
     }
     catch (const Botan::Invalid_Argument&) {
       emit errorMessage(Constants::messages[7], inFilePath);
+      return false;
+    }
+    catch (const Botan::Exception& e) {
+      const QString error(e.what());
+      emit errorMessage(QStringLiteral("Error: ") % error, inFilePath);
       return false;
     }
     catch (const std::invalid_argument&) {
@@ -183,6 +186,11 @@ bool Kryvo::BotanProvider::decrypt(CryptoState* state,
     }
     catch (const Botan::Lookup_Error&) {
       emit errorMessage(Constants::messages[6], inFilePath);
+      return false;
+    }
+    catch (const Botan::Exception& e) {
+      const QString error(e.what());
+      emit errorMessage(QStringLiteral("Error: ") % error, inFilePath);
       return false;
     }
     catch (const std::invalid_argument&) {
@@ -336,13 +344,15 @@ bool Kryvo::BotanProvider::encryptFile(CryptoState* state,
   Botan::Pipe pipe;
 
   if (compress) {
-    pipe.append(new Botan::Compression_Filter(std::string("zlib"),
-                                              static_cast<std::size_t>(9)));
+    pipe.append_filter(
+      new Botan::Compression_Filter(std::string("zlib"),
+                                    static_cast<std::size_t>(9)));
   }
 
-  pipe.append(Botan::get_cipher(algorithmNameStd, key, iv, Botan::ENCRYPTION));
+  pipe.append_filter(Botan::get_cipher(algorithmNameStd, key, iv,
+                                       Botan::ENCRYPTION));
 
-  pipe.append(new Botan::DataSink_Stream(out));
+  pipe.append_filter(new Botan::DataSink_Stream(out));
 
   const bool success =
     executeCipher(state, Botan::ENCRYPTION, inputFilePath, pipe, in, out);
@@ -474,14 +484,16 @@ bool Kryvo::BotanProvider::decryptFile(CryptoState* state,
 
   Botan::Pipe pipe;
 
-  pipe.append(Botan::get_cipher(algorithmNameStd, key, iv, Botan::DECRYPTION));
+  pipe.append_filter(Botan::get_cipher(algorithmNameStd, key, iv,
+                                       Botan::DECRYPTION));
 
   if (tr("Compressed") == compressString) {
-    pipe.append(new Botan::Decompression_Filter(std::string("lzma"),
-                                                static_cast<std::size_t>(9)));
+    pipe.append_filter(
+      new Botan::Decompression_Filter(std::string("zlib"),
+                                      static_cast<std::size_t>(9)));
   }
 
-  pipe.append(new Botan::DataSink_Stream(out));
+  pipe.append_filter(new Botan::DataSink_Stream(out));
 
   const bool success = executeCipher(state, Botan::DECRYPTION, inputFilePath,
                                      pipe, in, out);
