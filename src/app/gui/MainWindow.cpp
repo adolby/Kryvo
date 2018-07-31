@@ -13,7 +13,6 @@
 #include <QStringRef>
 #include <QStringBuilder>
 #include <QString>
-#include <initializer_list>
 
 class Kryvo::MainWindowPrivate {
   Q_DISABLE_COPY(MainWindowPrivate)

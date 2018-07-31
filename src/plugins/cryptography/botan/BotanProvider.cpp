@@ -1,5 +1,5 @@
 ﻿#include "BotanProvider.hpp"
-#include "constants.h"
+#include "Constants.hpp"
 #include <QMimeDatabase>
 #include <QMimeType>
 #include <QFileInfo>
@@ -73,8 +73,8 @@ bool Kryvo::BotanProvider::encrypt(CryptoState* state,
 
     const QString& outFilePath = QString(outPath % QDir::separator() %
                                          inputFileInfo.fileName() %
-                                         Constants::kDot %
-                                         Constants::kExtension);
+                                         Kryvo::Constants::kDot %
+                                         Kryvo::Constants::kExtension);
 
     outputFilePaths << outFilePath;
 
@@ -83,11 +83,11 @@ bool Kryvo::BotanProvider::encrypt(CryptoState* state,
                   keySize, compress);
     }
     catch (const Botan::Stream_IO_Error&) {
-      emit errorMessage(Constants::messages[7], inFilePath);
+      emit errorMessage(Kryvo::Constants::messages[7], inFilePath);
       return false;
     }
     catch (const Botan::Invalid_Argument&) {
-      emit errorMessage(Constants::messages[7], inFilePath);
+      emit errorMessage(Kryvo::Constants::messages[7], inFilePath);
       return false;
     }
     catch (const Botan::Exception& e) {
@@ -96,7 +96,7 @@ bool Kryvo::BotanProvider::encrypt(CryptoState* state,
       return false;
     }
     catch (const std::invalid_argument&) {
-      emit errorMessage(Constants::messages[7], inFilePath);
+      emit errorMessage(Kryvo::Constants::messages[7], inFilePath);
       return false;
     }
     catch (const std::exception& e) {
@@ -106,7 +106,7 @@ bool Kryvo::BotanProvider::encrypt(CryptoState* state,
     }
 
     if (state->isAborted() || state->isStopped(inFilePath)) {
-      emit errorMessage(Constants::messages[2], inFilePath);
+      emit errorMessage(Kryvo::Constants::messages[2], inFilePath);
 
       if (state->isAborted()) {
         state->abort(false);

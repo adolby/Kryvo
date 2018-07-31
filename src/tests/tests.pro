@@ -27,6 +27,7 @@ CONFIG(release, debug|release) {
 INCLUDEPATH += $$PWD/../app/
 
 SOURCES += \
+  ../app/Constants.cpp \
   ../app/cryptography/Crypto.cpp \
   ../app/cryptography/CryptoState.cpp \
   test_Crypto.cpp \
@@ -34,6 +35,7 @@ SOURCES += \
   FileOperations.cpp
 
 HEADERS += \
+  ../app/Constants.hpp \
   ../app/cryptography/Crypto.hpp \
   ../app/cryptography/CryptoState.hpp \
   test_Crypto.hpp \

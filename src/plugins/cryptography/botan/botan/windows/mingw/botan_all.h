@@ -36,12 +36,12 @@
 
 /*
 * This file was automatically generated running
-* 'configure.py --cpu=x86_64 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib'
+* 'configure.py --cpu=x86_32 --cc=gcc --os=mingw --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib'
 *
 * Target
-*  - Compiler: cl /MD /bigobj /EHs /GR /O2 /Oi
-*  - Arch: x86_64
-*  - OS: windows
+*  - Compiler: g++ -fstack-protector -m32 -pthread -std=c++11 -D_REENTRANT -O3 -momit-leaf-frame-pointer
+*  - Arch: x86_32
+*  - OS: mingw
 */
 
 #define BOTAN_VERSION_MAJOR 2
@@ -56,14 +56,14 @@
 #define BOTAN_DISTRIBUTION_INFO "unspecified"
 
 /* How many bits per limb in a BigInt */
-#define BOTAN_MP_WORD_BITS 64
+#define BOTAN_MP_WORD_BITS 32
 
 
-#define BOTAN_INSTALL_PREFIX R"(c:\Botan)"
+#define BOTAN_INSTALL_PREFIX R"(/mingw)"
 #define BOTAN_INSTALL_HEADER_DIR "include/botan-2"
 #define BOTAN_INSTALL_LIB_DIR "lib"
-#define BOTAN_LIB_LINK "user32.lib ws2_32.lib z"
-#define BOTAN_LINK_FLAGS "/MD /bigobj"
+#define BOTAN_LIB_LINK "-lws2_32 -lz"
+#define BOTAN_LINK_FLAGS "-fstack-protector -m32 -pthread"
 
 #ifndef BOTAN_DLL
   #define BOTAN_DLL 
@@ -71,27 +71,23 @@
 
 /* Target identification and feature test macros */
 
-#define BOTAN_TARGET_OS_IS_WINDOWS
+#define BOTAN_TARGET_OS_IS_MINGW
 
 #define BOTAN_TARGET_OS_HAS_FILESYSTEM
 #define BOTAN_TARGET_OS_HAS_RTLGENRANDOM
-#define BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY
-#define BOTAN_TARGET_OS_HAS_STL_FILESYSTEM_MSVC
 #define BOTAN_TARGET_OS_HAS_THREADS
 #define BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK
 #define BOTAN_TARGET_OS_HAS_WIN32
-#define BOTAN_TARGET_OS_HAS_WINSOCK2
 
 
-#define BOTAN_BUILD_COMPILER_IS_MSVC
+#define BOTAN_BUILD_COMPILER_IS_GCC
 
 
 
 
-#define BOTAN_TARGET_ARCH_IS_X86_64
+#define BOTAN_TARGET_ARCH_IS_X86_32
 #define BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN
 #define BOTAN_TARGET_CPU_IS_X86_FAMILY
-#define BOTAN_TARGET_CPU_HAS_NATIVE_64BIT
 
 #define BOTAN_TARGET_SUPPORTS_AESNI
 #define BOTAN_TARGET_SUPPORTS_AVX2
@@ -266,6 +262,7 @@
 #define BOTAN_HAS_SHA1_X86_SHA_NI 20170518
 #define BOTAN_HAS_SHA2_32 20131128
 #define BOTAN_HAS_SHA2_32_X86 20170518
+#define BOTAN_HAS_SHA2_32_X86_BMI2 20180526
 #define BOTAN_HAS_SHA2_64 20131128
 #define BOTAN_HAS_SHA3 20161018
 #define BOTAN_HAS_SHACAL2 20170813

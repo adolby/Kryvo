@@ -25,6 +25,7 @@ CONFIG(release, debug|release) {
 
 SOURCES += \
   BotanProvider.cpp \
+  ../../../app/Constants.cpp \
   ../../../app/cryptography/CryptoState.cpp \
   zlib/adler32.c \
   zlib/compress.c \
@@ -44,6 +45,7 @@ SOURCES += \
 
 HEADERS += \
   BotanProvider.hpp \
+  ../../../app/Constants.hpp \
   ../../../app/cryptography/CryptoState.hpp \
   zlib/crc32.h \
   zlib/deflate.h \
@@ -219,13 +221,15 @@ mac {
 win32 {
   message(Windows)
 
-  win32-msvc2015 {
+  win32-msvc {
+    message(MSVC)
+
     LIBS += advapi32.lib user32.lib
 
     QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
     contains(QT_ARCH, x86_64) {
-      message(MSVC x86_64)
+      message(x86_64)
 
       SOURCES += \
         botan/windows/msvc/x86_64/botan_all.cpp \
@@ -247,36 +251,13 @@ win32 {
         message(Release)
         DESTDIR = ../../../../build/windows/msvc/x86_64/release/plugins/botan
       }
-    } else {
-      message(MSVC x86)
-
-      SOURCES += \
-        botan/windows/msvc/x86/botan_all.cpp \
-        botan/windows/msvc/x86/botan_all_aesni.cpp \
-        botan/windows/msvc/x86/botan_all_avx2.cpp \
-        botan/windows/msvc/x86/botan_all_rdrand.cpp \
-        botan/windows/msvc/x86/botan_all_rdseed.cpp \
-        botan/windows/msvc/x86/botan_all_ssse3.cpp
-
-      HEADERS += \
-        botan/windows/msvc/x86/botan_all.h \
-        botan/windows/msvc/x86/botan_all_internal.h
-
-      debug {
-        message(Debug)
-        DESTDIR = ../../../../build/windows/msvc/x86/debug/plugins/botan
-      }
-      release {
-        message(Release)
-        DESTDIR = ../../../../build/windows/msvc/x86/release/plugins/botan
-      }
     }
   }
 
   mkpath($${DESTDIR}/../../../Kryvo/plugins/)
   mkpath($${DESTDIR}/../../../test/plugins/)
-  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../../Kryvo/plugins/)
-  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../../test/plugins/)
+  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../../../Kryvo/plugins/)
+  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../../../test/plugins/)
 } # End win32
 
 OBJECTS_DIR = $${DESTDIR}/obj

@@ -1,22 +1,10 @@
-#ifndef KRYVO_CRYPTOGRAPHY_CONSTANTS_H_
-#define KRYVO_CRYPTOGRAPHY_CONSTANTS_H_
+#include "Constants.hpp"
 
-#include <QFileInfo>
-#include <QDir>
-#include <QObject>
-#include <QStringList>
-#include <QString>
-#include <QStringBuilder>
+const QString Kryvo::Constants::kDot = QStringLiteral(".");
+const QString Kryvo::Constants::kExtension = QStringLiteral("enc");
+const QString Kryvo::Constants::kArchiveExtension = QStringLiteral("7z");
 
-namespace Kryvo {
-
-namespace Constants {
-
-const QString kDot = QStringLiteral(".");
-const QString kExtension = QStringLiteral("enc");
-const QString kArchiveExtension = QStringLiteral("7z");
-
-const QStringList messages {
+const QStringList Kryvo::Constants::messages {
   QObject::tr("File %1 encrypted."), // 0
   QObject::tr("File %1 decrypted."), // 1
   QObject::tr("Encryption stopped. File %1 not fully encrypted."), // 2
@@ -43,8 +31,8 @@ const QStringList messages {
  * file path
  * \return String containing a file path without an extension
  */
-inline QString removeExtension(const QString& filePath,
-                               const QString& extension) {
+QString Kryvo::Constants::removeExtension(const QString& filePath,
+                                          const QString& extension) {
   const QFileInfo firstSuffixFileInfo{filePath};
   QString newFilePath = filePath;
 
@@ -71,7 +59,7 @@ inline QString removeExtension(const QString& filePath,
  * \return String representing a unique file path created from the input file
  * path
  */
-inline QString uniqueFilePath(const QString& filePath) {
+QString Kryvo::Constants::uniqueFilePath(const QString& filePath) {
   const QFileInfo inputFile{filePath};
   QString uniqueFilePath = filePath;
 
@@ -102,9 +90,3 @@ inline QString uniqueFilePath(const QString& filePath) {
 
   return uniqueFilePath;
 }
-
-}
-
-}
-
-#endif // KRYVO_CRYPTOGRAPHY_CONSTANTS_H_

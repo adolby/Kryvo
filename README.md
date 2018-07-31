@@ -65,7 +65,7 @@ Android requires a small patch that implements std::string to_string(), which is
 
 If you would like to update Botan, you'll need to produce a new amalgamation build. The configuration commands used to generate Botan amalgamation files follows for each platform:
 
-### Android ARM 32-bit
+### Android ARM armv7
 python configure.py --cpu=armv5te --os=linux --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ### Linux GCC x86_64
@@ -77,11 +77,17 @@ python configure.py --cc=clang --amalgamation --disable-shared --disable-modules
 ### macOS Clang x86_64
 python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
-### iOS Clang 64-bit
+### iOS Clang armv8-a
 python configure.py --os=ios --cpu=armv8-a --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ### Windows Visual Studio x86_64
-python configure.py --cpu=x64 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+python configure.py --cpu=x86_64 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+
+### Windows Visual Studio x86
+python configure.py --cpu=x86_32 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+
+### Windows MinGW-w64 x86
+python configure.py --cpu=x86_32 --cc=gcc --os=mingw --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
 
 ## Contact
 

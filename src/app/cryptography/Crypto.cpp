@@ -2,7 +2,7 @@
 #include "cryptography/CryptoState.hpp"
 #include "cryptography/CryptoProviderInterface.hpp"
 #include "archive/Archiver.hpp"
-#include "constants.h"
+#include "Constants.hpp"
 #include <QPluginLoader>
 #include <QLibrary>
 #include <QJsonObject>

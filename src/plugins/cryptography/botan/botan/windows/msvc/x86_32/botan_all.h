@@ -36,11 +36,11 @@
 
 /*
 * This file was automatically generated running
-* 'configure.py --cpu=x86_64 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib'
+* 'configure.py --cpu=x86 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib'
 *
 * Target
 *  - Compiler: cl /MD /bigobj /EHs /GR /O2 /Oi
-*  - Arch: x86_64
+*  - Arch: x86_32
 *  - OS: windows
 */
 
@@ -56,7 +56,7 @@
 #define BOTAN_DISTRIBUTION_INFO "unspecified"
 
 /* How many bits per limb in a BigInt */
-#define BOTAN_MP_WORD_BITS 64
+#define BOTAN_MP_WORD_BITS 32
 
 
 #define BOTAN_INSTALL_PREFIX R"(c:\Botan)"
@@ -88,13 +88,11 @@
 
 
 
-#define BOTAN_TARGET_ARCH_IS_X86_64
+#define BOTAN_TARGET_ARCH_IS_X86_32
 #define BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN
 #define BOTAN_TARGET_CPU_IS_X86_FAMILY
-#define BOTAN_TARGET_CPU_HAS_NATIVE_64BIT
 
 #define BOTAN_TARGET_SUPPORTS_AESNI
-#define BOTAN_TARGET_SUPPORTS_AVX2
 #define BOTAN_TARGET_SUPPORTS_BMI2
 #define BOTAN_TARGET_SUPPORTS_RDRAND
 #define BOTAN_TARGET_SUPPORTS_RDSEED
@@ -290,7 +288,6 @@
 #define BOTAN_HAS_SYSTEM_RNG 20141202
 #define BOTAN_HAS_THREAD_UTILS 20180112
 #define BOTAN_HAS_THREEFISH_512 20131224
-#define BOTAN_HAS_THREEFISH_512_AVX2 20160903
 #define BOTAN_HAS_THRESHOLD_SECRET_SHARING 20131128
 #define BOTAN_HAS_TIGER 20131128
 #define BOTAN_HAS_TLS 20150319

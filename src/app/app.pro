@@ -25,6 +25,7 @@ CONFIG(release, debug|release) {
 
 SOURCES += \
   main.cpp \
+  Constants.cpp \
   Application.cpp \
   archive/Archiver.cpp \
   cryptography/Crypto.cpp \
@@ -46,7 +47,7 @@ SOURCES += \
   utility/Thread.cpp
 
 HEADERS += \
-  constants.h \
+  Constants.hpp \
   Application.hpp \
   archive/Archiver.hpp \
   cryptography/Crypto.hpp \
@@ -186,13 +187,32 @@ win32 {
   SOURCES += gui/DesktopMainWindow.cpp
   HEADERS += gui/DesktopMainWindow.hpp
 
-  win32-msvc2015 {
+  win32-g++ {
+    message(g++)
+
+    contains(QT_ARCH, x86_64) {
+      message(g++ x86_64)
+
+      debug {
+        message(Debug)
+        DESTDIR = ../../build/windows/mingw/x86_64/debug/Kryvo
+      }
+      release {
+        message(Release)
+        DESTDIR = ../../build/windows/mingw/x86_64/release/Kryvo
+      }
+    }
+  }
+
+  win32-msvc {
+    message(MSVC)
+
     LIBS += advapi32.lib user32.lib
 
     QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
     contains(QT_ARCH, x86_64) {
-      message(MSVC x86_64)
+      message(x86_64)
 
       debug {
         message(Debug)
@@ -201,17 +221,6 @@ win32 {
       release {
         message(Release)
         DESTDIR = ../../build/windows/msvc/x86_64/release/Kryvo
-      }
-    } else {
-      message(MSVC x86)
-
-      debug {
-        message(Debug)
-        DESTDIR = ../../build/windows/msvc/x86/debug/Kryvo
-      }
-      release {
-        message(Release)
-        DESTDIR = ../../build/windows/msvc/x86/release/Kryvo
       }
     }
   }
