@@ -60,7 +60,8 @@ HEADERS += \
   zlib/zutil.h
 
 INCLUDEPATH += \
-  ../../../app/
+  ../../../app/ \
+  zlib/
 
 # Platform-specific configuration
 linux {
@@ -221,10 +222,39 @@ mac {
 win32 {
   message(Windows)
 
+  win32-g++ {
+    message(g++)
+
+    SOURCES += \
+      botan/windows/mingw/x86_32/botan_all.cpp \
+      botan/windows/mingw/x86_32/botan_all_aesni.cpp \
+      botan/windows/mingw/x86_32/botan_all_avx2.cpp \
+      botan/windows/mingw/x86_32/botan_all_bmi2.cpp \
+      botan/windows/mingw/x86_32/botan_all_rdrand.cpp \
+      botan/windows/mingw/x86_32/botan_all_rdseed.cpp \
+      botan/windows/mingw/x86_32/botan_all_sha_sse41_ssse3.cpp \
+      botan/windows/mingw/x86_32/botan_all_sha_ssse3.cpp \
+      botan/windows/mingw/x86_32/botan_all_sse2.cpp \
+      botan/windows/mingw/x86_32/botan_all_ssse3.cpp
+
+    HEADERS += \
+      botan/windows/mingw/x86_32/botan_all.h \
+      botan/windows/mingw/x86_32/botan_all_internal.h
+
+    debug {
+      message(Debug)
+      DESTDIR = ../../build/windows/mingw/x86_32/debug/plugins/botan/
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../build/windows/mingw/x86_32/release/plugins/botan/
+    }
+  }
+
   win32-msvc {
     message(MSVC)
 
-    LIBS += advapi32.lib user32.lib
+    LIBS += advapi32.lib user32.lib ws2_32.lib
 
     QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
@@ -237,6 +267,8 @@ win32 {
         botan/windows/msvc/x86_64/botan_all_avx2.cpp \
         botan/windows/msvc/x86_64/botan_all_rdrand.cpp \
         botan/windows/msvc/x86_64/botan_all_rdseed.cpp \
+        botan/windows/msvc/x86_64/botan_all_sha_sse41_ssse3.cpp \
+        botan/windows/msvc/x86_64/botan_all_sha_ssse3.cpp \
         botan/windows/msvc/x86_64/botan_all_ssse3.cpp
 
       HEADERS += \
@@ -254,10 +286,9 @@ win32 {
     }
   }
 
-  mkpath($${DESTDIR}/../../../Kryvo/plugins/)
-  mkpath($${DESTDIR}/../../../test/plugins/)
-  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../../../Kryvo/plugins/)
-  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/libbotan.dll $${DESTDIR}/../../../test/plugins/)
+  mkpath($${DESTDIR}/../../Kryvo/plugins/)
+  mkpath($${DESTDIR}/../../test/plugins/)
+  QMAKE_POST_LINK += $$quote($$QMAKE_COPY $${DESTDIR}/botan.dll $${DESTDIR}/../../Kryvo/plugins/)
 } # End win32
 
 OBJECTS_DIR = $${DESTDIR}/obj

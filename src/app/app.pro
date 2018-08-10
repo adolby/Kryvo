@@ -190,17 +190,13 @@ win32 {
   win32-g++ {
     message(g++)
 
-    contains(QT_ARCH, x86_64) {
-      message(g++ x86_64)
-
-      debug {
-        message(Debug)
-        DESTDIR = ../../build/windows/mingw/x86_64/debug/Kryvo
-      }
-      release {
-        message(Release)
-        DESTDIR = ../../build/windows/mingw/x86_64/release/Kryvo
-      }
+    debug {
+      message(Debug)
+      DESTDIR = ../../build/windows/mingw/x86/debug/Kryvo/
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../build/windows/mingw/x86/release/Kryvo/
     }
   }
 
@@ -216,11 +212,11 @@ win32 {
 
       debug {
         message(Debug)
-        DESTDIR = ../../build/windows/msvc/x86_64/debug/Kryvo
+        DESTDIR = ../../build/windows/msvc/x86_64/debug/Kryvo/
       }
       release {
         message(Release)
-        DESTDIR = ../../build/windows/msvc/x86_64/release/Kryvo
+        DESTDIR = ../../build/windows/msvc/x86_64/release/Kryvo/
       }
     }
   }
