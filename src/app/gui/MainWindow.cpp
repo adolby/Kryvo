@@ -302,7 +302,7 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
                                           const QString& defaultFile) const {
   // Try to load user theme, if it exists
   const QString styleSheetPath = QStringLiteral("themes") %
-                                 QDir::separator() % styleFile;
+                                 QStringLiteral("/") % styleFile;
   QFile userTheme(styleSheetPath);
 
   QString styleSheet;

@@ -44,11 +44,11 @@ bool Kryvo::BotanProvider::encrypt(CryptoState* state,
   }
 
   const QString& algorithm = [&cipher, &keySize, &modeOfOperation]() {
-    QString algo = QString(cipher % QDir::separator() % modeOfOperation);
+    QString algo = QString(cipher % QStringLiteral("/") % modeOfOperation);
 
     if (QStringLiteral("AES") == cipher) {
       algo = QString(cipher % QStringLiteral("-") % QString::number(keySize) %
-                     QDir::separator() % modeOfOperation);
+                     QStringLiteral("/") % modeOfOperation);
     }
 
     return algo;
@@ -71,7 +71,7 @@ bool Kryvo::BotanProvider::encrypt(CryptoState* state,
                              outputDir.absolutePath() :
                              inputFileInfo.absolutePath();
 
-    const QString& outFilePath = QString(outPath % QDir::separator() %
+    const QString& outFilePath = QString(outPath % QStringLiteral("/") %
                                          inputFileInfo.fileName() %
                                          Kryvo::Constants::kDot %
                                          Kryvo::Constants::kExtension);
@@ -165,7 +165,7 @@ bool Kryvo::BotanProvider::decrypt(CryptoState* state,
 
     const QString& inFilePath = inputFileInfo.absoluteFilePath();
 
-    const QString& outFilePath = QString(outPath % QDir::separator() %
+    const QString& outFilePath = QString(outPath % QStringLiteral("/") %
                                          inputFileInfo.fileName());
 
 // TODO: Fix container

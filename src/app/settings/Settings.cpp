@@ -13,7 +13,7 @@ namespace Kryvo {
   const QStringList kDefaultPaths =
     QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
   const QString kDefaultPath = QString(kDefaultPaths.first() %
-                                       QDir::separator());
+                                       QStringLiteral("/"));
 }
 
 class Kryvo::SettingsPrivate {
@@ -50,8 +50,8 @@ Kryvo::SettingsPrivate::SettingsPrivate() = default;
 void Kryvo::SettingsPrivate::importSettings() {
 #if defined(Q_OS_MACOS)
   const QString& settingsPath = QString(qApp->applicationDirPath() %
-                                       QDir::separator() %
-                                       QStringLiteral("settings.json"));
+                                        QStringLiteral("/") %
+                                        QStringLiteral("settings.json"));
 #else
   const QString& settingsPath = QStringLiteral("settings.json");
 #endif
@@ -99,7 +99,7 @@ void Kryvo::SettingsPrivate::importSettings() {
     const QFileInfo lastOpenInfo{lastOpen};
 
     if (lastOpenInfo.exists() && lastOpenInfo.isDir()) {
-      lastOpenPath = lastOpenInfo.absolutePath() % QDir::separator();
+      lastOpenPath = lastOpenInfo.absolutePath() % QStringLiteral("/");
     }
     else {
       lastOpenPath = kDefaultPath;
@@ -126,7 +126,7 @@ void Kryvo::SettingsPrivate::importSettings() {
 void Kryvo::SettingsPrivate::exportSettings() const {
 #if defined(Q_OS_MACOS)
   const QString& settingsPath = QString(QCoreApplication::applicationDirPath() %
-                                        QDir::separator() %
+                                        QStringLiteral("/") %
                                         QStringLiteral("settings.json"));
 #else
   const QString& settingsPath = QStringLiteral("settings.json");
@@ -167,7 +167,7 @@ void Kryvo::SettingsPrivate::exportSettings() const {
       QString outPath = cleanedPath;
 
       if (cleanedPathInfo.isDir() && !cleanedPathInfo.isRoot()) {
-        outPath = cleanedPath % QDir::separator();
+        outPath = cleanedPath % QStringLiteral("/");
       }
 
       return outPath;

@@ -37,14 +37,14 @@ QString Kryvo::Constants::removeExtension(const QString& filePath,
   QString newFilePath = filePath;
 
   if (QStringLiteral("7z") == firstSuffixFileInfo.suffix()) {
-    newFilePath = firstSuffixFileInfo.absolutePath() % QDir::separator() %
+    newFilePath = firstSuffixFileInfo.absolutePath() % QStringLiteral("/") %
                   firstSuffixFileInfo.completeBaseName();
   }
 
   const QFileInfo secondSuffixFileInfo(newFilePath);
 
   if (secondSuffixFileInfo.suffix() == extension) {
-    newFilePath = secondSuffixFileInfo.absolutePath() % QDir::separator() %
+    newFilePath = secondSuffixFileInfo.absolutePath() % QStringLiteral("/") %
                   secondSuffixFileInfo.completeBaseName();
   }
 
@@ -71,7 +71,7 @@ QString Kryvo::Constants::uniqueFilePath(const QString& filePath) {
 
     if (uniqueFile.exists() && uniqueFile.isFile()) {
       // Write number of copies before file extension
-      uniqueFilePath = QString(inputFile.absolutePath() % QDir::separator() %
+      uniqueFilePath = QString(inputFile.absolutePath() % QStringLiteral("/") %
                                inputFile.baseName() %
                                QStringLiteral(" (%1)").arg(i + 2));
 
