@@ -51,7 +51,7 @@ void Kryvo::Crypto::loadProviders() {
 
   pluginsDir.cd(QStringLiteral("plugins"));
 
-  const QFileInfoList fileInfoList = pluginsDir.entryInfoList(QDir::Files);
+  const QFileInfoList& fileInfoList = pluginsDir.entryInfoList(QDir::Files);
 
   for (const QFileInfo& fileInfo : fileInfoList) {
     const QString& filePath = fileInfo.absoluteFilePath();
@@ -83,18 +83,14 @@ void Kryvo::Crypto::loadProviders() {
         CryptoProviderInterface* cp =
           qobject_cast<CryptoProviderInterface*>(plugin);
 
-        connect(plugin, SIGNAL(fileProgress(const QString&, const QString&,
-                                            const qint64)),
-                this, SIGNAL(fileProgress(const QString&, const QString&,
-                                          const qint64)));
+        connect(plugin, SIGNAL(fileProgress(QString,QString,qint64)),
+                this, SIGNAL(fileProgress(QString,QString,qint64)));
 
-        connect(plugin, SIGNAL(statusMessage(const QString&)),
-                this, SIGNAL(statusMessage(const QString&)));
+        connect(plugin, SIGNAL(statusMessage(QString)),
+                this, SIGNAL(statusMessage(QString)));
 
-        connect(plugin, SIGNAL(errorMessage(const QString&,
-                                            const QString&)),
-                this, SIGNAL(errorMessage(const QString&,
-                                          const QString&)));
+        connect(plugin, SIGNAL(errorMessage(QString,QString)),
+                this, SIGNAL(errorMessage(QString,QString)));
 
         d->availableProviders.insert(pluginName, cp);
       }
