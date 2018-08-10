@@ -139,7 +139,7 @@ mac {
 win32 {
   message(Windows)
 
-  win32-msvc2015 {
+  win32-msvc {
     LIBS += advapi32.lib user32.lib
 
     QMAKE_CXXFLAGS += -bigobj -arch:AVX2
@@ -154,17 +154,6 @@ win32 {
       release {
         message(Release)
         DESTDIR = ../../build/windows/msvc/x86_64/release/test/
-      }
-    } else {
-      message(MSVC x86)
-
-      debug {
-        message(Debug)
-        DESTDIR = ../../build/windows/msvc/x86/debug/test/
-      }
-      release {
-        message(Release)
-        DESTDIR = ../../build/windows/msvc/x86/release/test/
       }
     }
   }
