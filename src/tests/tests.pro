@@ -139,6 +139,19 @@ mac {
 win32 {
   message(Windows)
 
+  win32-g++ {
+    message(g++)
+
+    debug {
+      message(Debug)
+      DESTDIR = ../../build/windows/mingw/x86/debug/test/
+    }
+    release {
+      message(Release)
+      DESTDIR = ../../build/windows/mingw/x86/release/test/
+    }
+  }
+
   win32-msvc {
     LIBS += advapi32.lib user32.lib
 
