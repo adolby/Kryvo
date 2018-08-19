@@ -47,7 +47,6 @@ class Kryvo::MainWindowPrivate {
   bool busyStatus{false};
 };
 
-
 Kryvo::MainWindowPrivate::MainWindowPrivate() = default;
 
 void Kryvo::MainWindowPrivate::busy(const bool busy) {
@@ -175,7 +174,7 @@ void Kryvo::MainWindow::addFiles() {
   Q_ASSERT(fileListFrame);
 
   // Open a file dialog to get files
-  const QStringList fileNames =
+  const QStringList& fileNames =
     QFileDialog::getOpenFileNames(this, tr("Add Files"),
                                   settings->lastOpenPath(),
                                   tr("Any files (*)"));
@@ -301,8 +300,8 @@ void Kryvo::MainWindow::updateContainerMode(const bool container) {
 QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
                                           const QString& defaultFile) const {
   // Try to load user theme, if it exists
-  const QString styleSheetPath = QStringLiteral("themes") %
-                                 QStringLiteral("/") % styleFile;
+  const QString& styleSheetPath = QStringLiteral("themes") %
+                                  QStringLiteral("/") % styleFile;
   QFile userTheme(styleSheetPath);
 
   QString styleSheet;
@@ -316,7 +315,7 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
     }
   }
   else { // Otherwise, load default theme
-    const QString localPath = QStringLiteral(":/stylesheets/") % defaultFile;
+    const QString& localPath = QStringLiteral(":/stylesheets/") % defaultFile;
     QFile defaultTheme(localPath);
 
     const bool defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);

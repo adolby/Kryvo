@@ -6,7 +6,7 @@
 #include <QDebug>
 
 Kryvo::Archiver::Archiver(QObject* parent)
-  : QObject{parent} {
+  : QObject(parent) {
 }
 
 void Kryvo::Archiver::compress(const QStringList& inFilePaths,
@@ -15,9 +15,9 @@ void Kryvo::Archiver::compress(const QStringList& inFilePaths,
     return;
   }
 
-  const QString filePath = outFilePath.isEmpty() ?
-                           inFilePaths.first() :
-                           outFilePath;
+  const QString& filePath = outFilePath.isEmpty() ?
+                            inFilePaths.first() :
+                            outFilePath;
 
   for (const QString& inFilePath : inFilePaths) {
 
@@ -32,10 +32,10 @@ void Kryvo::Archiver::extract(const QString& inFilePath,
     return;
   }
 
-  const QFileInfo inFileInfo{inFilePath};
-  const QString inPath = inFileInfo.absolutePath();
+  const QFileInfo inFileInfo(inFilePath);
+  const QString& inPath = inFileInfo.absolutePath();
 
-  const QString path = outFilePath.isEmpty() ? inPath : outFilePath;
+  const QString& path = outFilePath.isEmpty() ? inPath : outFilePath;
 
   emit extractedFilePath(path);
 }

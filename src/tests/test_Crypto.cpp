@@ -9,14 +9,14 @@
 
 void TestCrypto::testComparatorSameFile() {
   // Test data
-  const QString fileName1 = QStringLiteral("file1.png");
-  const QString fileName2 = QStringLiteral("file2.png");
+  const QString& fileName1 = QStringLiteral("file1.png");
+  const QString& fileName2 = QStringLiteral("file2.png");
 
   const QFile file1(fileName1);
   const QFile file2(fileName2);
 
   if (!file1.exists() || !file2.exists()) {
-    const QString msg = QStringLiteral("Test file %1 is missing. ");
+    const QString& msg = QStringLiteral("Test file %1 is missing. ");
 
     QString message;
 
@@ -40,15 +40,15 @@ void TestCrypto::testComparatorSameFile() {
 
 void TestCrypto::testComparatorDifferentFile() {
   // Test data
-  const QString fileName1 = QStringLiteral("file1.png");
-  const QString fileName2 = QStringLiteral("file3.png");
+  const QString& fileName1 = QStringLiteral("file1.png");
+  const QString& fileName2 = QStringLiteral("file3.png");
 
   const QFile file1(fileName1);
   const QFile file2(fileName2);
 
   if (!file1.exists() || !file2.exists()) {
     QString message;
-    const QString msg = QStringLiteral("Test file %1 is missing. ");
+    const QString& msg = QStringLiteral("Test file %1 is missing. ");
 
     if (!file1.exists()) {
       message += msg.arg(fileName1);
@@ -116,8 +116,8 @@ void TestCrypto::testEncryptDecrypt() {
   const QFile inputFile(inputFileName);
 
   if (!inputFile.exists()) {
-    const QString msg = QStringLiteral("Test file %1 is missing.");
-    const QString message = msg.arg(inputFileName);
+    const QString& msg = QStringLiteral("Test file %1 is missing.");
+    const QString& message = msg.arg(inputFileName);
     const auto* messageString =
         reinterpret_cast<const char*>(message.constData());
 
@@ -162,15 +162,15 @@ void TestCrypto::testEncryptDecrypt() {
 
 void TestCrypto::testEncryptDecryptAll() {
   // Test data
-  const QString passphrase = QStringLiteral("password");
-  const QString cipher = QStringLiteral("AES");
+  const QString& passphrase = QStringLiteral("password");
+  const QString& cipher = QStringLiteral("AES");
   const std::size_t keySize = 128;
-  const QString modeOfOperation = QStringLiteral("GCM");
+  const QString& modeOfOperation = QStringLiteral("GCM");
   const bool compress = true;
 
-  const QStringList inputFileNames = {QStringLiteral("test.txt"),
-                                      QStringLiteral("test.exe"),
-                                      QStringLiteral("test.zip")};
+  const QStringList& inputFileNames = {QStringLiteral("test.txt"),
+                                       QStringLiteral("test.exe"),
+                                       QStringLiteral("test.zip")};
 
   bool skip = false;
   QString message;
@@ -191,13 +191,13 @@ void TestCrypto::testEncryptDecryptAll() {
     QSKIP(msg);
   }
 
-  const QStringList encryptedFileNames = {QStringLiteral("test.txt.enc"),
-                                          QStringLiteral("test.exe.enc"),
-                                          QStringLiteral("test.zip.enc")};
+  const QStringList& encryptedFileNames = {QStringLiteral("test.txt.enc"),
+                                           QStringLiteral("test.exe.enc"),
+                                           QStringLiteral("test.zip.enc")};
 
-  const QStringList decryptedFileNames = {QStringLiteral("test (2).txt"),
-                                          QStringLiteral("test (2).exe"),
-                                          QStringLiteral("test (2).zip")};
+  const QStringList& decryptedFileNames = {QStringLiteral("test (2).txt"),
+                                           QStringLiteral("test (2).exe"),
+                                           QStringLiteral("test (2).zip")};
 
   Kryvo::Crypto cryptography;
 

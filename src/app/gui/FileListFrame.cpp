@@ -85,8 +85,8 @@ void Kryvo::FileListFrame::clear() {
   d->fileListModel.clear();
 
   // File list header
-  const QStringList headerList = {tr("File"), tr("Task"), tr("Progress"),
-                                  tr("Remove")};
+  const QStringList& headerList = {tr("File"), tr("Task"), tr("Progress"),
+                                   tr("Remove")};
   d->fileListModel.setHorizontalHeaderLabels(headerList);
 
   QHeaderView* header = d->fileListView->horizontalHeader();
@@ -106,7 +106,7 @@ void Kryvo::FileListFrame::updateProgress(const QString& path,
   qDebug() << path << " " << task << " " << percent;
 
   if (!path.isEmpty()) {
-    const QList<QStandardItem*> items =
+    const QList<QStandardItem*>& items =
             d->fileListModel.findItems(path, Qt::MatchExactly, 0);
 
     if (!items.empty()) {
@@ -132,7 +132,7 @@ void Kryvo::FileListFrame::updateProgress(const QString& path,
 void Kryvo::FileListFrame::addFileToModel(const QString& path) {
   Q_D(FileListFrame);
 
-  const QFileInfo fileInfo{path};
+  const QFileInfo fileInfo(path);
 
   if (fileInfo.exists() && fileInfo.isFile()) {
     // If the file exists, add it to the model
@@ -164,8 +164,8 @@ void Kryvo::FileListFrame::addFileToModel(const QString& path) {
     closeFileItem->setEditable(false);
     closeFileItem->setSelectable(false);
 
-    const QList<QStandardItem*> items = {pathItem, taskItem, progressItem,
-                                         closeFileItem};
+    const QList<QStandardItem*>& items = {pathItem, taskItem, progressItem,
+                                          closeFileItem};
 
     // Search to see if this item is already in the model
     bool addNewItem = true;

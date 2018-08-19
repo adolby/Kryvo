@@ -174,7 +174,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
                                "operation to securely transform data. GCM and "
                                "EAX are both currently considered to be secure "
                                "modes of operation."));
-  const QString modeSplitToolTip = splitToolTip(modeToolTip, d->toolTipWidth);
+  const QString& modeSplitToolTip = splitToolTip(modeToolTip, d->toolTipWidth);
 
   auto modeLabel = new QLabel(tr("Mode of operation:"), modeFrame);
   modeLabel->setObjectName(QStringLiteral("text"));
@@ -300,7 +300,7 @@ void Kryvo::SettingsFrame::changeKeySize() {
   Q_D(SettingsFrame);
   Q_ASSERT(d->keySizeComboBox);
 
-  const QString keySizeString = d->keySizeComboBox->currentText();
+  const QString& keySizeString = d->keySizeComboBox->currentText();
 
   const std::size_t keySize = keySizeString.toInt();
 

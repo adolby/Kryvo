@@ -21,8 +21,8 @@ bool FileOperations::filesEqual(const QString& filePath1,
                                 const QString& filePath2) {
   bool equivalent = false;
 
-  QFile file1{filePath1};
-  QFile file2{filePath2};
+  QFile file1(filePath1);
+  QFile file2(filePath2);
 
   if (file1.exists() && file2.exists()) {
     file1.open(QFile::ReadOnly);

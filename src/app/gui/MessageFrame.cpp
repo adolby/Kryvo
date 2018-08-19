@@ -15,7 +15,7 @@ class Kryvo::MessageFramePrivate {
   MessageFramePrivate();
 
   QVector<QString> messages;
-  QVector<QString>::ConstIterator it{};
+  QVector<QString>::ConstIterator it;
   QLabel* messageLabel{nullptr};
 };
 
