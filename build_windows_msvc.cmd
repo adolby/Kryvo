@@ -3,16 +3,11 @@ echo on
 SET project_dir="%cd%"
 
 echo Set up environment...
-set PATH=%QT%\bin\;C:\Qt\Tools\QtCreator\bin\;C:\Qt\QtIFW2.0.1\bin\;%PATH%
-call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
+set PATH=%QT%\bin\;C:\Qt\Tools\QtCreator\bin\;C:\Qt\QtIFW3.0.4\bin\;%PATH%
+call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 
 echo Building Kryvo...
-qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
-nmake
-
-echo Building tests...
-cd %project_dir%\tests\
-qmake -spec win32-msvc2015 CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
+qmake -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
 nmake
 
 echo Copying test data...
