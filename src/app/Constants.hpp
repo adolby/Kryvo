@@ -15,6 +15,8 @@ class Constants {
   static const QString kDot;
   static const QString kExtension;
   static const QString kArchiveExtension;
+  static const QStringList kDefaultPaths;
+  static const QString kDocumentsPath;
 
   static const QStringList messages;
 

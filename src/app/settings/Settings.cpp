@@ -1,5 +1,5 @@
 #include "settings/Settings.hpp"
-#include <QStandardPaths>
+#include "Constants.hpp"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
@@ -8,13 +8,6 @@
 #include <QDir>
 #include <QStringBuilder>
 #include <QApplication>
-
-namespace Kryvo {
-  const QStringList kDefaultPaths =
-    QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
-  const QString kDefaultPath = QString(kDefaultPaths.first() %
-                                       QStringLiteral("/"));
-}
 
 class Kryvo::SettingsPrivate {
   Q_DISABLE_COPY(SettingsPrivate)
@@ -40,8 +33,8 @@ class Kryvo::SettingsPrivate {
   QString modeOfOperation;
   bool compressionMode{true};
   bool containerMode{false};
-  QString outputPath{kDefaultPath};
-  QString lastOpenPath{kDefaultPath};
+  QString outputPath{Kryvo::Constants::kDocumentsPath};
+  QString lastOpenPath{Kryvo::Constants::kDocumentsPath};
   QString styleSheetPath;
 };
 
@@ -56,7 +49,7 @@ void Kryvo::SettingsPrivate::importSettings() {
   const QString& settingsPath = QStringLiteral("settings.json");
 #endif
 
-  QFile settingsFile{settingsPath};
+  QFile settingsFile(settingsPath);
   const bool fileOpen = settingsFile.open(QIODevice::ReadOnly);
 
   if (fileOpen) {
@@ -91,18 +84,19 @@ void Kryvo::SettingsPrivate::importSettings() {
 
     containerMode = settings[QStringLiteral("containerMode")].toBool(true);
 
-    outputPath = settings[QStringLiteral("outputPath")].toString(kDefaultPath);
+    outputPath =
+      settings[QStringLiteral("outputPath")].toString(Constants::kDocumentsPath);
 
     const QString& lastOpen =
-      settings[QStringLiteral("lastOpenPath")].toString(kDefaultPath);
+      settings[QStringLiteral("lastOpenPath")].toString(Constants::kDocumentsPath);
 
-    const QFileInfo lastOpenInfo{lastOpen};
+    const QFileInfo lastOpenInfo(lastOpen);
 
     if (lastOpenInfo.exists() && lastOpenInfo.isDir()) {
       lastOpenPath = lastOpenInfo.absolutePath() % QStringLiteral("/");
     }
     else {
-      lastOpenPath = kDefaultPath;
+      lastOpenPath = Constants::kDocumentsPath;
     }
 
     const QJsonValue& styleObject = settings[QStringLiteral("styleSheetPath")];
@@ -117,8 +111,8 @@ void Kryvo::SettingsPrivate::importSettings() {
     modeOfOperation = QStringLiteral("GCM");
     compressionMode = true;
     containerMode = true;
-    outputPath = kDefaultPath;
-    lastOpenPath = kDefaultPath;
+    outputPath = Constants::kDocumentsPath;
+    lastOpenPath = Constants::kDocumentsPath;
     styleSheetPath = QStringLiteral("kryvo.qss");
   }
 }
@@ -162,7 +156,7 @@ void Kryvo::SettingsPrivate::exportSettings() const {
     const auto addPathSeparator = [](const QString& inPath) {
       const QString& cleanedPath = QDir::cleanPath(inPath);
 
-      const QFileInfo cleanedPathInfo{cleanedPath};
+      const QFileInfo cleanedPathInfo(cleanedPath);
 
       QString outPath = cleanedPath;
 
@@ -174,9 +168,13 @@ void Kryvo::SettingsPrivate::exportSettings() const {
     };
 
     settings[QStringLiteral("outputPath")] =
-      outputPath.isEmpty() ? kDefaultPath : addPathSeparator(outputPath);
+      outputPath.isEmpty() ?
+      Constants::kDocumentsPath :
+      addPathSeparator(outputPath);
     settings[QStringLiteral("lastOpenPath")] =
-      lastOpenPath.isEmpty() ? kDefaultPath : addPathSeparator(lastOpenPath);
+      lastOpenPath.isEmpty() ?
+      Constants::kDocumentsPath :
+      addPathSeparator(lastOpenPath);
     settings[QStringLiteral("styleSheetPath")] =
       addPathSeparator(styleSheetPath);
 

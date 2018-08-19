@@ -1,8 +1,14 @@
 #include "Constants.hpp"
+#include <QStandardPaths>
 
 const QString Kryvo::Constants::kDot = QStringLiteral(".");
 const QString Kryvo::Constants::kExtension = QStringLiteral("enc");
 const QString Kryvo::Constants::kArchiveExtension = QStringLiteral("7z");
+
+const QStringList Kryvo::Constants::kDefaultPaths =
+  QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
+const QString Kryvo::Constants::kDocumentsPath = QString(kDefaultPaths.first() %
+                                                 QStringLiteral("/"));
 
 const QStringList Kryvo::Constants::messages {
   QObject::tr("File %1 encrypted."), // 0
@@ -75,7 +81,7 @@ QString Kryvo::Constants::uniqueFilePath(const QString& filePath) {
                                inputFile.baseName() %
                                QStringLiteral(" (%1)").arg(i + 2));
 
-      const QString suffix = inputFile.completeSuffix();
+      const QString& suffix = inputFile.completeSuffix();
       if (!suffix.isEmpty()) {
         // Add the file extension if there is one
         uniqueFilePath += QString(Constants::kDot % suffix);
