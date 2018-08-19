@@ -47,7 +47,9 @@ void Kryvo::Crypto::loadProviders() {
 
   QDir pluginsDir(qApp->applicationDirPath());
 
+#if defined (Q_OS_MACOS)
   pluginsDir.cdUp();
+#endif
 
   pluginsDir.cd(QStringLiteral("plugins"));
 
@@ -102,10 +104,10 @@ void Kryvo::Crypto::loadProviders() {
       d->provider = d->availableProviders.value(QStringLiteral("BOTAN"));
     }
     else {
-      for (CryptoProviderInterface* cp : d->availableProviders) {
-        d->provider = cp;
-        break;
-      }
+//      for (CryptoProviderInterface* cp : d->availableProviders) {
+//        d->provider = cp;
+//        break;
+//      }
     }
   }
 }
