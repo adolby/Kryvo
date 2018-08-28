@@ -34,7 +34,7 @@ class SlidingStackedWidget : public QStackedWidget {
 
   explicit SlidingStackedWidget(QWidget* parent = nullptr);
 
-  ~SlidingStackedWidget();
+  ~SlidingStackedWidget() override;
 
  signals:
   void animationFinished();
@@ -57,6 +57,6 @@ class SlidingStackedWidget : public QStackedWidget {
   void stopAnimation();
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_SLIDINGSTACKEDWIDGET_HPP_

@@ -39,7 +39,7 @@ class MainWindow : public QMainWindow {
   /*!
    * \brief ~MainWindow Destroys the application's main window
    */
-  virtual ~MainWindow();
+  ~MainWindow() override;
 
  signals:
   /*!
@@ -206,6 +206,6 @@ class MainWindow : public QMainWindow {
   QVBoxLayout* contentLayout;
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_MAINWINDOW_HPP_

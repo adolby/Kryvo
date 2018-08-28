@@ -1,5 +1,5 @@
-#ifndef PIMPL_H
-#define PIMPL_H
+#ifndef KRYVO_UTILITY_PIMPL_H_
+#define KRYVO_UTILITY_PIMPL_H_
 
 template <typename T> static inline T *getPtrHelper(T *ptr) { return ptr; }
 template <typename Wrapper> static inline typename Wrapper::pointer getPtrHelper(const Wrapper &p) { return p.get(); }
@@ -9,4 +9,4 @@ template <typename Wrapper> static inline typename Wrapper::pointer getPtrHelper
     inline const Class##Private* d_func() const { return reinterpret_cast<const Class##Private *>(getPtrHelper(d_ptr)); } \
     friend class Class##Private;
 
-#endif // PIMPL_H
+#endif // KRYVO_UTILITY_PIMPL_H_

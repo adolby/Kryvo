@@ -26,7 +26,7 @@ class OutputFrame : public QFrame {
    */
   explicit OutputFrame(QWidget* parent = nullptr);
 
-  ~OutputFrame();
+  ~OutputFrame() override;
 
   /*!
    * \brief outputPath Updates the output file path string of the output line
@@ -50,6 +50,6 @@ class OutputFrame : public QFrame {
   void editingFinished();
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_OUTPUTFRAME_HPP_

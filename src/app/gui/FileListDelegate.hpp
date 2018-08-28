@@ -71,6 +71,6 @@ class FileListDelegate : public QStyledItemDelegate {
   bool focusBorderEnabled;
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_FILELISTDELEGATE_HPP_

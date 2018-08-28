@@ -47,7 +47,7 @@ void Kryvo::Crypto::loadProviders() {
 
   QDir pluginsDir(qApp->applicationDirPath());
 
-#if defined (Q_OS_MACOS)
+#if defined(Q_OS_MACOS)
   pluginsDir.cdUp();
 #endif
 

@@ -26,7 +26,7 @@ class PasswordFrame : public QFrame {
    */
   explicit PasswordFrame(QWidget* parent = nullptr);
 
-  ~PasswordFrame();
+  ~PasswordFrame() override;
 
   /*!
    * \brief password Returns the password string from the password line
@@ -43,6 +43,6 @@ class PasswordFrame : public QFrame {
   void editingFinished();
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_PASSWORDFRAME_HPP_

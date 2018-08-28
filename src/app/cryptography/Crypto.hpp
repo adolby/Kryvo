@@ -23,7 +23,7 @@ class Crypto : public QObject {
    */
   explicit Crypto(QObject* parent = nullptr);
 
-  ~Crypto();
+  ~Crypto() override;
 
  signals:
   /*!
@@ -123,6 +123,6 @@ class Crypto : public QObject {
   void stop(const QString& filePath);
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_CRYPTOGRAPHY_CRYPTO_HPP_

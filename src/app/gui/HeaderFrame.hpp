@@ -25,7 +25,7 @@ class HeaderFrame : public QFrame {
    */
   explicit HeaderFrame(QWidget* parent = nullptr);
 
-  ~HeaderFrame();
+  ~HeaderFrame() override;
 
   /*!
    * \brief setIconSize Sets the icon size for buttons
@@ -64,6 +64,6 @@ class HeaderFrame : public QFrame {
   void togglePauseIcon(const bool toggle);
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_HEADERFRAME_HPP_

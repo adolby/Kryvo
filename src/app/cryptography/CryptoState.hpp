@@ -96,6 +96,6 @@ class CryptoState {
   std::atomic<bool> busyStatus;
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_CRYPTOGRAPHY_CRYPTOSTATE_HPP_

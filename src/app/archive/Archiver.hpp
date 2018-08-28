@@ -31,6 +31,6 @@ class Archiver : public QObject {
   void extract(const QString& inFilePath, const QString& outFilePath);
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_ARCHIVE_ARCHIVER_HPP_

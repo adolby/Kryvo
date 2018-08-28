@@ -12,9 +12,9 @@ class Thread : public QThread {
 
  public:
   explicit Thread(QObject* parent = nullptr);
-  ~Thread();
+  ~Thread() final;
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_UTILITY_THREAD_HPP_

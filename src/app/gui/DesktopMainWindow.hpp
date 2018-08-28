@@ -31,37 +31,34 @@ class DesktopMainWindow : public MainWindow {
   * \brief closeEvent Executed when the main window is closed
   * \param event Close event
   */
-  virtual void closeEvent(QCloseEvent* event);
+  void closeEvent(QCloseEvent* event) override;
 
   /*!
   * \brief dragEnterEvent Executed when a drag enter event occurs on the main
   * window
   * \param event Drag enter event
   */
-  virtual void dragEnterEvent(QDragEnterEvent* event);
+  void dragEnterEvent(QDragEnterEvent* event) override;
 
   /*!
   * \brief dropEvent Executed when a drop event occurs on the main window
   * \param event Drop event
   */
-  virtual void dropEvent(QDropEvent* event);
+  void dropEvent(QDropEvent* event) override;
 
   /*!
    * \brief sizeHint Returns the preferred size of the main window
    * \return Preferred size
    */
-  virtual QSize sizeHint() const;
+  QSize sizeHint() const override;
 
   /*!
    * \brief minimumSizeHint Returns the minimum size of the main window
    * \return Maximum size
    */
-  virtual QSize minimumSizeHint() const;
-
- private:
-  Settings* settings;
+  QSize minimumSizeHint() const override;
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_DESKTOPMAINWINDOW_HPP_

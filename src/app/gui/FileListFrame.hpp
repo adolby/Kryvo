@@ -27,7 +27,7 @@ class FileListFrame : public QFrame {
    */
   explicit FileListFrame(QWidget* parent = nullptr);
 
-  ~FileListFrame();
+  ~FileListFrame() override;
 
   /*!
    * \brief item Returns a standard item at the input index in the file list
@@ -87,6 +87,6 @@ class FileListFrame : public QFrame {
   void resizeEvent(QResizeEvent* event);
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_FILELISTFRAME_HPP_

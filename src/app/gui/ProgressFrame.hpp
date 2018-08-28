@@ -25,7 +25,7 @@ class ProgressFrame : public QFrame {
    */
   explicit ProgressFrame(QWidget* parent = nullptr);
 
-  ~ProgressFrame();
+  ~ProgressFrame() override;
 
   /*!
    * \brief updateTask Updates the task label
@@ -35,6 +35,6 @@ class ProgressFrame : public QFrame {
   void updateTask(const QString& task, const int percentProgress);
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_PROGRESSFRAME_HPP_

@@ -6,7 +6,7 @@
 
 Kryvo::DesktopMainWindow::DesktopMainWindow(Settings* s,
                                             QWidget* parent)
-  : MainWindow(s, parent), settings(s) {
+  : MainWindow(s, parent) {
   messageFrame->appendText(tr("To begin, click the Add Files button or drag "
                               "and drop files. Next, enter a file path for the "
                               "output files. Enter a password. Finally, click "

@@ -26,7 +26,7 @@ class ElidedLabel : public QFrame {
                        QWidget* parent = nullptr,
                        Qt::WindowFlags f = Qt::WindowFlags());
 
-  ~ElidedLabel();
+  ~ElidedLabel() override;
 
   void updateLabel();
   QString text() const;
@@ -43,6 +43,6 @@ class ElidedLabel : public QFrame {
   void changeEvent(QEvent* event);
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_ELIDEDLABEL_HPP_

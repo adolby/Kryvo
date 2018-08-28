@@ -10,7 +10,7 @@ namespace Kryvo {
 
 class CryptoProviderInterface {
  public:
-  virtual ~CryptoProviderInterface() {}
+  virtual ~CryptoProviderInterface() = default;
 
  /*!
   * \brief encrypt Encrypt a list of files
@@ -80,7 +80,7 @@ class CryptoProviderInterface {
   virtual QObject* qObject() = 0;
 };
 
-}
+} // namespace Kryvo
 
 #define CryptoProviderInterface_iid "io.kryvo.CryptoProviderInterface"
 

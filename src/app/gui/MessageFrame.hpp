@@ -46,6 +46,6 @@ class MessageFrame : public QFrame {
   void pageRight();
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_MESSAGEFRAME_HPP_

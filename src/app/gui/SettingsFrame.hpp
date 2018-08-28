@@ -34,7 +34,7 @@ class SettingsFrame : public QFrame {
                          const bool containerMode,
                          QWidget* parent = nullptr);
 
-  ~SettingsFrame();
+  ~SettingsFrame() override;
 
  signals:
   /*!
@@ -105,6 +105,6 @@ class SettingsFrame : public QFrame {
   void changeContainerMode();
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_GUI_SETTINGSFRAME_HPP_

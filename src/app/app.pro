@@ -90,7 +90,7 @@ linux {
       message(Release)
       DESTDIR = ../../build/android/release/Kryvo
     }
-  }
+  } # End android
 
   linux-clang {
     message(clang)
@@ -110,7 +110,7 @@ linux {
       message(Release)
       DESTDIR = ../../build/linux/clang/x86_64/release/Kryvo
     }
-  }
+  } # End linux-clang
 
   linux-g++ {
     message(g++)
@@ -130,8 +130,8 @@ linux {
       message(Release)
       DESTDIR = ../../build/linux/gcc/x86_64/release/Kryvo
     }
-  }
-} # End Linux
+  } # End linux-g++
+} # End linux
 
 mac {
   QMAKE_MAC_SDK = macosx10.13
@@ -154,7 +154,7 @@ mac {
     }
 
     LIBS += -framework Foundation -framework CoreFoundation -framework UIKit
-  }
+  } # End ios
 
   macx {
     message(macOS)
@@ -165,7 +165,7 @@ mac {
     SOURCES += gui/DesktopMainWindow.cpp
     HEADERS += gui/DesktopMainWindow.hpp
 
-    QMAKE_TARGET_BUNDLE_PREFIX = io.kryvo
+    QMAKE_TARGET_BUNDLE_PREFIX = app.kryvo
     ICON = ../../resources/icons/kryvo.icns
 
     debug {
@@ -176,8 +176,8 @@ mac {
       message(Release)
       DESTDIR = ../../build/macOS/clang/x86_64/release/Kryvo
     }
-  }
-}
+  } # End macx
+} # End mac
 
 win32 {
   message(Windows)
@@ -198,7 +198,7 @@ win32 {
       message(Release)
       DESTDIR = ../../build/windows/mingw/x86/release/Kryvo/
     }
-  }
+  } # End win32-g++
 
   win32-msvc {
     message(MSVC)
@@ -219,7 +219,7 @@ win32 {
         DESTDIR = ../../build/windows/msvc/x86_64/release/Kryvo/
       }
     }
-  }
+  } # End win32-msvc
 
   RC_ICONS += ../../resources/icons/kryvo.ico
 } # End win32

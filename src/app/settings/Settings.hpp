@@ -156,6 +156,6 @@ class Settings {
   QString styleSheetPath() const;
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_SETTINGS_SETTINGS_HPP_

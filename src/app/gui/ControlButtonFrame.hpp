@@ -25,7 +25,7 @@ class ControlButtonFrame : public QFrame {
    */
   explicit ControlButtonFrame(QWidget* parent = nullptr);
 
-  ~ControlButtonFrame();
+  ~ControlButtonFrame() override;
 
   /*!
    * \brief setIconSize Sets the icon size for buttons.

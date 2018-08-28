@@ -1,5 +1,5 @@
-#ifndef KRYVO_CRYPTOGRAPHY_CONSTANTS_H_
-#define KRYVO_CRYPTOGRAPHY_CONSTANTS_H_
+#ifndef KRYVO_CONSTANTS_HPP_
+#define KRYVO_CONSTANTS_HPP_
 
 #include <QFileInfo>
 #include <QDir>
@@ -45,4 +45,4 @@ class Constants {
 
 }
 
-#endif // KRYVO_CRYPTOGRAPHY_CONSTANTS_H_
+#endif // KRYVO_CONSTANTS_HPP_

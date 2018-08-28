@@ -35,9 +35,9 @@ class Application : public QObject {
    * operation and then quits the thread. If the thread doesn't respond, it will
    * be terminated so the application can exit.
    */
-  virtual ~Application();
+  ~Application() override;
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_APPLICATION_HPP_
