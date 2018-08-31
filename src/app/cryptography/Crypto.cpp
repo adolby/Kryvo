@@ -49,9 +49,10 @@ void Kryvo::Crypto::loadProviders() {
 
 #if defined(Q_OS_MACOS)
   pluginsDir.cdUp();
+  pluginsDir.cd(QStringLiteral("PlugIns/cryptography/botan/"));
 #endif
 
-  pluginsDir.cd(QStringLiteral("plugins"));
+  pluginsDir.cd(QStringLiteral("plugins/cryptography/botan/"));
 
   const QFileInfoList& fileInfoList = pluginsDir.entryInfoList(QDir::Files);
 
