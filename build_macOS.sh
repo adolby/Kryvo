@@ -36,20 +36,35 @@ PATH=/usr/local/opt/qt/bin/:${PATH}
 # cp botan_all.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all.cpp
 # cp botan_all.h ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all.h
 
+cd ${project_dir}/src/
+
+# Clean build directory
+make distclean
+rm -rf ${project_dir}/build/macOS/
+
 # Build Kryvo
 echo "Building Kryvo..."
-cd ${project_dir}/src/
-qmake -config release
+qmake CONFIG+=release
 make
 
-# Copy dependencies for test app
+# Copy Qt dependencies for test app
+echo "Copy Qt dependencies to test app..."
 cd ${project_dir}/build/macOS/clang/x86_64/release/test/
 macdeployqt CryptoTests.app
 
+mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/test/CryptoTests.app/Contents/PlugIns/cryptography/botan/
+cd ${project_dir}/build/macOS/clang/x86_64/release/test/CryptoTests.app/Contents/PlugIns/cryptography/botan/
+
+# Copy plugins to test app
+echo "Copy plugins to test app..."
+cp ${project_dir}/build/macOS/clang/x86_64/release/plugins/botan/libbotan.dylib libbotan.dylib
+
 # Copy test data
-echo "Copying test data..."
+echo "Copying test data archive..."
 cd ${project_dir}/build/macOS/clang/x86_64/release/test/CryptoTests.app/Contents/MacOS/
 cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
+
+echo "Extracting test data..."
 7z x test-data.zip &> /dev/null
 
 # Run tests
@@ -59,14 +74,22 @@ chmod +x CryptoTests
 
 # Package Kryvo
 echo "Packaging..."
+# Copy plugins to app
+mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/Kryvo.app/Contents/PlugIns/cryptography/botan/
+cd ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/Kryvo.app/Contents/PlugIns/cryptography/botan/
+cp ${project_dir}/build/macOS/clang/x86_64/release/plugins/botan/libbotan.dylib libbotan.dylib
+
 cd ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/
 
 rm -rf moc
 rm -rf obj
 rm -rf qrc
 
-echo "Creating dmg archive..."
+echo "Copying Qt dependencies and creating dmg archive..."
 macdeployqt Kryvo.app -dmg
+
+TAG_NAME="${TAG_NAME:-dev}"
+
 mv Kryvo.dmg "Kryvo_${TAG_NAME}.dmg"
 # appdmg json-path Kryvo_${TRAVIS_TAG}.dmg
 
