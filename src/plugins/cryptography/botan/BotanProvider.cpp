@@ -316,7 +316,8 @@ bool Kryvo::BotanProvider::encryptFile(CryptoState* state,
 
   const std::string& algorithmNameStd = algorithmName.toStdString();
 
-  const QString& headerText = tr("-------- ENCRYPTED FILE --------");
+  const QString& headerText =
+    QStringLiteral("-------- ENCRYPTED FILE --------");
 
   const QString& compressedText = [&compress]() {
     QString text = tr("Not compressed");
@@ -410,7 +411,7 @@ bool Kryvo::BotanProvider::decryptFile(CryptoState* state,
   const QString& headerString = QString::fromStdString(headerStringStd);
   const QString& compressString = QString::fromStdString(compressStringStd);
 
-  if (headerString != tr("-------- ENCRYPTED FILE --------")) {
+  if (headerString != QStringLiteral("-------- ENCRYPTED FILE --------")) {
     emit errorMessage(Constants::messages[6].arg(inputFilePath));
     return false;
   }
