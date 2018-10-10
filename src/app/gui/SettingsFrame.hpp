@@ -28,10 +28,10 @@ class SettingsFrame : public QFrame {
    * \param parent QWidget parent
    */
   explicit SettingsFrame(const QString& cipher,
-                         const std::size_t keySize,
+                         std::size_t keySize,
                          const QString& mode,
-                         const bool compressionMode,
-                         const bool containerMode,
+                         bool compressionMode,
+                         bool containerMode,
                          QWidget* parent = nullptr);
 
   ~SettingsFrame() override;
@@ -55,7 +55,7 @@ class SettingsFrame : public QFrame {
    * combobox representing it
    * \param keySize Key size in bits
    */
-  void updateKeySize(const std::size_t keySize);
+  void updateKeySize(std::size_t keySize);
 
   /*!
    * \brief updateModeOfOperation Emitted when the user has changed the cipher
@@ -69,14 +69,14 @@ class SettingsFrame : public QFrame {
    * compression mode via the checkbox representing it
    * \param compress Boolean representing compression
    */
-  void updateCompressionMode(const bool compress);
+  void updateCompressionMode(bool compress);
 
   /*!
    * \brief updateContainerMode Emitted when the user has changed the container
    * mode via the checkbox representing it
    * \param container Boolean representing container
    */
-  void updateContainerMode(const bool container);
+  void updateContainerMode(bool container);
 
  public slots:
   /*!

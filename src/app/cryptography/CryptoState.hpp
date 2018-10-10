@@ -23,7 +23,7 @@ class CryptoState {
    * \brief abort Updates the abort status
    * \param abort Boolean representing the abort status
    */
-  void abort(const bool abort);
+  void abort(bool abort);
 
   /*!
    * \brief isAborted Returns the current abort status
@@ -35,7 +35,7 @@ class CryptoState {
    * \brief pause Updates the pause status
    * \param pause Boolean representing the pause status
    */
-  void pause(const bool pause);
+  void pause(bool pause);
 
   /*!
    * \brief isPaused Returns the current pause status
@@ -51,7 +51,7 @@ class CryptoState {
    * \param stop Boolean representing the stop status for the file represented
    * by filePath
    */
-  void stop(const QString& filePath, const bool stop);
+  void stop(const QString& filePath, bool stop);
 
   /*!
    * \brief isStopped Returns a stop status in the stop status container. A stop
@@ -68,7 +68,7 @@ class CryptoState {
    * \brief busy Updates the busy status
    * \param busy Boolean representing the busy status
    */
-  void busy(const bool busy);
+  void busy(bool busy);
 
   /*!
    * \brief isBusy Returns the busy status

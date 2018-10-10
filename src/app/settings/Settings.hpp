@@ -45,7 +45,7 @@ class Settings {
    * \brief maximized Sets the maximized state
    * \param maximized Boolean representing maximized state
    */
-  void maximized(const bool maximized);
+  void maximized(bool maximized);
 
   /*!
    * \brief maximized Returns the main window's maximized state
@@ -81,7 +81,7 @@ class Settings {
    * \brief keySize Sets the key size
    * \param keySize Key size in bits
    */
-  void keySize(const std::size_t keySize);
+  void keySize(std::size_t keySize);
 
   /*!
    * \brief keySize Returns the key size
@@ -105,7 +105,7 @@ class Settings {
    * \brief compressionMode Sets the compression mode
    * \param compress Boolean representing the compression mode
    */
-  void compressionMode(const bool compress);
+  void compressionMode(bool compress);
 
   /*!
    * \brief compressionMode Returns the compression mode
@@ -117,7 +117,7 @@ class Settings {
    * \brief containerMode Sets the container mode
    * \param container Boolean representing the container mode
    */
-  void containerMode(const bool container);
+  void containerMode(bool container);
 
   /*!
    * \brief containerMode Returns the container mode

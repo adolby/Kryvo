@@ -35,7 +35,7 @@ class FileListFrame : public QFrame {
    * \param row Integer representing the file list model row
    * \return Standard item taken from specified index in the file list model
    */
-  QStandardItem* item(const int row);
+  QStandardItem* item(int row);
 
   /*!
    * \brief rowCount Returns the number of rows in the file list model
@@ -55,8 +55,7 @@ class FileListFrame : public QFrame {
    * \param task Task operating on file
    * \param percent Integer representing progress as a percentage
    */
-  void updateProgress(const QString& path, const QString& task,
-                      const qint64 percent);
+  void updateProgress(const QString& path, const QString& task, qint64 percent);
 
  signals:
   /*!

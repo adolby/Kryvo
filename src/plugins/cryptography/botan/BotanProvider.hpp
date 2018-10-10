@@ -48,7 +48,7 @@ class BotanProviderPrivate;
 class BotanProvider : public QObject,
                       public CryptoProviderInterface {
   Q_OBJECT
-  Q_PLUGIN_METADATA(IID "io.kryvo.CryptoProviderInterface" FILE "botan.json")
+  Q_PLUGIN_METADATA(IID "app.kryvo.CryptoProviderInterface" FILE "botan.json")
   Q_INTERFACES(Kryvo::CryptoProviderInterface)
   DECLARE_PRIVATE(BotanProvider)
   std::unique_ptr<BotanProviderPrivate> const d_ptr;
@@ -180,6 +180,6 @@ class BotanProvider : public QObject,
   QObject* qObject() Q_DECL_OVERRIDE;
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_CRYPTOGRAPHY_BOTANPROVIDER_HPP_

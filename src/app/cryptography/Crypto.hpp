@@ -33,11 +33,11 @@ class Crypto : public QObject {
    * \param progressValue Integer representing the current progress as a percent
    */
   void fileProgress(const QString& filePath, const QString& task,
-                    const qint64 percentProgress);
+                    qint64 percentProgress);
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher
-   * operation should be displayed to the user
+   * operation is produced
    * \param message String containing the information message to display
    */
   void statusMessage(const QString& message);
@@ -77,10 +77,10 @@ class Crypto : public QObject {
                const QStringList& inputFilePaths,
                const QString& outputPath = QString(),
                const QString& cipher = QStringLiteral("AES"),
-               const std::size_t inputKeySize = 128,
+               std::size_t inputKeySize = 128,
                const QString& modeOfOperation = QStringLiteral("GCM"),
-               const bool compress = true,
-               const bool container = true);
+               bool compress = true,
+               bool container = true);
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
@@ -112,7 +112,7 @@ class Crypto : public QObject {
    * execution.
    * \param pause Boolean representing the pause state
    */
-  void pause(const bool pause);
+  void pause(bool pause);
 
   /*!
    * \brief stop Executed when a signal is received to set the stop status for

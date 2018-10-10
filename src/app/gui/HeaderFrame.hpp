@@ -49,7 +49,7 @@ class HeaderFrame : public QFrame {
    * \param pause Boolean representing the pause/resume state of the
    * pause/resume button
    */
-  void pause(const bool pause);
+  void pause(bool pause);
 
   /*!
    * \brief switchFrame Emitted when the settings button is clicked
@@ -61,7 +61,7 @@ class HeaderFrame : public QFrame {
    * \brief togglePauseIcon Toggles the pause button icon and text when the
    * paused button is checked
    */
-  void togglePauseIcon(const bool toggle);
+  void togglePauseIcon(bool toggle);
 };
 
 } // namespace Kryvo

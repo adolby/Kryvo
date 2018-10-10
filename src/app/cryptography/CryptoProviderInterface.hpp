@@ -30,10 +30,10 @@ class CryptoProviderInterface {
                        const QStringList& inputFilePaths,
                        const QString& outputPath = QString(),
                        const QString& cipher = QString("AES"),
-                       const std::size_t keySize = 128,
+                       std::size_t keySize = 128,
                        const QString& modeOfOperation = QString("GCM"),
-                       const bool compress = true,
-                       const bool container = true) = 0;
+                       bool compress = true,
+                       bool container = true) = 0;
 
   /*!
    * \brief decrypt Decrypt a list of files. The algorithm is determined from
@@ -56,7 +56,7 @@ class CryptoProviderInterface {
    * \param percent Integer representing the current progress as a percent
    */
   virtual void fileProgress(const QString& filePath, const QString& task,
-                            const qint64 percentProgress) = 0;
+                            qint64 percentProgress) = 0;
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher

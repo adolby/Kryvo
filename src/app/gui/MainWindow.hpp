@@ -58,10 +58,10 @@ class MainWindow : public QMainWindow {
                const QStringList& inputFileNames,
                const QString& outputPath,
                const QString& cipher,
-               const std::size_t keySize,
+               std::size_t keySize,
                const QString& modeOfOperation,
-               const bool compress,
-               const bool container);
+               bool compress,
+               bool container);
 
   /*!
    * \brief decrypt Emitted when the user provides all required data for
@@ -78,7 +78,7 @@ class MainWindow : public QMainWindow {
    * \brief pauseCipher Emitted when the user toggles the Pause push button
    * \param pause Boolean representing the pause status
    */
-  void pauseCipher(const bool pause);
+  void pauseCipher(bool pause);
 
   /*!
    * \brief abortCipher Emitted when the user clicks the Clear Files push
@@ -110,7 +110,7 @@ class MainWindow : public QMainWindow {
    * the algorithm name from the settings panel.
    * \param cryptDirection Boolean representing encrypt or decrypt
    */
-  void processFiles(const bool cryptDirection);
+  void processFiles(bool cryptDirection);
 
   /*!
    * \brief updateFileProgress Executed when the cipher operation progress is
@@ -120,7 +120,7 @@ class MainWindow : public QMainWindow {
    * \param progressValue Integer representing the current progress in percent
    */
   void updateFileProgress(const QString& path, const QString& task,
-                          const qint64 progressValue);
+                          qint64 progressValue);
 
   /*!
    * \brief updateStatusMessage Executed when a message should be displayed to
@@ -142,7 +142,7 @@ class MainWindow : public QMainWindow {
    * request new encryption.
    * \param busy Boolean representing the busy status
    */
-  void updateBusyStatus(const bool busy);
+  void updateBusyStatus(bool busy);
 
   /*!
    * \brief updateCipher Executed when the cipher is updated by the user in the
@@ -156,7 +156,7 @@ class MainWindow : public QMainWindow {
    * the settings frame
    * \param keySize Key size in bits
    */
-  void updateKeySize(const std::size_t keySize);
+  void updateKeySize(std::size_t keySize);
 
   /*!
    * \brief updateModeOfOperation Executed when the mode of operation is updated
@@ -170,14 +170,14 @@ class MainWindow : public QMainWindow {
    * by the user in the settings frame
    * \param compress Boolean representing the new compression mode
    */
-  void updateCompressionMode(const bool compress);
+  void updateCompressionMode(bool compress);
 
   /*!
    * \brief updateContainerMode Executed when the container mode is updated
    * by the user in the settings frame
    * \param compress Boolean representing the new container mode
    */
-  void updateContainerMode(const bool container);
+  void updateContainerMode(bool container);
 
  protected:
   /*!

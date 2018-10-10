@@ -32,7 +32,7 @@ class ProgressFrame : public QFrame {
    * \param task New task text
    * \param percentProgress New progress in percent
    */
-  void updateTask(const QString& task, const int percentProgress);
+  void updateTask(const QString& task, int percentProgress);
 };
 
 } // namespace Kryvo
