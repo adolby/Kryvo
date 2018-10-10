@@ -82,7 +82,7 @@ class CryptoProviderInterface {
 
 } // namespace Kryvo
 
-#define CryptoProviderInterface_iid "io.kryvo.CryptoProviderInterface"
+#define CryptoProviderInterface_iid "app.kryvo.CryptoProviderInterface"
 
 Q_DECLARE_INTERFACE(Kryvo::CryptoProviderInterface, CryptoProviderInterface_iid)
 
