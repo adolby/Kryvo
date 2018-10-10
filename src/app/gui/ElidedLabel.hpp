@@ -37,10 +37,10 @@ class ElidedLabel : public QFrame {
   void setElideMode(const Qt::TextElideMode mode);
 
  protected:
-  QSize sizeHint() const;
-  QSize minimumSizeHint() const;
-  void paintEvent(QPaintEvent* event);
-  void changeEvent(QEvent* event);
+  QSize sizeHint() const override;
+  QSize minimumSizeHint() const override;
+  void paintEvent(QPaintEvent* event) override;
+  void changeEvent(QEvent* event) override;
 };
 
 } // namespace Kryvo

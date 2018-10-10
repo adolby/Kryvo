@@ -83,7 +83,7 @@ class FileListFrame : public QFrame {
    * \brief resizeEvent Executed after this widget resizes
    * \param event Event data
    */
-  void resizeEvent(QResizeEvent* event);
+  void resizeEvent(QResizeEvent* event) override;
 };
 
 } // namespace Kryvo
