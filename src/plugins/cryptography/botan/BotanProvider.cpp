@@ -320,10 +320,10 @@ bool Kryvo::BotanProvider::encryptFile(CryptoState* state,
     QStringLiteral("-------- ENCRYPTED FILE --------");
 
   const QString& compressedText = [&compress]() {
-    QString text = tr("Not compressed");
+    QString text = QStringLiteral("Not compressed");
 
     if (compress) {
-      text = tr("Compressed");
+      text = QStringLiteral("Compressed");
     }
 
     return text;
@@ -488,7 +488,7 @@ bool Kryvo::BotanProvider::decryptFile(CryptoState* state,
   pipe.append_filter(Botan::get_cipher(algorithmNameStd, key, iv,
                                        Botan::DECRYPTION));
 
-  if (tr("Compressed") == compressString) {
+  if (QStringLiteral("Compressed") == compressString) {
     pipe.append_filter(
       new Botan::Decompression_Filter(std::string("zlib"),
                                       static_cast<std::size_t>(9)));
