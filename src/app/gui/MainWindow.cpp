@@ -246,12 +246,12 @@ void Kryvo::MainWindow::processFiles(const bool cryptDirection) {
   }
 }
 
-void Kryvo::MainWindow::updateFileProgress(const QString& path,
+void Kryvo::MainWindow::updateFileProgress(const QString& filePath,
                                            const QString& task,
                                            const qint64 progressValue) {
   Q_ASSERT(fileListFrame);
 
-  fileListFrame->updateProgress(path, task, progressValue);
+  fileListFrame->updateProgress(filePath, task, progressValue);
 }
 
 void Kryvo::MainWindow::updateStatusMessage(const QString& message) {
