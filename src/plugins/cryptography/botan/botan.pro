@@ -26,42 +26,18 @@ CONFIG(release, debug|release) {
 SOURCES += \
   BotanProvider.cpp \
   ../../../app/Constants.cpp \
-  ../../../app/cryptography/CryptoState.cpp \
-  zlib/adler32.c \
-  zlib/compress.c \
-  zlib/crc32.c \
-  zlib/deflate.c \
-  zlib/gzclose.c \
-  zlib/gzlib.c \
-  zlib/gzread.c \
-  zlib/gzwrite.c \
-  zlib/infback.c \
-  zlib/inffast.c \
-  zlib/inflate.c \
-  zlib/inftrees.c \
-  zlib/trees.c \
-  zlib/uncompr.c \
-  zlib/zutil.c
+  ../../../app/cryptography/CryptoState.cpp
 
 HEADERS += \
   BotanProvider.hpp \
   ../../../app/Constants.hpp \
-  ../../../app/cryptography/CryptoState.hpp \
-  zlib/crc32.h \
-  zlib/deflate.h \
-  zlib/gzguts.h \
-  zlib/inffast.h \
-  zlib/inffixed.h \
-  zlib/inflate.h \
-  zlib/inftrees.h \
-  zlib/trees.h \
-  zlib/zconf.h \
-  zlib/zlib.h \
-  zlib/zutil.h
+  ../../../app/cryptography/CryptoState.hpp
 
 INCLUDEPATH += \
   ../../../app/ \
-  zlib/
+  ../../../lib/zlib/
+
+LIBS += -lz
 
 # Platform-specific configuration
 linux {

@@ -42,6 +42,8 @@ HEADERS += \
 #  test_Archiver.hpp \
   FileOperations.h
 
+LIBS += -lz
+
 # Platform-specific configuration
 linux {
   message(Linux)

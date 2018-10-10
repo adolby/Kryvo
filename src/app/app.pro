@@ -84,11 +84,13 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/android/debug/Kryvo
+      LIBS += -L$$PWD/../../build/android/armv7/debug/lib/ -lz
+      DESTDIR = ../../build/android/armv7/debug/Kryvo
     }
     release {
       message(Release)
-      DESTDIR = ../../build/android/release/Kryvo
+      LIBS += -L$$PWD/../../build/android/armv7/release/lib/ -lz
+      DESTDIR = ../../build/android/armv7/release/Kryvo
     }
   } # End android
 
@@ -104,10 +106,12 @@ linux {
 
     debug {
       message(Debug)
+      LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/lib/ -lz
       DESTDIR = ../../build/linux/clang/x86_64/debug/Kryvo
     }
     release {
       message(Release)
+      LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/lib/ -lz
       DESTDIR = ../../build/linux/clang/x86_64/release/Kryvo
     }
   } # End linux-clang
@@ -124,10 +128,12 @@ linux {
 
     debug {
       message(Debug)
+      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/lib/ -lz
       DESTDIR = ../../build/linux/gcc/x86_64/debug/Kryvo
     }
     release {
       message(Release)
+      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/lib/ -lz
       DESTDIR = ../../build/linux/gcc/x86_64/release/Kryvo
     }
   } # End linux-g++
@@ -146,10 +152,12 @@ mac {
 
     debug {
       message(Debug)
+      LIBS += -L$$PWD/../../build/iOS/debug/lib/ -lz
       DESTDIR = ../../build/iOS/debug/Kryvo
     }
     release {
       message(Release)
+      LIBS += -L$$PWD/../../build/iOS/release/lib/ -lz
       DESTDIR = ../../build/iOS/release/Kryvo
     }
 
@@ -170,10 +178,12 @@ mac {
 
     debug {
       message(Debug)
+      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/lib/ -lz
       DESTDIR = ../../build/macOS/clang/x86_64/debug/Kryvo
     }
     release {
       message(Release)
+      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/lib/ -lz
       DESTDIR = ../../build/macOS/clang/x86_64/release/Kryvo
     }
   } # End macx
@@ -192,10 +202,12 @@ win32 {
 
     debug {
       message(Debug)
+      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/lib/ -lz
       DESTDIR = ../../build/windows/mingw/x86/debug/Kryvo/
     }
     release {
       message(Release)
+      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/lib/ -lz
       DESTDIR = ../../build/windows/mingw/x86/release/Kryvo/
     }
   } # End win32-g++
@@ -212,10 +224,12 @@ win32 {
 
       debug {
         message(Debug)
+        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/lib/ -lz
         DESTDIR = ../../build/windows/msvc/x86_64/debug/Kryvo/
       }
       release {
         message(Release)
+        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/lib/ -lz
         DESTDIR = ../../build/windows/msvc/x86_64/release/Kryvo/
       }
     }
