@@ -515,7 +515,7 @@ bool Kryvo::BotanProvider::decryptFile(CryptoState* state,
 }
 
 bool Kryvo::BotanProvider::executeCipher(CryptoState* state,
-                                         Botan::Cipher_Dir direction,
+                                         const Botan::Cipher_Dir direction,
                                          const QString& inputFilePath,
                                          Botan::Pipe& pipe,
                                          std::ifstream& in,
@@ -547,14 +547,14 @@ bool Kryvo::BotanProvider::executeCipher(CryptoState* state,
       fileIndex += readSize;
       const double nextFraction = static_cast<double>(fileIndex) /
                                   static_cast<double>(size);
-      const auto nextPercent = static_cast<int>(nextFraction * 100);
+      const int nextPercent = static_cast<int>(nextFraction * 100);
 
       if (nextPercent > percent && nextPercent < 100) {
         percent = nextPercent;
 
-        const QString task = Botan::ENCRYPTION == direction ?
-                             tr("Encrypting") :
-                             tr("Decrypting");
+        const QString& task = Botan::ENCRYPTION == direction ?
+                              tr("Encrypting") :
+                              tr("Decrypting");
 
         emit fileProgress(inputFilePath, task, percent);
       }
