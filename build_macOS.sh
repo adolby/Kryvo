@@ -36,7 +36,7 @@ PATH=/usr/local/opt/qt/bin/:${PATH}
 # cp botan_all.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all.cpp
 # cp botan_all.h ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all.h
 
-cd ${project_dir}/src/
+cd ${project_dir}
 
 # Clean build directory
 make distclean
