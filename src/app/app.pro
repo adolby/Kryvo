@@ -43,8 +43,7 @@ SOURCES += \
   gui/ElidedLabel.cpp \
   gui/flowlayout.cpp \
   gui/SlidingStackedWidget.cpp \
-  settings/Settings.cpp \
-  utility/Thread.cpp
+  settings/Settings.cpp
 
 HEADERS += \
   Constants.hpp \
@@ -139,10 +138,7 @@ linux {
   } # End linux-g++
 } # End linux
 
-mac {
-  QMAKE_MAC_SDK = macosx10.13
-  QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
-
+darwin {
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
 
@@ -164,9 +160,12 @@ mac {
     LIBS += -framework Foundation -framework CoreFoundation -framework UIKit
   } # End ios
 
-  macx {
+  macos {
     message(macOS)
     message(clang)
+
+#    QMAKE_MAC_SDK = macosx10.13
+#    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
 
     QT += widgets
 
@@ -186,8 +185,8 @@ mac {
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/lib/ -lz
       DESTDIR = ../../build/macOS/clang/x86_64/release/Kryvo
     }
-  } # End macx
-} # End mac
+  } # End macos
+} # End darwin
 
 win32 {
   message(Windows)

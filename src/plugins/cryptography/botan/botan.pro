@@ -66,7 +66,7 @@ linux {
       message(Release)
       DESTDIR = ../../../../build/android/release/plugins/botan
     }
-  } # End Android
+  } # End android
 
   linux-clang {
     message(clang)
@@ -121,12 +121,9 @@ linux {
       DESTDIR = ../../../../build/linux/gcc/x86_64/release/plugins/botan
     }
   } # End g++
-} # End Linux
+} # End linux
 
-mac {
-  QMAKE_MAC_SDK = macosx10.13
-  QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
-
+darwin {
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
 
@@ -148,9 +145,9 @@ mac {
       message(Release)
       DESTDIR = ../../../../build/iOS/release/plugins/botan
     }
-  } # End iOS
+  } # End ios
 
-  macx {
+  macos {
     message(macOS)
     message(clang)
 
@@ -177,8 +174,8 @@ mac {
       message(Release)
       DESTDIR = ../../../../build/macOS/clang/x86_64/release/plugins/botan
     }
-  } # End macOS
-} # End Mac
+  } # End macos
+} # End darwin
 
 win32 {
   message(Windows)
@@ -204,18 +201,18 @@ win32 {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/windows/mingw/x86_32/debug/plugins/botan/
+      DESTDIR = ../../../../build/windows/mingw/x86_32/debug/plugins/botan/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/windows/mingw/x86_32/release/plugins/botan/
+      DESTDIR = ../../../../build/windows/mingw/x86_32/release/plugins/botan/
     }
-  }
+  } # End win32-g++
 
   win32-msvc {
     message(MSVC)
 
-    LIBS += advapi32.lib user32.lib ws2_32.lib
+    LIBS += -ladvapi32 -luser32 -lws2_32
 
     QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
@@ -245,7 +242,7 @@ win32 {
         DESTDIR = ../../../../build/windows/msvc/x86_64/release/plugins/botan
       }
     }
-  }
+  } # End win32-msvc
 } # End win32
 
 OBJECTS_DIR = $${DESTDIR}/obj
