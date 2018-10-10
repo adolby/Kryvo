@@ -40,7 +40,7 @@ class ControlButtonFrame : public QFrame {
    * \param cryptDirection Boolean representing encrypt (true) or
    * decrypt (false)
    */
-  void processFiles(const bool cryptDirection);
+  void processFiles(bool cryptDirection);
 
  private slots:
   /*!

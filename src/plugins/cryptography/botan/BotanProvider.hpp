@@ -65,7 +65,7 @@ class BotanProvider : public QObject,
    * \param percent Integer representing the current progress as a percent
    */
   void fileProgress(const QString& filePath, const QString& task,
-                    const qint64 percentProgress) Q_DECL_OVERRIDE;
+                    qint64 percentProgress) Q_DECL_OVERRIDE;
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher
@@ -101,10 +101,10 @@ class BotanProvider : public QObject,
                const QStringList& inputFilePaths,
                const QString& outputPath = QString(),
                const QString& cipher = QString("AES"),
-               const std::size_t keySize = 128,
+               std::size_t keySize = 128,
                const QString& modeOfOperation = QString("GCM"),
-               const bool compress = true,
-               const bool container = true) Q_DECL_OVERRIDE;
+               bool compress = true,
+               bool container = true) Q_DECL_OVERRIDE;
 
   /*!
    * \brief decrypt Decrypt a list of files. The algorithm is determined from
@@ -139,8 +139,8 @@ class BotanProvider : public QObject,
                    const QString& inputFilePath,
                    const QString& outputFilePath,
                    const QString& algorithmName,
-                   const std::size_t keySize,
-                   const bool compress);
+                   std::size_t keySize,
+                   bool compress);
 
   /*!
    * \brief decryptFile Decrypts a single file with the input passphrase and
