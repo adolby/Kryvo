@@ -79,16 +79,13 @@ Kryvo::Application::Application(QObject* parent)
   connect(&d->cryptography, &Crypto::busyStatus,
           &d->gui, &MainWindow::updateBusyStatus);
 
-  // Update archive operation in progress status
-//  connect(&d->archiver, &Archiver::progress,
-//          &gui, &MainWindow::archiveFileProgress);
+  // Update file compression operation in progress status
+  connect(&d->archiver, &Archiver::fileProgress,
+          &d->gui, &MainWindow::updateFileProgress);
 
-  // Connect archiver's extracted signal to crypto provider's decrypt
-//  connect(&d->archiver, &Archiver::extractedFile,
-//          this, &Crypto::decrypt);
-
-//  connect(&d->cryptography, &Crypto::extract,
-//          &d->archiver, &Archiver::extract);
+  // Update file decompression operation in progress status
+  connect(&d->archiver, &Archiver::fileProgress,
+          &d->gui, &MainWindow::updateFileProgress);
 
   d->cryptographyThread.start();
   d->archiverThread.start();
