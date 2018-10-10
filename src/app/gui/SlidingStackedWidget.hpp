@@ -40,20 +40,20 @@ class SlidingStackedWidget : public QStackedWidget {
   void animationFinished();
 
  public slots:
-  void setSpeed(const int speed);
-  void setAnimation(const QEasingCurve::Type animationType);
-  void setVerticalMode(const bool vertical);
-  void setWrap(const bool wrap);
+  void setSpeed(int speed);
+  void setAnimation(QEasingCurve::Type animationType);
+  void setVerticalMode(bool vertical);
+  void setWrap(bool wrap);
 
   void slideInNext();
   void slideInPrev();
-  void slideInIndex(const int index, const Direction direction = Automatic);
+  void slideInIndex(int index, Direction direction = Automatic);
 
  private slots:
   void animationDone();
 
  private:
-  void slideInWidget(QWidget* widget, const Direction direction);
+  void slideInWidget(QWidget* widget, Direction direction);
   void stopAnimation();
 };
 
