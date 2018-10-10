@@ -17,20 +17,11 @@ class Kryvo::CryptoPrivate {
  public:
   CryptoPrivate();
 
-  /*!
-   * \brief errorMessage Returns error message
-   * \return String containing error message
-   */
-  QString errorMessage(int index) const;
-
   CryptoState state;
 
   QHash<QString, CryptoProviderInterface*> availableProviders;
 
   CryptoProviderInterface* provider{nullptr};
-
-  // The list of status messages that can be displayed to the user
-  const QStringList messages;
 };
 
 Kryvo::CryptoPrivate::CryptoPrivate() = default;
