@@ -18,6 +18,7 @@ echo "Installing Qt..."
 brew install qt
 
 # Add Qt binaries to path
+echo "Adding Qt binaries to path..."
 PATH=/usr/local/opt/qt/bin/:${PATH}
 
 # Get Botan
@@ -52,12 +53,11 @@ echo "Copy Qt dependencies to test app..."
 cd ${project_dir}/build/macOS/clang/x86_64/release/test/
 macdeployqt CryptoTests.app
 
+# Copy plugins for test app
+echo "Copy plugins for test app..."
 mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/test/CryptoTests.app/Contents/PlugIns/cryptography/botan/
 cd ${project_dir}/build/macOS/clang/x86_64/release/test/CryptoTests.app/Contents/PlugIns/cryptography/botan/
-
-# Copy plugins to test app
-echo "Copy plugins to test app..."
-cp ${project_dir}/build/macOS/clang/x86_64/release/plugins/botan/libbotan.dylib libbotan.dylib
+cp ${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib libbotan.dylib
 
 # Copy test data
 echo "Copying test data archive..."
@@ -74,10 +74,11 @@ chmod +x CryptoTests
 
 # Package Kryvo
 echo "Packaging..."
+
 # Copy plugins to app
 mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/Kryvo.app/Contents/PlugIns/cryptography/botan/
 cd ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/Kryvo.app/Contents/PlugIns/cryptography/botan/
-cp ${project_dir}/build/macOS/clang/x86_64/release/plugins/botan/libbotan.dylib libbotan.dylib
+cp ${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib libbotan.dylib
 
 cd ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/
 

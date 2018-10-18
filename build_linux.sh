@@ -10,18 +10,18 @@ qt_install_dir=/opt
 echo "Installing Qt..."
 cd ${qt_install_dir}
 echo "Downloading Qt files..."
-wget https://github.com/adolby/qt-more-builds/releases/download/5.7/qt-opensource-5.7.0-linux-x86_64.7z
+wget https://github.com/adolby/qt-more-builds/releases/download/5.11.2/qt-opensource-5.11.2-linux-x86_64.7z
 echo "Extracting Qt files..."
-7z x qt-opensource-5.7.0-linux-x86_64.7z &> /dev/null
+7z x qt-opensource-5.11.2-linux-x86_64.7z &> /dev/null
 
 # Install Qt Installer Framework
 echo "Installing Qt Installer Framework..."
-wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-2.0.3/qt-installer-framework-opensource-2.0.3-linux.7z
-7z x qt-installer-framework-opensource-2.0.3-linux.7z &> /dev/null
+wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.0.4/qt-installer-framework-opensource-3.0.4-linux.7z
+7z x qt-installer-framework-opensource-3.0.4-linux.7z &> /dev/null
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
-PATH=${qt_install_dir}/Qt/5.7/gcc_64/bin/:${qt_install_dir}/Qt/QtIFW2.0.3/bin/:${PATH}
+PATH=${qt_install_dir}/Qt/5.11.2/gcc_64/bin/:${qt_install_dir}/Qt/QtIFW3.0.4/bin/:${PATH}
 
 # Get Botan
 # echo "Installing Botan..."
@@ -39,60 +39,75 @@ PATH=${qt_install_dir}/Qt/5.7/gcc_64/bin/:${qt_install_dir}/Qt/QtIFW2.0.3/bin/:$
 # cp botan_all.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all.cpp
 # cp botan_all.h ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all.h
 
+cd ${project_dir}
+
+# Clean build directory
+make distclean
+rm -rf ${project_dir}/build/linux/
+
 # Build Kryvo
 echo "Building Kryvo..."
-cd ${project_dir}/src/
-qmake -v
-qmake -config release -spec linux-g++-64
+qmake CONFIG+=release -spec linux-g++-64
 make
 
+# Copy Qt dependencies for test app
+echo "Copy Qt dependencies to test app..."
+cd ${project_dir}/build/linux/gcc/x86_64/release/test/
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libQt5Core.so.5.11.2" "libQt5Core.so.5"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libQt5Test.so.5.11.2" "libQt5Test.so.5"
+
+# Copy plugins for test app
+echo "Copy plugins for test app..."
+mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/
+cd ${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/
+cp ${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so libbotan.so
+
 # Copy test data
-echo "Copying test data..."
+echo "Copying test data archive..."
 cd ${project_dir}/build/linux/gcc/x86_64/release/test/
 cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
-7z x test-data.zip &> /dev/null
 
-# Copy test dependencies
-echo "Copying test app dependencies..."
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Core.so.5.7.0" "libQt5Core.so.5"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Test.so.5.7.0" "libQt5Test.so.5"
+echo "Extracting test data..."
+7z x test-data.zip &> /dev/null
 
 # Run tests
 echo "Running tests..."
 chmod +x CryptoTests
-cd plugins
-ls
-cd ..
-ls
 ./CryptoTests
 
 # Package Kryvo
 echo "Packaging..."
+
+# Copy plugins for app
+mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/plugins/cryptography/botan/
+cd ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/plugins/cryptography/botan/
+cp ${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so libbotan.so
+
 cd ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/
 
 rm -rf moc
 rm -rf obj
 rm -rf qrc
 
-echo "Copying files for archival..."
+echo "Copying Qt dependencies..."
 
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
 
 mkdir platforms
-cp "${qt_install_dir}/Qt/5.7/gcc_64/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
 
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Core.so.5.7.0" "libQt5Core.so.5"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Gui.so.5.7.0" "libQt5Gui.so.5"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Svg.so.5.7.0" "libQt5Svg.so.5"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5DBus.so.5.7.0" "libQt5DBus.so.5"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5XcbQpa.so.5.7.0" "libQt5XcbQpa.so.5"
-cp "${qt_install_dir}/Qt/5.7/gcc_64/lib/libQt5Widgets.so.5.7.0" "libQt5Widgets.so.5"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libQt5Core.so.5.11.2" "libQt5Core.so.5"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libQt5Gui.so.5.11.2" "libQt5Gui.so.5"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libQt5Svg.so.5.11.2" "libQt5Svg.so.5"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libQt5DBus.so.5.11.2" "libQt5DBus.so.5"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libQt5XcbQpa.so.5.11.2" "libQt5XcbQpa.so.5"
+cp "${qt_install_dir}/Qt/5.11.2/gcc_64/lib/libQt5Widgets.so.5.11.2" "libQt5Widgets.so.5"
 
 chrpath -r \$ORIGIN/.. platforms/libqxcb.so
 chrpath -r \$ORIGIN/.. platforms/libqminimal.so
@@ -106,7 +121,9 @@ mkdir themes
 cp "${project_dir}/resources/stylesheets/kryvo.qss" "themes/kryvo.qss"
 
 echo "Copying files for installer..."
-cp -R * "${project_dir}/installer/linux/packages/io.kryvo.kryvo/data/"
+cp -R * "${project_dir}/installer/linux/packages/io.kryvo/data/"
+
+TAG_NAME="${TAG_NAME:-dev}"
 
 echo "Packaging portable archive..."
 cd ..
