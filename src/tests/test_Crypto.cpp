@@ -1,247 +1,223 @@
-#include "test_Crypto.hpp"
 #include "FileOperations.h"
 #include "cryptography/Crypto.hpp"
-#include <QTest>
+#include "catch.hpp"
 #include <QFile>
-#include <QThread>
+#include <QStringList>
 #include <QString>
 #include <memory>
 
-void TestCrypto::testComparatorSameFile() {
-  // Test data
-  const QString& fileName1 = QStringLiteral("file1.png");
-  const QString& fileName2 = QStringLiteral("file2.png");
+class EncryptionTestData {
+ public:
+  EncryptionTestData(const QString& passphrase, const QString& cipher,
+                     std::size_t keySize, const QString& modeOfOperation,
+                     bool compress, const QStringList& inputFileName,
+                     const QString& encryptedFileName,
+                     const QString& decryptedFileName);
 
-  const QFile file1(fileName1);
-  const QFile file2(fileName2);
-
-  if (!file1.exists() || !file2.exists()) {
-    const QString& msg = QStringLiteral("Test file %1 is missing. ");
-
-    QString message;
-
-    if (!file1.exists()) {
-      message += msg.arg(fileName1);
-    }
-
-    if (!file2.exists()) {
-      message += msg.arg(fileName2);
-    }
-
-    const auto* messages = reinterpret_cast<const char*>(message.constData());
-
-    QSKIP(messages);
-  }
-
-  const bool equivalentTest = FileOperations::filesEqual(fileName1, fileName2);
-
-  QVERIFY(equivalentTest);
-}
-
-void TestCrypto::testComparatorDifferentFile() {
-  // Test data
-  const QString& fileName1 = QStringLiteral("file1.png");
-  const QString& fileName2 = QStringLiteral("file3.png");
-
-  const QFile file1(fileName1);
-  const QFile file2(fileName2);
-
-  if (!file1.exists() || !file2.exists()) {
-    QString message;
-    const QString& msg = QStringLiteral("Test file %1 is missing. ");
-
-    if (!file1.exists()) {
-      message += msg.arg(fileName1);
-    }
-
-    if (!file2.exists()) {
-      message += msg.arg(fileName2);
-    }
-
-    const auto* messages = reinterpret_cast<const char*>(message.constData());
-
-    QSKIP(messages);
-  }
-
-  const bool equivalentTest = FileOperations::filesEqual(fileName1, fileName2);
-
-  QVERIFY(!equivalentTest);
-}
-
-void TestCrypto::testEncryptDecrypt_data() {
-  QTest::addColumn<QString>("passphrase");
-  QTest::addColumn<QString>("cipher");
-  QTest::addColumn<int>("keySize");
-  QTest::addColumn<QString>("modeOfOperation");
-  QTest::addColumn<bool>("compress");
-  QTest::addColumn<QString>("inputFileName");
-  QTest::addColumn<QString>("encryptedFileName");
-  QTest::addColumn<QString>("decryptedFileName");
-
-  QTest::newRow("Text file with compression")
-    << "password" << "AES" << 128 << "GCM" << true << "test.txt"
-    << "test.txt.enc" << "test (2).txt";
-
-  QTest::newRow("Executable file with compression")
-    << "password2" << "AES" << 128 << "GCM" << true << "test.exe"
-    << "test.exe.enc" << "test (2).exe";
-
-  QTest::newRow("Zip file with compression")
-    << "password3" << "AES" << 128 << "GCM" << true << "test.zip"
-    << "test.zip.enc" << "test (2).zip";
-
-  QTest::newRow("Text file without compression")
-    << "password" << "AES" << 128 << "GCM" << true << "test.txt"
-    << "test.txt.enc" << "test (2).txt";
-
-  QTest::newRow("Executable file without compression")
-    << "password2" << "AES" << 128 << "GCM" << true << "test.exe"
-    << "test.exe.enc" << "test (2).exe";
-
-  QTest::newRow("Zip file without compression")
-    << "password3" << "AES" << 128 << "GCM" << true << "test.zip"
-    << "test.zip.enc" << "test (2).zip";
-}
-
-void TestCrypto::testEncryptDecrypt() {
-  QFETCH(QString, passphrase);
-  QFETCH(QString, cipher);
-  QFETCH(int, keySize);
-  QFETCH(QString, modeOfOperation);
-  QFETCH(bool, compress);
-  QFETCH(QString, inputFileName);
-  QFETCH(QString, encryptedFileName);
-  QFETCH(QString, decryptedFileName);
-
-  const QFile inputFile(inputFileName);
-
-  if (!inputFile.exists()) {
-    const QString& msg = QStringLiteral("Test file %1 is missing.");
-    const QString& message = msg.arg(inputFileName);
-    const auto* messageString =
-        reinterpret_cast<const char*>(message.constData());
-
-    QSKIP(messageString);
-  }
-
+  QString passphrase;
+  QString cipher;
+  std::size_t keySize = 0;
+  QString modeOfOperation;
+  bool compress = false;
   QStringList inputFileNames;
-  inputFileNames.append(inputFileName);
-
   QStringList encryptedFileNames;
-  encryptedFileNames.append(encryptedFileName);
+  QStringList decryptedFileNames;
+};
 
-  Kryvo::Crypto cryptography;
-
-  QString outputPath;
-
-  // Test encryption and decryption
-  cryptography.encrypt(passphrase, inputFileNames, outputPath, cipher,
-                       static_cast<std::size_t>(keySize), modeOfOperation,
-                       compress, false);
-  cryptography.decrypt(passphrase, encryptedFileNames);
-
-  // Compare initial file to decrypted file
-  const bool equivalentTest =
-        FileOperations::filesEqual(inputFileName, decryptedFileName);
-
-  // Clean up test files
-  QFile encryptedFile(encryptedFileName);
-
-  if (encryptedFile.exists()) {
-    encryptedFile.remove();
-  }
-
-  QFile decryptedFile(decryptedFileName);
-
-  if (decryptedFile.exists()) {
-    decryptedFile.remove();
-  }
-
-  QVERIFY(equivalentTest);
+EncryptionTestData::EncryptionTestData(const QString& passphrase,
+                                       const QString& cipher,
+                                       std::size_t keySize,
+                                       const QString& modeOfOperation,
+                                       bool compress,
+                                       const QStringList& inputFileNames,
+                                       const QString& encryptedFileName,
+                                       const QString& decryptedFileName)
+  : passphrase(passphrase), cipher(cipher), keySize(keySize),
+    modeOfOperation(modeOfOperation), compress(compress),
+    inputFileNames(inputFileNames), encryptedFileNames(encryptedFileNames),
+    decryptedFileNames(decryptedFileNames) {
 }
 
-void TestCrypto::testEncryptDecryptAll() {
-  // Test data
-  const QString& passphrase = QStringLiteral("password");
-  const QString& cipher = QStringLiteral("AES");
-  const std::size_t keySize = 128;
-  const QString& modeOfOperation = QStringLiteral("GCM");
-  const bool compress = true;
+/*!
+ * testEncryptDecrypt Crypto's encryption operation randomly salts the key and
+ * IV. This means that encryption and decryption will need to be tested
+ * together. Tests the encryption/decryption process with single test files as
+ * input.
+ */
+SCENARIO("Test encryption and decryption on various files with single file as "
+         "input", "[testEncryptDecrypt]") {
+  std::vector<EncryptionTestData> testDataVector;
 
-  const QStringList& inputFileNames = {QStringLiteral("test.txt"),
-                                       QStringLiteral("test.exe"),
-                                       QStringLiteral("test.zip")};
+  // Text file with compression
+  testDataVector.emplace_back(QStringLiteral("password"),
+                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              true, QStringList{QStringLiteral("test.txt")},
+                              QStringList{QStringLiteral("test.txt.enc")},
+                              QStringList{QStringLiteral("test (2).txt")});
 
-  bool skip = false;
-  QString message;
+  // Executable file with compression
+  testDataVector.emplace_back(QStringLiteral("password2"),
+                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              true, QStringList{QStringLiteral("test.exe")},
+                              QStringList{QStringLiteral("test.exe.enc")},
+                              QStringList{QStringLiteral("test (2).exe")});
 
-  for (const QString& inputFileName : inputFileNames) {
-    const QFile inputFile(inputFileName);
+  // Zip file with compression
+  testDataVector.emplace_back(QStringLiteral("password3"),
+                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              true, QStringList{QStringLiteral("test.zip")},
+                              QStringList{QStringLiteral("test.zip.enc")},
+                              QStringList{QStringLiteral("test (2).zip")});
 
-    if (!inputFile.exists()) {
-      message +=
-        QStringLiteral("\nTest file %1 is missing.").arg(inputFileName);
-      skip = true;
+  // Text file without compression
+  testDataVector.emplace_back(QStringLiteral("password"),
+                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              false, QStringList{QStringLiteral("test.txt")},
+                              QStringList{QStringLiteral("test.txt.enc")},
+                              QStringList{QStringLiteral("test (2).txt")});
+
+  // Executable file without compression
+  testDataVector.emplace_back(QStringLiteral("password2"),
+                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              false, QStringList{QStringLiteral("test.exe")},
+                              QStringList{QStringLiteral("test.exe.enc")},
+                              QStringList{QStringLiteral("test (2).exe")});
+
+  // Zip file without compression
+  testDataVector.emplace_back(QStringLiteral("password3"),
+                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              false, QStringList{QStringLiteral("test.zip")},
+                              QStringList{QStringLiteral("test.zip.enc")},
+                              QStringList{QStringLiteral("test (2).zip")});
+
+  for (const EncryptionTestData& etd : testDataVector) {
+    GIVEN("A test file") {
+      const QFile inputFile(etd.inputFileNames.at(0));
+
+      REQUIRE(inputFile.exists());
+
+      WHEN("Encrypting and decrypting") {
+        Kryvo::Crypto cryptography;
+
+        QString outputPath;
+
+        // Test encryption and decryption
+        cryptography.encrypt(etd.passphrase, etd.inputFileNames, outputPath, etd.cipher,
+                             static_cast<std::size_t>(etd.keySize),
+                             etd.modeOfOperation, etd.compress, false);
+
+        cryptography.decrypt(etd.passphrase, etd.encryptedFileNames);
+
+        // Compare initial file to decrypted file
+        const bool equivalentTest =
+          FileOperations::filesEqual(etd.inputFileNames.at(0),
+                                     etd.decryptedFileNames.at(0));
+
+        // Clean up test files
+        QFile encryptedFile(etd.encryptedFileNames.at(0));
+
+        if (encryptedFile.exists()) {
+          encryptedFile.remove();
+        }
+
+        QFile decryptedFile(etd.decryptedFileNames.at(0));
+
+        if (decryptedFile.exists()) {
+          decryptedFile.remove();
+        }
+
+        THEN ("decrypted file matches plaintext file") {
+          REQUIRE(equivalentTest);
+        }
+      }
     }
   }
+}
 
-  if (skip) {
-    const auto* msg = reinterpret_cast<const char*>(message.constData());
+/*!
+ * testEncryptDecryptMultiple Crypto's encryption operation randomly salts the
+ * key and IV. This means that encryption and decryption will need to be tested
+ * together. Tests the encryption and decryption process with multiple test
+ * files as input.
+ */
+SCENARIO("Test encryption and decryption on various file types with multiple "
+         "files as input", "[testEncryptDecryptMultiple]") {
+  GIVEN("Test files") {
+    std::vector<EncryptionTestData> testDataVector;
 
-    QSKIP(msg);
-  }
+    QString message;
 
-  const QStringList& encryptedFileNames = {QStringLiteral("test.txt.enc"),
-                                           QStringLiteral("test.exe.enc"),
-                                           QStringLiteral("test.zip.enc")};
+    QStringList inputFileNames{QStringLiteral("test.txt"),
+                               QStringLiteral("test.exe"),
+                               QStringLiteral("test.zip")};
 
-  const QStringList& decryptedFileNames = {QStringLiteral("test (2).txt"),
-                                           QStringLiteral("test (2).exe"),
-                                           QStringLiteral("test (2).zip")};
+    for (const QString& inputFileName : inputFileNames) {
+      const QFile inputFile(inputFileName);
 
-  Kryvo::Crypto cryptography;
+      REQUIRE(!inputFile.exists());
+    }
 
-  QString outputPath;
+    testDataVector.emplace_back(QStringLiteral("password"),
+                                QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                                true, inputFileNames,
+                                QStringList{QStringLiteral("test.txt.enc"),
+                                            QStringLiteral("test.exe.enc"),
+                                            QStringLiteral("test.zip.enc")},
+                                QStringList{QStringLiteral("test (2).txt"),
+                                            QStringLiteral("test (2).exe"),
+                                            QStringLiteral("test (2).zip")});
 
-  // Test encryption and decryption
-  cryptography.encrypt(passphrase, inputFileNames, outputPath, cipher, keySize,
-                       modeOfOperation, compress, false);
-  cryptography.decrypt(passphrase, encryptedFileNames);
+    WHEN("Encrypting and decrypting files") {
+      const EncryptionTestData& etd = testDataVector.at(0);
 
-  bool equivalentTest = false;
+      Kryvo::Crypto cryptography;
 
-  const int inputFilesSize = inputFileNames.size();
-  for (int i = 0; i < inputFilesSize; ++i) {
-    const QString& inputFileName = inputFileNames[i];
-    const QString& decryptedFileName = decryptedFileNames[i];
+      QString outputPath;
 
-    // Compare initial file to decrypted file
-    equivalentTest =
+      // Test encryption and decryption
+      cryptography.encrypt(etd.passphrase, etd.inputFileNames, outputPath,
+                           etd.cipher, etd.keySize, etd.modeOfOperation,
+                           etd.compress, false);
+
+      cryptography.decrypt(etd.passphrase, etd.encryptedFileNames);
+
+      bool equivalentTest = false;
+
+      const int inputFilesSize = inputFileNames.size();
+      for (int i = 0; i < inputFilesSize; ++i) {
+        const QString& inputFileName = inputFileNames.at(i);
+        const QString& decryptedFileName = etd.decryptedFileNames.at(i);
+
+        // Compare initial file to decrypted file
+        equivalentTest =
           FileOperations::filesEqual(inputFileName, decryptedFileName);
 
-    if (!equivalentTest) { // If these two files weren't equivalent, test failed
-      break;
+        if (!equivalentTest) {
+          // If these two files aren't equivalent then the test failed
+          break;
+        }
+      }
+
+      // Clean up test files
+      for (int i = 0; i < inputFilesSize; ++i) {
+        const QString& encryptedFileName = etd.encryptedFileNames.at(i);
+        QFile encryptedFile(encryptedFileName);
+
+        if (encryptedFile.exists()) {
+          encryptedFile.remove();
+        }
+
+        const QString& decryptedFileName = etd.decryptedFileNames.at(i);
+        QFile decryptedFile(decryptedFileName);
+
+        if (decryptedFile.exists()) {
+          decryptedFile.remove();
+        }
+      }
+
+      THEN("all decrypted files match plaintext files") {
+        REQUIRE(equivalentTest);
+      }
     }
   }
-
-  // Clean up test files
-  for (int i = 0; i < inputFilesSize; ++i) {
-    const QString& encryptedFileName = encryptedFileNames[i];
-    QFile encryptedFile(encryptedFileName);
-
-    if (encryptedFile.exists()) {
-      encryptedFile.remove();
-    }
-
-    const QString& decryptedFileName = decryptedFileNames[i];
-    QFile decryptedFile(decryptedFileName);
-
-    if (decryptedFile.exists()) {
-      decryptedFile.remove();
-    }
-  }
-
-  QVERIFY(equivalentTest);
 }
-
-QTEST_GUILESS_MAIN(TestCrypto)

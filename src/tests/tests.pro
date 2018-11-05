@@ -1,11 +1,13 @@
-QT += core testlib
-QT -= gui
+include(../../defaults.pri)
 
 TARGET = CryptoTests
 
 TEMPLATE = app
 
-CONFIG += c++14 testcase
+CONFIG += c++14 console
+
+QT += core
+QT -= gui
 
 # Qt Creator Debug/Release Differentiation
 # Ensure one "debug_and_release" in CONFIG, for clarity.
@@ -24,22 +26,20 @@ CONFIG(release, debug|release) {
   CONFIG += release
 }
 
-INCLUDEPATH += $$PWD/../app/
-
 SOURCES += \
   ../app/Constants.cpp \
   ../app/cryptography/Crypto.cpp \
   ../app/cryptography/CryptoState.cpp \
   test_Crypto.cpp \
 #  test_Archiver.cpp \
-  FileOperations.cpp
+  FileOperations.cpp \
+  main.cpp \
+    test_FileOperations.cpp
 
 HEADERS += \
   ../app/Constants.hpp \
   ../app/cryptography/Crypto.hpp \
   ../app/cryptography/CryptoState.hpp \
-  test_Crypto.hpp \
-#  test_Archiver.hpp \
   FileOperations.h
 
 LIBS += -lz
@@ -54,10 +54,7 @@ linux {
   android {
     message(Android)
 
-    # You'll need to place your Boost path here.
-    INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
-
-    HEADERS += src/libs/botan/android/android_to_string.h
+#    HEADERS += src/libs/botan/android/android_to_string.h
 
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../resources/android
 
