@@ -2,8 +2,12 @@
 #include <QStandardPaths>
 
 const QString Kryvo::Constants::kDot = QStringLiteral(".");
-const QString Kryvo::Constants::kExtension = QStringLiteral("enc");
-const QString Kryvo::Constants::kArchiveExtension = QStringLiteral("7z");
+const QString Kryvo::Constants::kEncryptedFileExtension =
+  QStringLiteral("enc");
+const QString Kryvo::Constants::kCompressedFileExtension =
+  QStringLiteral("gz");
+const QString Kryvo::Constants::kArchiveFileExtension =
+  QStringLiteral("tar");
 
 const QStringList Kryvo::Constants::kDefaultPaths =
   QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
@@ -11,21 +15,23 @@ const QString Kryvo::Constants::kDocumentsPath = QString(kDefaultPaths.first() %
                                                  QStringLiteral("/"));
 
 const QStringList Kryvo::Constants::messages {
-  QObject::tr("File %1 encrypted."), // 0
-  QObject::tr("File %1 decrypted."), // 1
-  QObject::tr("Encryption stopped. File %1 not fully encrypted."), // 2
-  QObject::tr("Decryption stopped. File %1 not fully decrypted."), // 3
-  QObject::tr("Error: Can't read file %1."), // 4
+  QObject::tr("Unknown error: Please contact andrewdolby@gmail.com."), // 0
+  QObject::tr("File %1 encrypted."), // 1
+  QObject::tr("File %1 decrypted."), // 2
+  QObject::tr("Encryption stopped. File %1 not fully encrypted."), // 3
+  QObject::tr("Decryption stopped. File %1 not fully decrypted."), // 4
+  QObject::tr("Error: Can't read file %1."), // 5
   QObject::tr("Error: Can't decrypt file %1. Wrong password entered or the "
-              "file has been corrupted."), // 5
-  QObject::tr("Error: Can't decrypt file %1. Is it an encrypted file?"), // 6
+              "file has been corrupted."), // 6
+  QObject::tr("Error: Can't decrypt file %1. Is it an encrypted file?"), // 7
   QObject::tr("Error: Can't encrypt file %1. Check that this file exists and "
-              "that you have permission to access it and try again."), // 7
+              "that you have permission to access it and try again."), // 8
   QObject::tr("Error: Can't compress %1. Please contact "
-              "andrewdolby@gmail.com"), // 8
-  QObject::tr("Error: Can't extract %1. Please contact "
               "andrewdolby@gmail.com"), // 9
-  QObject::tr("Unknown error: Please contact andrewdolby@gmail.com.") // 10
+  QObject::tr("Error: Can't extract %1. Please contact "
+              "andrewdolby@gmail.com"), // 10
+  QObject::tr("Error: Can't compress file %1."), // 11
+  QObject::tr("Error: Can't decompress file %1.") // 12
 };
 
 /*!
@@ -39,19 +45,13 @@ const QStringList Kryvo::Constants::messages {
  */
 QString Kryvo::Constants::removeExtension(const QString& filePath,
                                           const QString& extension) {
-  const QFileInfo firstSuffixFileInfo{filePath};
+  const QFileInfo suffixFileInfo(filePath);
+
   QString newFilePath = filePath;
 
-  if (QStringLiteral("7z") == firstSuffixFileInfo.suffix()) {
-    newFilePath = firstSuffixFileInfo.absolutePath() % QStringLiteral("/") %
-                  firstSuffixFileInfo.completeBaseName();
-  }
-
-  const QFileInfo secondSuffixFileInfo(newFilePath);
-
-  if (secondSuffixFileInfo.suffix() == extension) {
-    newFilePath = secondSuffixFileInfo.absolutePath() % QStringLiteral("/") %
-                  secondSuffixFileInfo.completeBaseName();
+  if (suffixFileInfo.suffix() == extension) {
+    newFilePath = suffixFileInfo.absolutePath() % QStringLiteral("/") %
+                  suffixFileInfo.completeBaseName();
   }
 
   return newFilePath;
@@ -66,14 +66,14 @@ QString Kryvo::Constants::removeExtension(const QString& filePath,
  * path
  */
 QString Kryvo::Constants::uniqueFilePath(const QString& filePath) {
-  const QFileInfo inputFile{filePath};
+  const QFileInfo inputFile(filePath);
   QString uniqueFilePath = filePath;
 
   bool foundUniqueFilePath = false;
   auto i = 0;
 
   while (!foundUniqueFilePath && i < 100000) {
-    const QFileInfo uniqueFile{uniqueFilePath};
+    const QFileInfo uniqueFile(uniqueFilePath);
 
     if (uniqueFile.exists() && uniqueFile.isFile()) {
       // Write number of copies before file extension

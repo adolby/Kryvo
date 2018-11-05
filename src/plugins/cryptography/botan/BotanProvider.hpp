@@ -102,9 +102,7 @@ class BotanProvider : public QObject,
                const QString& outputPath = QString(),
                const QString& cipher = QString("AES"),
                std::size_t keySize = 128,
-               const QString& modeOfOperation = QString("GCM"),
-               bool compress = true,
-               bool container = true) Q_DECL_OVERRIDE;
+               const QString& modeOfOperation = QString("GCM")) Q_DECL_OVERRIDE;
 
   /*!
    * \brief decrypt Decrypt a list of files. The algorithm is determined from
@@ -139,8 +137,7 @@ class BotanProvider : public QObject,
                    const QString& inputFilePath,
                    const QString& outputFilePath,
                    const QString& algorithmName,
-                   std::size_t keySize,
-                   bool compress);
+                   std::size_t keySize);
 
   /*!
    * \brief decryptFile Decrypts a single file with the input passphrase and

@@ -13,8 +13,9 @@ namespace Kryvo {
 class Constants {
  public:
   static const QString kDot;
-  static const QString kExtension;
-  static const QString kArchiveExtension;
+  static const QString kEncryptedFileExtension;
+  static const QString kCompressedFileExtension;
+  static const QString kArchiveFileExtension;
   static const QStringList kDefaultPaths;
   static const QString kDocumentsPath;
 

@@ -47,14 +47,21 @@ class Archiver : public QObject {
                     const QString& filePath = QString());
 
  public slots:
-  void compressFile(const QString& inFilePath,
-                    const QString& outFilePath = QString{});
+  QByteArray compressChunk(const QByteArray& chunk);
 
-  void decompressFile(const QString& inFilePath, const QString& outFilePath);
+  void compressFiles(const QStringList& inFilePaths,
+                     const QString& outPath = QString());
 
-  void archive(const QStringList& inFilePaths);
+  void decompressFiles(const QStringList& inFilePaths,
+                       const QString& outPath = QString());
 
-  void extract(const QString& inFilePath);
+  bool compressFile(const QString& inFilePath, const QString& outFilePath);
+
+  bool decompressFile(const QString& inFilePath, const QString& outFilePath);
+
+  void archive(const QStringList& filePaths);
+
+  void extract(const QString& archiveFilePath);
 };
 
 } // namespace Kryvo

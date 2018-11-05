@@ -1,4 +1,5 @@
 #include "archive/Archiver.hpp"
+#include "Constants.hpp"
 #include <QDir>
 #include <QFile>
 #include <QStringBuilder>
@@ -10,16 +11,22 @@ class Kryvo::ArchiverPrivate {
   Q_DISABLE_COPY(ArchiverPrivate)
 
  public:
-  ArchiverPrivate();
+  ArchiverPrivate(Archiver* q);
 
-  int def(const QString& sourceFilePath, const QString& destFilePath,
-          int level = Z_DEFAULT_COMPRESSION);
-  int inf(const QString& sourceFilePath, const QString& destFilePath);
+  int gzipDeflateFile(const QString& sourceFilePath,
+                      const QString& destFilePath,
+                      int level = Z_DEFAULT_COMPRESSION);
+  int gzipInflateFile(const QString& sourceFilePath,
+                      const QString& destFilePath);
 
   static constexpr qint64 kChunk = 16384;
+
+  Archiver* q_ptr = nullptr;
 };
 
-Kryvo::ArchiverPrivate::ArchiverPrivate() = default;
+Kryvo::ArchiverPrivate::ArchiverPrivate(Archiver* q)
+  : q_ptr(q) {
+}
 
 /* Compress from file source to file dest until EOF on source.
    def() returns Z_OK on success, Z_MEM_ERROR if memory could not be
@@ -27,8 +34,9 @@ Kryvo::ArchiverPrivate::ArchiverPrivate() = default;
    level is supplied, Z_VERSION_ERROR if the version of zlib.h and the
    version of the library linked do not match, or Z_ERRNO if there is
    an error reading or writing the files. */
-int Kryvo::ArchiverPrivate::def(const QString& sourceFilePath,
-                                const QString& destFilePath, int level) {
+int Kryvo::ArchiverPrivate::gzipDeflateFile(const QString& sourceFilePath,
+                                            const QString& destFilePath,
+                                            int level) {
   int ret = Z_ERRNO;
   int flush = 0;
   unsigned have = 0;
@@ -36,13 +44,13 @@ int Kryvo::ArchiverPrivate::def(const QString& sourceFilePath,
   QFile source(sourceFilePath);
   const bool sourceFileOpen = source.open(QIODevice::ReadOnly);
   if (!sourceFileOpen) {
-      return ret;
+    return ret;
   }
 
   QFile dest(destFilePath);
   const bool destFileOpen = dest.open(QIODevice::WriteOnly);
   if (!destFileOpen) {
-      return ret;
+    return ret;
   }
 
   unsigned char in[kChunk];
@@ -54,7 +62,8 @@ int Kryvo::ArchiverPrivate::def(const QString& sourceFilePath,
   strm.zfree = Z_NULL;
   strm.opaque = Z_NULL;
 
-  ret = deflateInit(&strm, level);
+  ret = deflateInit2(&strm, level, Z_DEFLATED, MAX_WBITS + 16, 8,
+                     Z_DEFAULT_STRATEGY);
 
   if (ret != Z_OK) {
     return ret;
@@ -81,14 +90,20 @@ int Kryvo::ArchiverPrivate::def(const QString& sourceFilePath,
     do {
       strm.avail_out = kChunk;
       strm.next_out = out;
-      ret = deflate(&strm, flush);    /* no bad return value */
+      ret = deflate(&strm, flush); /* no bad return value */
 
-      Q_ASSERT(ret != Z_STREAM_ERROR);  /* state not clobbered */
+      Q_ASSERT(ret != Z_STREAM_ERROR); /* state not clobbered */
 
       have = kChunk - strm.avail_out;
 
       const qint64 bytesWritten = dest.write(reinterpret_cast<char*>(out),
                                              have);
+
+      const qint64 percentProgress =
+        static_cast<qint64>(bytesWritten / bytesAvailable);
+
+      q_ptr->fileProgress(sourceFilePath, QObject::tr("Compression"),
+                          percentProgress);
 
       if (bytesWritten != have || bytesWritten < 0) {
         deflateEnd(&strm);
@@ -96,15 +111,18 @@ int Kryvo::ArchiverPrivate::def(const QString& sourceFilePath,
       }
     } while (0 == strm.avail_out);
 
-    Q_ASSERT(0 == strm.avail_in);     /* all input will be used */
+    Q_ASSERT(0 == strm.avail_in); /* all input will be used */
 
     /* done when last data in file processed */
   } while (flush != Z_FINISH);
 
-  Q_ASSERT(ret == Z_STREAM_END);        /* stream will be complete */
+  Q_ASSERT(ret == Z_STREAM_END); /* stream will be complete */
 
   /* clean up and return */
   deflateEnd(&strm);
+
+  q_ptr->fileProgress(sourceFilePath, QObject::tr("Compression"),
+                      100);
 
   return Z_OK;
 }
@@ -115,8 +133,8 @@ int Kryvo::ArchiverPrivate::def(const QString& sourceFilePath,
    invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
    the version of the library linked do not match, or Z_ERRNO if there
    is an error reading or writing the files. */
-int Kryvo::ArchiverPrivate::inf(const QString& sourceFilePath,
-                                const QString& destFilePath) {
+int Kryvo::ArchiverPrivate::gzipInf(const QString& sourceFilePath,
+                                    const QString& destFilePath) {
   int ret = Z_ERRNO;
   unsigned have = 0;
 
@@ -125,13 +143,13 @@ int Kryvo::ArchiverPrivate::inf(const QString& sourceFilePath,
   QFile source(sourceFilePath);
   const bool sourceFileOpen = source.open(QIODevice::ReadOnly);
   if (!sourceFileOpen) {
-      return ret;
+    return ret;
   }
 
   QFile dest(destFilePath);
   const bool destFileOpen = dest.open(QIODevice::WriteOnly);
   if (!destFileOpen) {
-      return ret;
+    return ret;
   }
 
   unsigned char in[kChunk];
@@ -144,7 +162,7 @@ int Kryvo::ArchiverPrivate::inf(const QString& sourceFilePath,
   strm.avail_in = 0;
   strm.next_in = Z_NULL;
 
-  ret = inflateInit(&strm);
+  ret = inflateInit2(&strm, MAX_WBITS + 16);
 
   if (ret != Z_OK) {
     return ret;
@@ -173,11 +191,11 @@ int Kryvo::ArchiverPrivate::inf(const QString& sourceFilePath,
       strm.next_out = out;
       ret = inflate(&strm, Z_NO_FLUSH);
 
-      Q_ASSERT(ret != Z_STREAM_ERROR);  /* state not clobbered */
+      Q_ASSERT(ret != Z_STREAM_ERROR); /* state not clobbered */
 
       switch (ret) {
       case Z_NEED_DICT:
-        ret = Z_DATA_ERROR;     /* and fall through */
+        ret = Z_DATA_ERROR; /* and fall through */
       case Z_DATA_ERROR:
       case Z_MEM_ERROR:
         inflateEnd(&strm);
@@ -188,6 +206,12 @@ int Kryvo::ArchiverPrivate::inf(const QString& sourceFilePath,
 
       const qint64 bytesWritten = dest.write(reinterpret_cast<char*>(out),
                                              have);
+
+      const qint64 percentProgress =
+        static_cast<qint64>(bytesWritten / bytesAvailable);
+
+      q_ptr->fileProgress(sourceFilePath, QObject::tr("Decompression"),
+                          percentProgress);
 
       if (bytesWritten != have || bytesWritten < 0) {
         inflateEnd(&strm);
@@ -201,86 +225,129 @@ int Kryvo::ArchiverPrivate::inf(const QString& sourceFilePath,
   /* clean up and return */
   inflateEnd(&strm);
 
+  q_ptr->fileProgress(sourceFilePath, QObject::tr("Decompression"),
+                      100);
+
   return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 
-/* report a zlib or i/o error */
-//QString error(int ret) {
-//    switch (ret) {
-//    case Z_ERRNO:
-//        if (ferror(stdin))
-//            fputs("Error reading stdin\n", stderr);
-//        if (ferror(stdout))
-//            fputs("Error writing stdout\n", stderr);
-//        break;
-//    case Z_STREAM_ERROR:
-//        fputs("invalid compression level\n", stderr);
-//        break;
-//    case Z_DATA_ERROR:
-//        fputs("invalid or incomplete deflate data\n", stderr);
-//        break;
-//    case Z_MEM_ERROR:
-//        fputs("out of memory\n", stderr);
-//        break;
-//    case Z_VERSION_ERROR:
-//        fputs("zlib version mismatch!\n", stderr);
-//    }
-//}
-
 Kryvo::Archiver::Archiver(QObject* parent)
-  : QObject(parent) {
+  : QObject(parent), d_ptr(std::make_unique<ArchiverPrivate>(this)) {
 }
 
 Kryvo::Archiver::~Archiver() = default;
 
-void Kryvo::Archiver::compressFile(const QString& inFilePath,
-                                   const QString& outFilePath) {
+QByteArray compressChunk(const QByteArray& chunk) {
+    return
+}
+
+void Kryvo::Archiver::compressFiles(const QStringList& inputFilePaths,
+                                    const QString& outputPath) {
+  const QDir outputDir(outputPath);
+
+  // Create output path if it doesn't exist
+  if (!outputDir.exists()) {
+    outputDir.mkpath(outputPath);
+  }
+
+  for (const QString& inputFilePath : inputFilePaths) {
+    const QFileInfo inputFileInfo(inputFilePath);
+    const QString& inFilePath = inputFileInfo.absoluteFilePath();
+
+    const QString& outPath = outputDir.exists() ?
+                             outputDir.absolutePath() :
+                             inputFileInfo.absolutePath();
+
+    const QString& outFilePath =
+      QString(outPath % QStringLiteral("/") % inputFileInfo.fileName() %
+              Kryvo::Constants::kDot %
+              Kryvo::Constants::kCompressedFileExtension);
+
+    compressFile(inFilePath, outFilePath);
+  }
+}
+
+void Kryvo::Archiver::decompressFiles(const QStringList& inputFilePaths,
+                                      const QString& outputPath) {
+  const QDir outputDir(outputPath);
+
+  // Create output path if it doesn't exist
+  if (!outputDir.exists()) {
+    outputDir.mkpath(outputPath);
+  }
+
+  for (const QString& inputFilePath : inputFilePaths) {
+    const QFileInfo inputFileInfo(inputFilePath);
+    const QString& outPath = outputDir.exists() ?
+                             outputDir.absolutePath() :
+                             inputFileInfo.absolutePath();
+
+    const QString& inFilePath = inputFileInfo.absoluteFilePath();
+
+    const QString& outputFilePath = QString(outPath % QStringLiteral("/") %
+                                            inputFileInfo.fileName());
+
+    // Remove the gz extension if at the end of the file path
+    const QString& choppedOutputFilePath =
+      Constants::removeExtension(outputFilePath,
+                                 Constants::kEncryptedFileExtension);
+
+    // Create a unique file name for the file in this directory
+    const QString& uniqueOutputFilePath =
+      Constants::uniqueFilePath(choppedOutputFilePath);
+
+    decompressFile(inFilePath, uniqueOutputFilePath);
+  }
+}
+
+bool Kryvo::Archiver::compressFile(const QString& inputFilePath,
+                                   const QString& outputFilePath) {
   Q_D(Archiver);
 
-  if (inFilePath.isEmpty()) {
-    // TODO Unify app error strings
-    emit errorMessage(QStringLiteral("No input path provided for compression"));
-    return;
+  const QFileInfo inputFileInfo(inputFilePath);
+
+  if (!inputFileInfo.exists() || !inputFileInfo.isFile() ||
+      !inputFileInfo.isReadable()) {
+    emit errorMessage(Constants::messages[11], inputFilePath);
+    return false;
   }
 
-  const QString& filePath = outFilePath.isEmpty() ? inFilePath : outFilePath;
-
-  const int ret = d->inf(filePath, outFilePath);
+  const int ret = d->gzipDef(inputFilePath, outputFilePath,
+                             Z_DEFAULT_COMPRESSION);
 
   if (ret != Z_OK) {
-    // TODO Unify app error strings
-    emit errorMessage(QStringLiteral("File compression error"));
+    emit errorMessage(Constants::messages[11], inputFilePath);
+    return false;
   }
+
+  return true;
 }
 
-void Kryvo::Archiver::decompressFile(const QString& inFilePath,
-                                     const QString& outFilePath) {
+bool Kryvo::Archiver::decompressFile(const QString& inputFilePath,
+                                     const QString& outputFilePath) {
   Q_D(Archiver);
 
-  if (inFilePath.isEmpty()) {
-    // TODO Unify app error strings
-    emit errorMessage(QStringLiteral("No input path provided for "
-                                     "decompression"));
-    return;
+  const QFileInfo inputFileInfo(inputFilePath);
+
+  if (!inputFileInfo.exists() || !inputFileInfo.isFile() ||
+      !inputFileInfo.isReadable()) {
+    emit errorMessage(Constants::messages[12], inputFilePath);
+    return false;
   }
 
-  const QFileInfo inFileInfo(inFilePath);
-  const QString& inPath = inFileInfo.absolutePath();
-
-  const QString& filePath = outFilePath.isEmpty() ? inPath : outFilePath;
-
-  const int ret = d->def(filePath, outFilePath, Z_DEFAULT_COMPRESSION);
+  const int ret = d->gzipInf(inputFilePath, outputFilePath);
 
   if (ret != Z_OK) {
-    // TODO Unify app error strings
-    emit errorMessage(QStringLiteral("File decompression error"));
+    emit errorMessage(Constants::messages[12], inputFilePath);
   }
+
+  return true;
 }
 
-void Kryvo::Archiver::archive(const QStringList& inFilePaths) {
+void Kryvo::Archiver::archive(const QStringList& filePaths) {
 
 }
 
-void Kryvo::Archiver::extract(const QString& inFilePath) {
+void Kryvo::Archiver::extract(const QString& archiveFilePath) {
 
 }
