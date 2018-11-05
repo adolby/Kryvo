@@ -1,3 +1,5 @@
+include(../../../../defaults.pri)
+
 QT += core
 
 TARGET = botan
@@ -33,10 +35,6 @@ HEADERS += \
   ../../../app/Constants.hpp \
   ../../../app/cryptography/CryptoState.hpp
 
-INCLUDEPATH += \
-  ../../../app/ \
-  ../../../lib/zlib/
-
 LIBS += -lz
 
 # Platform-specific configuration
@@ -48,9 +46,6 @@ linux {
 
   android {
     message(Android)
-
-    # Place Boost path here
-    INCLUDEPATH += $$(HOME)/Boost/boost_1_58_0/
 
     SOURCES += botan/android/botan_all.cpp
 

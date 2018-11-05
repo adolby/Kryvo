@@ -1,8 +1,8 @@
 TEMPLATE = subdirs
 CONFIG += ordered
-SUBDIRS = thirdparty src
+SUBDIRS = 3rdparty src
 
-src.depends = thirdparty
+src.depends = 3rdparty
 
 # Qt Creator Debug/Release Differentiation
 # Ensure one "debug_and_release" in CONFIG, for clarity.
