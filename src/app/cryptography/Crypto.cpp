@@ -112,7 +112,7 @@ void Kryvo::Crypto::encrypt(const QString& passphrase,
                             const bool compress, const bool container) {
   Q_D(Crypto);
 
-  if ( !d->provider ) {
+  if (!d->provider) {
     return;
   }
 
@@ -143,7 +143,7 @@ void Kryvo::Crypto::decrypt(const QString& passphrase,
                             const QString& outputPath) {
   Q_D(Crypto);
 
-  if ( !d->provider ) {
+  if (!d->provider) {
     return;
   }
 
