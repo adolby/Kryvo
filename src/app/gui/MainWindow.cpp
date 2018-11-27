@@ -14,6 +14,8 @@
 #include <QStringBuilder>
 #include <QString>
 
+#include <QDebug>
+
 class Kryvo::MainWindowPrivate {
   Q_DISABLE_COPY(MainWindowPrivate)
 
@@ -228,8 +230,7 @@ void Kryvo::MainWindow::processFiles(const bool cryptDirection) {
                        settings->cipher(),
                        settings->keySize(),
                        settings->modeOfOperation(),
-                       settings->compressionMode(),
-                       settings->containerMode());
+                       settings->compressionMode());
         }
         else {
           emit decrypt(passphrase, fileList, outputPath);
@@ -250,6 +251,8 @@ void Kryvo::MainWindow::updateFileProgress(const QString& filePath,
                                            const QString& task,
                                            const qint64 progressValue) {
   Q_ASSERT(fileListFrame);
+
+//  qDebug() << Q_FUNC_INFO << filePath << task << progressValue;
 
   fileListFrame->updateProgress(filePath, task, progressValue);
 }

@@ -52,7 +52,6 @@ class MainWindow : public QMainWindow {
    * \param keySize Key size
    * \param modeOfOperation String representing mode of operation
    * \param compress Boolean representing compression mode
-   * \param container Boolean representing container mode
    */
   void encrypt(const QString& passphrase,
                const QStringList& inputFileNames,
@@ -60,8 +59,7 @@ class MainWindow : public QMainWindow {
                const QString& cipher,
                std::size_t keySize,
                const QString& modeOfOperation,
-               bool compress,
-               bool container);
+               bool compress);
 
   /*!
    * \brief decrypt Emitted when the user provides all required data for
