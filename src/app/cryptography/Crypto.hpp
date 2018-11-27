@@ -58,6 +58,17 @@ class Crypto : public QObject {
 
  public:
   void loadProviders();
+  bool encryptFiles(const QString& passphrase,
+                    const QStringList& inputFilePaths,
+                    const QString& outputPath = QString(),
+                    const QString& cipher = QStringLiteral("AES"),
+                    std::size_t inputKeySize = 128,
+                    const QString& modeOfOperation = QStringLiteral("GCM"),
+                    bool compress = true);
+
+  bool decryptFiles(const QString& passphrase,
+                    const QStringList& inputFilePaths,
+                    const QString& outputPath = QString());
 
  public slots:
   /*!
@@ -79,8 +90,7 @@ class Crypto : public QObject {
                const QString& cipher = QStringLiteral("AES"),
                std::size_t inputKeySize = 128,
                const QString& modeOfOperation = QStringLiteral("GCM"),
-               bool compress = true,
-               bool container = true);
+               bool compress = true);
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a

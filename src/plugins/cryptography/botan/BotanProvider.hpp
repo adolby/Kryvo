@@ -35,10 +35,10 @@
   #endif
 #endif
 
+#include <QSaveFile>
+#include <QFile>
 #include <QObject>
 #include <QString>
-#include <fstream>
-#include <string>
 #include <memory>
 
 namespace Kryvo {
@@ -55,7 +55,7 @@ class BotanProvider : public QObject,
 
  public:
   explicit BotanProvider(QObject* parent = nullptr);
-  ~BotanProvider() Q_DECL_OVERRIDE;
+  ~BotanProvider() override;
 
  signals:
   /*!
@@ -65,14 +65,14 @@ class BotanProvider : public QObject,
    * \param percent Integer representing the current progress as a percent
    */
   void fileProgress(const QString& filePath, const QString& task,
-                    qint64 percentProgress) Q_DECL_OVERRIDE;
+                    qint64 percentProgress) override;
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher
    * operation should be displayed to the user
    * \param message String containing the information message to display
    */
-  void statusMessage(const QString& message) Q_DECL_OVERRIDE;
+  void statusMessage(const QString& message) override;
 
   /*!
    * \brief errorMessage Emitted when an error occurs
@@ -80,7 +80,7 @@ class BotanProvider : public QObject,
    * \param filePath String containing the file path which encountered an error
    */
   void errorMessage(const QString& message,
-                    const QString& filePath = QString()) Q_DECL_OVERRIDE;
+                    const QString& filePath = QString()) override;
 
  public:
  /*!
@@ -94,7 +94,6 @@ class BotanProvider : public QObject,
   * \param inputKeySize Key size in bits
   * \param modeOfOperation String representing mode of operation
   * \param compress Boolean representing compression mode
-  * \param container Boolean representing container mode
   */
   bool encrypt(CryptoState* state,
                const QString& passphrase,
@@ -102,21 +101,22 @@ class BotanProvider : public QObject,
                const QString& outputPath = QString(),
                const QString& cipher = QString("AES"),
                std::size_t keySize = 128,
-               const QString& modeOfOperation = QString("GCM")) Q_DECL_OVERRIDE;
+               const QString& modeOfOperation = QString("GCM"),
+               bool compress = false) override;
 
   /*!
    * \brief decrypt Decrypt a list of files. The algorithm is determined from
    * the file header.
    * \param state Decryption process state
    * \param passphrase String representing the user-entered passphrase
-   * \param inputFilePaths List of strings containing the file paths of
-   * the files to decrypt
+   * \param inputFilePaths List of strings containing the file paths of the
+   * files to decrypt
    * \param outputPath String containing output file path
    */
   bool decrypt(CryptoState* state,
                const QString& passphrase,
                const QStringList& inputFilePaths,
-               const QString& outputPath) Q_DECL_OVERRIDE;
+               const QString& outputPath) override;
 
   /*!
    * \brief encryptFile Encrypts a single file with the input passphrase and
@@ -137,7 +137,7 @@ class BotanProvider : public QObject,
                    const QString& inputFilePath,
                    const QString& outputFilePath,
                    const QString& algorithmName,
-                   std::size_t keySize);
+                   std::size_t keySize, bool compress);
 
   /*!
    * \brief decryptFile Decrypts a single file with the input passphrase and
@@ -157,24 +157,21 @@ class BotanProvider : public QObject,
    * initialization vector, and cipher direction
    * \param state Cipher process state
    * \param direction Cipher direction
-   * \param inputFilePath String containing the file path of the file to
-   * encrypt/decrypt
+   * \param inFile Source file
+   * \param outFile Destination file
    * \param pipe Botan pipe for encryption or decryption
-   * \param in Input file stream
-   * \param out Output file stream
    */
   bool executeCipher(CryptoState* state,
                      Botan::Cipher_Dir direction,
-                     const QString& inputFilePath,
-                     Botan::Pipe& pipe,
-                     std::ifstream& in,
-                     std::ofstream& out);
+                     QFile* inFile,
+                     QSaveFile* outFile,
+                     Botan::Pipe* pipe);
 
   /*!
    * \brief qObject Provide a constant cost QObject conversion
    * \return
    */
-  QObject* qObject() Q_DECL_OVERRIDE;
+  QObject* qObject() override;
 };
 
 } // namespace Kryvo

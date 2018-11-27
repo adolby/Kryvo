@@ -20,10 +20,9 @@ class CryptoProviderInterface {
   * files to encrypt
   * \param outputPath String containing output file path
   * \param cipher String representing name of the cipher
-  * \param inputKeySize Key size in bits
+  * \param keySize Key size in bits
   * \param modeOfOperation String representing mode of operation
   * \param compress Boolean representing compression mode
-  * \param container Boolean representing container mode
   */
   virtual bool encrypt(CryptoState* state,
                        const QString& passphrase,
@@ -32,8 +31,7 @@ class CryptoProviderInterface {
                        const QString& cipher = QString("AES"),
                        std::size_t keySize = 128,
                        const QString& modeOfOperation = QString("GCM"),
-                       bool compress = true,
-                       bool container = true) = 0;
+                       bool compress = true) = 0;
 
   /*!
    * \brief decrypt Decrypt a list of files. The algorithm is determined from

@@ -9,8 +9,6 @@
 #include <QJsonArray>
 #include <QCoreApplication>
 
-#include <QDebug>
-
 class Kryvo::CryptoPrivate {
   Q_DISABLE_COPY(CryptoPrivate)
 
@@ -94,8 +92,7 @@ void Kryvo::Crypto::loadProviders() {
   if (!d->availableProviders.isEmpty()) {
     if (d->availableProviders.contains(QStringLiteral("BOTAN"))) {
       d->provider = d->availableProviders.value(QStringLiteral("BOTAN"));
-    }
-    else {
+    } else {
 //      for (CryptoProviderInterface* cp : d->availableProviders) {
 //        d->provider = cp;
 //        break;
@@ -104,20 +101,14 @@ void Kryvo::Crypto::loadProviders() {
   }
 }
 
-void Kryvo::Crypto::encrypt(const QString& passphrase,
-                            const QStringList& inputFilePaths,
-                            const QString& outputPath, const QString& cipher,
-                            const std::size_t inputKeySize,
-                            const QString& modeOfOperation,
-                            const bool compress, const bool container) {
+bool Kryvo::Crypto::encryptFiles( const QString& passphrase,
+                                  const QStringList& inputFilePaths,
+                                  const QString& outputPath,
+                                  const QString& cipher,
+                                  std::size_t inputKeySize,
+                                  const QString& modeOfOperation,
+                                  bool compress) {
   Q_D(Crypto);
-
-  if (!d->provider) {
-    return;
-  }
-
-  d->state.busy(true);
-  emit busyStatus(d->state.isBusy());
 
   const std::size_t keySize = [&inputKeySize]() {
     std::size_t size = 128;
@@ -129,8 +120,46 @@ void Kryvo::Crypto::encrypt(const QString& passphrase,
     return size;
   }();
 
-  d->provider->encrypt(&d->state, passphrase, inputFilePaths, outputPath,
-                       cipher, keySize, modeOfOperation, compress, container);
+  bool encryptSuccess = false;
+
+  if (d->provider) {
+    encryptSuccess = d->provider->encrypt(&d->state, passphrase, inputFilePaths,
+                                          outputPath, cipher, keySize,
+                                          modeOfOperation, compress);
+  }
+
+  return encryptSuccess;
+}
+
+bool Kryvo::Crypto::decryptFiles(const QString& passphrase,
+                                 const QStringList& inputFilePaths,
+                                 const QString& outputPath) {
+  Q_D(Crypto);
+
+  bool decryptSuccess = false;
+
+  if (d->provider) {
+    decryptSuccess = d->provider->decrypt(&d->state, passphrase, inputFilePaths,
+                                          outputPath);
+  }
+
+  return decryptSuccess;
+}
+
+void Kryvo::Crypto::encrypt(const QString& passphrase,
+                            const QStringList& inputFilePaths,
+                            const QString& outputPath, const QString& cipher,
+                            std::size_t inputKeySize,
+                            const QString& modeOfOperation,
+                            bool compress) {
+  Q_D(Crypto);
+
+  d->state.busy(true);
+  emit busyStatus(d->state.isBusy());
+
+  const bool encryptSuccess = encryptFiles(passphrase, inputFilePaths,
+                                           outputPath, cipher, inputKeySize,
+                                           modeOfOperation, compress);
 
   d->state.reset();
 
@@ -143,14 +172,11 @@ void Kryvo::Crypto::decrypt(const QString& passphrase,
                             const QString& outputPath) {
   Q_D(Crypto);
 
-  if (!d->provider) {
-    return;
-  }
-
   d->state.busy(true);
   emit busyStatus(d->state.isBusy());
 
-  d->provider->decrypt(&d->state, passphrase, inputFilePaths, outputPath);
+  const bool decryptSuccess = decryptFiles(passphrase, inputFilePaths,
+                                           outputPath);
 
   d->state.reset();
 
