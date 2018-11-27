@@ -1,68 +1,63 @@
-#include "FileOperations.h"
+#include "FileOperations.hpp"
 #include "catch.hpp"
+#include <QFileInfo>
 #include <QFile>
 #include <QString>
 
-
 SCENARIO("File compare returns success for identical files", "[compareSame]") {
   GIVEN("Two identical PNG files") {
-    // Test data
     const QString& fileName1 = QStringLiteral("file1.png");
     const QString& fileName2 = QStringLiteral("file2.png");
 
-    const QFile file1(fileName1);
-    const QFile file2(fileName2);
+    const QFileInfo fileInfo1(fileName1);
+    const QFileInfo fileInfo2(fileName2);
 
-    if (!file1.exists() || !file2.exists()) {
-      const QString& msg = QStringLiteral("Test file %1 is missing. ");
+    const QString& msgTemplate = QStringLiteral("Test file %1 is missing.");
 
-      QString message;
-
-      if (!file1.exists()) {
-        message += msg.arg(fileName1);
-      }
-
-      if (!file2.exists()) {
-        message += msg.arg(fileName2);
-      }
-
-      const char* messages = reinterpret_cast<const char*>(message.constData());
+    if (!fileInfo1.exists()) {
+      FAIL(msgTemplate.arg(fileName1).toStdString());
     }
 
-    const bool equivalentTest = FileOperations::filesEqual(fileName1, fileName2);
+    if (!fileInfo2.exists()) {
+      FAIL(msgTemplate.arg(fileName2).toStdString());
+    }
 
-    REQUIRE(equivalentTest);
+    WHEN("Files are equivalent") {
+      const bool equivalentTest = FileOperations::filesEqual(fileName1,
+                                                             fileName2);
+      THEN("Returns true") {
+        REQUIRE(equivalentTest);
+      }
+    }
   }
 }
 
 SCENARIO("File compare returns success for different files",
          "[compareDifferent]") {
   GIVEN("Two different PNG files") {
-    // Test data
     const QString& fileName1 = QStringLiteral("file1.png");
     const QString& fileName2 = QStringLiteral("file3.png");
 
-    const QFile file1(fileName1);
-    const QFile file2(fileName2);
+    const QFileInfo fileInfo1(fileName1);
+    const QFileInfo fileInfo2(fileName2);
 
-    if (!file1.exists() || !file2.exists()) {
-      const QString& msg = QStringLiteral("Test file %1 is missing. ");
+    const QString& msgTemplate = QStringLiteral("Test file %1 is missing. ");
 
-      QString message;
-
-      if (!file1.exists()) {
-        message += msg.arg(fileName1);
-      }
-
-      if (!file2.exists()) {
-        message += msg.arg(fileName2);
-      }
-
-      const char* messages = reinterpret_cast<const char*>(message.constData());
+    if (!fileInfo1.exists()) {
+      FAIL(msgTemplate.arg(fileName1).toStdString());
     }
 
-    const bool equivalentTest = FileOperations::filesEqual(fileName1, fileName2);
+    if (!fileInfo2.exists()) {
+      FAIL(msgTemplate.arg(fileName2).toStdString());
+    }
 
-    REQUIRE(!equivalentTest);
+    WHEN("Files aren't equivalent") {
+      const bool equivalentTest = FileOperations::filesEqual(fileName1,
+                                                             fileName2);
+
+      THEN("Returns false") {
+        REQUIRE_FALSE(equivalentTest);
+      }
+    }
   }
 }

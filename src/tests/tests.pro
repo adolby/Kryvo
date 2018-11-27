@@ -1,12 +1,13 @@
 include(../../defaults.pri)
 
-TARGET = CryptoTests
+TARGET = tests
 
 TEMPLATE = app
 
-CONFIG += c++14 console
+CONFIG += qt console warn_on depend_includepath testcase
+CONFIG += c++14
 
-QT += core
+QT += testlib
 QT -= gui
 
 # Qt Creator Debug/Release Differentiation
@@ -30,17 +31,19 @@ SOURCES += \
   ../app/Constants.cpp \
   ../app/cryptography/Crypto.cpp \
   ../app/cryptography/CryptoState.cpp \
+  ../app/archive/Archiver.cpp \
   test_Crypto.cpp \
-#  test_Archiver.cpp \
+  test_Archiver.cpp \
   FileOperations.cpp \
-  main.cpp \
-    test_FileOperations.cpp
+  test_FileOperations.cpp \
+  main.cpp
 
 HEADERS += \
   ../app/Constants.hpp \
   ../app/cryptography/Crypto.hpp \
   ../app/cryptography/CryptoState.hpp \
-  FileOperations.h
+  ../app/archive/Archiver.hpp \
+    FileOperations.hpp
 
 LIBS += -lz
 

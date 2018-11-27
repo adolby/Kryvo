@@ -1,48 +1,57 @@
-#include "FileOperations.h"
+#include "FileOperations.hpp"
 #include <QFile>
-#include <QtGlobal>
+#include <QByteArray>
 
 bool FileOperations::filesEqual(const QString& filePath1,
                                 const QString& filePath2) {
-  bool equivalent = false;
-
   QFile file1(filePath1);
   QFile file2(filePath2);
 
-  if (file1.exists() && file2.exists()) {
-    file1.open(QFile::ReadOnly);
-    file2.open(QFile::ReadOnly);
+  if (!file1.exists() || !file2.exists()) {
+    return false;
+  }
 
-    while (!file1.atEnd()) {
-      QByteArray file1Buffer;
+  if (file1.size() != file2.size()) {
+    return false;
+  }
 
-      const qint64 file1BytesRead = file1.read(file1Buffer.data(), 16384);
+  const bool file1Open = file1.open(QFile::ReadOnly);
 
-      if (-1 == file1BytesRead) {
-        break;
-      }
+  if (!file1Open) {
+    return false;
+  }
 
-      QByteArray file2Buffer;
+  const bool file2Open = file2.open(QFile::ReadOnly);
 
-      const qint64 file2BytesRead = file2.read(file2Buffer.data(), 16384);
+  if (!file2Open) {
+    return false;
+  }
 
-      if (-1 == file1BytesRead) {
-        break;
-      }
+  while (!file1.atEnd()) {
+    QByteArray file1Buffer;
+    file1Buffer.resize(4096);
+    file1Buffer.fill(0);
 
-      if (file1Buffer != file2Buffer) {
-        break;
-      }
+    const qint64 file1BytesRead = file1.read(file1Buffer.data(), 4096);
 
-      if (file1.atEnd() && !file2.atEnd()) {
-        break;
-      }
+    if (-1 == file1BytesRead) {
+      return false;
+    }
 
-      if (file1.atEnd() && file2.atEnd()) {
-        equivalent = true;
-      }
+    QByteArray file2Buffer;
+    file2Buffer.resize(4096);
+    file2Buffer.fill(0);
+
+    const qint64 file2BytesRead = file2.read(file2Buffer.data(), 4096);
+
+    if (-1 == file2BytesRead) {
+      return false;
+    }
+
+    if (file1Buffer != file2Buffer) {
+      return false;
     }
   }
 
-  return equivalent;
+  return true;
 }

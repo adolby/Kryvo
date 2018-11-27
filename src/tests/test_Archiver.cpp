@@ -1,69 +1,65 @@
-#include "test_Archiver.hpp"
-#include "FileOperations.h"
+#include "FileOperations.hpp"
 #include "archive/Archiver.hpp"
-#include <QTest>
+#include "catch.hpp"
+#include <QFileInfo>
 #include <QFile>
-#include <QThread>
+#include <QStringList>
 #include <QString>
 
-void TestArchiver::testComparatorSameFile() {
-  // Test data
-  const QString fileName1 = QStringLiteral("file1.png");
-  const QString fileName2 = QStringLiteral("file2.png");
 
-  QFile file1{fileName1};
-  QFile file2{fileName2};
-  if (!file1.exists() || !file2.exists()) {
-    const QString msg = QStringLiteral("Test file %1 is missing. ");
+/*!
+ * testCompressDecompress Tests the compression/decompression process with a
+ * text file as input.
+ */
+SCENARIO("Test compression and decompression on a text file",
+         "[testCompressDecompressText]") {
+  GIVEN("A text file") {
+    Kryvo::Archiver archiver;
 
-    QString message;
+    const QStringList& inputFileNames = {QStringLiteral("test1.txt")};
+    const QStringList& compressedFileNames = {QStringLiteral("test1.txt.gz")};
+    const QStringList& decompressedFileNames =
+      {QStringLiteral("test1 (2).txt")};
 
-    if (!file1.exists()) {
-      message += msg.arg(fileName1);
+    const QFileInfo inputFileInfo(inputFileNames.at(0));
+
+    const QString& msgTemplate = QStringLiteral("Test file %1 is missing.");
+
+    if (!inputFileInfo.exists()) {
+      FAIL(msgTemplate.arg(inputFileNames.at(0)).toStdString());
     }
 
-    if (!file2.exists()) {
-      message += msg.arg(fileName2);
+    WHEN("Compressing and decompressing") {
+      const bool compressSuccess = archiver.compressFiles(inputFileNames);
+
+      REQUIRE(compressSuccess);
+
+      const bool decompressSuccess =
+        archiver.decompressFiles(compressedFileNames);
+
+      REQUIRE(decompressSuccess);
+
+      // Compare initial file with decompressed file
+      const bool equivalentTest =
+        FileOperations::filesEqual(inputFileNames.at(0),
+                                   decompressedFileNames.at(0));
+
+      // Clean up test files
+      QFile compressedFile(compressedFileNames.at(0));
+
+      if (compressedFile.exists()) {
+        compressedFile.remove();
+      }
+
+      QFile decompressedFile(decompressedFileNames.at(0));
+
+      if (decompressedFile.exists()) {
+        decompressedFile.remove();
+      }
+
+      THEN("Decompressed file matches original file") {
+        REQUIRE(equivalentTest);
+      }
     }
-
-    const char* messages = reinterpret_cast<const char*>(message.constData());
-
-    QSKIP(messages);
   }
-
-  const bool equivalentTest = FileOperations::filesEqual(fileName1, fileName2);
-
-  QVERIFY(equivalentTest);
 }
-
-void TestArchiver::testComparatorDifferentFile() {
-  // Test data
-  const QString fileName1 = QStringLiteral("file1.png");
-  const QString fileName2 = QStringLiteral("file3.png");
-
-  QFile file1{fileName1};
-  QFile file2{fileName2};
-  if (!file1.exists() || !file2.exists()) {
-    const QString msg = QStringLiteral("Test file %1 is missing. ");
-
-    QString message;
-
-    if (!file1.exists()) {
-      message += msg.arg(fileName1);
-    }
-
-    if (!file2.exists()) {
-      message += msg.arg(fileName2);
-    }
-
-    const char* messages = reinterpret_cast<const char*>(message.constData());
-
-    QSKIP(messages);
-  }
-
-  const bool equivalentTest = FileOperations::filesEqual(fileName1, fileName2);
-
-  QVERIFY(!equivalentTest);
-}
-
-QTEST_GUILESS_MAIN(TestArchiver)
