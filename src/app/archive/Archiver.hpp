@@ -21,6 +21,10 @@ class Archiver : public QObject {
   ~Archiver() override;
 
  signals:
+  void fileCompressed(const QString& filePath);
+
+  void fileDecompressed(const QString& filePath);
+
   /*!
    * \brief fileProgress Emitted when the file operation progress changes
    * \param filePath String containing file path
@@ -46,18 +50,25 @@ class Archiver : public QObject {
   void errorMessage(const QString& message,
                     const QString& filePath = QString());
 
- public slots:
+ public:
   QByteArray compressChunk(const QByteArray& chunk);
 
-  void compressFiles(const QStringList& inFilePaths,
+  bool compressFiles(const QStringList& inFilePaths,
                      const QString& outPath = QString());
 
-  void decompressFiles(const QStringList& inFilePaths,
+  bool decompressFiles(const QStringList& inFilePaths,
                        const QString& outPath = QString());
 
   bool compressFile(const QString& inFilePath, const QString& outFilePath);
 
   bool decompressFile(const QString& inFilePath, const QString& outFilePath);
+
+ public slots:
+  void compress(const QStringList& inFilePaths,
+                const QString& outPath = QString());
+
+  void decompress(const QStringList& inFilePaths,
+                  const QString& outPath = QString());
 
   void archive(const QStringList& filePaths);
 
