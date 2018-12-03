@@ -46,8 +46,8 @@ Kryvo::DesktopMainWindow::DesktopMainWindow(Settings* s,
   this->setAcceptDrops(true);
 
   // Load stylesheet
-  const QString styleSheet = loadStyleSheet(settings->styleSheetPath(),
-                                            QStringLiteral("kryvo.qss"));
+  const QString& styleSheet = loadStyleSheet(settings->styleSheetPath(),
+                                             QStringLiteral("kryvo.qss"));
 
   if (!styleSheet.isEmpty()) {
     this->setStyleSheet(styleSheet);
