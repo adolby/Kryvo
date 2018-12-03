@@ -1,7 +1,7 @@
 #ifndef KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDERINTERFACE_HPP_
 #define KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDERINTERFACE_HPP_
 
-#include "cryptography/CryptoState.hpp"
+#include "DispatcherState.hpp"
 #include <QObject>
 #include <QString>
 #include <QtPlugin>
@@ -13,20 +13,19 @@ class CryptoProviderInterface {
   virtual ~CryptoProviderInterface() = default;
 
  /*!
-  * \brief encrypt Encrypt a list of files
+  * \brief encrypt Encrypt a file
   * \param state Encryption process state
   * \param passphrase String representing the user-entered passphrase
-  * \param inputFilePaths List of strings containing the file paths of the
-  * files to encrypt
+  * \param inFilePaths String containing the file path of the file to encrypt
   * \param outputPath String containing output file path
   * \param cipher String representing name of the cipher
   * \param keySize Key size in bits
   * \param modeOfOperation String representing mode of operation
   * \param compress Boolean representing compression mode
   */
-  virtual bool encrypt(CryptoState* state,
+  virtual bool encrypt(DispatcherState* state,
                        const QString& passphrase,
-                       const QStringList& inputFilePaths,
+                       const QString& inFilePath,
                        const QString& outputPath = QString(),
                        const QString& cipher = QString("AES"),
                        std::size_t keySize = 128,
@@ -34,18 +33,17 @@ class CryptoProviderInterface {
                        bool compress = true) = 0;
 
   /*!
-   * \brief decrypt Decrypt a list of files. The algorithm is determined from
+   * \brief decrypt Decrypt a file. The algorithm is determined from
    * the file header.
    * \param state Decryption process state
    * \param passphrase String representing the user-entered passphrase
-   * \param inputFilePaths List of strings containing the file paths of
-   * the files to decrypt
-   * \param outputPath String containing output file path
+   * \param inFilePath String containing the file path of the file to decrypt
+   * \param outFilePath String containing output file path
    */
-  virtual bool decrypt(CryptoState* state,
+  virtual bool decrypt(DispatcherState* state,
                        const QString& passphrase,
-                       const QStringList& inputFilePaths,
-                       const QString& outputPath) = 0;
+                       const QString& inFilePath,
+                       const QString& outFilePath) = 0;
 
   /*!
    * \brief fileProgress Emitted when the cipher operation file progress changes

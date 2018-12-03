@@ -1,6 +1,7 @@
 #ifndef KRYVO_ARCHIVE_ARCHIVER_HPP_
 #define KRYVO_ARCHIVE_ARCHIVER_HPP_
 
+#include "DispatcherState.hpp"
 #include "utility/pimpl.h"
 #include <QObject>
 #include <QStringList>
@@ -16,7 +17,7 @@ class Archiver : public QObject {
   std::unique_ptr<ArchiverPrivate> const d_ptr;
 
  public:
-  explicit Archiver(QObject* parent = nullptr);
+  explicit Archiver(DispatcherState* state, QObject* parent = nullptr);
 
   ~Archiver() override;
 

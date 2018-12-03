@@ -1,29 +1,25 @@
-#ifndef KRYVO_CRYPTOGRAPHY_CRYPTO_HPP_
-#define KRYVO_CRYPTOGRAPHY_CRYPTO_HPP_
+#ifndef KRYVO_DISPATCHER_HPP_
+#define KRYVO_DISPATCHER_HPP_
 
-#include "DispatcherState.hpp"
 #include "utility/pimpl.h"
 #include <QObject>
+#include <QStringList>
 #include <QString>
 #include <memory>
 
 namespace Kryvo {
 
-class CryptoPrivate;
+class DispatcherPrivate;
 
-class Crypto : public QObject {
+class Dispatcher : public QObject {
   Q_OBJECT
-  DECLARE_PRIVATE(Crypto)
-  std::unique_ptr<CryptoPrivate> const d_ptr;
+  DECLARE_PRIVATE(Dispatcher)
+  std::unique_ptr<DispatcherPrivate> const d_ptr;
 
  public:
-  /*!
-   * \brief Crypto Constructs the Crypto class
-   * \param parent
-   */
-  explicit Crypto(DispatcherState* state, QObject* parent = nullptr);
+  explicit Dispatcher(QObject* parent = nullptr);
 
-  ~Crypto() override;
+  ~Dispatcher() override;
 
  signals:
   /*!
@@ -56,17 +52,18 @@ class Crypto : public QObject {
    */
   void busyStatus(bool busyStatus);
 
- public:
-  void loadProviders();
-  bool encryptFile(const QString& passphrase,
-                   const QString& inputFilePath,
-                   const QString& outputPath = QString(),
-                   const QString& cipher = QStringLiteral("AES"),
-                   std::size_t inputKeySize = 128,
-                   const QString& modeOfOperation = QStringLiteral("GCM"),
-                   bool compress = true);
+  void compressFile(const QString& inputFilePath,
+                    const QString& outputPath = QString());
 
-  bool decryptFile(const QString& passphrase,
+  void encryptFile(const QString& passphrase,
+                    const QString& inputFilePath,
+                    const QString& outputPath = QString(),
+                    const QString& cipher = QStringLiteral("AES"),
+                    std::size_t inputKeySize = 128,
+                    const QString& modeOfOperation = QStringLiteral("GCM"),
+                    bool compress = true);
+
+  void decryptFile(const QString& passphrase,
                    const QString& inputFilePath,
                    const QString& outputPath = QString());
 
@@ -75,17 +72,16 @@ class Crypto : public QObject {
    * \brief encrypt Executed when a signal is received for encryption with a
    * passphrase, a list of input file paths, and the algorithm name
    * \param passphrase String representing the user-entered passphrase
-   * \param inputFilePath String containing the file path of the file to
-   * encrypt
+   * \param inputFilePaths List of strings containing the file paths of the
+   * files to encrypt
    * \param outputPath String containing output file path
    * \param cipher String representing name of the cipher
    * \param inputKeySize Key size in bits
    * \param modeOfOperation String representing mode of operation
    * \param compress Boolean representing compression mode
-   * \param container Boolean representing container mode
    */
   void encrypt(const QString& passphrase,
-               const QString& inputFilePath,
+               const QStringList& inputFilePaths,
                const QString& outputPath = QString(),
                const QString& cipher = QStringLiteral("AES"),
                std::size_t inputKeySize = 128,
@@ -94,17 +90,45 @@ class Crypto : public QObject {
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
-   * passphrase and an input file path
+   * passphrase and a list of input file paths
    * \param passphrase String representing the user-entered passphrase
-   * \param inputFileName String containing the file path of the file to
-   * decrypt
-   * \param outputPath String containing output file path
+   * \param inputFilePaths List of strings containing the file paths of
+   * the files to decrypt
+   * \param outputPath String containing output path
    */
   void decrypt(const QString& passphrase,
-               const QString& inputFilePath,
+               const QStringList& inputFilePaths,
                const QString& outputPath = QString());
+
+  /*!
+   * \brief abort Executed when a signal is received to set the abort status.
+   * The abort status, when set, will stop the execution of the current cipher
+   * operation and prevent further cipher operations from starting until it is
+   * reset to false. The current cipher operation is abandoned and cannot be
+   * continued.
+   */
+  void abort();
+
+  /*!
+   * \brief pause Executed when a signal is received to set or clear the pause
+   * status (via the state of the boolean parameter pause). The pause status, if
+   * set to true, will pause the execution of the current cipher operation until
+   * it is reset to false. When the pause status is reset to false, the cipher
+   * operation that was in progress when the pause was signaled will resume
+   * execution.
+   * \param pause Boolean representing the pause state
+   */
+  void pause(bool pause);
+
+  /*!
+   * \brief stop Executed when a signal is received to set the stop status for
+   * the file path input parameter. The stop status, if set, will skip the input
+   * file path in the encrypt/decrypt process.
+   * \param filePath String containing a file path
+   */
+  void stop(const QString& filePath);
 };
 
 } // namespace Kryvo
 
-#endif // KRYVO_CRYPTOGRAPHY_CRYPTO_HPP_
+#endif // KRYVO_DISPATCHER_HPP_

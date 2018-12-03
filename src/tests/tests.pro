@@ -29,9 +29,10 @@ CONFIG(release, debug|release) {
 
 SOURCES += \
   ../app/Constants.cpp \
-  ../app/cryptography/Crypto.cpp \
-  ../app/cryptography/CryptoState.cpp \
+  ../app/DispatcherState.cpp \
+  ../app/Dispatcher.cpp \
   ../app/archive/Archiver.cpp \
+  ../app/cryptography/Crypto.cpp \
   test_Crypto.cpp \
   test_Archiver.cpp \
   FileOperations.cpp \
@@ -40,10 +41,12 @@ SOURCES += \
 
 HEADERS += \
   ../app/Constants.hpp \
-  ../app/cryptography/Crypto.hpp \
-  ../app/cryptography/CryptoState.hpp \
+  ../app/DispatcherState.hpp \
+  ../app/Dispatcher.hpp \
   ../app/archive/Archiver.hpp \
-    FileOperations.hpp
+  ../app/cryptography/Crypto.hpp \
+  ../app/utility/Thread.hpp \
+  FileOperations.hpp
 
 LIBS += -lz
 

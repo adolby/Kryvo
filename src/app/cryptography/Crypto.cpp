@@ -1,31 +1,34 @@
 #include "cryptography/Crypto.hpp"
-#include "cryptography/CryptoState.hpp"
 #include "cryptography/CryptoProviderInterface.hpp"
-#include "archive/Archiver.hpp"
 #include "Constants.hpp"
 #include <QPluginLoader>
 #include <QLibrary>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QFileInfoList>
+#include <QDir>
 #include <QCoreApplication>
 
 class Kryvo::CryptoPrivate {
   Q_DISABLE_COPY(CryptoPrivate)
 
  public:
-  CryptoPrivate();
+  explicit CryptoPrivate(DispatcherState* ds);
 
-  CryptoState state;
+  DispatcherState* state{nullptr};
 
   QHash<QString, CryptoProviderInterface*> availableProviders;
 
   CryptoProviderInterface* provider{nullptr};
 };
 
-Kryvo::CryptoPrivate::CryptoPrivate() = default;
+Kryvo::CryptoPrivate::CryptoPrivate(DispatcherState* ds)
+  : state(ds) {
+}
 
-Kryvo::Crypto::Crypto(QObject* parent)
-  : QObject(parent), d_ptr(std::make_unique<CryptoPrivate>()) {
+Kryvo::Crypto::Crypto(DispatcherState* state, QObject* parent)
+  : QObject(parent),
+    d_ptr(std::make_unique<CryptoPrivate>(state)) {
   loadProviders();
 }
 
@@ -101,13 +104,13 @@ void Kryvo::Crypto::loadProviders() {
   }
 }
 
-bool Kryvo::Crypto::encryptFiles( const QString& passphrase,
-                                  const QStringList& inputFilePaths,
-                                  const QString& outputPath,
-                                  const QString& cipher,
-                                  std::size_t inputKeySize,
-                                  const QString& modeOfOperation,
-                                  bool compress) {
+bool Kryvo::Crypto::encryptFile(const QString& passphrase,
+                                const QString& inputFilePath,
+                                const QString& outputPath,
+                                const QString& cipher,
+                                std::size_t inputKeySize,
+                                const QString& modeOfOperation,
+                                bool compress) {
   Q_D(Crypto);
 
   const std::size_t keySize = [&inputKeySize]() {
@@ -120,88 +123,81 @@ bool Kryvo::Crypto::encryptFiles( const QString& passphrase,
     return size;
   }();
 
-  bool encryptSuccess = false;
-
-  if (d->provider) {
-    encryptSuccess = d->provider->encrypt(&d->state, passphrase, inputFilePaths,
-                                          outputPath, cipher, keySize,
-                                          modeOfOperation, compress);
+  if (!d->provider) {
+    return false;
   }
 
-  return encryptSuccess;
+  const QDir outputDir(outputPath);
+
+  // Create output path if it doesn't exist
+  if (!outputDir.exists()) {
+    outputDir.mkpath(outputPath);
+  }
+
+  const QFileInfo inputFileInfo(inputFilePath);
+  const QString& inFilePath = inputFileInfo.absoluteFilePath();
+
+  const QString& outPath = outputDir.exists() ?
+                           outputDir.absolutePath() :
+                           inputFileInfo.absolutePath();
+
+  const QString& outFilePath =
+    QString(outPath % QStringLiteral("/") % inputFileInfo.fileName() %
+            Kryvo::Constants::kDot % Kryvo::Constants::kEncryptedFileExtension);
+
+  const bool success = d->provider->encrypt(d->state, passphrase, inFilePath,
+                                            outFilePath, cipher, keySize,
+                                            modeOfOperation, compress);
+
+  return success;
 }
 
-bool Kryvo::Crypto::decryptFiles(const QString& passphrase,
-                                 const QStringList& inputFilePaths,
-                                 const QString& outputPath) {
+bool Kryvo::Crypto::decryptFile(const QString& passphrase,
+                                const QString& inputFilePath,
+                                const QString& outputPath) {
   Q_D(Crypto);
 
-  bool decryptSuccess = false;
-
-  if (d->provider) {
-    decryptSuccess = d->provider->decrypt(&d->state, passphrase, inputFilePaths,
-                                          outputPath);
+  if (!d->provider) {
+    return false;
   }
 
-  return decryptSuccess;
+  const QDir outputDir(outputPath);
+
+  // Create output path if it doesn't exist
+  if (!outputDir.exists()) {
+    outputDir.mkpath(outputPath);
+  }
+
+  const QFileInfo inputFileInfo(inputFilePath);
+  const QString& outPath = outputDir.exists() ?
+                           outputDir.absolutePath() :
+                           inputFileInfo.absolutePath();
+
+  const QString& inFilePath = inputFileInfo.absoluteFilePath();
+
+  const QString& outFilePath = QString(outPath % QStringLiteral("/") %
+                                       inputFileInfo.fileName());
+
+  const bool success = d->provider->decrypt(d->state, passphrase, inFilePath,
+                                            outFilePath);
+
+  return success;
 }
 
 void Kryvo::Crypto::encrypt(const QString& passphrase,
-                            const QStringList& inputFilePaths,
+                            const QString& inputFileName,
                             const QString& outputPath, const QString& cipher,
                             std::size_t inputKeySize,
                             const QString& modeOfOperation,
                             bool compress) {
-  Q_D(Crypto);
-
-  d->state.busy(true);
-  emit busyStatus(d->state.isBusy());
-
-  const bool encryptSuccess = encryptFiles(passphrase, inputFilePaths,
-                                           outputPath, cipher, inputKeySize,
-                                           modeOfOperation, compress);
-
-  d->state.reset();
-
-  d->state.busy(false);
-  emit busyStatus(d->state.isBusy());
+  const bool encryptSuccess = encryptFile(passphrase, inputFileName,
+                                          outputPath, cipher, inputKeySize,
+                                          modeOfOperation, compress);
 }
 
 void Kryvo::Crypto::decrypt(const QString& passphrase,
-                            const QStringList& inputFilePaths,
+                            const QString& inputFileName,
                             const QString& outputPath) {
-  Q_D(Crypto);
-
-  d->state.busy(true);
-  emit busyStatus(d->state.isBusy());
-
-  const bool decryptSuccess = decryptFiles(passphrase, inputFilePaths,
-                                           outputPath);
-
-  d->state.reset();
-
-  d->state.busy(false);
-  emit busyStatus(d->state.isBusy());
-}
-
-void Kryvo::Crypto::abort() {
-  Q_D(Crypto);
-
-  if (d->state.isBusy()) {
-    d->state.abort(true);
-  }
-}
-
-void Kryvo::Crypto::pause(const bool pause) {
-  Q_D(Crypto);
-
-  d->state.pause(pause);
-}
-
-void Kryvo::Crypto::stop(const QString& filePath) {
-  Q_D(Crypto);
-
-  if (d->state.isBusy()) {
-    d->state.stop(filePath, true);
-  }
+  const bool decryptSuccess = decryptFile(passphrase, inputFileName,
+                                          outputPath);
 }

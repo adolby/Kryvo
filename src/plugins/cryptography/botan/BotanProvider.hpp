@@ -2,7 +2,7 @@
 #define KRYVO_CRYPTOGRAPHY_BOTANPROVIDER_HPP_
 
 #include "cryptography/CryptoProviderInterface.hpp"
-#include "cryptography/CryptoState.hpp"
+#include "DispatcherState.hpp"
 #include "utility/pimpl.h"
 
 #include <QtGlobal>
@@ -84,20 +84,19 @@ class BotanProvider : public QObject,
 
  public:
  /*!
-  * \brief encrypt Encrypt a list of files
+  * \brief encrypt Encrypt a file
   * \param state Encryption process state
   * \param passphrase String representing the user-entered passphrase
-  * \param inputFilePaths List of strings containing the file paths of the
-  * files to encrypt
+  * \param inFilePath String containing the file path of the file to encrypt
   * \param outputPath String containing output file path
   * \param cipher String representing name of the cipher
   * \param inputKeySize Key size in bits
   * \param modeOfOperation String representing mode of operation
   * \param compress Boolean representing compression mode
   */
-  bool encrypt(CryptoState* state,
+  bool encrypt(DispatcherState* state,
                const QString& passphrase,
-               const QStringList& inputFilePaths,
+               const QString& inFilePath,
                const QString& outputPath = QString(),
                const QString& cipher = QString("AES"),
                std::size_t keySize = 128,
@@ -105,18 +104,17 @@ class BotanProvider : public QObject,
                bool compress = false) override;
 
   /*!
-   * \brief decrypt Decrypt a list of files. The algorithm is determined from
+   * \brief decrypt Decrypt a file. The algorithm is determined from
    * the file header.
    * \param state Decryption process state
    * \param passphrase String representing the user-entered passphrase
-   * \param inputFilePaths List of strings containing the file paths of the
-   * files to decrypt
-   * \param outputPath String containing output file path
+   * \param inFilePath Strings containing the file path of the file to decrypt
+   * \param outFilePath String containing output file path
    */
-  bool decrypt(CryptoState* state,
+  bool decrypt(DispatcherState* state,
                const QString& passphrase,
-               const QStringList& inputFilePaths,
-               const QString& outputPath) override;
+               const QString& inFilePath,
+               const QString& outFilePath) override;
 
   /*!
    * \brief encryptFile Encrypts a single file with the input passphrase and
@@ -132,7 +130,7 @@ class BotanProvider : public QObject,
    * \param keySize Key size
    * \param compress Boolean representing compression mode
    */
-  bool encryptFile(CryptoState* state,
+  bool encryptFile(DispatcherState* state,
                    const QString& passphrase,
                    const QString& inputFilePath,
                    const QString& outputFilePath,
@@ -147,7 +145,7 @@ class BotanProvider : public QObject,
    * \param inputFilePath String containing the file path of the file to decrypt
    * \param outputPath String containing output file path
    */
-  bool decryptFile(CryptoState* state,
+  bool decryptFile(DispatcherState* state,
                    const QString& passphrase,
                    const QString& inputFilePath,
                    const QString& outputFilePath);
@@ -161,7 +159,7 @@ class BotanProvider : public QObject,
    * \param outFile Destination file
    * \param pipe Botan pipe for encryption or decryption
    */
-  bool executeCipher(CryptoState* state,
+  bool executeCipher(DispatcherState* state,
                      Botan::Cipher_Dir direction,
                      QFile* inFile,
                      QSaveFile* outFile,

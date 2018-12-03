@@ -29,9 +29,10 @@ SOURCES += \
   main.cpp \
   Constants.cpp \
   Application.cpp \
+  Dispatcher.cpp \
+  DispatcherState.cpp \
   archive/Archiver.cpp \
   cryptography/Crypto.cpp \
-  cryptography/CryptoState.cpp \
   gui/MainWindow.cpp \
   gui/SettingsFrame.cpp \
   gui/HeaderFrame.cpp \
@@ -50,9 +51,10 @@ SOURCES += \
 HEADERS += \
   Constants.hpp \
   Application.hpp \
+  Dispatcher.hpp \
+  DispatcherState.hpp \
   archive/Archiver.hpp \
   cryptography/Crypto.hpp \
-  cryptography/CryptoState.hpp \
   cryptography/CryptoProviderInterface.hpp \
   gui/MainWindow.hpp \
   gui/SettingsFrame.hpp \

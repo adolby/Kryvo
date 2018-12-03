@@ -1,5 +1,5 @@
 #include "FileOperations.hpp"
-#include "cryptography/Crypto.hpp"
+#include "Dispatcher.hpp"
 #include "catch.hpp"
 #include <QFileInfo>
 #include <QFile>
@@ -69,7 +69,7 @@ SCENARIO("Test encryption and decryption on various file types",
                               QStringList{QStringLiteral("test3.zip.enc")},
                               QStringList{QStringLiteral("test3 (2).zip")});
 
-  Kryvo::Crypto cryptography;
+  Kryvo::Dispatcher dispatcher;
 
   for (const EncryptionTestData& etd : testDataVector) {
     GIVEN("Test file: " + etd.inputFileNames.at(0).toStdString()) {
@@ -84,18 +84,12 @@ SCENARIO("Test encryption and decryption on various file types",
       WHEN("Encrypting and decrypting: " +
            etd.inputFileNames.at(0).toStdString()) {
         // Test encryption and decryption
-        const bool encryptSuccess =
-          cryptography.encryptFiles(etd.passphrase, etd.inputFileNames,
-                                    QString(), etd.cipher,
-                                    static_cast<std::size_t>(etd.keySize),
-                                    etd.modeOfOperation, etd.compress);
+        dispatcher.encrypt(etd.passphrase, etd.inputFileNames,
+                           QString(), etd.cipher,
+                           static_cast<std::size_t>(etd.keySize),
+                           etd.modeOfOperation, etd.compress);
 
-        REQUIRE(encryptSuccess);
-
-        const bool decryptSuccess =
-          cryptography.decryptFiles(etd.passphrase, etd.encryptedFileNames);
-
-        REQUIRE(decryptSuccess);
+        dispatcher.decrypt(etd.passphrase, etd.encryptedFileNames);
 
         // Compare initial file with decrypted file
         const bool equivalentTest =

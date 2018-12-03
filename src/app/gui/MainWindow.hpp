@@ -46,7 +46,7 @@ class MainWindow : public QMainWindow {
    * \brief encrypt Emitted when the user provides all required data for
    * encryption and clicks the Encrypt push button
    * \param passphrase String representing the user supplied passphrase
-   * \param inputFileNames List of input file strings
+   * \param inputFilePath List of input file paths
    * \param outputPath String containing output file path
    * \param cipher String representing the current cipher
    * \param keySize Key size
@@ -54,7 +54,7 @@ class MainWindow : public QMainWindow {
    * \param compress Boolean representing compression mode
    */
   void encrypt(const QString& passphrase,
-               const QStringList& inputFileNames,
+               const QStringList& inputFilePaths,
                const QString& outputPath,
                const QString& cipher,
                std::size_t keySize,
@@ -65,24 +65,24 @@ class MainWindow : public QMainWindow {
    * \brief decrypt Emitted when the user provides all required data for
    * decryption and clicks the Decrypt push button
    * \param passphrase String representing the user supplied passphrase
-   * \param inputFileNames List of input file strings
-   * \param outputFileName String containing output file path in container mode
+   * \param inputFilePath List of input file paths
+   * \param outputFilePath String containing output file path in container mode
    */
   void decrypt(const QString& passphrase,
-               const QStringList& inputFileNames,
-               const QString& outputFileName);
+               const QStringList& inputFilePath,
+               const QString& outputFilePath);
 
   /*!
-   * \brief pauseCipher Emitted when the user toggles the Pause push button
-   * \param pause Boolean representing the pause status
+   * \brief pause Emitted when the user toggles the Pause push button
+   * \param pauseStatus Boolean representing the pause status
    */
-  void pauseCipher(bool pause);
+  void pause(bool pauseStatus);
 
   /*!
-   * \brief abortCipher Emitted when the user clicks the Clear Files push
+   * \brief abort Emitted when the user clicks the Clear Files push
    * button
    */
-  void abortCipher();
+  void abort();
 
   /*!
    * \brief stopFile Emitted when the user clicks a remove file button

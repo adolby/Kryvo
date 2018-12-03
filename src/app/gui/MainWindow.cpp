@@ -138,7 +138,7 @@ Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
 
   // Header button connections
   connect(headerFrame, &HeaderFrame::pause,
-          this, &MainWindow::pauseCipher);
+          this, &MainWindow::pause);
   connect(headerFrame, &HeaderFrame::addFiles,
           this, &MainWindow::addFiles);
   connect(headerFrame, &HeaderFrame::removeFiles,
@@ -197,7 +197,7 @@ void Kryvo::MainWindow::removeFiles() {
   Q_ASSERT(fileListFrame);
 
   // Signal to abort current cipher operation if it's in progress
-  emit abortCipher();
+  emit abort();
 
   fileListFrame->clear();
 }

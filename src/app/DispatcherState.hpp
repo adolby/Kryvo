@@ -1,5 +1,5 @@
-#ifndef KRYVO_CRYPTOGRAPHY_CRYPTOSTATE_HPP_
-#define KRYVO_CRYPTOGRAPHY_CRYPTOSTATE_HPP_
+#ifndef KRYVO_DISPATCHERSTATE_HPP_
+#define KRYVO_DISPATCHERSTATE_HPP_
 
 #include <QHash>
 #include <QString>
@@ -7,12 +7,9 @@
 
 namespace Kryvo {
 
-class CryptoState {
+class DispatcherState {
  public:
-  /*!
-   * \brief CryptoState Constructs the State class
-   */
-  explicit CryptoState();
+  explicit DispatcherState();
 
   /*!
    * \brief reset Resets the status, except pause and busy, to default values
@@ -77,13 +74,13 @@ class CryptoState {
   bool isBusy() const;
 
  private:
-  // The abort status, when set to true, will stop an executing cryptopgraphic
-  // operation and prevent new cipher operations from starting until it is reset
+  // The abort status, when set to true, will stop an executing job
+  // operation and prevent new job operations from starting until it is reset
   // to false.
   std::atomic<bool> aborted;
 
   // The pause status, when set to false, will pause an executing cipher
-  // operation. When the pause status is set to true, the cipher operation
+  // operation. When the pause status is set to true, the job operation
   // that was in progress when the pause status was set will resume execution.
   std::atomic<bool> paused;
 
@@ -98,4 +95,4 @@ class CryptoState {
 
 } // namespace Kryvo
 
-#endif // KRYVO_CRYPTOGRAPHY_CRYPTOSTATE_HPP_
+#endif // KRYVO_DISPATCHERSTATE_HPP_

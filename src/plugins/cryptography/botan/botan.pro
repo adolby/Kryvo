@@ -28,12 +28,12 @@ CONFIG(release, debug|release) {
 SOURCES += \
   BotanProvider.cpp \
   ../../../app/Constants.cpp \
-  ../../../app/cryptography/CryptoState.cpp
+  ../../../app/DispatcherState.cpp
 
 HEADERS += \
   BotanProvider.hpp \
   ../../../app/Constants.hpp \
-  ../../../app/cryptography/CryptoState.hpp
+  ../../../app/DispatcherState.hpp
 
 LIBS += -lz
 

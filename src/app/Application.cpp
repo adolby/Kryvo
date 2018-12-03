@@ -1,33 +1,20 @@
 #include "Application.hpp"
 #include "gui/MainWindow.hpp"
 #include "gui/DesktopMainWindow.hpp"
-#include "cryptography/Crypto.hpp"
-#include "archive/Archiver.hpp"
 #include "settings/Settings.hpp"
+#include "Dispatcher.hpp"
 #include "utility/Thread.hpp"
 #include <memory>
 
-#include <QDebug>
-
-/*!
- * \brief ApplicationPrivate class
- */
 class Kryvo::ApplicationPrivate {
   Q_DISABLE_COPY(ApplicationPrivate)
 
  public:
-  /*!
-   * \brief ApplicationPrivate Constructs the app private implementation which
-   * contains the GUI and the cryptography object that interfaces with Botan.
-   * Initializes the cryptography work thread.
-   */
   ApplicationPrivate();
 
+  Dispatcher dispatcher;
+  Thread dispatcherThread;
   Settings settings;
-  Crypto cryptography;
-  Archiver archiver;
-  Thread cryptographyThread;
-  Thread archiverThread;
   DesktopMainWindow gui{&settings};
 };
 
@@ -39,56 +26,46 @@ Kryvo::Application::Application(QObject* parent)
 
   qRegisterMetaType<std::size_t>("std::size_t");
 
-  // Move cryptography object to another thread to prevent GUI from blocking
-  d->cryptography.moveToThread(&d->cryptographyThread);
-
-  // Connect GUI to cryptography object
+  // Connect GUI encrypt/decrypt actions
   connect(&d->gui, &MainWindow::encrypt,
-          &d->cryptography, &Crypto::encrypt);
+          &d->dispatcher, &Dispatcher::encrypt);
 
   connect(&d->gui, &MainWindow::decrypt,
-          &d->cryptography, &Crypto::decrypt);
+          &d->dispatcher, &Dispatcher::decrypt);
 
   // Connections are direct so the cryptography object can receive communication
-  // via flags from a different thread while it is runs a cipher operation
-  connect(&d->gui, &MainWindow::pauseCipher,
-          &d->cryptography, &Crypto::pause,
+  // via flags from a different thread while it is runnning a cipher operation
+  connect(&d->gui, &MainWindow::pause,
+          &d->dispatcher, &Dispatcher::pause,
           Qt::DirectConnection);
 
-  connect(&d->gui, &MainWindow::abortCipher,
-          &d->cryptography, &Crypto::abort,
+  connect(&d->gui, &MainWindow::abort,
+          &d->dispatcher, &Dispatcher::abort,
           Qt::DirectConnection);
 
   connect(&d->gui, &MainWindow::stopFile,
-          &d->cryptography, &Crypto::stop,
+          &d->dispatcher, &Dispatcher::stop,
           Qt::DirectConnection);
 
   // Update cipher progress bars
-  connect(&d->cryptography, &Crypto::fileProgress,
+  connect(&d->dispatcher, &Dispatcher::fileProgress,
           &d->gui, &MainWindow::updateFileProgress);
 
   // Update cipher status message
-  connect(&d->cryptography, &Crypto::statusMessage,
+  connect(&d->dispatcher, &Dispatcher::statusMessage,
           &d->gui, &MainWindow::updateStatusMessage);
 
   // Update cipher error message
-  connect(&d->cryptography, &Crypto::errorMessage,
+  connect(&d->dispatcher, &Dispatcher::errorMessage,
           &d->gui, &MainWindow::updateError);
 
   // Update cipher operation in progress status
-  connect(&d->cryptography, &Crypto::busyStatus,
+  connect(&d->dispatcher, &Dispatcher::busyStatus,
           &d->gui, &MainWindow::updateBusyStatus);
 
-  // Update file compression operation in progress status
-  connect(&d->archiver, &Archiver::fileProgress,
-          &d->gui, &MainWindow::updateFileProgress);
+  d->dispatcher.moveToThread(&d->dispatcherThread);
 
-  // Update file decompression operation in progress status
-  connect(&d->archiver, &Archiver::fileProgress,
-          &d->gui, &MainWindow::updateFileProgress);
-
-  d->cryptographyThread.start();
-  d->archiverThread.start();
+  d->dispatcherThread.start();
 
   d->gui.show();
 }
@@ -96,6 +73,6 @@ Kryvo::Application::Application(QObject* parent)
 Kryvo::Application::~Application() {
   Q_D(Application);
 
-  // Abort current threaded cipher operation
-  d->cryptography.abort();
+  // Abort current threaded operation
+  d->dispatcher.abort();
 }

@@ -1,5 +1,6 @@
-#include "FileOperations.hpp"
+#include "DispatcherState.hpp"
 #include "archive/Archiver.hpp"
+#include "FileOperations.hpp"
 #include "catch.hpp"
 #include <QFileInfo>
 #include <QFile>
@@ -14,7 +15,8 @@
 SCENARIO("Test compression and decompression on a text file",
          "[testCompressDecompressText]") {
   GIVEN("A text file") {
-    Kryvo::Archiver archiver;
+    Kryvo::DispatcherState state;
+    Kryvo::Archiver archiver(&state);
 
     const QStringList& inputFileNames = {QStringLiteral("test1.txt")};
     const QStringList& compressedFileNames = {QStringLiteral("test1.txt.gz")};
