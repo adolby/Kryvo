@@ -1,5 +1,5 @@
 /*
-* Botan 2.7.0 Amalgamation
+* Botan 2.9.0 Amalgamation
 * (C) 1999-2018 The Botan Authors
 *
 * Botan is released under the Simplified BSD License (see license.txt)

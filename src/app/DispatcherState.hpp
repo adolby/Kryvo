@@ -1,9 +1,9 @@
 #ifndef KRYVO_DISPATCHERSTATE_HPP_
 #define KRYVO_DISPATCHERSTATE_HPP_
 
-#include <QHash>
 #include <QString>
 #include <atomic>
+#include <vector>
 
 namespace Kryvo {
 
@@ -44,22 +44,22 @@ class DispatcherState {
    * \brief stop Updates a stop status in the stop status container. A stop
    * status corresponds with a file path and is used to decide whether to stop
    * encrypting/decrypting a file.
-   * \param filePath String containing the path of the file to set to stopped
+   * \param id ID representing the file to set to stopped
    * \param stop Boolean representing the stop status for the file represented
    * by filePath
    */
-  void stop(const QString& filePath, bool stop);
+  void stop(int id, bool stop);
 
   /*!
    * \brief isStopped Returns a stop status in the stop status container. A stop
    * status corresponds with a file path and is used to decide whether to stop
    * encrypting/decrypting a file.
-   * \param filePath String containing the file path to check the stop status
+   * \param id ID representing the file to check the stop status
    * for
    * \return Boolean Boolean representing the stop status for the file
    * represented by filePath
    */
-  bool isStopped(const QString& filePath) const;
+  bool isStopped(int id) const;
 
   /*!
    * \brief busy Updates the busy status
@@ -86,7 +86,7 @@ class DispatcherState {
 
   // The container of stopped flags, which are used to stop
   // encrypting/decrypting a file.
-  QHash<QString, bool> stopped;
+  std::vector<std::atomic<bool>> stopped;
 
   // The busy status, when set to true, indicates that this class is currently
   // executing a cipher operation.

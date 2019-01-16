@@ -13,7 +13,7 @@
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
-#include <deque>
+#include <queue>
 #include <functional>
 #include <iterator>
 #include <map>
@@ -3026,7 +3026,7 @@ class Output_Buffers final
    private:
       class SecureQueue* get(Pipe::message_id) const;
 
-      std::deque<std::unique_ptr<SecureQueue>> m_buffers;
+      std::queue<std::unique_ptr<SecureQueue>> m_buffers;
       Pipe::message_id m_offset;
    };
 
@@ -5015,7 +5015,7 @@ class Stream_Handshake_IO final : public Handshake_IO
       std::pair<Handshake_Type, std::vector<uint8_t>>
          get_next_record(bool expecting_ccs) override;
    private:
-      std::deque<uint8_t> m_queue;
+      std::queue<uint8_t> m_queue;
       writer_fn m_send_hs;
    };
 

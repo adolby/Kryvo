@@ -36224,7 +36224,7 @@ class Directory_Walker : public File_Descriptor_Source
       std::pair<struct dirent*, std::string> get_next_dirent();
 
       std::pair<DIR*, std::string> m_cur_dir;
-      std::deque<std::string> m_dirlist;
+      std::queue<std::string> m_dirlist;
    };
 
 std::pair<struct dirent*, std::string> Directory_Walker::get_next_dirent()
@@ -52567,7 +52567,7 @@ std::vector<std::string> impl_boost_filesystem(const std::string& dir_path)
 std::vector<std::string> impl_readdir(const std::string& dir_path)
    {
    std::vector<std::string> out;
-   std::deque<std::string> dir_list;
+   std::queue<std::string> dir_list;
    dir_list.push_back(dir_path);
 
    while(!dir_list.empty())

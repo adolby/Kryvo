@@ -73286,7 +73286,7 @@ std::vector<std::string> impl_boost_filesystem(const std::string& dir_path)
 std::vector<std::string> impl_readdir(const std::string& dir_path)
    {
    std::vector<std::string> out;
-   std::deque<std::string> dir_list;
+   std::queue<std::string> dir_list;
    dir_list.push_back(dir_path);
 
    while(!dir_list.empty())
@@ -73326,7 +73326,7 @@ std::vector<std::string> impl_readdir(const std::string& dir_path)
 std::vector<std::string> impl_win32(const std::string& dir_path)
    {
    std::vector<std::string> out;
-   std::deque<std::string> dir_list;
+   std::queue<std::string> dir_list;
    dir_list.push_back(dir_path);
 
    while(!dir_list.empty())

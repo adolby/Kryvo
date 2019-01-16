@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QString>
 #include <memory>
+#include <queue>
 
 namespace Kryvo {
 
@@ -28,12 +29,16 @@ class Crypto : public QObject {
  signals:
   /*!
    * \brief fileProgress Emitted when the cipher operation file progress changes
-   * \param path String containing path of the file to update progress on
+   * \param id ID representing the file to update progress on
    * \param task String containing path name
-   * \param progressValue Integer representing the current progress as a percent
+   * \param percentProgress Integer representing the current progress as a
+   * percent
    */
-  void fileProgress(const QString& filePath, const QString& task,
-                    qint64 percentProgress);
+  void fileProgress(int id, const QString& task, qint64 percentProgress);
+
+  void fileEncrypted(int id);
+
+  void fileDecrypted(int id);
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher
@@ -56,53 +61,52 @@ class Crypto : public QObject {
    */
   void busyStatus(bool busyStatus);
 
- public:
-  void loadProviders();
-  bool encryptFile(const QString& passphrase,
-                   const QString& inputFilePath,
-                   const QString& outputPath = QString(),
-                   const QString& cipher = QStringLiteral("AES"),
-                   std::size_t inputKeySize = 128,
-                   const QString& modeOfOperation = QStringLiteral("GCM"),
-                   bool compress = true);
-
-  bool decryptFile(const QString& passphrase,
-                   const QString& inputFilePath,
-                   const QString& outputPath = QString());
-
  public slots:
   /*!
    * \brief encrypt Executed when a signal is received for encryption with a
    * passphrase, a list of input file paths, and the algorithm name
+   * \param id Pipeline ID
    * \param passphrase String representing the user-entered passphrase
    * \param inputFilePath String containing the file path of the file to
    * encrypt
-   * \param outputPath String containing output file path
+   * \param outputFilePath String containing output file path
    * \param cipher String representing name of the cipher
-   * \param inputKeySize Key size in bits
+   * \param keySize Key size in bits
    * \param modeOfOperation String representing mode of operation
    * \param compress Boolean representing compression mode
-   * \param container Boolean representing container mode
    */
-  void encrypt(const QString& passphrase,
+  void encrypt(int id,
+               const QString& passphrase,
                const QString& inputFilePath,
-               const QString& outputPath = QString(),
-               const QString& cipher = QStringLiteral("AES"),
-               std::size_t inputKeySize = 128,
-               const QString& modeOfOperation = QStringLiteral("GCM"),
-               bool compress = true);
+               const QString& outputFilePath,
+               const QString& cipher,
+               std::size_t keySize,
+               const QString& modeOfOperation,
+               bool compress);
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
    * passphrase and an input file path
+   * \param id Pipeline ID
    * \param passphrase String representing the user-entered passphrase
-   * \param inputFileName String containing the file path of the file to
+   * \param inputFilePath String containing the file path of the file to
    * decrypt
-   * \param outputPath String containing output file path
+   * \param outputFilePath String containing output file path
+   * \param algorithmNameString Algorithm name
+   * \param keySizeString Key size as a string
+   * \param pbkdfSaltString PBKDF salt
+   * \param keySaltString Key salt
+   * \param ivSaltString Initialization vector salt
    */
-  void decrypt(const QString& passphrase,
+  void decrypt(int id,
+               const QString& passphrase,
                const QString& inputFilePath,
-               const QString& outputPath = QString());
+               const QString& outputFilePath,
+               const QString& algorithmNameString,
+               const QString& keySizeString,
+               const QString& pbkdfSaltString,
+               const QString& keySaltString,
+               const QString& ivSaltString);
 };
 
 } // namespace Kryvo

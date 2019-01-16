@@ -3,8 +3,6 @@
 #include <QMouseEvent>
 #include <QEvent>
 
-#include <QDebug>
-
 Kryvo::FileListDelegate::FileListDelegate(QObject* parent)
   : QStyledItemDelegate(parent), focusBorderEnabled(false) {
 }

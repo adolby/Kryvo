@@ -18,48 +18,43 @@ SCENARIO("Test compression and decompression on a text file",
     Kryvo::DispatcherState state;
     Kryvo::Archiver archiver(&state);
 
-    const QStringList& inputFileNames = {QStringLiteral("test1.txt")};
-    const QStringList& compressedFileNames = {QStringLiteral("test1.txt.gz")};
-    const QStringList& decompressedFileNames =
-      {QStringLiteral("test1 (2).txt")};
+    const QString& inputFilePath = QStringLiteral("test1.txt");
+    const QString& compressedFilePath = QStringLiteral("test1.txt.gz");
+    const QString& decompressedFilePath = QStringLiteral("test1 (2).txt");
 
-    const QFileInfo inputFileInfo(inputFileNames.at(0));
+    const QFileInfo inputFileInfo(inputFilePath);
 
     const QString& msgTemplate = QStringLiteral("Test file %1 is missing.");
 
     if (!inputFileInfo.exists()) {
-      FAIL(msgTemplate.arg(inputFileNames.at(0)).toStdString());
+      FAIL(msgTemplate.arg(inputFilePath).toStdString());
     }
 
-    WHEN("Compressing and decompressing") {
-      const bool compressSuccess = archiver.compressFiles(inputFileNames);
+    WHEN("Compressing and decompressing file") {
+      const int id = 0;
 
-      REQUIRE(compressSuccess);
-
-      const bool decompressSuccess =
-        archiver.decompressFiles(compressedFileNames);
-
-      REQUIRE(decompressSuccess);
+      archiver.compress(id, inputFilePath, compressedFilePath);
+      archiver.decompress(id, compressedFilePath, decompressedFilePath);
 
       // Compare initial file with decompressed file
       const bool equivalentTest =
-        FileOperations::filesEqual(inputFileNames.at(0),
-                                   decompressedFileNames.at(0));
+        FileOperations::filesEqual(inputFilePath, decompressedFilePath);
 
       // Clean up test files
-      QFile compressedFile(compressedFileNames.at(0));
+      QFile compressedFile(compressedFilePath);
 
       if (compressedFile.exists()) {
         compressedFile.remove();
       }
 
-      QFile decompressedFile(decompressedFileNames.at(0));
+      QFile decompressedFile(decompressedFilePath);
 
       if (decompressedFile.exists()) {
         decompressedFile.remove();
       }
 
-      THEN("Decompressed file matches original file") {
+      THEN("Decompressed file matches original file: " +
+           inputFilePath.toStdString()) {
         REQUIRE(equivalentTest);
       }
     }

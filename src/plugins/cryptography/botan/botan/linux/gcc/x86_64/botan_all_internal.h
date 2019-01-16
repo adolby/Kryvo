@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <chrono>
 #include <condition_variable>
-#include <deque>
+#include <queue>
 #include <functional>
 #include <map>
 #include <memory>
@@ -2481,7 +2481,7 @@ class Output_Buffers
    private:
       class SecureQueue* get(Pipe::message_id) const;
 
-      std::deque<SecureQueue*> m_buffers;
+      std::queue<SecureQueue*> m_buffers;
       Pipe::message_id m_offset;
    };
 
@@ -4325,7 +4325,7 @@ class Stream_Handshake_IO final : public Handshake_IO
       std::pair<Handshake_Type, std::vector<byte>>
          get_next_record(bool expecting_ccs) override;
    private:
-      std::deque<byte> m_queue;
+      std::queue<byte> m_queue;
       writer_fn m_send_hs;
    };
 

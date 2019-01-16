@@ -10,8 +10,6 @@
 #include <QStringBuilder>
 #include <QString>
 
-#include <QDebug>
-
 class Kryvo::FileListFramePrivate {
   Q_DISABLE_COPY(FileListFramePrivate)
 
@@ -103,27 +101,29 @@ void Kryvo::FileListFrame::updateProgress(const QString& path,
                                           const qint64 percent) {
   Q_D(FileListFrame);
 
-  qDebug() << path << " " << task << " " << percent;
+//  qDebug() << path << " " << task << " " << percent;
 
-  if (!path.isEmpty()) {
-    const QList<QStandardItem*>& items =
-            d->fileListModel.findItems(path, Qt::MatchExactly, 0);
+  if (path.isEmpty()) {
+    return;
+  }
 
-    if (!items.empty()) {
-      QStandardItem* item = items.first();
+  const QList<QStandardItem*>& items =
+    d->fileListModel.findItems(path, Qt::MatchExactly, 0);
 
-      if (item) {
-        const int index = item->row();
+  if (!items.empty()) {
+    QStandardItem* item = items.first();
 
-        QStandardItem* taskItem = d->fileListModel.item(index, 1);
-        if (taskItem) {
-          taskItem->setText(task);
-        }
+    if (item) {
+      const int index = item->row();
 
-        QStandardItem* progressItem = d->fileListModel.item(index, 2);
-        if (progressItem) {
-          progressItem->setData(percent, Qt::DisplayRole);
-        }
+      QStandardItem* taskItem = d->fileListModel.item(index, 1);
+      if (taskItem) {
+        taskItem->setText(task);
+      }
+
+      QStandardItem* progressItem = d->fileListModel.item(index, 2);
+      if (progressItem) {
+        progressItem->setData(percent, Qt::DisplayRole);
       }
     }
   }

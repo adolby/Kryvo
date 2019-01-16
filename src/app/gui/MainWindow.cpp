@@ -60,10 +60,7 @@ bool Kryvo::MainWindowPrivate::isBusy() const {
 }
 
 Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
-  : QMainWindow(parent), d_ptr(std::make_unique<MainWindowPrivate>()),
-    headerFrame(nullptr), fileListFrame(nullptr), messageFrame(nullptr),
-    outputFrame(nullptr), passwordFrame(nullptr), controlButtonFrame(nullptr),
-    contentLayout(nullptr) {
+  : QMainWindow(parent), d_ptr(std::make_unique<MainWindowPrivate>()) {
   // Set object name
   this->setObjectName(QStringLiteral("mainWindow"));
 
@@ -252,7 +249,7 @@ void Kryvo::MainWindow::updateFileProgress(const QString& filePath,
                                            const qint64 progressValue) {
   Q_ASSERT(fileListFrame);
 
-//  qDebug() << Q_FUNC_INFO << filePath << task << progressValue;
+  qDebug() << Q_FUNC_INFO << filePath << task << progressValue;
 
   fileListFrame->updateProgress(filePath, task, progressValue);
 }

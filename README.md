@@ -66,28 +66,28 @@ Android requires a small patch that implements std::string to_string(), which is
 If you would like to update Botan, you'll need to produce a new amalgamation build. The configuration commands used to generate Botan amalgamation files follows for each platform:
 
 ### Android ARM armv7
-python configure.py --cpu=armv5te --os=linux --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+python configure.py --cpu=armv5te --os=linux --amalgamation --disable-shared --disable-modules=pkcs11
 
 ### Linux GCC x86_64
-python configure.py --cc=gcc --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+python configure.py --cc=gcc --amalgamation --disable-shared --disable-modules=pkcs11
 
 ### Linux Clang x86_64
-python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11
 
 ### macOS Clang x86_64
-python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11
 
 ### iOS Clang armv8-a
-python configure.py --os=ios --cpu=armv8-a --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+python configure.py --os=ios --cpu=armv8-a --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11
 
 ### Windows Visual Studio x86_64
-python configure.py --cpu=x86_64 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+python configure.py --cpu=x86_64 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11
 
 ### Windows Visual Studio x86
-python configure.py --cpu=x86_32 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+python configure.py --cpu=x86_32 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11
 
 ### Windows MinGW-w64 x86
-python configure.py --cpu=x86_32 --cc=gcc --os=mingw --amalgamation --disable-shared --disable-modules=pkcs11 --with-zlib
+python configure.py --cpu=x86_32 --cc=gcc --os=mingw --amalgamation --disable-shared --disable-modules=pkcs11
 
 ## Contact
 

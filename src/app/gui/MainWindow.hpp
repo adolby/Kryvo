@@ -193,15 +193,15 @@ class MainWindow : public QMainWindow {
                          const QString& defaultFile) const;
 
  protected:
-  Settings* settings;
-  SettingsFrame* settingsFrame;
-  HeaderFrame* headerFrame;
-  FileListFrame* fileListFrame;
-  MessageFrame* messageFrame;
-  OutputFrame* outputFrame;
-  PasswordFrame* passwordFrame;
-  ControlButtonFrame* controlButtonFrame;
-  QVBoxLayout* contentLayout;
+  Settings* settings = nullptr;
+  SettingsFrame* settingsFrame = nullptr;
+  HeaderFrame* headerFrame = nullptr;
+  FileListFrame* fileListFrame = nullptr;
+  MessageFrame* messageFrame = nullptr;
+  OutputFrame* outputFrame = nullptr;
+  PasswordFrame* passwordFrame = nullptr;
+  ControlButtonFrame* controlButtonFrame = nullptr;
+  QVBoxLayout* contentLayout = nullptr;
 };
 
 } // namespace Kryvo

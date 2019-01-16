@@ -9,11 +9,29 @@
 #include <QDir>
 #include <QCoreApplication>
 
+#include <QDebug>
+
 class Kryvo::CryptoPrivate {
   Q_DISABLE_COPY(CryptoPrivate)
+  Q_DECLARE_PUBLIC(Crypto)
 
  public:
-  explicit CryptoPrivate(DispatcherState* ds);
+  explicit CryptoPrivate(Crypto* crypto, DispatcherState* ds);
+
+  void loadProviders();
+
+  void encryptFile(int id, const QString& passphrase,
+                   const QString& inputFilePath, const QString& outputPath,
+                   const QString& cipher, std::size_t inputKeySize,
+                   const QString& modeOfOperation, bool compress);
+
+  void decryptFile(int id, const QString& passphrase,
+                   const QString& inputFilePath, const QString& outputPath,
+                   const QString& algorithmNameString,
+                   const QString& keySizeString, const QString& pbkdfSaltString,
+                   const QString& keySaltString, const QString& ivSaltString);
+
+  Crypto* const q_ptr{nullptr};
 
   DispatcherState* state{nullptr};
 
@@ -22,20 +40,19 @@ class Kryvo::CryptoPrivate {
   CryptoProviderInterface* provider{nullptr};
 };
 
-Kryvo::CryptoPrivate::CryptoPrivate(DispatcherState* ds)
-  : state(ds) {
+Kryvo::CryptoPrivate::CryptoPrivate(Crypto* crypto, DispatcherState* ds)
+  : q_ptr(crypto), state(ds) {
+  loadProviders();
 }
 
 Kryvo::Crypto::Crypto(DispatcherState* state, QObject* parent)
-  : QObject(parent),
-    d_ptr(std::make_unique<CryptoPrivate>(state)) {
-  loadProviders();
+  : QObject(parent), d_ptr(std::make_unique<CryptoPrivate>(this, state)) {
 }
 
 Kryvo::Crypto::~Crypto() = default;
 
-void Kryvo::Crypto::loadProviders() {
-  Q_D(Crypto);
+void Kryvo::CryptoPrivate::loadProviders() {
+  Q_Q(Crypto);
 
   QDir pluginsDir(qApp->applicationDirPath());
 
@@ -78,23 +95,25 @@ void Kryvo::Crypto::loadProviders() {
         CryptoProviderInterface* cp =
           qobject_cast<CryptoProviderInterface*>(plugin);
 
-        connect(plugin, SIGNAL(fileProgress(QString,QString,qint64)),
-                this, SIGNAL(fileProgress(QString,QString,qint64)));
+        QObject::connect(plugin, SIGNAL(fileProgress(int,QString,qint64)),
+                         q, SIGNAL(fileProgress(int,QString,qint64)));
 
-        connect(plugin, SIGNAL(statusMessage(QString)),
-                this, SIGNAL(statusMessage(QString)));
+        QObject::connect(plugin, SIGNAL(statusMessage(QString)),
+                         q, SIGNAL(statusMessage(QString)));
 
-        connect(plugin, SIGNAL(errorMessage(QString,QString)),
-                this, SIGNAL(errorMessage(QString,QString)));
+        QObject::connect(plugin, SIGNAL(errorMessage(QString,QString)),
+                         q, SIGNAL(errorMessage(QString,QString)));
 
-        d->availableProviders.insert(pluginName, cp);
+        cp->init(state);
+
+        availableProviders.insert(pluginName, cp);
       }
     }
   }
 
-  if (!d->availableProviders.isEmpty()) {
-    if (d->availableProviders.contains(QStringLiteral("BOTAN"))) {
-      d->provider = d->availableProviders.value(QStringLiteral("BOTAN"));
+  if (!availableProviders.isEmpty()) {
+    if (availableProviders.contains(QStringLiteral("BOTAN"))) {
+      provider = availableProviders.value(QStringLiteral("BOTAN"));
     } else {
 //      for (CryptoProviderInterface* cp : d->availableProviders) {
 //        d->provider = cp;
@@ -104,100 +123,70 @@ void Kryvo::Crypto::loadProviders() {
   }
 }
 
-bool Kryvo::Crypto::encryptFile(const QString& passphrase,
-                                const QString& inputFilePath,
-                                const QString& outputPath,
-                                const QString& cipher,
-                                std::size_t inputKeySize,
-                                const QString& modeOfOperation,
-                                bool compress) {
+void Kryvo::CryptoPrivate::encryptFile(int id,
+                                       const QString& passphrase,
+                                       const QString& inputFilePath,
+                                       const QString& outputFilePath,
+                                       const QString& cipher,
+                                       std::size_t keySize,
+                                       const QString& modeOfOperation,
+                                       bool compress) {
+  Q_Q(Crypto);
+
+  if (!provider) {
+    return;
+  }
+
+  provider->encrypt(id, passphrase, inputFilePath, outputFilePath, cipher,
+                    keySize, modeOfOperation, compress);
+
+  emit q->fileEncrypted(id);
+}
+
+void Kryvo::CryptoPrivate::decryptFile(int id,
+                                       const QString& passphrase,
+                                       const QString& inputFilePath,
+                                       const QString& outputFilePath,
+                                       const QString& algorithmNameString,
+                                       const QString& keySizeString,
+                                       const QString& pbkdfSaltString,
+                                       const QString& keySaltString,
+                                       const QString& ivSaltString) {
+  Q_Q(Crypto);
+
+  if (!provider) {
+    return;
+  }
+
+  provider->decrypt(id, passphrase, inputFilePath, outputFilePath,
+                    algorithmNameString, keySizeString, pbkdfSaltString,
+                    keySaltString, ivSaltString);
+
+  emit q->fileDecrypted(id);
+}
+
+void Kryvo::Crypto::encrypt(int id, const QString& passphrase,
+                            const QString& inputFilePath,
+                            const QString& outputFilePath,
+                            const QString& cipher, std::size_t inputKeySize,
+                            const QString& modeOfOperation, bool compress) {
   Q_D(Crypto);
 
-  const std::size_t keySize = [&inputKeySize]() {
-    std::size_t size = 128;
-
-    if (inputKeySize > 0) {
-      size = inputKeySize;
-    }
-
-    return size;
-  }();
-
-  if (!d->provider) {
-    return false;
-  }
-
-  const QDir outputDir(outputPath);
-
-  // Create output path if it doesn't exist
-  if (!outputDir.exists()) {
-    outputDir.mkpath(outputPath);
-  }
-
-  const QFileInfo inputFileInfo(inputFilePath);
-  const QString& inFilePath = inputFileInfo.absoluteFilePath();
-
-  const QString& outPath = outputDir.exists() ?
-                           outputDir.absolutePath() :
-                           inputFileInfo.absolutePath();
-
-  const QString& outFilePath =
-    QString(outPath % QStringLiteral("/") % inputFileInfo.fileName() %
-            Kryvo::Constants::kDot % Kryvo::Constants::kEncryptedFileExtension);
-
-  const bool success = d->provider->encrypt(d->state, passphrase, inFilePath,
-                                            outFilePath, cipher, keySize,
-                                            modeOfOperation, compress);
-
-  return success;
+  d->encryptFile(id, passphrase, inputFilePath, outputFilePath, cipher,
+                 inputKeySize, modeOfOperation, compress);
 }
 
-bool Kryvo::Crypto::decryptFile(const QString& passphrase,
-                                const QString& inputFilePath,
-                                const QString& outputPath) {
+void Kryvo::Crypto::decrypt(int id, const QString& passphrase,
+                            const QString& inputFilePath,
+                            const QString& outputPath,
+                            const QString& algorithmNameString,
+                            const QString& keySizeString,
+                            const QString& pbkdfSaltString,
+                            const QString& keySaltString,
+                            const QString& ivSaltString) {
   Q_D(Crypto);
 
-  if (!d->provider) {
-    return false;
-  }
-
-  const QDir outputDir(outputPath);
-
-  // Create output path if it doesn't exist
-  if (!outputDir.exists()) {
-    outputDir.mkpath(outputPath);
-  }
-
-  const QFileInfo inputFileInfo(inputFilePath);
-  const QString& outPath = outputDir.exists() ?
-                           outputDir.absolutePath() :
-                           inputFileInfo.absolutePath();
-
-  const QString& inFilePath = inputFileInfo.absoluteFilePath();
-
-  const QString& outFilePath = QString(outPath % QStringLiteral("/") %
-                                       inputFileInfo.fileName());
-
-  const bool success = d->provider->decrypt(d->state, passphrase, inFilePath,
-                                            outFilePath);
-
-  return success;
-}
-
-void Kryvo::Crypto::encrypt(const QString& passphrase,
-                            const QString& inputFileName,
-                            const QString& outputPath, const QString& cipher,
-                            std::size_t inputKeySize,
-                            const QString& modeOfOperation,
-                            bool compress) {
-  const bool encryptSuccess = encryptFile(passphrase, inputFileName,
-                                          outputPath, cipher, inputKeySize,
-                                          modeOfOperation, compress);
-}
-
-void Kryvo::Crypto::decrypt(const QString& passphrase,
-                            const QString& inputFileName,
-                            const QString& outputPath) {
-  const bool decryptSuccess = decryptFile(passphrase, inputFileName,
-                                          outputPath);
+  d->decryptFile(id, passphrase, inputFilePath, outputPath,
+                 algorithmNameString, keySizeString, pbkdfSaltString,
+                 keySaltString, ivSaltString);
 }

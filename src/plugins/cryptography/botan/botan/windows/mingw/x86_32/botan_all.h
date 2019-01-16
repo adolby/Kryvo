@@ -14,7 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <deque>
+#include <queue>
 #include <exception>
 #include <functional>
 #include <initializer_list>
@@ -1201,7 +1201,7 @@ operator!=(const secure_allocator<T>&, const secure_allocator<U>&)
    { return false; }
 
 template<typename T> using secure_vector = std::vector<T, secure_allocator<T>>;
-template<typename T> using secure_deque = std::deque<T, secure_allocator<T>>;
+template<typename T> using secure_queue = std::queue<T, secure_allocator<T>>;
 
 // For better compatability with 1.10 API
 template<typename T> using SecureVector = secure_vector<T>;

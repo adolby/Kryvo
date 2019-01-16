@@ -22,19 +22,18 @@ class Archiver : public QObject {
   ~Archiver() override;
 
  signals:
-  void fileCompressed(const QString& filePath);
+  void fileCompressed(int id, const QString& outputFilePath);
 
-  void fileDecompressed(const QString& filePath);
+  void fileDecompressed(int id, const QString& outputFilePath);
 
   /*!
    * \brief fileProgress Emitted when the file operation progress changes
-   * \param filePath String containing file path
+   * \param id ID representing file
    * \param task Sting containing task name
    * \param percentProgress Integer representing the current progress as a
    * percent
    */
-  void fileProgress(const QString& filePath, const QString& task,
-                    qint64 percentProgress);
+  void fileProgress(int id, const QString& task, qint64 percentProgress);
 
   /*!
    * \brief statusMessage Emitted when a message about the current
@@ -51,25 +50,12 @@ class Archiver : public QObject {
   void errorMessage(const QString& message,
                     const QString& filePath = QString());
 
- public:
-  QByteArray compressChunk(const QByteArray& chunk);
-
-  bool compressFiles(const QStringList& inFilePaths,
-                     const QString& outPath = QString());
-
-  bool decompressFiles(const QStringList& inFilePaths,
-                       const QString& outPath = QString());
-
-  bool compressFile(const QString& inFilePath, const QString& outFilePath);
-
-  bool decompressFile(const QString& inFilePath, const QString& outFilePath);
-
  public slots:
-  void compress(const QStringList& inFilePaths,
-                const QString& outPath = QString());
+  void compress(int id, const QString& inputFilePath,
+                const QString& outputFilePath);
 
-  void decompress(const QStringList& inFilePaths,
-                  const QString& outPath = QString());
+  void decompress(int id, const QString& inputFilePath,
+                  const QString& outputFilePath);
 
   void archive(const QStringList& filePaths);
 

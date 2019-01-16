@@ -2,8 +2,6 @@
 
 Kryvo::DispatcherState::DispatcherState()
   : aborted(false), paused(false), busyStatus(false) {
-  // Reserve a small number of elements to improve dictionary performance
-  stopped.reserve(100);
 }
 
 void Kryvo::DispatcherState::abort(const bool abort) {
@@ -22,12 +20,18 @@ bool Kryvo::DispatcherState::isPaused() const {
   return paused;
 }
 
-void Kryvo::DispatcherState::stop(const QString& filePath, const bool stop) {
-  stopped.insert(filePath, stop);
+void Kryvo::DispatcherState::stop(const int id, const bool stop) {
+  stopped[id] = stop;
 }
 
-bool Kryvo::DispatcherState::isStopped(const QString& filePath) const {
-  return stopped.value(filePath, false);
+bool Kryvo::DispatcherState::isStopped(const int id) const {
+  bool hasBeenStopped = false;
+
+  if (id < stopped.size()) {
+    hasBeenStopped = stopped.at(id);
+  }
+
+  return hasBeenStopped;
 }
 
 void Kryvo::DispatcherState::reset() {

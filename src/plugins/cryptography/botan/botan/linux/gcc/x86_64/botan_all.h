@@ -13,7 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <deque>
+#include <queue>
 #include <exception>
 #include <functional>
 #include <future>
@@ -980,7 +980,7 @@ operator!=(const secure_allocator<T>&, const secure_allocator<U>&)
    { return false; }
 
 template<typename T> using secure_vector = std::vector<T, secure_allocator<T>>;
-template<typename T> using secure_deque = std::deque<T, secure_allocator<T>>;
+template<typename T> using secure_queue = std::queue<T, secure_allocator<T>>;
 
 template<typename T>
 std::vector<T> unlock(const secure_vector<T>& in)
@@ -21418,7 +21418,7 @@ class BOTAN_DLL Server final : public Channel
 
 namespace Botan {
 
-//template<typename T> using secure_deque = std::vector<T, secure_allocator<T>>;
+//template<typename T> using secure_queue = std::vector<T, secure_allocator<T>>;
 
 namespace TLS {
 

@@ -1,5 +1,5 @@
 /*
-* Botan 2.7.0 Amalgamation
+* Botan 2.9.0 Amalgamation
 * (C) 1999-2018 The Botan Authors
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -251,7 +251,7 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
 }
 /*
 * AES
-* (C) 1999-2010,2015,2017 Jack Lloyd
+* (C) 1999-2010,2015,2017,2018 Jack Lloyd
 *
 * Based on the public domain reference implementation by Paulo Baretto
 *
@@ -265,14 +265,14 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(const std::string& algo,
 * countermeasures are used which may be helpful in some situations:
 *
 * - Only a single 256-word T-table is used, with rotations applied.
-*   Most implementations use 4 T-tables which leaks much more
-*   information via cache usage.
+*   Most implementations use 4 (or sometimes 5) T-tables, which leaks
+*   much more information via cache usage.
 *
 * - The TE and TD tables are computed at runtime to avoid flush+reload
 *   attacks using clflush. As different processes will not share the
 *   same underlying table data, an attacker can't manipulate another
 *   processes cache lines via their shared reference to the library
-*   read only segment.
+*   read only segment. (However, prime+probe attacks are still possible.)
 *
 * - Each cache line of the lookup tables is accessed at the beginning
 *   of each call to encrypt or decrypt. (See the Z variable below)
@@ -296,7 +296,7 @@ namespace Botan {
 
 namespace {
 
-BOTAN_ALIGNAS(64)
+alignas(64)
 const uint8_t SE[256] = {
    0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B,
    0xFE, 0xD7, 0xAB, 0x76, 0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0,
@@ -321,7 +321,7 @@ const uint8_t SE[256] = {
    0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F,
    0xB0, 0x54, 0xBB, 0x16 };
 
-BOTAN_ALIGNAS(64)
+alignas(64)
 const uint8_t SD[256] = {
    0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E,
    0x81, 0xF3, 0xD7, 0xFB, 0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87,
@@ -346,15 +346,15 @@ const uint8_t SD[256] = {
    0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63,
    0x55, 0x21, 0x0C, 0x7D };
 
-inline uint8_t xtime(uint8_t s) { return static_cast<uint8_t>(s << 1) ^ ((s >> 7) * 0x1B); }
-inline uint8_t xtime4(uint8_t s) { return xtime(xtime(s)); }
-inline uint8_t xtime8(uint8_t s) { return xtime(xtime(xtime(s))); }
+inline constexpr uint8_t xtime(uint8_t s) { return static_cast<uint8_t>(s << 1) ^ ((s >> 7) * 0x1B); }
+inline constexpr uint8_t xtime4(uint8_t s) { return xtime(xtime(s)); }
+inline constexpr uint8_t xtime8(uint8_t s) { return xtime(xtime(xtime(s))); }
 
-inline uint8_t xtime3(uint8_t s) { return xtime(s) ^ s; }
-inline uint8_t xtime9(uint8_t s) { return xtime8(s) ^ s; }
-inline uint8_t xtime11(uint8_t s) { return xtime8(s) ^ xtime(s) ^ s; }
-inline uint8_t xtime13(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ s; }
-inline uint8_t xtime14(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ xtime(s); }
+inline constexpr uint8_t xtime3(uint8_t s) { return xtime(s) ^ s; }
+inline constexpr uint8_t xtime9(uint8_t s) { return xtime8(s) ^ s; }
+inline constexpr uint8_t xtime11(uint8_t s) { return xtime8(s) ^ xtime(s) ^ s; }
+inline constexpr uint8_t xtime13(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ s; }
+inline constexpr uint8_t xtime14(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ xtime(s); }
 
 inline uint32_t SE_word(uint32_t x)
    {
@@ -435,7 +435,6 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
    BOTAN_ASSERT(EK.size() && ME.size() == 16, "Key was set");
 
    const size_t cache_line_size = CPUID::cache_line_size();
-
    const uint32_t* TE = AES_TE();
 
    // Hit every cache line of TE
@@ -516,6 +515,10 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
       {
       Z |= TD[i];
       }
+   for(size_t i = 0; i < 256; i += cache_line_size)
+      {
+      Z |= SD[i];
+      }
    Z &= TD[99]; // this is zero, which hopefully the compiler cannot deduce
 
    for(size_t i = 0; i != blocks; ++i)
@@ -586,8 +589,24 @@ void aes_key_schedule(const uint8_t key[], size_t length,
    // Can't happen, but make static analyzers happy
    BOTAN_ARG_CHECK(X == 4 || X == 6 || X == 8, "Invalid AES key size");
 
+   const uint32_t* TD = AES_TD();
+
+   // Prefetch TD and SE which are used later on in this function
+   volatile uint32_t Z = 0;
+   const size_t cache_line_size = CPUID::cache_line_size();
+
+   for(size_t i = 0; i < 256; i += cache_line_size / sizeof(uint32_t))
+      {
+      Z |= TD[i];
+      }
+   for(size_t i = 0; i < 256; i += cache_line_size)
+      {
+      Z |= SE[i];
+      }
+   Z &= TD[99]; // this is zero, which hopefully the compiler cannot deduce
+
    for(size_t i = 0; i != X; ++i)
-      XEK[i] = load_be<uint32_t>(key, i);
+      XEK[i] = Z ^ load_be<uint32_t>(key, i);
 
    for(size_t i = X; i < 4*(rounds+1); i += X)
       {
@@ -614,8 +633,8 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
    for(size_t i = 4; i != length + 24; ++i)
       {
-      XDK[i] = SE_word(XDK[i]);
-      XDK[i] = AES_T(AES_TD(), 0, XDK[i], XDK[i], XDK[i], XDK[i]);
+      XDK[i] = Z ^ SE_word(XDK[i]);
+      XDK[i] = AES_T(TD, 0, XDK[i], XDK[i], XDK[i], XDK[i]);
       }
 
    ME.resize(16);
@@ -1140,7 +1159,7 @@ namespace {
 
 namespace ARIA_F {
 
-BOTAN_ALIGNAS(16)
+alignas(16)
 const uint32_t S1[256]={
    0x00636363,0x007c7c7c,0x00777777,0x007b7b7b,0x00f2f2f2,0x006b6b6b,0x006f6f6f,0x00c5c5c5,
    0x00303030,0x00010101,0x00676767,0x002b2b2b,0x00fefefe,0x00d7d7d7,0x00ababab,0x00767676,
@@ -1176,7 +1195,7 @@ const uint32_t S1[256]={
    0x00414141,0x00999999,0x002d2d2d,0x000f0f0f,0x00b0b0b0,0x00545454,0x00bbbbbb,0x00161616
 };
 
-BOTAN_ALIGNAS(16)
+alignas(16)
 const uint32_t S2[256]={
    0xe200e2e2,0x4e004e4e,0x54005454,0xfc00fcfc,0x94009494,0xc200c2c2,0x4a004a4a,0xcc00cccc,
    0x62006262,0x0d000d0d,0x6a006a6a,0x46004646,0x3c003c3c,0x4d004d4d,0x8b008b8b,0xd100d1d1,
@@ -1212,7 +1231,7 @@ const uint32_t S2[256]={
    0x89008989,0xde00dede,0x71007171,0x1a001a1a,0xaf00afaf,0xba00baba,0xb500b5b5,0x81008181
 };
 
-BOTAN_ALIGNAS(16)
+alignas(16)
 const uint32_t X1[256]={
    0x52520052,0x09090009,0x6a6a006a,0xd5d500d5,0x30300030,0x36360036,0xa5a500a5,0x38380038,
    0xbfbf00bf,0x40400040,0xa3a300a3,0x9e9e009e,0x81810081,0xf3f300f3,0xd7d700d7,0xfbfb00fb,
@@ -1248,7 +1267,7 @@ const uint32_t X1[256]={
    0xe1e100e1,0x69690069,0x14140014,0x63630063,0x55550055,0x21210021,0x0c0c000c,0x7d7d007d
 };
 
-BOTAN_ALIGNAS(16)
+alignas(16)
 const uint32_t X2[256]={
    0x30303000,0x68686800,0x99999900,0x1b1b1b00,0x87878700,0xb9b9b900,0x21212100,0x78787800,
    0x50505000,0x39393900,0xdbdbdb00,0xe1e1e100,0x72727200,0x09090900,0x62626200,0x3c3c3c00,
@@ -2373,7 +2392,7 @@ void ASN1_Formatter::decode(std::ostream& output,
             data.decode(number, ENUMERATED, class_tag);
             }
 
-         std::vector<uint8_t> rep = BigInt::encode(number, BigInt::Binary);
+         std::vector<uint8_t> rep = BigInt::encode(number);
          if(rep.empty()) // if zero
             rep.resize(1);
 
@@ -2929,6 +2948,12 @@ bool X509_Time::passes_sanity_check() const
 std::chrono::system_clock::time_point X509_Time::to_std_timepoint() const
    {
    return calendar_point(m_year, m_month, m_day, m_hour, m_minute, m_second).to_std_timepoint();
+   }
+
+uint64_t X509_Time::time_since_epoch() const
+   {
+   auto tp = this->to_std_timepoint();
+   return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
    }
 
 /*
@@ -3523,7 +3548,7 @@ void encode_tag(std::vector<uint8_t>& encoded_tag,
       }
    else
       {
-      size_t blocks = high_bit(type_tag) + 6;
+      size_t blocks = high_bit(static_cast<uint32_t>(type_tag)) + 6;
       blocks = (blocks - (blocks % 7)) / 7;
 
       BOTAN_ASSERT_NOMSG(blocks > 0);
@@ -3897,7 +3922,7 @@ DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag,
 /*
 * OID maps
 *
-* This file was automatically generated by ./src/scripts/oids.py on 2018-07-01
+* This file was automatically generated by ./src/scripts/oids.py on 2018-08-23
 *
 * All manual edits to this file will be lost. Edit the script
 * then regenerate this source file.
@@ -3915,13 +3940,15 @@ std::unordered_map<std::string, std::string> OIDS::load_oid2str_map()
       { "0.3.4401.5.3.1.9.46", "Camellia-256/GCM" },
       { "0.3.4401.5.3.1.9.6", "Camellia-128/GCM" },
       { "1.0.14888.3.0.5", "ECKCDSA" },
+      { "1.2.156.10197.1.104.100", "SM4/OCB" },
       { "1.2.156.10197.1.104.2", "SM4/CBC" },
       { "1.2.156.10197.1.104.8", "SM4/GCM" },
       { "1.2.156.10197.1.301", "sm2p256v1" },
-      { "1.2.156.10197.1.301.1", "SM2_Sig" },
+      { "1.2.156.10197.1.301.1", "SM2" },
       { "1.2.156.10197.1.301.2", "SM2_Kex" },
       { "1.2.156.10197.1.301.3", "SM2_Enc" },
       { "1.2.156.10197.1.401", "SM3" },
+      { "1.2.156.10197.1.501", "SM2_Sig/SM3" },
       { "1.2.156.10197.1.504", "RSA/EMSA3(SM3)" },
       { "1.2.250.1.223.101.256.1", "frp256v1" },
       { "1.2.392.200011.61.1.1.1.2", "Camellia-128/CBC" },
@@ -3972,7 +3999,6 @@ std::unordered_map<std::string, std::string> OIDS::load_oid2str_map()
       { "1.2.840.113549.1.9.14", "PKCS9.ExtensionRequest" },
       { "1.2.840.113549.1.9.16.3.18", "ChaCha20Poly1305" },
       { "1.2.840.113549.1.9.16.3.6", "KeyWrap.TripleDES" },
-      { "1.2.840.113549.1.9.16.3.7", "KeyWrap.RC2" },
       { "1.2.840.113549.1.9.16.3.8", "Compression.Zlib" },
       { "1.2.840.113549.1.9.2", "PKCS9.UnstructuredName" },
       { "1.2.840.113549.1.9.3", "PKCS9.ContentType" },
@@ -3980,11 +4006,11 @@ std::unordered_map<std::string, std::string> OIDS::load_oid2str_map()
       { "1.2.840.113549.1.9.7", "PKCS9.ChallengePassword" },
       { "1.2.840.113549.2.10", "HMAC(SHA-384)" },
       { "1.2.840.113549.2.11", "HMAC(SHA-512)" },
+      { "1.2.840.113549.2.13", "HMAC(SHA-512-256)" },
       { "1.2.840.113549.2.5", "MD5" },
       { "1.2.840.113549.2.7", "HMAC(SHA-160)" },
       { "1.2.840.113549.2.8", "HMAC(SHA-224)" },
       { "1.2.840.113549.2.9", "HMAC(SHA-256)" },
-      { "1.2.840.113549.3.2", "RC2/CBC" },
       { "1.2.840.113549.3.7", "TripleDES/CBC" },
       { "1.3.101.110", "Curve25519" },
       { "1.3.101.112", "Ed25519" },
@@ -4031,10 +4057,23 @@ std::unordered_map<std::string, std::string> OIDS::load_oid2str_map()
       { "1.3.6.1.4.1.25258.3.2.3", "AES-256/OCB" },
       { "1.3.6.1.4.1.25258.3.2.4", "Serpent/OCB" },
       { "1.3.6.1.4.1.25258.3.2.5", "Twofish/OCB" },
+      { "1.3.6.1.4.1.25258.3.2.6", "Camellia-128/OCB" },
+      { "1.3.6.1.4.1.25258.3.2.7", "Camellia-192/OCB" },
+      { "1.3.6.1.4.1.25258.3.2.8", "Camellia-256/OCB" },
       { "1.3.6.1.4.1.25258.3.3", "Twofish/CBC" },
+      { "1.3.6.1.4.1.25258.3.4.1", "AES-128/SIV" },
+      { "1.3.6.1.4.1.25258.3.4.2", "AES-192/SIV" },
+      { "1.3.6.1.4.1.25258.3.4.3", "AES-256/SIV" },
+      { "1.3.6.1.4.1.25258.3.4.4", "Serpent/SIV" },
+      { "1.3.6.1.4.1.25258.3.4.5", "Twofish/SIV" },
+      { "1.3.6.1.4.1.25258.3.4.6", "Camellia-128/SIV" },
+      { "1.3.6.1.4.1.25258.3.4.7", "Camellia-192/SIV" },
+      { "1.3.6.1.4.1.25258.3.4.8", "Camellia-256/SIV" },
+      { "1.3.6.1.4.1.25258.3.4.9", "SM4/SIV" },
       { "1.3.6.1.4.1.3029.1.2.1", "ElGamal" },
       { "1.3.6.1.4.1.3029.1.5.1", "OpenPGP.Curve25519" },
       { "1.3.6.1.4.1.311.20.2.2", "Microsoft SmartcardLogon" },
+      { "1.3.6.1.4.1.311.20.2.3", "Microsoft UPN" },
       { "1.3.6.1.4.1.8301.3.1.2.9.0.38", "secp521r1" },
       { "1.3.6.1.5.5.7.1.1", "PKIX.AuthorityInformationAccess" },
       { "1.3.6.1.5.5.7.3.1", "PKIX.ServerAuth" },
@@ -4089,6 +4128,7 @@ std::unordered_map<std::string, std::string> OIDS::load_oid2str_map()
       { "2.16.840.1.101.3.4.3.7", "DSA/EMSA1(SHA-3(384))" },
       { "2.16.840.1.101.3.4.3.8", "DSA/EMSA1(SHA-3(512))" },
       { "2.16.840.1.101.3.4.3.9", "ECDSA/EMSA1(SHA-3(224))" },
+      { "2.16.840.1.113730.1.13", "Certificate Comment" },
       { "2.5.29.14", "X509v3.SubjectKeyIdentifier" },
       { "2.5.29.15", "X509v3.KeyUsage" },
       { "2.5.29.17", "X509v3.SubjectAlternativeName" },
@@ -4131,21 +4171,31 @@ std::unordered_map<std::string, OID> OIDS::load_str2oid_map()
       { "AES-128/CCM", OID({2,16,840,1,101,3,4,1,7}) },
       { "AES-128/GCM", OID({2,16,840,1,101,3,4,1,6}) },
       { "AES-128/OCB", OID({1,3,6,1,4,1,25258,3,2,1}) },
+      { "AES-128/SIV", OID({1,3,6,1,4,1,25258,3,4,1}) },
       { "AES-192/CBC", OID({2,16,840,1,101,3,4,1,22}) },
       { "AES-192/CCM", OID({2,16,840,1,101,3,4,1,27}) },
       { "AES-192/GCM", OID({2,16,840,1,101,3,4,1,26}) },
       { "AES-192/OCB", OID({1,3,6,1,4,1,25258,3,2,2}) },
+      { "AES-192/SIV", OID({1,3,6,1,4,1,25258,3,4,2}) },
       { "AES-256/CBC", OID({2,16,840,1,101,3,4,1,42}) },
       { "AES-256/CCM", OID({2,16,840,1,101,3,4,1,47}) },
       { "AES-256/GCM", OID({2,16,840,1,101,3,4,1,46}) },
       { "AES-256/OCB", OID({1,3,6,1,4,1,25258,3,2,3}) },
+      { "AES-256/SIV", OID({1,3,6,1,4,1,25258,3,4,3}) },
       { "CAST-128/CBC", OID({1,2,840,113533,7,66,10}) },
       { "Camellia-128/CBC", OID({1,2,392,200011,61,1,1,1,2}) },
       { "Camellia-128/GCM", OID({0,3,4401,5,3,1,9,6}) },
+      { "Camellia-128/OCB", OID({1,3,6,1,4,1,25258,3,2,6}) },
+      { "Camellia-128/SIV", OID({1,3,6,1,4,1,25258,3,4,6}) },
       { "Camellia-192/CBC", OID({1,2,392,200011,61,1,1,1,3}) },
       { "Camellia-192/GCM", OID({0,3,4401,5,3,1,9,26}) },
+      { "Camellia-192/OCB", OID({1,3,6,1,4,1,25258,3,2,7}) },
+      { "Camellia-192/SIV", OID({1,3,6,1,4,1,25258,3,4,7}) },
       { "Camellia-256/CBC", OID({1,2,392,200011,61,1,1,1,4}) },
       { "Camellia-256/GCM", OID({0,3,4401,5,3,1,9,46}) },
+      { "Camellia-256/OCB", OID({1,3,6,1,4,1,25258,3,2,8}) },
+      { "Camellia-256/SIV", OID({1,3,6,1,4,1,25258,3,4,8}) },
+      { "Certificate Comment", OID({2,16,840,1,113730,1,13}) },
       { "ChaCha20Poly1305", OID({1,2,840,113549,1,9,16,3,18}) },
       { "Compression.Zlib", OID({1,2,840,113549,1,9,16,3,8}) },
       { "Curve25519", OID({1,3,101,110}) },
@@ -4193,19 +4243,21 @@ std::unordered_map<std::string, OID> OIDS::load_str2oid_map()
       { "HMAC(SHA-256)", OID({1,2,840,113549,2,9}) },
       { "HMAC(SHA-384)", OID({1,2,840,113549,2,10}) },
       { "HMAC(SHA-512)", OID({1,2,840,113549,2,11}) },
+      { "HMAC(SHA-512-256)", OID({1,2,840,113549,2,13}) },
       { "KeyWrap.AES-128", OID({2,16,840,1,101,3,4,1,5}) },
       { "KeyWrap.AES-192", OID({2,16,840,1,101,3,4,1,25}) },
       { "KeyWrap.AES-256", OID({2,16,840,1,101,3,4,1,45}) },
       { "KeyWrap.CAST-128", OID({1,2,840,113533,7,66,15}) },
-      { "KeyWrap.RC2", OID({1,2,840,113549,1,9,16,3,7}) },
       { "KeyWrap.TripleDES", OID({1,2,840,113549,1,9,16,3,6}) },
       { "MD5", OID({1,2,840,113549,2,5}) },
       { "MGF1", OID({1,2,840,113549,1,1,8}) },
       { "McEliece", OID({1,3,6,1,4,1,25258,1,3}) },
       { "Microsoft SmartcardLogon", OID({1,3,6,1,4,1,311,20,2,2}) },
+      { "Microsoft UPN", OID({1,3,6,1,4,1,311,20,2,3}) },
       { "OpenPGP.Curve25519", OID({1,3,6,1,4,1,3029,1,5,1}) },
       { "OpenPGP.Ed25519", OID({1,3,6,1,4,1,11591,15,1}) },
       { "PBE-PKCS5v20", OID({1,2,840,113549,1,5,13}) },
+      { "PBES2", OID({1,2,840,113549,1,5,13}) },
       { "PKCS5.PBKDF2", OID({1,2,840,113549,1,5,12}) },
       { "PKCS9.ChallengePassword", OID({1,2,840,113549,1,9,7}) },
       { "PKCS9.ContentType", OID({1,2,840,113549,1,9,3}) },
@@ -4227,7 +4279,6 @@ std::unordered_map<std::string, OID> OIDS::load_str2oid_map()
       { "PKIX.ServerAuth", OID({1,3,6,1,5,5,7,3,1}) },
       { "PKIX.TimeStamping", OID({1,3,6,1,5,5,7,3,8}) },
       { "PKIX.XMPPAddr", OID({1,3,6,1,5,5,7,8,5}) },
-      { "RC2/CBC", OID({1,2,840,113549,3,2}) },
       { "RIPEMD-160", OID({1,3,36,3,2,1}) },
       { "RSA", OID({1,2,840,113549,1,1,1}) },
       { "RSA/EMSA3(MD5)", OID({1,2,840,113549,1,1,4}) },
@@ -4258,16 +4309,21 @@ std::unordered_map<std::string, OID> OIDS::load_str2oid_map()
       { "SHA-512-256", OID({2,16,840,1,101,3,4,2,6}) },
       { "SHAKE-128", OID({2,16,840,1,101,3,4,2,11}) },
       { "SHAKE-256", OID({2,16,840,1,101,3,4,2,12}) },
+      { "SM2", OID({1,2,156,10197,1,301,1}) },
       { "SM2_Enc", OID({1,2,156,10197,1,301,3}) },
       { "SM2_Kex", OID({1,2,156,10197,1,301,2}) },
       { "SM2_Sig", OID({1,2,156,10197,1,301,1}) },
+      { "SM2_Sig/SM3", OID({1,2,156,10197,1,501}) },
       { "SM3", OID({1,2,156,10197,1,401}) },
       { "SM4/CBC", OID({1,2,156,10197,1,104,2}) },
       { "SM4/GCM", OID({1,2,156,10197,1,104,8}) },
+      { "SM4/OCB", OID({1,2,156,10197,1,104,100}) },
+      { "SM4/SIV", OID({1,3,6,1,4,1,25258,3,4,9}) },
       { "Scrypt", OID({1,3,6,1,4,1,11591,4,11}) },
       { "Serpent/CBC", OID({1,3,6,1,4,1,25258,3,1}) },
       { "Serpent/GCM", OID({1,3,6,1,4,1,25258,3,101}) },
       { "Serpent/OCB", OID({1,3,6,1,4,1,25258,3,2,4}) },
+      { "Serpent/SIV", OID({1,3,6,1,4,1,25258,3,4,4}) },
       { "Streebog-256", OID({1,2,643,7,1,1,2,2}) },
       { "Streebog-512", OID({1,2,643,7,1,1,2,3}) },
       { "Threefish-512/CBC", OID({1,3,6,1,4,1,25258,3,2}) },
@@ -4276,6 +4332,7 @@ std::unordered_map<std::string, OID> OIDS::load_str2oid_map()
       { "Twofish/CBC", OID({1,3,6,1,4,1,25258,3,3}) },
       { "Twofish/GCM", OID({1,3,6,1,4,1,25258,3,102}) },
       { "Twofish/OCB", OID({1,3,6,1,4,1,25258,3,2,5}) },
+      { "Twofish/SIV", OID({1,3,6,1,4,1,25258,3,4,5}) },
       { "X509v3.AnyPolicy", OID({2,5,29,32,0}) },
       { "X509v3.AuthorityKeyIdentifier", OID({2,5,29,35}) },
       { "X509v3.BasicConstraints", OID({2,5,29,19}) },
@@ -4353,7 +4410,7 @@ namespace OIDS {
 
 namespace {
 
-class OID_Map
+class OID_Map final
    {
    public:
       void add_oid(const OID& oid, const std::string& str)
@@ -4537,7 +4594,7 @@ void AutoSeeded_RNG::force_reseed()
 
    if(!m_rng->is_seeded())
       {
-      throw Exception("AutoSeeded_RNG reseeding failed");
+      throw Internal_Error("AutoSeeded_RNG reseeding failed");
       }
    }
 
@@ -4570,7 +4627,7 @@ size_t AutoSeeded_RNG::reseed(Entropy_Sources& srcs,
 
 void AutoSeeded_RNG::randomize(uint8_t output[], size_t output_len)
    {
-   randomize_with_ts_input(output, output_len);
+   m_rng->randomize_with_ts_input(output, output_len);
    }
 
 void AutoSeeded_RNG::randomize_with_input(uint8_t output[], size_t output_len,
@@ -4873,6 +4930,7 @@ OctetString operator^(const OctetString& k1, const OctetString& k2)
 /*
 * Base32 Encoding and Decoding
 * (C) 2018 Erwan Chaussy
+* (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -4882,32 +4940,37 @@ namespace Botan {
 
 namespace {
 
-class Base32
+class Base32 final
    {
    public:
-      static inline size_t encoding_bytes_in() BOTAN_NOEXCEPT
+      static inline std::string name() noexcept
+         {
+         return "base32";
+         }
+
+      static inline size_t encoding_bytes_in() noexcept
          {
          return m_encoding_bytes_in;
          }
-      static inline size_t encoding_bytes_out() BOTAN_NOEXCEPT
+      static inline size_t encoding_bytes_out() noexcept
          {
          return m_encoding_bytes_out;
          }
 
-      static inline size_t decoding_bytes_in() BOTAN_NOEXCEPT
+      static inline size_t decoding_bytes_in() noexcept
          {
          return m_encoding_bytes_out;
          }
-      static inline size_t decoding_bytes_out() BOTAN_NOEXCEPT
+      static inline size_t decoding_bytes_out() noexcept
          {
          return m_encoding_bytes_in;
          }
 
-      static inline size_t bits_consumed() BOTAN_NOEXCEPT
+      static inline size_t bits_consumed() noexcept
          {
          return m_encoding_bits;
          }
-      static inline size_t remaining_bits_before_padding() BOTAN_NOEXCEPT
+      static inline size_t remaining_bits_before_padding() noexcept
          {
          return m_remaining_bits_before_padding;
          }
@@ -4921,7 +4984,7 @@ class Base32
          return (round_up(input_length, m_encoding_bytes_out) * m_encoding_bytes_in) / m_encoding_bytes_out;
          }
 
-      static void encode(char out[8], const uint8_t in[5]) BOTAN_NOEXCEPT
+      static void encode(char out[8], const uint8_t in[5]) noexcept
          {
          out[0] = Base32::m_bin_to_base32[(in[0] & 0xF8) >> 3];
          out[1] = Base32::m_bin_to_base32[((in[0] & 0x07) << 2) | (in[1] >> 6)];
@@ -4933,7 +4996,7 @@ class Base32
          out[7] = Base32::m_bin_to_base32[in[4] & 0x1F];
          }
 
-      static inline uint8_t lookup_binary_value(char input) BOTAN_NOEXCEPT
+      static inline uint8_t lookup_binary_value(char input) noexcept
          {
          return Base32::m_base32_to_bin[static_cast<uint8_t>(input)];
          }
@@ -5043,23 +5106,7 @@ size_t base32_encode(char out[],
 std::string base32_encode(const uint8_t input[],
                           size_t input_length)
    {
-   const size_t output_length = Base32::encode_max_output(input_length);
-   std::string output(output_length, 0);
-
-   size_t consumed = 0;
-   size_t produced = 0;
-
-   if(output_length > 0)
-      {
-      produced = base32_encode(&output.front(),
-                               input, input_length,
-                               consumed, true);
-      }
-
-   BOTAN_ASSERT_EQUAL(consumed, input_length, "Consumed the entire input");
-   BOTAN_ASSERT_EQUAL(produced, output.size(), "Produced expected size");
-
-   return output;
+   return base_encode_to_string(Base32(), input, input_length);
    }
 
 size_t base32_decode(uint8_t out[],
@@ -5077,14 +5124,7 @@ size_t base32_decode(uint8_t output[],
                      size_t input_length,
                      bool ignore_ws)
    {
-   size_t consumed = 0;
-   size_t written = base32_decode(output, input, input_length,
-                                  consumed, true, ignore_ws);
-
-   if(consumed != input_length)
-      { throw Invalid_Argument("base32_decode: input did not have full bytes"); }
-
-   return written;
+   return base_decode_full(Base32(), output, input, input_length, ignore_ws);
    }
 
 size_t base32_decode(uint8_t output[],
@@ -5098,22 +5138,182 @@ secure_vector<uint8_t> base32_decode(const char input[],
                                      size_t input_length,
                                      bool ignore_ws)
    {
-   const size_t output_length = Base32::decode_max_output(input_length);
-   secure_vector<uint8_t> bin(output_length);
-
-   size_t written = base32_decode(bin.data(),
-                                  input,
-                                  input_length,
-                                  ignore_ws);
-
-   bin.resize(written);
-   return bin;
+   return base_decode_to_vec<secure_vector<uint8_t>>(Base32(), input, input_length, ignore_ws);
    }
 
 secure_vector<uint8_t> base32_decode(const std::string& input,
                                      bool ignore_ws)
    {
    return base32_decode(input.data(), input.size(), ignore_ws);
+   }
+
+}
+/*
+* (C) 2018 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+namespace {
+
+uint32_t sha256_d_checksum(const uint8_t input[], size_t input_length)
+   {
+   std::unique_ptr<HashFunction> sha256 = HashFunction::create_or_throw("SHA-256");
+
+   std::vector<uint8_t> checksum(32);
+
+   sha256->update(input, input_length);
+   sha256->final(checksum);
+
+   sha256->update(checksum);
+   sha256->final(checksum);
+
+   checksum.resize(4);
+   uint32_t c = load_be<uint32_t>(checksum.data(), 0);
+   return c;
+   }
+
+class Character_Table
+   {
+   public:
+      // This must be a literal constant
+      Character_Table(const char* alphabet) :
+         m_alphabet(alphabet)
+         {
+         const size_t alpha_len = std::strlen(alphabet);
+
+         // 128 or up would flow into 0x80 invalid bit
+         if(alpha_len == 0 || alpha_len >= 128)
+            throw Invalid_Argument("Bad Character_Table string");
+
+         m_alphabet_len = static_cast<uint8_t>(alpha_len);
+
+         set_mem(m_tab, 256, 0x80);
+
+         for(size_t i = 0; m_alphabet[i]; ++i)
+            {
+            const uint8_t b = static_cast<uint8_t>(m_alphabet[i]);
+            BOTAN_ASSERT(m_tab[b] == 0x80, "No duplicate chars");
+            m_tab[b] = static_cast<uint8_t>(i);
+            }
+         }
+
+      uint8_t radix() const { return m_alphabet_len; }
+
+      char operator[](size_t i) const
+         {
+         BOTAN_ASSERT(i < m_alphabet_len, "Character in range");
+         return m_alphabet[i];
+         }
+
+      uint8_t code_for(char c) const
+         {
+         return m_tab[static_cast<uint8_t>(c)];
+         }
+
+   private:
+      const char* m_alphabet;
+      uint8_t m_alphabet_len;
+      uint8_t m_tab[256];
+   };
+
+static const Character_Table& BASE58_ALPHA()
+   {
+   static const Character_Table base58_alpha("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz");
+   return base58_alpha;
+   }
+
+std::string base58_encode(BigInt v, size_t leading_zeros)
+   {
+   const auto base58 = BASE58_ALPHA();
+
+   std::string result;
+   BigInt q;
+   uint8_t r;
+
+   while(v.is_nonzero())
+      {
+      ct_divide_u8(v, base58.radix(), q, r);
+      result.push_back(base58[r]);
+      v.swap(q);
+      }
+
+   for(size_t i = 0; i != leading_zeros; ++i)
+      result.push_back(base58[0]);
+
+   return std::string(result.rbegin(), result.rend());
+   }
+
+template<typename T, typename Z>
+size_t count_leading_zeros(const T input[], size_t input_length, Z zero)
+   {
+   size_t leading_zeros = 0;
+
+   while(leading_zeros < input_length && input[leading_zeros] == zero)
+      leading_zeros += 1;
+
+   return leading_zeros;
+   }
+
+}
+
+std::string base58_encode(const uint8_t input[], size_t input_length)
+   {
+   BigInt v(input, input_length);
+   return base58_encode(v, count_leading_zeros(input, input_length, 0));
+   }
+
+std::string base58_check_encode(const uint8_t input[], size_t input_length)
+   {
+   BigInt v(input, input_length);
+   v <<= 32;
+   v += sha256_d_checksum(input, input_length);
+   return base58_encode(v, count_leading_zeros(input, input_length, 0));
+   }
+
+std::vector<uint8_t> base58_decode(const char input[], size_t input_length)
+   {
+   const auto base58 = BASE58_ALPHA();
+
+   const size_t leading_zeros = count_leading_zeros(input, input_length, base58[0]);
+
+   BigInt v;
+
+   for(size_t i = leading_zeros; i != input_length; ++i)
+      {
+      size_t idx = base58.code_for(input[i]);
+
+      if(idx == 0x80)
+         throw Decoding_Error("Invalid base58");
+
+      v *= base58.radix();
+      v += idx;
+      }
+
+   std::vector<uint8_t> output(v.bytes() + leading_zeros);
+   v.binary_encode(output.data() + leading_zeros);
+   return output;
+   }
+
+std::vector<uint8_t> base58_check_decode(const char input[], size_t input_length)
+   {
+   std::vector<uint8_t> dec = base58_decode(input, input_length);
+
+   if(dec.size() < 4)
+      throw Decoding_Error("Invalid base58 too short for checksum");
+
+   const uint32_t computed_checksum = sha256_d_checksum(dec.data(), dec.size() - 4);
+   const uint32_t checksum = load_be<uint32_t>(&dec[dec.size()-4], 0);
+
+   if(checksum != computed_checksum)
+      throw Decoding_Error("Invalid base58 checksum");
+
+   dec.resize(dec.size() - 4);
+
+   return dec;
    }
 
 }
@@ -5129,22 +5329,153 @@ namespace Botan {
 
 namespace {
 
-static const uint8_t BIN_TO_BASE64[64] = {
+class Base64 final
+   {
+   public:
+      static inline std::string name() noexcept
+         {
+         return "base64";
+         }
+
+      static inline size_t encoding_bytes_in() noexcept
+         {
+         return m_encoding_bytes_in;
+         }
+      static inline size_t encoding_bytes_out() noexcept
+         {
+         return m_encoding_bytes_out;
+         }
+
+      static inline size_t decoding_bytes_in() noexcept
+         {
+         return m_encoding_bytes_out;
+         }
+      static inline size_t decoding_bytes_out() noexcept
+         {
+         return m_encoding_bytes_in;
+         }
+
+      static inline size_t bits_consumed() noexcept
+         {
+         return m_encoding_bits;
+         }
+      static inline size_t remaining_bits_before_padding() noexcept
+         {
+         return m_remaining_bits_before_padding;
+         }
+
+      static inline size_t encode_max_output(size_t input_length)
+         {
+         return (round_up(input_length, m_encoding_bytes_in) / m_encoding_bytes_in) * m_encoding_bytes_out;
+         }
+      static inline size_t decode_max_output(size_t input_length)
+         {
+         return (round_up(input_length, m_encoding_bytes_out) * m_encoding_bytes_in) / m_encoding_bytes_out;
+         }
+
+      static void encode(char out[8], const uint8_t in[5]) noexcept
+         {
+         out[0] = Base64::m_bin_to_base64[(in[0] & 0xFC) >> 2];
+         out[1] = Base64::m_bin_to_base64[((in[0] & 0x03) << 4) | (in[1] >> 4)];
+         out[2] = Base64::m_bin_to_base64[((in[1] & 0x0F) << 2) | (in[2] >> 6)];
+         out[3] = Base64::m_bin_to_base64[in[2] & 0x3F];
+         }
+
+      static inline uint8_t lookup_binary_value(char input) noexcept
+         {
+         return Base64::m_base64_to_bin[static_cast<uint8_t>(input)];
+         }
+
+      static inline bool check_bad_char(uint8_t bin, char input, bool ignore_ws)
+         {
+         if(bin <= 0x3F)
+            {
+            return true;
+            }
+         else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws)))
+            {
+            std::string bad_char(1, input);
+            if(bad_char == "\t")
+               { bad_char = "\\t"; }
+            else if(bad_char == "\n")
+               { bad_char = "\\n"; }
+            else if(bad_char == "\r")
+               { bad_char = "\\r"; }
+
+            throw Invalid_Argument(
+               std::string("base64_decode: invalid base64 character '") +
+               bad_char + "'");
+            }
+         return false;
+         }
+
+      static void decode(uint8_t* out_ptr, const uint8_t decode_buf[4])
+         {
+         out_ptr[0] = (decode_buf[0] << 2) | (decode_buf[1] >> 4);
+         out_ptr[1] = (decode_buf[1] << 4) | (decode_buf[2] >> 2);
+         out_ptr[2] = (decode_buf[2] << 6) | decode_buf[3];
+         }
+
+      static inline size_t bytes_to_remove(size_t final_truncate)
+         {
+         return final_truncate;
+         }
+
+   private:
+      static const size_t m_encoding_bits = 6;
+      static const size_t m_remaining_bits_before_padding = 8;
+
+
+      static const size_t m_encoding_bytes_in = 3;
+      static const size_t m_encoding_bytes_out = 4;
+
+
+      static const uint8_t m_bin_to_base64[64];
+      static const uint8_t m_base64_to_bin[256];
+   };
+
+const uint8_t Base64::m_bin_to_base64[64] =
+   {
    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
-};
+   };
 
-void do_base64_encode(char out[4], const uint8_t in[3])
+/*
+* base64 Decoder Lookup Table
+* Warning: assumes ASCII encodings
+*/
+const uint8_t Base64::m_base64_to_bin[256] =
    {
-   out[0] = BIN_TO_BASE64[(in[0] & 0xFC) >> 2];
-   out[1] = BIN_TO_BASE64[((in[0] & 0x03) << 4) | (in[1] >> 4)];
-   out[2] = BIN_TO_BASE64[((in[1] & 0x0F) << 2) | (in[2] >> 6)];
-   out[3] = BIN_TO_BASE64[in[2] & 0x3F];
-   }
-
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
+   0x80, 0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0x3E, 0xFF, 0xFF, 0xFF, 0x3F, 0x34, 0x35,
+   0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0xFF, 0xFF,
+   0xFF, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04,
+   0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
+   0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+   0x19, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x1A, 0x1B, 0x1C,
+   0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
+   0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30,
+   0x31, 0x32, 0x33, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+   };
 }
 
 size_t base64_encode(char out[],
@@ -5153,170 +5484,23 @@ size_t base64_encode(char out[],
                      size_t& input_consumed,
                      bool final_inputs)
    {
-   input_consumed = 0;
-
-   size_t input_remaining = input_length;
-   size_t output_produced = 0;
-
-   while(input_remaining >= 3)
-      {
-      do_base64_encode(out + output_produced, in + input_consumed);
-
-      input_consumed += 3;
-      output_produced += 4;
-      input_remaining -= 3;
-      }
-
-   if(final_inputs && input_remaining)
-      {
-      uint8_t remainder[3] = { 0 };
-      for(size_t i = 0; i != input_remaining; ++i)
-         remainder[i] = in[input_consumed + i];
-
-      do_base64_encode(out + output_produced, remainder);
-
-      size_t empty_bits = 8 * (3 - input_remaining);
-      size_t index = output_produced + 4 - 1;
-      while(empty_bits >= 8)
-         {
-         out[index--] = '=';
-         empty_bits -= 6;
-         }
-
-      input_consumed += input_remaining;
-      output_produced += 4;
-      }
-
-   return output_produced;
+   return base_encode(Base64(), out, in, input_length, input_consumed, final_inputs);
    }
 
 std::string base64_encode(const uint8_t input[],
                           size_t input_length)
    {
-   const size_t output_length = base64_encode_max_output(input_length);
-   std::string output(output_length, 0);
-
-   size_t consumed = 0;
-   size_t produced = 0;
-   
-   if (output_length > 0)
-   {
-      produced = base64_encode(&output.front(),
-                               input, input_length,
-                               consumed, true);
+   return base_encode_to_string(Base64(), input, input_length);
    }
 
-   BOTAN_ASSERT_EQUAL(consumed, input_length, "Consumed the entire input");
-   BOTAN_ASSERT_EQUAL(produced, output.size(), "Produced expected size");
-
-   return output;
-   }
-
-size_t base64_decode(uint8_t output[],
-                     const char input[],
+size_t base64_decode(uint8_t out[],
+                     const char in[],
                      size_t input_length,
                      size_t& input_consumed,
                      bool final_inputs,
                      bool ignore_ws)
    {
-   /*
-   * Base64 Decoder Lookup Table
-   * Warning: assumes ASCII encodings
-   */
-   static const uint8_t BASE64_TO_BIN[256] = {
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
-      0x80, 0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0x3E, 0xFF, 0xFF, 0xFF, 0x3F, 0x34, 0x35,
-      0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0xFF, 0xFF,
-      0xFF, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04,
-      0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
-      0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-      0x19, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x1A, 0x1B, 0x1C,
-      0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
-      0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30,
-      0x31, 0x32, 0x33, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-
-   uint8_t* out_ptr = output;
-   uint8_t decode_buf[4];
-   size_t decode_buf_pos = 0;
-   size_t final_truncate = 0;
-
-   clear_mem(output, input_length * 3 / 4);
-
-   for(size_t i = 0; i != input_length; ++i)
-      {
-      const uint8_t bin = BASE64_TO_BIN[static_cast<uint8_t>(input[i])];
-
-      if(bin <= 0x3F)
-         {
-         decode_buf[decode_buf_pos] = bin;
-         decode_buf_pos += 1;
-         }
-      else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws)))
-         {
-         std::string bad_char(1, input[i]);
-         if(bad_char == "\t")
-           bad_char = "\\t";
-         else if(bad_char == "\n")
-           bad_char = "\\n";
-         else if(bad_char == "\r")
-           bad_char = "\\r";
-
-         throw Invalid_Argument(
-           std::string("base64_decode: invalid base64 character '") +
-           bad_char + "'");
-         }
-
-      /*
-      * If we're at the end of the input, pad with 0s and truncate
-      */
-      if(final_inputs && (i == input_length - 1))
-         {
-         if(decode_buf_pos)
-            {
-            for(size_t j = decode_buf_pos; j != 4; ++j)
-               decode_buf[j] = 0;
-            final_truncate = (4 - decode_buf_pos);
-            decode_buf_pos = 4;
-            }
-         }
-
-      if(decode_buf_pos == 4)
-         {
-         out_ptr[0] = (decode_buf[0] << 2) | (decode_buf[1] >> 4);
-         out_ptr[1] = (decode_buf[1] << 4) | (decode_buf[2] >> 2);
-         out_ptr[2] = (decode_buf[2] << 6) | decode_buf[3];
-
-         out_ptr += 3;
-         decode_buf_pos = 0;
-         input_consumed = i+1;
-         }
-      }
-
-   while(input_consumed < input_length &&
-         BASE64_TO_BIN[static_cast<uint8_t>(input[input_consumed])] == 0x80)
-      {
-      ++input_consumed;
-      }
-
-   size_t written = (out_ptr - output) - final_truncate;
-
-   return written;
+   return base_decode(Base64(), out, in, input_length, input_consumed, final_inputs, ignore_ws);
    }
 
 size_t base64_decode(uint8_t output[],
@@ -5324,14 +5508,7 @@ size_t base64_decode(uint8_t output[],
                      size_t input_length,
                      bool ignore_ws)
    {
-   size_t consumed = 0;
-   size_t written = base64_decode(output, input, input_length,
-                                  consumed, true, ignore_ws);
-
-   if(consumed != input_length)
-      throw Invalid_Argument("base64_decode: input did not have full bytes");
-
-   return written;
+   return base_decode_full(Base64(), output, input, input_length, ignore_ws);
    }
 
 size_t base64_decode(uint8_t output[],
@@ -5342,35 +5519,26 @@ size_t base64_decode(uint8_t output[],
    }
 
 secure_vector<uint8_t> base64_decode(const char input[],
-                                 size_t input_length,
-                                 bool ignore_ws)
+                                     size_t input_length,
+                                     bool ignore_ws)
    {
-   const size_t output_length = base64_decode_max_output(input_length);
-   secure_vector<uint8_t> bin(output_length);
-
-   size_t written = base64_decode(bin.data(),
-                                  input,
-                                  input_length,
-                                  ignore_ws);
-
-   bin.resize(written);
-   return bin;
+   return base_decode_to_vec<secure_vector<uint8_t>>(Base64(), input, input_length, ignore_ws);
    }
 
 secure_vector<uint8_t> base64_decode(const std::string& input,
-                                 bool ignore_ws)
+                                     bool ignore_ws)
    {
    return base64_decode(input.data(), input.size(), ignore_ws);
    }
 
 size_t base64_encode_max_output(size_t input_length)
    {
-   return (round_up(input_length, 3) / 3) * 4;
+   return Base64::encode_max_output(input_length);
    }
 
 size_t base64_decode_max_output(size_t input_length)
    {
-   return (round_up(input_length, 4) * 3) / 4;
+   return Base64::decode_max_output(input_length);
    }
 
 }
@@ -5463,6 +5631,15 @@ std::string make_bcrypt(const std::string& pass,
                         uint16_t work_factor,
                         char version)
    {
+   /*
+   * On a 4 GHz Skylake, workfactor == 18 takes about 15 seconds to
+   * hash a password. This seems like a reasonable upper bound for the
+   * time being.
+   * Bcrypt allows up to work factor 31 (2^31 iterations)
+   */
+   BOTAN_ARG_CHECK(work_factor >= 4 && work_factor <= 18,
+                   "Invalid bcrypt work factor");
+
    static const uint8_t BCRYPT_MAGIC[8*3] = {
       0x4F, 0x72, 0x70, 0x68, 0x65, 0x61, 0x6E, 0x42,
       0x65, 0x68, 0x6F, 0x6C, 0x64, 0x65, 0x72, 0x53,
@@ -5472,10 +5649,11 @@ std::string make_bcrypt(const std::string& pass,
    Blowfish blowfish;
 
    // Include the trailing NULL byte, so we need c_str() not data()
-   blowfish.eks_key_schedule(cast_char_ptr_to_uint8(pass.c_str()),
-                             pass.length() + 1,
-                             salt.data(),
-                             work_factor);
+   blowfish.salted_set_key(cast_char_ptr_to_uint8(pass.c_str()),
+                           pass.length() + 1,
+                           salt.data(),
+                           salt.size(),
+                           work_factor);
 
    std::vector<uint8_t> ctext(BCRYPT_MAGIC, BCRYPT_MAGIC + 8*3);
 
@@ -5547,6 +5725,42 @@ bool check_bcrypt(const std::string& pass, const std::string& hash)
 
 namespace Botan {
 
+std::string BigInt::to_dec_string() const
+   {
+   BigInt copy = *this;
+   copy.set_sign(Positive);
+
+   uint8_t remainder;
+   std::vector<uint8_t> digits;
+
+   while(copy > 0)
+      {
+      ct_divide_u8(copy, 10, copy, remainder);
+      digits.push_back(remainder);
+      }
+
+   std::string s;
+
+   for(auto i = digits.rbegin(); i != digits.rend(); ++i)
+      {
+      s.push_back(Charset::digit2char(*i));
+      }
+
+   if(s.empty())
+      s += "0";
+
+   return s;
+   }
+
+std::string BigInt::to_hex_string() const
+   {
+   const std::vector<uint8_t> bits = BigInt::encode(*this);
+   if(bits.empty())
+      return "00";
+   else
+      return hex_encode(bits);
+   }
+
 /*
 * Encode a BigInt
 */
@@ -5567,14 +5781,13 @@ void BigInt::encode(uint8_t output[], const BigInt& n, Base base)
    else if(base == Decimal)
       {
       BigInt copy = n;
-      BigInt remainder;
+      uint8_t remainder;
       copy.set_sign(Positive);
       const size_t output_size = n.encoded_size(Decimal);
       for(size_t j = 0; j != output_size; ++j)
          {
-         divide(copy, 10, copy, remainder);
-         output[output_size - 1 - j] =
-            Charset::digit2char(static_cast<uint8_t>(remainder.word_at(0)));
+         ct_divide_u8(copy, 10, copy, remainder);
+         output[output_size - 1 - j] = Charset::digit2char(remainder);
          if(copy.is_zero())
             break;
          }
@@ -5588,12 +5801,15 @@ void BigInt::encode(uint8_t output[], const BigInt& n, Base base)
 */
 std::vector<uint8_t> BigInt::encode(const BigInt& n, Base base)
    {
+   if(base == Binary)
+      return BigInt::encode(n);
+
    std::vector<uint8_t> output(n.encoded_size(base));
    encode(output.data(), n, base);
-   if(base != Binary)
-      for(size_t j = 0; j != output.size(); ++j)
-         if(output[j] == 0)
-            output[j] = '0';
+   for(size_t j = 0; j != output.size(); ++j)
+      if(output[j] == 0)
+         output[j] = '0';
+
    return output;
    }
 
@@ -5602,12 +5818,15 @@ std::vector<uint8_t> BigInt::encode(const BigInt& n, Base base)
 */
 secure_vector<uint8_t> BigInt::encode_locked(const BigInt& n, Base base)
    {
+   if(base == Binary)
+      return BigInt::encode_locked(n);
+
    secure_vector<uint8_t> output(n.encoded_size(base));
    encode(output.data(), n, base);
-   if(base != Binary)
-      for(size_t j = 0; j != output.size(); ++j)
-         if(output[j] == 0)
-            output[j] = '0';
+   for(size_t j = 0; j != output.size(); ++j)
+      if(output[j] == 0)
+         output[j] = '0';
+
    return output;
    }
 
@@ -5718,7 +5937,7 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
    if(stream.flags() & std::ios::hex)
       base = BigInt::Hexadecimal;
    else if(stream.flags() & std::ios::oct)
-      throw Exception("Octal output of BigInt not supported");
+      throw Invalid_Argument("Octal output of BigInt not supported");
 
    if(n == 0)
       stream.write("0", 1);
@@ -5762,101 +5981,39 @@ std::istream& operator>>(std::istream& stream, BigInt& n)
 
 namespace Botan {
 
-BigInt& BigInt::add(const word y[], size_t y_sw, Sign y_sign)
+BigInt& BigInt::add(const word y[], size_t y_words, Sign y_sign)
    {
    const size_t x_sw = sig_words();
+
+   grow_to(std::max(x_sw, y_words) + 1);
 
    if(sign() == y_sign)
       {
-      const size_t reg_size = std::max(x_sw, y_sw) + 1;
-
-      if(m_reg.size() < reg_size)
-         grow_to(reg_size);
-
-      bigint_add2(mutable_data(), reg_size - 1, y, y_sw);
+      bigint_add2(mutable_data(), size() - 1, y, y_words);
       }
    else
       {
-      const int32_t relative_size = bigint_cmp(data(), x_sw, y, y_sw);
+      const int32_t relative_size = bigint_cmp(data(), x_sw, y, y_words);
 
+      if(relative_size >= 0)
+         {
+         // *this >= y
+         bigint_sub2(mutable_data(), x_sw, y, y_words);
+         }
+      else
+         {
+         // *this < y
+         bigint_sub2_rev(mutable_data(), y, y_words);
+         }
+
+      //this->sign_fixup(relative_size, y_sign);
       if(relative_size < 0)
-         {
-         const size_t reg_size = std::max(x_sw, y_sw);
-         grow_to(reg_size);
-         bigint_sub2_rev(mutable_data(), y, y_sw);
          set_sign(y_sign);
-         }
       else if(relative_size == 0)
-         {
-         zeroise(m_reg);
          set_sign(Positive);
-         }
-      else if(relative_size > 0)
-         {
-         bigint_sub2(mutable_data(), x_sw, y, y_sw);
-         }
       }
 
    return (*this);
-   }
-
-BigInt& BigInt::operator+=(const BigInt& y)
-   {
-   return add(y.data(), y.sig_words(), y.sign());
-   }
-
-BigInt& BigInt::operator+=(word y)
-   {
-   return add(&y, 1, Positive);
-   }
-
-BigInt& BigInt::sub(const word y[], size_t y_sw, Sign y_sign)
-   {
-   const size_t x_sw = sig_words();
-
-   int32_t relative_size = bigint_cmp(data(), x_sw, y, y_sw);
-
-   const size_t reg_size = std::max(x_sw, y_sw) + 1;
-   grow_to(reg_size);
-
-   if(relative_size < 0)
-      {
-      if(sign() == y_sign)
-         bigint_sub2_rev(mutable_data(), y, y_sw);
-      else
-         bigint_add2(mutable_data(), reg_size - 1, y, y_sw);
-
-      set_sign(y_sign == Positive ? Negative : Positive);
-      }
-   else if(relative_size == 0)
-      {
-      if(sign() == y_sign)
-         {
-         clear();
-         set_sign(Positive);
-         }
-      else
-         bigint_shl1(mutable_data(), x_sw, 0, 1);
-      }
-   else if(relative_size > 0)
-      {
-      if(sign() == y_sign)
-         bigint_sub2(mutable_data(), x_sw, y, y_sw);
-      else
-         bigint_add2(mutable_data(), reg_size - 1, y, y_sw);
-      }
-
-   return (*this);
-   }
-
-BigInt& BigInt::operator-=(const BigInt& y)
-   {
-   return sub(y.data(), y.sig_words(), y.sign());
-   }
-
-BigInt& BigInt::operator-=(word y)
-   {
-   return sub(&y, 1, Positive);
    }
 
 BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>& ws)
@@ -5864,9 +6021,40 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
    if(this->is_negative() || s.is_negative() || mod.is_negative())
       throw Invalid_Argument("BigInt::mod_add expects all arguments are positive");
 
-   // TODO add optimized version of this
-   *this += s;
-   this->reduce_below(mod, ws);
+   BOTAN_DEBUG_ASSERT(*this < mod);
+   BOTAN_DEBUG_ASSERT(s < mod);
+
+   /*
+   t + s or t + s - p == t - (p - s)
+
+   So first compute ws = p - s
+
+   Then compute t + s and t - ws
+
+   If t - ws does not borrow, then that is the correct valued
+   */
+
+   const size_t mod_sw = mod.sig_words();
+   BOTAN_ARG_CHECK(mod_sw > 0, "BigInt::mod_add modulus must be positive");
+
+   this->grow_to(mod_sw);
+   s.grow_to(mod_sw);
+
+   // First mod_sw for p - s, 2*mod_sw for bigint_addsub workspace
+   if(ws.size() < 3*mod_sw)
+      ws.resize(3*mod_sw);
+
+   word borrow = bigint_sub3(&ws[0], mod.data(), mod_sw, s.data(), mod_sw);
+   BOTAN_DEBUG_ASSERT(borrow == 0);
+
+   // Compute t - ws
+   borrow = bigint_sub3(&ws[mod_sw], this->data(), mod_sw, &ws[0], mod_sw);
+
+   // Compute t + s
+   bigint_add3_nc(&ws[mod_sw*2], this->data(), mod_sw, s.data(), mod_sw);
+
+   CT::conditional_copy_mem(borrow, &ws[0], &ws[mod_sw*2], &ws[mod_sw], mod_sw);
+   set_words(&ws[0], mod_sw);
 
    return (*this);
    }
@@ -5876,74 +6064,88 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
    if(this->is_negative() || s.is_negative() || mod.is_negative())
       throw Invalid_Argument("BigInt::mod_sub expects all arguments are positive");
 
-   const size_t t_sw = sig_words();
-   const size_t s_sw = s.sig_words();
-   const size_t mod_sw = mod.sig_words();
-
-   if(t_sw > mod_sw || s_sw > mod_sw)
-      throw Invalid_Argument("BigInt::mod_sub args larger than modulus");
-
+   // We are assuming in this function that *this and s are no more than mod_sw words long
    BOTAN_DEBUG_ASSERT(*this < mod);
    BOTAN_DEBUG_ASSERT(s < mod);
 
-   int32_t relative_size = bigint_cmp(data(), t_sw, s.data(), s_sw);
+   const size_t mod_sw = mod.sig_words();
 
-   if(relative_size >= 0)
+   this->grow_to(mod_sw);
+   s.grow_to(mod_sw);
+
+   if(ws.size() < mod_sw)
+      ws.resize(mod_sw);
+
+#if 0
+   //Faster but not const time:
+
+   // Compute t - s
+   word borrow = bigint_sub3(ws.data(), data(), mod_sw, s.data(), mod_sw);
+
+   if(borrow)
       {
-      // this >= s in which case just subtract
-      bigint_sub2(mutable_data(), t_sw, s.data(), s_sw);
+      // If t < s, instead compute p - (s - t)
+      bigint_sub2_rev(mutable_data(), s.data(), mod_sw);
+      bigint_sub2_rev(mutable_data(), mod.data(), mod_sw);
       }
    else
       {
-      // Otherwise we must sub s and then add p (or add (p - s) as here)
+      // No borrow so we already have the result we need
+      swap_reg(ws);
+      }
+#else
+   if(mod_sw == 4)
+      bigint_mod_sub_n<4>(mutable_data(), s.data(), mod.data(), ws.data());
+   else if(mod_sw == 6)
+      bigint_mod_sub_n<6>(mutable_data(), s.data(), mod.data(), ws.data());
+   else
+      bigint_mod_sub(mutable_data(), s.data(), mod.data(), mod_sw, ws.data());
+#endif
 
-      if(ws.size() < mod_sw)
-         ws.resize(mod_sw);
+   return (*this);
+   }
 
-      word borrow = bigint_sub3(ws.data(), mod.data(), mod_sw, s.data(), s_sw);
-      BOTAN_ASSERT_NOMSG(borrow == 0);
+BigInt& BigInt::mod_mul(uint8_t y, const BigInt& mod, secure_vector<word>& ws)
+   {
+   BOTAN_ARG_CHECK(this->is_negative() == false, "*this must be positive");
+   BOTAN_ARG_CHECK(y < 16, "y too large");
 
-      if(m_reg.size() < mod_sw)
-         grow_to(mod_sw);
+   BOTAN_DEBUG_ASSERT(*this < mod);
 
-      word carry = bigint_add2_nc(mutable_data(), m_reg.size(), ws.data(), mod_sw);
-      BOTAN_ASSERT_NOMSG(carry == 0);
+   switch(y)
+      {
+      case 2:
+         *this <<= 1;
+         break;
+      case 4:
+         *this <<= 2;
+         break;
+      case 8:
+         *this <<= 3;
+         break;
+      default:
+         *this *= static_cast<word>(y);
+         break;
       }
 
+   this->reduce_below(mod, ws);
    return (*this);
    }
 
 BigInt& BigInt::rev_sub(const word y[], size_t y_sw, secure_vector<word>& ws)
    {
-   /*
-   *this = BigInt(y, y_sw) - *this;
-   return *this;
-   */
    if(this->sign() != BigInt::Positive)
       throw Invalid_State("BigInt::sub_rev requires this is positive");
 
    const size_t x_sw = this->sig_words();
 
-   const int32_t relative_size = bigint_cmp(y, y_sw, this->data(), x_sw);
-
-   ws.resize(std::max(y_sw, x_sw) + 1);
+   ws.resize(std::max(x_sw, y_sw));
    clear_mem(ws.data(), ws.size());
 
-   if(relative_size < 0)
-      {
-      bigint_sub3(ws.data(), this->data(), x_sw, y, y_sw);
-      this->flip_sign();
-      }
-   else if(relative_size == 0)
-      {
-      ws.clear();
-      }
-   else if(relative_size > 0)
-      {
-      bigint_sub3(ws.data(), y, y_sw, this->data(), x_sw);
-      }
+   const int32_t relative_size = bigint_sub_abs(ws.data(), data(), x_sw, y, y_sw);
 
-   m_reg.swap(ws);
+   this->cond_flip_sign(relative_size > 0);
+   this->swap_reg(ws);
 
    return (*this);
    }
@@ -5989,7 +6191,7 @@ BigInt& BigInt::mul(const BigInt& y, secure_vector<word>& ws)
                  y.data(), y.size(), y_sw,
                  ws.data(), ws.size());
 
-      z_reg.swap(m_reg);
+      this->swap_reg(z_reg);
       }
 
    return (*this);
@@ -6057,30 +6259,26 @@ word BigInt::operator%=(word mod)
    if(mod == 0)
       throw BigInt::DivideByZero();
 
-   if(is_power_of_2(mod))
-       {
-       word result = (word_at(0) & (mod - 1));
-       clear();
-       grow_to(2);
-       m_reg[0] = result;
-       return result;
-       }
-
    word remainder = 0;
 
-   for(size_t j = sig_words(); j > 0; --j)
-      remainder = bigint_modop(remainder, word_at(j-1), mod);
-   clear();
-   grow_to(2);
+   if(is_power_of_2(mod))
+       {
+       remainder = (word_at(0) & (mod - 1));
+       }
+   else
+      {
+      const size_t sw = sig_words();
+      for(size_t i = sw; i > 0; --i)
+         remainder = bigint_modop(remainder, word_at(i-1), mod);
+      }
 
    if(remainder && sign() == BigInt::Negative)
-      m_reg[0] = mod - remainder;
-   else
-      m_reg[0] = remainder;
+      remainder = mod - remainder;
 
+   m_data.set_to_zero();
+   m_data.set_word_at(0, remainder);
    set_sign(BigInt::Positive);
-
-   return word_at(0);
+   return remainder;
    }
 
 /*
@@ -6088,24 +6286,17 @@ word BigInt::operator%=(word mod)
 */
 BigInt& BigInt::operator<<=(size_t shift)
    {
-   if(shift)
-      {
-      const size_t shift_words = shift / BOTAN_MP_WORD_BITS,
-                   shift_bits  = shift % BOTAN_MP_WORD_BITS,
-                   words = sig_words();
+   const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
+   const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
+   const size_t size = sig_words();
 
-      /*
-      * FIXME - if shift_words == 0 && the top shift_bits of the top word
-      * are zero then we know that no additional word is needed and can
-      * skip the allocation.
-      */
-      const size_t needed_size = words + shift_words + (shift_bits ? 1 : 0);
+   const size_t bits_free = top_bits_free();
 
-      if(m_reg.size() < needed_size)
-         grow_to(needed_size);
+   const size_t new_size = size + shift_words + (bits_free < shift);
 
-      bigint_shl1(mutable_data(), words, shift_words, shift_bits);
-      }
+   m_data.grow_to(new_size);
+
+   bigint_shl1(m_data.mutable_data(), new_size, size, shift_words, shift_bits);
 
    return (*this);
    }
@@ -6115,16 +6306,13 @@ BigInt& BigInt::operator<<=(size_t shift)
 */
 BigInt& BigInt::operator>>=(size_t shift)
    {
-   if(shift)
-      {
-      const size_t shift_words = shift / BOTAN_MP_WORD_BITS,
-                   shift_bits  = shift % BOTAN_MP_WORD_BITS;
+   const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
+   const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
 
-      bigint_shr1(mutable_data(), sig_words(), shift_words, shift_bits);
+   bigint_shr1(m_data.mutable_data(), m_data.size(), shift_words, shift_bits);
 
-      if(is_zero())
-         set_sign(Positive);
-      }
+   if(is_negative() && is_zero())
+      set_sign(Positive);
 
    return (*this);
    }
@@ -6132,7 +6320,7 @@ BigInt& BigInt::operator>>=(size_t shift)
 }
 /*
 * BigInt Binary Operators
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2018 Jack Lloyd
 *     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -6141,87 +6329,29 @@ BigInt& BigInt::operator>>=(size_t shift)
 
 namespace Botan {
 
-namespace {
-
-BigInt bigint_add(const BigInt& x, const word y[], size_t y_sw, BigInt::Sign y_sign)
+//static
+BigInt BigInt::add2(const BigInt& x, const word y[], size_t y_words, BigInt::Sign y_sign)
    {
    const size_t x_sw = x.sig_words();
 
-   BigInt z(x.sign(), std::max(x_sw, y_sw) + 1);
+   BigInt z(x.sign(), std::max(x_sw, y_words) + 1);
 
    if(x.sign() == y_sign)
-      bigint_add3(z.mutable_data(), x.data(), x_sw, y, y_sw);
+      {
+      bigint_add3(z.mutable_data(), x.data(), x_sw, y, y_words);
+      }
    else
       {
-      int32_t relative_size = bigint_cmp(x.data(), x_sw, y, y_sw);
+      const int32_t relative_size = bigint_sub_abs(z.mutable_data(), x.data(), x_sw, y, y_words);
 
+      //z.sign_fixup(relative_size, y_sign);
       if(relative_size < 0)
-         {
-         bigint_sub3(z.mutable_data(), y, y_sw, x.data(), x_sw);
          z.set_sign(y_sign);
-         }
       else if(relative_size == 0)
          z.set_sign(BigInt::Positive);
-      else if(relative_size > 0)
-         bigint_sub3(z.mutable_data(), x.data(), x_sw, y, y_sw);
       }
 
    return z;
-   }
-
-BigInt bigint_sub(const BigInt& x, const word y[], size_t y_sw, BigInt::Sign y_sign)
-   {
-   const size_t x_sw = x.sig_words();
-
-   int32_t relative_size = bigint_cmp(x.data(), x_sw, y, y_sw);
-
-   BigInt z(BigInt::Positive, std::max(x_sw, y_sw) + 1);
-
-   if(relative_size < 0)
-      {
-      if(x.sign() == y_sign)
-         bigint_sub3(z.mutable_data(), y, y_sw, x.data(), x_sw);
-      else
-         bigint_add3(z.mutable_data(), x.data(), x_sw, y, y_sw);
-      z.set_sign(y_sign == BigInt::Positive ? BigInt::Negative : BigInt::Positive);
-      }
-   else if(relative_size == 0)
-      {
-      if(x.sign() != y_sign)
-         bigint_shl2(z.mutable_data(), x.data(), x_sw, 0, 1);
-      z.set_sign(y_sign == BigInt::Positive ? BigInt::Negative : BigInt::Positive);
-      }
-   else if(relative_size > 0)
-      {
-      if(x.sign() == y_sign)
-         bigint_sub3(z.mutable_data(), x.data(), x_sw, y, y_sw);
-      else
-         bigint_add3(z.mutable_data(), x.data(), x_sw, y, y_sw);
-      z.set_sign(x.sign());
-      }
-   return z;
-   }
-
-}
-
-BigInt operator+(const BigInt& x, const BigInt& y)
-   {
-   return bigint_add(x, y.data(), y.sig_words(), y.sign());
-   }
-
-BigInt operator+(const BigInt& x, word y)
-   {
-   return bigint_add(x, &y, 1, BigInt::Positive);
-   }
-
-BigInt operator-(const BigInt& x, const BigInt& y)
-   {
-   return bigint_sub(x, y.data(), y.sig_words(), y.sign());
-   }
-
-BigInt operator-(const BigInt& x, word y)
-   {
-   return bigint_sub(x, &y, 1, BigInt::Positive);
    }
 
 /*
@@ -6229,7 +6359,8 @@ BigInt operator-(const BigInt& x, word y)
 */
 BigInt operator*(const BigInt& x, const BigInt& y)
    {
-   const size_t x_sw = x.sig_words(), y_sw = y.sig_words();
+   const size_t x_sw = x.sig_words();
+   const size_t y_sw = y.sig_words();
 
    BigInt z(BigInt::Positive, x.size() + y.size());
 
@@ -6247,8 +6378,26 @@ BigInt operator*(const BigInt& x, const BigInt& y)
                  workspace.data(), workspace.size());
       }
 
-   if(x_sw && y_sw && x.sign() != y.sign())
-      z.flip_sign();
+   z.cond_flip_sign(x_sw > 0 && y_sw > 0 && x.sign() != y.sign());
+
+   return z;
+   }
+
+/*
+* Multiplication Operator
+*/
+BigInt operator*(const BigInt& x, word y)
+   {
+   const size_t x_sw = x.sig_words();
+
+   BigInt z(BigInt::Positive, x_sw + 1);
+
+   if(x_sw && y)
+      {
+      bigint_linmul3(z.mutable_data(), x.data(), x_sw, y);
+      z.set_sign(x.sign());
+      }
+
    return z;
    }
 
@@ -6293,13 +6442,20 @@ word operator%(const BigInt& n, word mod)
    if(mod == 1)
       return 0;
 
-   if(is_power_of_2(mod))
-      return (n.word_at(0) & (mod - 1));
-
    word remainder = 0;
 
-   for(size_t j = n.sig_words(); j > 0; --j)
-      remainder = bigint_modop(remainder, n.word_at(j-1), mod);
+   if(is_power_of_2(mod))
+      {
+      remainder = (n.word_at(0) & (mod - 1));
+      }
+   else
+      {
+      const size_t sw = n.sig_words();
+      for(size_t i = sw; i > 0; --i)
+         {
+         remainder = bigint_modop(remainder, n.word_at(i-1), mod);
+         }
+      }
 
    if(remainder && n.sign() == BigInt::Negative)
       return mod - remainder;
@@ -6311,9 +6467,6 @@ word operator%(const BigInt& n, word mod)
 */
 BigInt operator<<(const BigInt& x, size_t shift)
    {
-   if(shift == 0)
-      return x;
-
    const size_t shift_words = shift / BOTAN_MP_WORD_BITS,
                 shift_bits  = shift % BOTAN_MP_WORD_BITS;
 
@@ -6329,17 +6482,16 @@ BigInt operator<<(const BigInt& x, size_t shift)
 */
 BigInt operator>>(const BigInt& x, size_t shift)
    {
-   if(shift == 0)
-      return x;
-   if(x.bits() <= shift)
-      return 0;
-
-   const size_t shift_words = shift / BOTAN_MP_WORD_BITS,
-                shift_bits  = shift % BOTAN_MP_WORD_BITS,
-                x_sw = x.sig_words();
+   const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
+   const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
+   const size_t x_sw = x.sig_words();
 
    BigInt y(x.sign(), x_sw - shift_words);
    bigint_shr2(y.mutable_data(), x.data(), x_sw, shift_words, shift_bits);
+
+   if(x.is_negative() && y.is_zero())
+      y.set_sign(BigInt::Positive);
+
    return y;
    }
 
@@ -6417,7 +6569,7 @@ namespace Botan {
 
 BigInt::BigInt(const word words[], size_t length)
    {
-   m_reg.assign(words, words + length);
+   m_data.set_words(words, length);
    }
 
 /*
@@ -6425,14 +6577,16 @@ BigInt::BigInt(const word words[], size_t length)
 */
 BigInt::BigInt(uint64_t n)
    {
-   if(n == 0)
-      return;
+   if(n > 0)
+      {
+#if BOTAN_MP_WORD_BITS == 32
+      m_data.set_word_at(0, static_cast<word>(n));
+      m_data.set_word_at(1, static_cast<word>(n >> 32));
+#else
+      m_data.set_word_at(0, n);
+#endif
+      }
 
-   const size_t limbs_needed = sizeof(uint64_t) / sizeof(word);
-
-   m_reg.resize(limbs_needed);
-   for(size_t i = 0; i != limbs_needed; ++i)
-      m_reg[i] = ((n >> (i*BOTAN_MP_WORD_BITS)) & MP_WORD_MASK);
    }
 
 /*
@@ -6440,17 +6594,8 @@ BigInt::BigInt(uint64_t n)
 */
 BigInt::BigInt(Sign s, size_t size)
    {
-   m_reg.resize(round_up(size, 8));
+   m_data.set_size(size);
    m_signedness = s;
-   }
-
-/*
-* Copy constructor
-*/
-BigInt::BigInt(const BigInt& other)
-   {
-   m_reg = other.m_reg;
-   m_signedness = other.m_signedness;
    }
 
 /*
@@ -6498,7 +6643,7 @@ BigInt::BigInt(const uint8_t input[], size_t length, Base base)
 BigInt::BigInt(const uint8_t buf[], size_t length, size_t max_bits)
    {
    const size_t max_bytes = std::min(length, (max_bits + 7) / 8);
-   *this = decode(buf, max_bytes);
+   binary_decode(buf, max_bytes);
 
    const size_t b = this->bits();
    if(b > max_bits)
@@ -6549,6 +6694,33 @@ int32_t BigInt::cmp(const BigInt& other, bool check_signs) const
                      other.data(), other.sig_words());
    }
 
+bool BigInt::is_equal(const BigInt& other) const
+   {
+   if(this->sign() != other.sign())
+      return false;
+
+   return bigint_ct_is_eq(this->data(), this->sig_words(),
+                          other.data(), other.sig_words()).is_set();
+   }
+
+bool BigInt::is_less_than(const BigInt& other) const
+   {
+   if(this->is_negative() && other.is_positive())
+      return true;
+
+   if(this->is_positive() && other.is_negative())
+      return false;
+
+   if(other.is_negative() && this->is_negative())
+      {
+      return !bigint_ct_is_lt(other.data(), other.sig_words(),
+                              this->data(), this->sig_words(), true).is_set();
+      }
+
+   return bigint_ct_is_lt(this->data(), this->sig_words(),
+                          other.data(), other.sig_words()).is_set();
+   }
+
 void BigInt::encode_words(word out[], size_t size) const
    {
    const size_t words = sig_words();
@@ -6560,23 +6732,47 @@ void BigInt::encode_words(word out[], size_t size) const
    copy_mem(out, data(), words);
    }
 
+size_t BigInt::Data::calc_sig_words() const
+   {
+   const size_t sz = m_reg.size();
+   size_t sig = sz;
+
+   word sub = 1;
+
+   for(size_t i = 0; i != sz; ++i)
+      {
+      const word w = m_reg[sz - i - 1];
+      sub &= ct_is_zero(w);
+      sig -= sub;
+      }
+
+   /*
+   * This depends on the data so is poisoned, but unpoison it here as
+   * later conditionals are made on the size.
+   */
+   CT::unpoison(sig);
+
+   return sig;
+   }
+
 /*
 * Return bits {offset...offset+length}
 */
 uint32_t BigInt::get_substring(size_t offset, size_t length) const
    {
-   if(length > 32)
-      throw Invalid_Argument("BigInt::get_substring: Substring size " + std::to_string(length) + " too big");
+   if(length == 0 || length > 32)
+      throw Invalid_Argument("BigInt::get_substring invalid substring length");
 
-   uint64_t piece = 0;
-   for(size_t i = 0; i != 8; ++i)
-      {
-      const uint8_t part = byte_at((offset / 8) + (7-i));
-      piece = (piece << 8) | part;
-      }
-
-   const uint64_t mask = (static_cast<uint64_t>(1) << length) - 1;
+   const size_t byte_offset = offset / 8;
    const size_t shift = (offset % 8);
+   const uint32_t mask = 0xFFFFFFFF >> (32 - length);
+
+   const uint8_t b0 = byte_at(byte_offset);
+   const uint8_t b1 = byte_at(byte_offset + 1);
+   const uint8_t b2 = byte_at(byte_offset + 2);
+   const uint8_t b3 = byte_at(byte_offset + 3);
+   const uint8_t b4 = byte_at(byte_offset + 4);
+   const uint64_t piece = make_uint64(0, 0, 0, b4, b3, b2, b1, b0);
 
    return static_cast<uint32_t>((piece >> shift) & mask);
    }
@@ -6600,12 +6796,11 @@ uint32_t BigInt::to_u32bit() const
 /*
 * Set bit number n
 */
-void BigInt::set_bit(size_t n)
+void BigInt::conditionally_set_bit(size_t n, bool set_it)
    {
    const size_t which = n / BOTAN_MP_WORD_BITS;
-   const word mask = static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS);
-   if(which >= size()) grow_to(which + 1);
-   m_reg[which] |= mask;
+   const word mask = static_cast<word>(set_it) << (n % BOTAN_MP_WORD_BITS);
+   m_data.set_word_at(which, word_at(which) | mask);
    }
 
 /*
@@ -6614,9 +6809,12 @@ void BigInt::set_bit(size_t n)
 void BigInt::clear_bit(size_t n)
    {
    const size_t which = n / BOTAN_MP_WORD_BITS;
-   const word mask = static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS);
+
    if(which < size())
-      m_reg[which] &= ~mask;
+      {
+      const word mask = ~(static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS));
+      m_data.set_word_at(which, word_at(which) & mask);
+      }
    }
 
 size_t BigInt::bytes() const
@@ -6624,9 +6822,16 @@ size_t BigInt::bytes() const
    return round_up(bits(), 8) / 8;
    }
 
-/*
-* Count how many bits are being used
-*/
+size_t BigInt::top_bits_free() const
+   {
+   const size_t words = sig_words();
+
+   const word top_word = word_at(words - 1);
+   const size_t bits_used = high_bit(top_word);
+   CT::unpoison(bits_used);
+   return BOTAN_MP_WORD_BITS - bits_used;
+   }
+
 size_t BigInt::bits() const
    {
    const size_t words = sig_words();
@@ -6634,8 +6839,10 @@ size_t BigInt::bits() const
    if(words == 0)
       return 0;
 
-   const size_t full_words = words - 1;
-   return (full_words * BOTAN_MP_WORD_BITS + high_bit(word_at(full_words)));
+   const size_t full_words = (words - 1) * BOTAN_MP_WORD_BITS;
+   const size_t top_bits = BOTAN_MP_WORD_BITS - top_bits_free();
+
+   return full_words + top_bits;
    }
 
 /*
@@ -6665,10 +6872,10 @@ BigInt BigInt::operator-() const
    return x;
    }
 
-void BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
+size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
    {
-   if(p.is_negative())
-      throw Invalid_Argument("BigInt::reduce_below mod must be positive");
+   if(p.is_negative() || this->is_negative())
+      throw Invalid_Argument("BigInt::reduce_below both values must be positive");
 
    const size_t p_words = p.sig_words();
 
@@ -6680,14 +6887,41 @@ void BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws)
 
    clear_mem(ws.data(), ws.size());
 
+   size_t reductions = 0;
+
    for(;;)
       {
       word borrow = bigint_sub3(ws.data(), data(), p_words + 1, p.data(), p_words);
-
       if(borrow)
          break;
 
-      m_reg.swap(ws);
+      ++reductions;
+      swap_reg(ws);
+      }
+
+   return reductions;
+   }
+
+void BigInt::ct_reduce_below(const BigInt& mod, secure_vector<word>& ws, size_t bound)
+   {
+   if(mod.is_negative() || this->is_negative())
+      throw Invalid_Argument("BigInt::ct_reduce_below both values must be positive");
+
+   const size_t mod_words = mod.sig_words();
+
+   grow_to(mod_words);
+
+   const size_t sz = size();
+
+   ws.resize(sz);
+
+   clear_mem(ws.data(), sz);
+
+   for(size_t i = 0; i != bound; ++i)
+      {
+      word borrow = bigint_sub3(ws.data(), data(), sz, mod.data(), mod_words);
+
+      CT::Mask<word>::is_zero(borrow).select_n(mutable_data(), ws.data(), data(), sz);
       }
    }
 
@@ -6699,17 +6933,6 @@ BigInt BigInt::abs() const
    BigInt x = (*this);
    x.set_sign(Positive);
    return x;
-   }
-
-void BigInt::grow_to(size_t n)
-   {
-   if(n > size())
-      {
-      if(n <= m_reg.capacity())
-         m_reg.resize(m_reg.capacity());
-      else
-         m_reg.resize(round_up(n, 8));
-      }
    }
 
 /*
@@ -6730,28 +6953,78 @@ void BigInt::binary_decode(const uint8_t buf[], size_t length)
    const size_t WORD_BYTES = sizeof(word);
 
    clear();
-   m_reg.resize(round_up((length / WORD_BYTES) + 1, 8));
+   secure_vector<word> reg((round_up((length / WORD_BYTES) + 1, 8)));
 
+   // TODO can load a word at a time here
    for(size_t i = 0; i != length / WORD_BYTES; ++i)
       {
       const size_t top = length - WORD_BYTES*i;
       for(size_t j = WORD_BYTES; j > 0; --j)
-         m_reg[i] = (m_reg[i] << 8) | buf[top - j];
+         reg[i] = (reg[i] << 8) | buf[top - j];
       }
 
    for(size_t i = 0; i != length % WORD_BYTES; ++i)
-      m_reg[length / WORD_BYTES] = (m_reg[length / WORD_BYTES] << 8) | buf[i];
+      reg[length / WORD_BYTES] = (reg[length / WORD_BYTES] << 8) | buf[i];
+
+   m_data.swap(reg);
+   }
+
+void BigInt::ct_cond_swap(bool predicate, BigInt& other)
+   {
+   const size_t max_words = std::max(size(), other.size());
+   grow_to(max_words);
+   other.grow_to(max_words);
+
+   bigint_cnd_swap(predicate, this->mutable_data(), other.mutable_data(), max_words);
+   }
+
+void BigInt::cond_flip_sign(bool predicate)
+   {
+   // This code is assuming Negative == 0, Positive == 1
+
+   const auto mask = CT::Mask<uint8_t>::expand(predicate);
+
+   const uint8_t current_sign = static_cast<uint8_t>(sign());
+
+   const uint8_t new_sign = mask.select(current_sign ^ 1, current_sign);
+
+   set_sign(static_cast<Sign>(new_sign));
+   }
+
+void BigInt::ct_cond_assign(bool predicate, const BigInt& other)
+   {
+   const size_t t_words = size();
+   const size_t o_words = other.size();
+
+   if(o_words < t_words)
+      grow_to(o_words);
+
+   const size_t r_words = std::max(t_words, o_words);
+
+   const auto mask = CT::Mask<word>::expand(predicate);
+
+   for(size_t i = 0; i != r_words; ++i)
+      {
+      const word o_word = other.word_at(i);
+      const word t_word = this->word_at(i);
+      this->set_word_at(i, mask.select(o_word, t_word));
+      }
+
+   if(sign() != other.sign())
+      {
+      cond_flip_sign(predicate);
+      }
    }
 
 #if defined(BOTAN_HAS_VALGRIND)
 void BigInt::const_time_poison() const
    {
-   CT::poison(m_reg.data(), m_reg.size());
+   CT::poison(m_data.const_data(), m_data.size());
    }
 
 void BigInt::const_time_unpoison() const
    {
-   CT::unpoison(m_reg.data(), m_reg.size());
+   CT::unpoison(m_data.const_data(), m_data.size());
    }
 #endif
 
@@ -6770,10 +7043,13 @@ void BigInt::const_time_lookup(secure_vector<word>& output,
       BOTAN_ASSERT(vec[i].size() >= words,
                    "Word size as expected in const_time_lookup");
 
-      const word mask = CT::is_equal(i, idx);
+      const auto mask = CT::Mask<word>::is_equal(i, idx);
 
       for(size_t w = 0; w != words; ++w)
-         output[w] |= CT::select<word>(mask, vec[i].word_at(w), 0);
+         {
+         const word viw = vec[i].word_at(w);
+         output[w] = mask.if_set_return(viw);
+         }
       }
 
    CT::unpoison(idx);
@@ -6783,7 +7059,7 @@ void BigInt::const_time_lookup(secure_vector<word>& output,
 }
 /*
 * Division Algorithm
-* (C) 1999-2007,2012 Jack Lloyd
+* (C) 1999-2007,2012,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -6798,123 +7074,217 @@ namespace {
 */
 void sign_fixup(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r)
    {
-   if(x.sign() == BigInt::Negative)
+   q.cond_flip_sign(x.sign() != y.sign());
+
+   if(x.is_negative() && r.is_nonzero())
       {
-      q.flip_sign();
-      if(r.is_nonzero()) { --q; r = y.abs() - r; }
+      q -= 1;
+      r = y.abs() - r;
       }
-   if(y.sign() == BigInt::Negative)
-      q.flip_sign();
    }
 
-bool division_check(word q, word y2, word y1,
-                    word x3, word x2, word x1)
+inline bool division_check(word q, word y2, word y1,
+                           word x3, word x2, word x1)
    {
-   // Compute (y3,y2,y1) = (y2,y1) * q
+   /*
+   Compute (y3,y2,y1) = (y2,y1) * q
+   and return true if (y3,y2,y1) > (x3,x2,x1)
+   */
 
    word y3 = 0;
    y1 = word_madd2(q, y1, &y3);
    y2 = word_madd2(q, y2, &y3);
 
-   // Return (y3,y2,y1) >? (x3,x2,x1)
+   const word x[3] = { x1, x2, x3 };
+   const word y[3] = { y1, y2, y3 };
 
-   if(y3 > x3) return true;
-   if(y3 < x3) return false;
-
-   if(y2 > x2) return true;
-   if(y2 < x2) return false;
-
-   if(y1 > x1) return true;
-   if(y1 < x1) return false;
-
-   return false;
+   return bigint_ct_is_lt(x, 3, y, 3).is_set();
    }
 
 }
 
+void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out)
+   {
+   const size_t x_words = x.sig_words();
+   const size_t y_words = y.sig_words();
+
+   const size_t x_bits = x.bits();
+
+   BigInt q(BigInt::Positive, x_words);
+   BigInt r(BigInt::Positive, y_words);
+   BigInt t(BigInt::Positive, y_words); // a temporary
+
+   for(size_t i = 0; i != x_bits; ++i)
+      {
+      const size_t b = x_bits - 1 - i;
+      const bool x_b = x.get_bit(b);
+
+      r *= 2;
+      r.conditionally_set_bit(0, x_b);
+
+      const bool r_gte_y = bigint_sub3(t.mutable_data(), r.data(), r.size(), y.data(), y_words) == 0;
+
+      q.conditionally_set_bit(b, r_gte_y);
+      r.ct_cond_swap(r_gte_y, t);
+      }
+
+   sign_fixup(x, y, q, r);
+   r_out = r;
+   q_out = q;
+   }
+
+void ct_divide_u8(const BigInt& x, uint8_t y, BigInt& q_out, uint8_t& r_out)
+   {
+   const size_t x_words = x.sig_words();
+   const size_t x_bits = x.bits();
+
+   BigInt q(BigInt::Positive, x_words);
+   uint32_t r = 0;
+
+   for(size_t i = 0; i != x_bits; ++i)
+      {
+      const size_t b = x_bits - 1 - i;
+      const bool x_b = x.get_bit(b);
+
+      r *= 2;
+      r += x_b;
+
+      const auto r_gte_y = CT::Mask<uint32_t>::is_gte(r, y);
+
+      q.conditionally_set_bit(b, r_gte_y.is_set());
+      r = r_gte_y.select(r - y, r);
+      }
+
+   if(x.is_negative())
+      {
+      q.flip_sign();
+      if(r != 0)
+         {
+         --q;
+         r = y - r;
+         }
+      }
+
+   r_out = static_cast<uint8_t>(r);
+   q_out = q;
+   }
+
+BigInt ct_modulo(const BigInt& x, const BigInt& y)
+   {
+   if(y.is_negative() || y.is_zero())
+      throw Invalid_Argument("ct_modulo requires y > 0");
+
+   const size_t y_words = y.sig_words();
+
+   const size_t x_bits = x.bits();
+
+   BigInt r(BigInt::Positive, y_words);
+   BigInt t(BigInt::Positive, y_words);
+
+   for(size_t i = 0; i != x_bits; ++i)
+      {
+      const size_t b = x_bits - 1 - i;
+      const bool x_b = x.get_bit(b);
+
+      r *= 2;
+      r.conditionally_set_bit(0, x_b);
+
+      const bool r_gte_y = bigint_sub3(t.mutable_data(), r.data(), r.size(), y.data(), y_words) == 0;
+
+      r.ct_cond_swap(r_gte_y, t);
+      }
+
+   if(x.is_negative())
+      {
+      if(r.is_nonzero())
+         {
+         r = y - r;
+         }
+      }
+
+   return r;
+   }
+
 /*
 * Solve x = q * y + r
+*
+* See Handbook of Applied Cryptography section 14.2.5
 */
-void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
+void divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out)
    {
    if(y_arg.is_zero())
       throw BigInt::DivideByZero();
 
-   BigInt y = y_arg;
-   const size_t y_words = y.sig_words();
+   const size_t y_words = y_arg.sig_words();
 
-   r = x;
-   q = 0;
+   BOTAN_ASSERT_NOMSG(y_words > 0);
+
+   BigInt y = y_arg;
+
+   BigInt r = x;
+   BigInt q = 0;
+   secure_vector<word> ws;
 
    r.set_sign(BigInt::Positive);
    y.set_sign(BigInt::Positive);
 
-   int32_t compare = r.cmp(y);
+   // Calculate shifts needed to normalize y with high bit set
+   const size_t shifts = y.top_bits_free();
 
-   if(compare == 0)
+   y <<= shifts;
+   r <<= shifts;
+
+   // we know y has not changed size, since we only shifted up to set high bit
+   const size_t t = y_words - 1;
+   const size_t n = std::max(y_words, r.sig_words()) - 1; // r may have changed size however
+
+   BOTAN_ASSERT_NOMSG(n >= t);
+
+   q.grow_to(n - t + 1);
+
+   word* q_words = q.mutable_data();
+
+   BigInt shifted_y = y << (BOTAN_MP_WORD_BITS * (n-t));
+
+   // Set q_{n-t} to number of times r > shifted_y
+   q_words[n-t] = r.reduce_below(shifted_y, ws);
+
+   const word y_t0  = y.word_at(t);
+   const word y_t1  = y.word_at(t-1);
+   BOTAN_DEBUG_ASSERT((y_t0 >> (BOTAN_MP_WORD_BITS-1)) == 1);
+
+   for(size_t j = n; j != t; --j)
       {
-      q = 1;
-      r = 0;
+      const word x_j0  = r.word_at(j);
+      const word x_j1 = r.word_at(j-1);
+      const word x_j2 = r.word_at(j-2);
+
+      word qjt = bigint_divop(x_j0, x_j1, y_t0);
+
+      qjt = CT::Mask<word>::is_equal(x_j0, y_t0).select(MP_WORD_MAX, qjt);
+
+      // Per HAC 14.23, this operation is required at most twice
+      qjt -= division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2);
+      qjt -= division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2);
+      BOTAN_DEBUG_ASSERT(division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2) == false);
+
+      shifted_y >>= BOTAN_MP_WORD_BITS;
+      // Now shifted_y == y << (BOTAN_MP_WORD_BITS * (j-t-1))
+
+      // TODO this sequence could be better
+      r -= qjt * shifted_y;
+      qjt -= r.is_negative();
+      r += static_cast<word>(r.is_negative()) * shifted_y;
+
+      q_words[j-t-1] = qjt;
       }
-   else if(compare > 0)
-      {
-      size_t shifts = 0;
-      word y_top = y.word_at(y.sig_words()-1);
-      while(y_top < MP_WORD_TOP_BIT) { y_top <<= 1; ++shifts; }
-      y <<= shifts;
-      r <<= shifts;
 
-      const size_t n = r.sig_words() - 1, t = y_words - 1;
-
-      if(n < t)
-         throw Internal_Error("BigInt division word sizes");
-
-      q.grow_to(n - t + 1);
-
-      word* q_words = q.mutable_data();
-
-      if(n <= t)
-         {
-         while(r > y) { r -= y; ++q; }
-         r >>= shifts;
-         sign_fixup(x, y_arg, q, r);
-         return;
-         }
-
-      BigInt temp = y << (BOTAN_MP_WORD_BITS * (n-t));
-
-      while(r >= temp) { r -= temp; q_words[n-t] += 1; }
-
-      for(size_t j = n; j != t; --j)
-         {
-         const word x_j0  = r.word_at(j);
-         const word x_j1 = r.word_at(j-1);
-         const word y_t  = y.word_at(t);
-
-         if(x_j0 == y_t)
-            q_words[j-t-1] = MP_WORD_MAX;
-         else
-            q_words[j-t-1] = bigint_divop(x_j0, x_j1, y_t);
-
-         while(division_check(q_words[j-t-1],
-                              y_t, y.word_at(t-1),
-                              x_j0, x_j1, r.word_at(j-2)))
-            {
-            q_words[j-t-1] -= 1;
-            }
-
-         r -= (q_words[j-t-1] * y) << (BOTAN_MP_WORD_BITS * (j-t-1));
-
-         if(r.is_negative())
-            {
-            r += y << (BOTAN_MP_WORD_BITS * (j-t-1));
-            q_words[j-t-1] -= 1;
-            }
-         }
-      r >>= shifts;
-      }
+   r >>= shifts;
 
    sign_fixup(x, y_arg, q, r);
+
+   r_out = r;
+   q_out = q;
    }
 
 }
@@ -7192,12 +7562,26 @@ void Blake2b::clear()
 #if defined(BOTAN_HAS_OPENSSL)
 #endif
 
+#if defined(BOTAN_HAS_COMMONCRYPTO)
+#endif
+
 namespace Botan {
 
 std::unique_ptr<BlockCipher>
 BlockCipher::create(const std::string& algo,
                     const std::string& provider)
    {
+#if defined(BOTAN_HAS_COMMONCRYPTO)
+   if(provider.empty() || provider == "commoncrypto")
+      {
+      if(auto bc = make_commoncrypto_block_cipher(algo))
+         return bc;
+
+      if(!provider.empty())
+         return nullptr;
+      }
+#endif
+
 #if defined(BOTAN_HAS_OPENSSL)
    if(provider.empty() || provider == "openssl")
       {
@@ -7209,7 +7593,6 @@ BlockCipher::create(const std::string& algo,
       }
 #endif
 
-   // TODO: CommonCrypto
    // TODO: CryptoAPI
    // TODO: /dev/crypto
 
@@ -7437,13 +7820,13 @@ BlockCipher::create_or_throw(const std::string& algo,
 
 std::vector<std::string> BlockCipher::providers(const std::string& algo)
    {
-   return probe_providers_of<BlockCipher>(algo, { "base", "openssl" });
+   return probe_providers_of<BlockCipher>(algo, { "base", "openssl", "commoncrypto" });
    }
 
 }
 /*
 * Blowfish
-* (C) 1999-2011 Jack Lloyd
+* (C) 1999-2011,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -7646,35 +8029,45 @@ void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_S.empty() == false);
 
-   while(blocks >= 2)
+   while(blocks >= 4)
       {
-      uint32_t L0, R0, L1, R1;
-      load_be(in, L0, R0, L1, R1);
+      uint32_t L0, R0, L1, R1, L2, R2, L3, R3;
+      load_be(in, L0, R0, L1, R1, L2, R2, L3, R3);
 
       for(size_t r = 0; r != 16; r += 2)
          {
          L0 ^= m_P[r];
          L1 ^= m_P[r];
+         L2 ^= m_P[r];
+         L3 ^= m_P[r];
          R0 ^= BFF(L0, m_S);
          R1 ^= BFF(L1, m_S);
+         R2 ^= BFF(L2, m_S);
+         R3 ^= BFF(L3, m_S);
 
          R0 ^= m_P[r+1];
          R1 ^= m_P[r+1];
+         R2 ^= m_P[r+1];
+         R3 ^= m_P[r+1];
          L0 ^= BFF(R0, m_S);
          L1 ^= BFF(R1, m_S);
+         L2 ^= BFF(R2, m_S);
+         L3 ^= BFF(R3, m_S);
          }
 
       L0 ^= m_P[16]; R0 ^= m_P[17];
       L1 ^= m_P[16]; R1 ^= m_P[17];
+      L2 ^= m_P[16]; R2 ^= m_P[17];
+      L3 ^= m_P[16]; R3 ^= m_P[17];
 
-      store_be(out, R0, L0, R1, L1);
+      store_be(out, R0, L0, R1, L1, R2, L2, R3, L3);
 
-      in += 2*BLOCK_SIZE;
-      out += 2*BLOCK_SIZE;
-      blocks -= 2;
+      in += 4*BLOCK_SIZE;
+      out += 4*BLOCK_SIZE;
+      blocks -= 4;
       }
 
-   if(blocks)
+   while(blocks)
       {
       uint32_t L, R;
       load_be(in, L, R);
@@ -7691,6 +8084,10 @@ void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       L ^= m_P[16]; R ^= m_P[17];
 
       store_be(out, R, L);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      blocks--;
       }
    }
 
@@ -7701,35 +8098,46 @@ void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_S.empty() == false);
 
-   while(blocks >= 2)
+   while(blocks >= 4)
       {
-      uint32_t L0, R0, L1, R1;
-      load_be(in, L0, R0, L1, R1);
+      uint32_t L0, R0, L1, R1, L2, R2, L3, R3;
+      load_be(in, L0, R0, L1, R1, L2, R2, L3, R3);
 
       for(size_t r = 17; r != 1; r -= 2)
          {
          L0 ^= m_P[r];
          L1 ^= m_P[r];
+         L2 ^= m_P[r];
+         L3 ^= m_P[r];
          R0 ^= BFF(L0, m_S);
          R1 ^= BFF(L1, m_S);
+         R2 ^= BFF(L2, m_S);
+         R3 ^= BFF(L3, m_S);
 
          R0 ^= m_P[r-1];
          R1 ^= m_P[r-1];
+         R2 ^= m_P[r-1];
+         R3 ^= m_P[r-1];
+
          L0 ^= BFF(R0, m_S);
          L1 ^= BFF(R1, m_S);
+         L2 ^= BFF(R2, m_S);
+         L3 ^= BFF(R3, m_S);
          }
 
       L0 ^= m_P[1]; R0 ^= m_P[0];
       L1 ^= m_P[1]; R1 ^= m_P[0];
+      L2 ^= m_P[1]; R2 ^= m_P[0];
+      L3 ^= m_P[1]; R3 ^= m_P[0];
 
-      store_be(out, R0, L0, R1, L1);
+      store_be(out, R0, L0, R1, L1, R2, L2, R3, L3);
 
-      in += 2*BLOCK_SIZE;
-      out += 2*BLOCK_SIZE;
-      blocks -= 2;
+      in += 4*BLOCK_SIZE;
+      out += 4*BLOCK_SIZE;
+      blocks -= 4;
       }
 
-   if(blocks)
+   while(blocks)
       {
       uint32_t L, R;
       load_be(in, L, R);
@@ -7746,6 +8154,10 @@ void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       L ^= m_P[1]; R ^= m_P[0];
 
       store_be(out, R, L);
+
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
+      blocks--;
       }
    }
 
@@ -7760,39 +8172,36 @@ void Blowfish::key_schedule(const uint8_t key[], size_t length)
    m_S.resize(1024);
    copy_mem(m_S.data(), S_INIT, 1024);
 
-   const uint8_t null_salt[16] = { 0 };
-
-   key_expansion(key, length, null_salt);
+   key_expansion(key, length, nullptr, 0);
    }
 
 void Blowfish::key_expansion(const uint8_t key[],
                              size_t length,
-                             const uint8_t salt[16])
+                             const uint8_t salt[],
+                             size_t salt_length)
    {
+   BOTAN_ASSERT_NOMSG(salt_length % 4 == 0);
+
    for(size_t i = 0, j = 0; i != 18; ++i, j += 4)
       m_P[i] ^= make_uint32(key[(j  ) % length], key[(j+1) % length],
                             key[(j+2) % length], key[(j+3) % length]);
 
+   const size_t P_salt_offset = (salt_length > 0) ? 18 % (salt_length / 4) : 0;
+
    uint32_t L = 0, R = 0;
-   generate_sbox(m_P, L, R, salt, 0);
-   generate_sbox(m_S, L, R, salt, 2);
+   generate_sbox(m_P, L, R, salt, salt_length, 0);
+   generate_sbox(m_S, L, R, salt, salt_length, P_salt_offset);
    }
 
 /*
 * Modified key schedule used for bcrypt password hashing
 */
-void Blowfish::eks_key_schedule(const uint8_t key[], size_t length,
-                                const uint8_t salt[16], size_t workfactor)
+void Blowfish::salted_set_key(const uint8_t key[], size_t length,
+                              const uint8_t salt[], size_t salt_length,
+                              size_t workfactor)
    {
-
-   /*
-   * On a 2.8 GHz Core-i7, workfactor == 18 takes about 25 seconds to
-   * hash a password. This seems like a reasonable upper bound for the
-   * time being.
-   * Bcrypt allows up to work factor 31 (2^31 iterations)
-   */
-   BOTAN_ARG_CHECK(workfactor >= 4 && workfactor <= 18,
-                   "Invalid bcrypt work factor");
+   BOTAN_ARG_CHECK(salt_length > 0 && salt_length % 4 == 0,
+                   "Invalid salt length for Blowfish salted key schedule");
 
    if(length > 72)
       {
@@ -7805,15 +8214,17 @@ void Blowfish::eks_key_schedule(const uint8_t key[], size_t length,
 
    m_S.resize(1024);
    copy_mem(m_S.data(), S_INIT, 1024);
-   key_expansion(key, length, salt);
+   key_expansion(key, length, salt, salt_length);
 
-   const uint8_t null_salt[16] = { 0 };
-   const size_t rounds = static_cast<size_t>(1) << workfactor;
-
-   for(size_t r = 0; r != rounds; ++r)
+   if(workfactor > 0)
       {
-      key_expansion(key, length, null_salt);
-      key_expansion(salt, 16, null_salt);
+      const size_t rounds = static_cast<size_t>(1) << workfactor;
+
+      for(size_t r = 0; r != rounds; ++r)
+         {
+         key_expansion(key, length, nullptr, 0);
+         key_expansion(salt, salt_length, nullptr, 0);
+         }
       }
    }
 
@@ -7822,13 +8233,17 @@ void Blowfish::eks_key_schedule(const uint8_t key[], size_t length,
 */
 void Blowfish::generate_sbox(secure_vector<uint32_t>& box,
                              uint32_t& L, uint32_t& R,
-                             const uint8_t salt[16],
+                             const uint8_t salt[],
+                             size_t salt_length,
                              size_t salt_off) const
    {
    for(size_t i = 0; i != box.size(); i += 2)
       {
-      L ^= load_be<uint32_t>(salt, (i + salt_off) % 4);
-      R ^= load_be<uint32_t>(salt, (i + salt_off + 1) % 4);
+      if(salt_length > 0)
+         {
+         L ^= load_be<uint32_t>(salt, (i + salt_off) % (salt_length / 4));
+         R ^= load_be<uint32_t>(salt, (i + salt_off + 1) % (salt_length / 4));
+         }
 
       for(size_t r = 0; r != 16; r += 2)
          {
@@ -8399,10 +8814,12 @@ namespace Camellia_F {
 
 /*
 * We use the slow byte-wise version of F in the first and last rounds
-* to help protect against timing attacks
+* to help protect against side channels analyzing cache hits on the
+* larger sbox tables.
 */
 uint64_t F_SLOW(uint64_t v, uint64_t K)
    {
+   alignas(64)
    static const uint8_t SBOX[256] = {
       0x70, 0x82, 0x2C, 0xEC, 0xB3, 0x27, 0xC0, 0xE5, 0xE4, 0x85, 0x57,
       0x35, 0xEA, 0x0C, 0xAE, 0x41, 0x23, 0xEF, 0x6B, 0x93, 0x45, 0x19,
@@ -9562,6 +9979,7 @@ void CAST_256::clear()
 * CBC Mode
 * (C) 1999-2007,2013,2017 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
+* (C) 2018 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9572,9 +9990,9 @@ namespace Botan {
 CBC_Mode::CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
    m_cipher(cipher),
    m_padding(padding),
-   m_state(m_cipher->block_size())
+   m_block_size(cipher->block_size())
    {
-   if(m_padding && !m_padding->valid_blocksize(cipher->block_size()))
+   if(m_padding && !m_padding->valid_blocksize(m_block_size))
       throw Invalid_Argument("Padding " + m_padding->name() +
                              " cannot be used with " +
                              cipher->name() + "/CBC");
@@ -9588,7 +10006,7 @@ void CBC_Mode::clear()
 
 void CBC_Mode::reset()
    {
-   zeroise(m_state);
+   m_state.clear();
    }
 
 std::string CBC_Mode::name() const
@@ -9622,6 +10040,7 @@ bool CBC_Mode::valid_nonce_length(size_t n) const
 void CBC_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
+   m_state.clear();
    }
 
 void CBC_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
@@ -9636,6 +10055,9 @@ void CBC_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    */
    if(nonce_len)
       m_state.assign(nonce, nonce + nonce_len);
+   else if(m_state.empty())
+      m_state.resize(m_cipher->block_size());
+   // else leave the state alone
    }
 
 size_t CBC_Encryption::minimum_final_size() const
@@ -9653,6 +10075,7 @@ size_t CBC_Encryption::output_length(size_t input_length) const
 
 size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
    const size_t BS = block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "CBC input is full blocks");
@@ -9677,6 +10100,7 @@ size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
 
 void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
 
    const size_t BS = block_size();
@@ -9686,7 +10110,7 @@ void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    padding().add_padding(buffer, bytes_in_final_block, BS);
 
    if((buffer.size()-offset) % BS)
-      throw Exception("Did not pad to full block size in " + name());
+      throw Internal_Error("Did not pad to full block size in " + name());
 
    update(buffer, offset);
    }
@@ -9708,6 +10132,7 @@ size_t CTS_Encryption::output_length(size_t input_length) const
 
 void CTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    uint8_t* buf = buffer.data() + offset;
    const size_t sz = buffer.size() - offset;
@@ -9762,6 +10187,8 @@ size_t CBC_Decryption::minimum_final_size() const
 
 size_t CBC_Decryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
+
    const size_t BS = block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
@@ -9788,6 +10215,7 @@ size_t CBC_Decryption::process(uint8_t buf[], size_t sz)
 
 void CBC_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
 
@@ -9802,13 +10230,13 @@ void CBC_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    buffer.resize(buffer.size() - pad_bytes); // remove padding
    if(pad_bytes == 0 && padding().name() != "NoPadding")
       {
-      throw Decoding_Error(name());
+      throw Decoding_Error("Invalid CBC padding");
       }
    }
 
 void CBC_Decryption::reset()
    {
-   zeroise(state());
+   CBC_Mode::reset();
    zeroise(m_tempbuf);
    }
 
@@ -9824,6 +10252,7 @@ size_t CTS_Decryption::minimum_final_size() const
 
 void CTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_STATE_CHECK(state().empty() == false);
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
@@ -9967,7 +10396,7 @@ CBC_MAC::CBC_MAC(BlockCipher* cipher) :
 }
 /*
 * CCM Mode Encryption
-* (C) 2013 Jack Lloyd
+* (C) 2013,2018 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -10074,20 +10503,22 @@ void CCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
 size_t CCM_Mode::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(m_nonce.size() > 0);
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
    return 0; // no output until finished
    }
 
-void CCM_Mode::encode_length(size_t len, uint8_t out[])
+void CCM_Mode::encode_length(uint64_t len, uint8_t out[])
    {
    const size_t len_bytes = L();
 
-   BOTAN_ASSERT(len_bytes < sizeof(size_t), "Length field fits");
+   BOTAN_ASSERT_NOMSG(len_bytes >= 1 && len_bytes <= 8);
 
    for(size_t i = 0; i != len_bytes; ++i)
-      out[len_bytes-1-i] = get_byte(sizeof(size_t)-1-i, len);
+      out[len_bytes-1-i] = get_byte(sizeof(uint64_t)-1-i, len);
 
-   BOTAN_ASSERT((len >> (len_bytes*8)) == 0, "Message length fits in field");
+   if(len_bytes < 8 && (len >> (len_bytes*8)) > 0)
+      throw Encoding_Error("CCM message length too long to encode in L field");
    }
 
 void CCM_Mode::inc(secure_vector<uint8_t>& C)
@@ -10635,13 +11066,14 @@ CFB_Mode::CFB_Mode(BlockCipher* cipher, size_t feedback_bits) :
 void CFB_Mode::clear()
    {
    m_cipher->clear();
+   m_keystream.clear();
    reset();
    }
 
 void CFB_Mode::reset()
    {
    m_state.clear();
-   m_keystream.clear();
+   zeroise(m_keystream);
    }
 
 std::string CFB_Mode::name() const
@@ -10685,12 +11117,15 @@ bool CFB_Mode::valid_nonce_length(size_t n) const
 void CFB_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
+   m_keystream.resize(m_cipher->block_size());
    }
 
 void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
+
+   verify_key_set(m_keystream.size());
 
    if(nonce_len == 0)
       {
@@ -10703,7 +11138,6 @@ void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    else
       {
       m_state.assign(nonce, nonce + nonce_len);
-      m_keystream.resize(m_state.size());
       cipher().encrypt(m_state, m_keystream);
       m_keystream_pos = 0;
       }
@@ -10725,6 +11159,9 @@ void CFB_Mode::shift_register()
 
 size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
    {
+   verify_key_set(m_keystream.size());
+   BOTAN_STATE_CHECK(m_state.empty() == false);
+
    const size_t shift = feedback();
 
    size_t left = sz;
@@ -10787,6 +11224,9 @@ inline void xor_copy(uint8_t buf[], uint8_t key_buf[], size_t len)
 
 size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
    {
+   verify_key_set(m_keystream.size());
+   BOTAN_STATE_CHECK(m_state.empty() == false);
+
    const size_t shift = feedback();
 
    size_t left = sz;
@@ -10832,13 +11272,60 @@ void CFB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 }
 /*
 * ChaCha
-* (C) 2014 Jack Lloyd
+* (C) 2014,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 
 namespace Botan {
+
+namespace {
+
+#define CHACHA_QUARTER_ROUND(a, b, c, d) \
+      do {                               \
+      a += b; d ^= a; d = rotl<16>(d);   \
+      c += d; b ^= c; b = rotl<12>(b);   \
+      a += b; d ^= a; d = rotl<8>(d);    \
+      c += d; b ^= c; b = rotl<7>(b);    \
+      } while(0)
+
+/*
+* Generate HChaCha cipher stream (for XChaCha IV setup)
+*/
+void hchacha(uint32_t output[8], const uint32_t input[16], size_t rounds)
+   {
+   BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
+
+   uint32_t x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
+            x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
+            x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
+            x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
+
+   for(size_t i = 0; i != rounds / 2; ++i)
+      {
+      CHACHA_QUARTER_ROUND(x00, x04, x08, x12);
+      CHACHA_QUARTER_ROUND(x01, x05, x09, x13);
+      CHACHA_QUARTER_ROUND(x02, x06, x10, x14);
+      CHACHA_QUARTER_ROUND(x03, x07, x11, x15);
+
+      CHACHA_QUARTER_ROUND(x00, x05, x10, x15);
+      CHACHA_QUARTER_ROUND(x01, x06, x11, x12);
+      CHACHA_QUARTER_ROUND(x02, x07, x08, x13);
+      CHACHA_QUARTER_ROUND(x03, x04, x09, x14);
+      }
+
+   output[0] = x00;
+   output[1] = x01;
+   output[2] = x02;
+   output[3] = x03;
+   output[4] = x12;
+   output[5] = x13;
+   output[6] = x14;
+   output[7] = x15;
+   }
+
+}
 
 ChaCha::ChaCha(size_t rounds) : m_rounds(rounds)
    {
@@ -10848,10 +11335,17 @@ ChaCha::ChaCha(size_t rounds) : m_rounds(rounds)
 
 std::string ChaCha::provider() const
    {
-#if defined(BOTAN_HAS_CHACHA_SSE2)
-   if(CPUID::has_sse2())
+#if defined(BOTAN_HAS_CHACHA_AVX2)
+   if(CPUID::has_avx2())
       {
-      return "sse2";
+      return "avx2";
+      }
+#endif
+
+#if defined(BOTAN_HAS_CHACHA_SIMD32)
+   if(CPUID::has_simd_32())
+      {
+      return "simd32";
       }
 #endif
 
@@ -10859,32 +11353,33 @@ std::string ChaCha::provider() const
    }
 
 //static
-void ChaCha::chacha_x4(uint8_t output[64*4], uint32_t input[16], size_t rounds)
+void ChaCha::chacha_x8(uint8_t output[64*8], uint32_t input[16], size_t rounds)
    {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
 
-#if defined(BOTAN_HAS_CHACHA_SSE2)
-   if(CPUID::has_sse2())
+#if defined(BOTAN_HAS_CHACHA_AVX2)
+   if(CPUID::has_avx2())
       {
-      return ChaCha::chacha_sse2_x4(output, input, rounds);
+      return ChaCha::chacha_avx2_x8(output, input, rounds);
+      }
+#endif
+
+#if defined(BOTAN_HAS_CHACHA_SIMD32)
+   if(CPUID::has_simd_32())
+      {
+      ChaCha::chacha_simd32_x4(output, input, rounds);
+      ChaCha::chacha_simd32_x4(output + 4*64, input, rounds);
+      return;
       }
 #endif
 
    // TODO interleave rounds
-   for(size_t i = 0; i != 4; ++i)
+   for(size_t i = 0; i != 8; ++i)
       {
       uint32_t x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
-             x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
-             x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
-             x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
-
-#define CHACHA_QUARTER_ROUND(a, b, c, d) \
-      do {                               \
-      a += b; d ^= a; d = rotl<16>(d);   \
-      c += d; b ^= c; b = rotl<12>(b);   \
-      a += b; d ^= a; d = rotl<8>(d);    \
-      c += d; b ^= c; b = rotl<7>(b);    \
-      } while(0)
+               x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
+               x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
+               x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
 
       for(size_t r = 0; r != rounds / 2; ++r)
          {
@@ -10898,8 +11393,6 @@ void ChaCha::chacha_x4(uint8_t output[64*4], uint32_t input[16], size_t rounds)
          CHACHA_QUARTER_ROUND(x02, x07, x08, x13);
          CHACHA_QUARTER_ROUND(x03, x04, x09, x14);
          }
-
-#undef CHACHA_QUARTER_ROUND
 
       x00 += input[0];
       x01 += input[1];
@@ -10936,9 +11429,11 @@ void ChaCha::chacha_x4(uint8_t output[64*4], uint32_t input[16], size_t rounds)
       store_le(x15, output + 64 * i + 4 * 15);
 
       input[12]++;
-      input[13] += input[12] < i; // carry?
+      input[13] += (input[12] == 0);
       }
    }
+
+#undef CHACHA_QUARTER_ROUND
 
 /*
 * Combine cipher stream with message
@@ -10949,11 +11444,14 @@ void ChaCha::cipher(const uint8_t in[], uint8_t out[], size_t length)
 
    while(length >= m_buffer.size() - m_position)
       {
-      xor_buf(out, in, &m_buffer[m_position], m_buffer.size() - m_position);
-      length -= (m_buffer.size() - m_position);
-      in += (m_buffer.size() - m_position);
-      out += (m_buffer.size() - m_position);
-      chacha_x4(m_buffer.data(), m_state.data(), m_rounds);
+      const size_t available = m_buffer.size() - m_position;
+
+      xor_buf(out, in, &m_buffer[m_position], available);
+      chacha_x8(m_buffer.data(), m_state.data(), m_rounds);
+
+      length -= available;
+      in += available;
+      out += available;
       m_position = 0;
       }
 
@@ -10962,10 +11460,28 @@ void ChaCha::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_position += length;
    }
 
-/*
-* ChaCha Key Schedule
-*/
-void ChaCha::key_schedule(const uint8_t key[], size_t length)
+void ChaCha::write_keystream(uint8_t out[], size_t length)
+   {
+   verify_key_set(m_state.empty() == false);
+
+   while(length >= m_buffer.size() - m_position)
+      {
+      const size_t available = m_buffer.size() - m_position;
+
+      copy_mem(out, &m_buffer[m_position], available);
+      chacha_x8(m_buffer.data(), m_state.data(), m_rounds);
+
+      length -= available;
+      out += available;
+      m_position = 0;
+      }
+
+   copy_mem(out, &m_buffer[m_position], length);
+
+   m_position += length;
+   }
+
+void ChaCha::initialize_state()
    {
    static const uint32_t TAU[] =
       { 0x61707865, 0x3120646e, 0x79622d36, 0x6b206574 };
@@ -10973,47 +11489,89 @@ void ChaCha::key_schedule(const uint8_t key[], size_t length)
    static const uint32_t SIGMA[] =
       { 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574 };
 
-   const uint32_t* CONSTANTS = (length == 16) ? TAU : SIGMA;
+   m_state[4] = m_key[0];
+   m_state[5] = m_key[1];
+   m_state[6] = m_key[2];
+   m_state[7] = m_key[3];
 
-   // Repeat the key if 128 bits
-   const uint8_t* key2 = (length == 32) ? key + 16 : key;
+   if(m_key.size() == 4)
+      {
+      m_state[0] = TAU[0];
+      m_state[1] = TAU[1];
+      m_state[2] = TAU[2];
+      m_state[3] = TAU[3];
+
+      m_state[8] = m_key[0];
+      m_state[9] = m_key[1];
+      m_state[10] = m_key[2];
+      m_state[11] = m_key[3];
+      }
+   else
+      {
+      m_state[0] = SIGMA[0];
+      m_state[1] = SIGMA[1];
+      m_state[2] = SIGMA[2];
+      m_state[3] = SIGMA[3];
+
+      m_state[8] = m_key[4];
+      m_state[9] = m_key[5];
+      m_state[10] = m_key[6];
+      m_state[11] = m_key[7];
+      }
+
+   m_state[12] = 0;
+   m_state[13] = 0;
+   m_state[14] = 0;
+   m_state[15] = 0;
 
    m_position = 0;
+   }
+
+/*
+* ChaCha Key Schedule
+*/
+void ChaCha::key_schedule(const uint8_t key[], size_t length)
+   {
+   m_key.resize(length / 4);
+   load_le<uint32_t>(m_key.data(), key, m_key.size());
+
    m_state.resize(16);
-   m_buffer.resize(4*64);
 
-   m_state[0] = CONSTANTS[0];
-   m_state[1] = CONSTANTS[1];
-   m_state[2] = CONSTANTS[2];
-   m_state[3] = CONSTANTS[3];
+   const size_t chacha_parallelism = 8; // chacha_x8
+   const size_t chacha_block = 64;
+   m_buffer.resize(chacha_parallelism * chacha_block);
 
-   m_state[4] = load_le<uint32_t>(key, 0);
-   m_state[5] = load_le<uint32_t>(key, 1);
-   m_state[6] = load_le<uint32_t>(key, 2);
-   m_state[7] = load_le<uint32_t>(key, 3);
+   set_iv(nullptr, 0);
+   }
 
-   m_state[8] = load_le<uint32_t>(key2, 0);
-   m_state[9] = load_le<uint32_t>(key2, 1);
-   m_state[10] = load_le<uint32_t>(key2, 2);
-   m_state[11] = load_le<uint32_t>(key2, 3);
+size_t ChaCha::default_iv_length() const
+   {
+   return 24;
+   }
 
-   // Default all-zero IV
-   const uint8_t ZERO[8] = { 0 };
-   set_iv(ZERO, sizeof(ZERO));
+Key_Length_Specification ChaCha::key_spec() const
+   {
+   return Key_Length_Specification(16, 32, 16);
+   }
+
+StreamCipher* ChaCha::clone() const
+   {
+   return new ChaCha(m_rounds);
    }
 
 bool ChaCha::valid_iv_length(size_t iv_len) const
    {
-   return (iv_len == 0 || iv_len == 8 || iv_len == 12);
+   return (iv_len == 0 || iv_len == 8 || iv_len == 12 || iv_len == 24);
    }
 
 void ChaCha::set_iv(const uint8_t iv[], size_t length)
    {
+   verify_key_set(m_state.empty() == false);
+
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
-   m_state[12] = 0;
-   m_state[13] = 0;
+   initialize_state();
 
    if(length == 0)
       {
@@ -11032,13 +11590,37 @@ void ChaCha::set_iv(const uint8_t iv[], size_t length)
       m_state[14] = load_le<uint32_t>(iv, 1);
       m_state[15] = load_le<uint32_t>(iv, 2);
       }
+   else if(length == 24)
+      {
+      m_state[12] = load_le<uint32_t>(iv, 0);
+      m_state[13] = load_le<uint32_t>(iv, 1);
+      m_state[14] = load_le<uint32_t>(iv, 2);
+      m_state[15] = load_le<uint32_t>(iv, 3);
 
-   chacha_x4(m_buffer.data(), m_state.data(), m_rounds);
+      secure_vector<uint32_t> hc(8);
+      hchacha(hc.data(), m_state.data(), m_rounds);
+
+      m_state[ 4] = hc[0];
+      m_state[ 5] = hc[1];
+      m_state[ 6] = hc[2];
+      m_state[ 7] = hc[3];
+      m_state[ 8] = hc[4];
+      m_state[ 9] = hc[5];
+      m_state[10] = hc[6];
+      m_state[11] = hc[7];
+      m_state[12] = 0;
+      m_state[13] = 0;
+      m_state[14] = load_le<uint32_t>(iv, 4);
+      m_state[15] = load_le<uint32_t>(iv, 5);
+      }
+
+   chacha_x8(m_buffer.data(), m_state.data(), m_rounds);
    m_position = 0;
    }
 
 void ChaCha::clear()
    {
+   zap(m_key);
    zap(m_state);
    zap(m_buffer);
    m_position = 0;
@@ -11054,7 +11636,7 @@ void ChaCha::seek(uint64_t offset)
    verify_key_set(m_state.empty() == false);
 
    // Find the block offset
-   uint64_t counter = offset / 64;
+   const uint64_t counter = offset / 64;
 
    uint8_t out[8];
 
@@ -11063,13 +11645,13 @@ void ChaCha::seek(uint64_t offset)
    m_state[12] = load_le<uint32_t>(out, 0);
    m_state[13] += load_le<uint32_t>(out, 1);
 
-   chacha_x4(m_buffer.data(), m_state.data(), m_rounds);
+   chacha_x8(m_buffer.data(), m_state.data(), m_rounds);
    m_position = offset % 64;
    }
 }
 /*
 * ChaCha20Poly1305 AEAD
-* (C) 2014,2016 Jack Lloyd
+* (C) 2014,2016,2018 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -11088,7 +11670,7 @@ ChaCha20Poly1305_Mode::ChaCha20Poly1305_Mode() :
 
 bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const
    {
-   return (n == 8 || n == 12);
+   return (n == 8 || n == 12 || n == 24);
    }
 
 void ChaCha20Poly1305_Mode::clear()
@@ -11112,8 +11694,8 @@ void ChaCha20Poly1305_Mode::key_schedule(const uint8_t key[], size_t length)
 
 void ChaCha20Poly1305_Mode::set_associated_data(const uint8_t ad[], size_t length)
    {
-   if(m_ctext_len)
-      throw Exception("Too late to set AD for ChaCha20Poly1305");
+   if(m_ctext_len > 0 || m_nonce_len > 0)
+      throw Invalid_State("Cannot set AD for ChaCha20Poly1305 while processing a message");
    m_ad.assign(ad, ad + length);
    }
 
@@ -11134,11 +11716,11 @@ void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
    m_chacha->set_iv(nonce, nonce_len);
 
-   secure_vector<uint8_t> init(64); // zeros
-   m_chacha->encrypt(init);
+   secure_vector<uint8_t> first_block(64);
+   m_chacha->write_keystream(first_block.data(), first_block.size());
 
-   m_poly1305->set_key(init.data(), 32);
-   // Remainder of output is discard
+   m_poly1305->set_key(first_block.data(), 32);
+   // Remainder of first block is discarded
 
    m_poly1305->update(m_ad);
 
@@ -11181,6 +11763,7 @@ void ChaCha20Poly1305_Encryption::finish(secure_vector<uint8_t>& buffer, size_t 
    const secure_vector<uint8_t> mac = m_poly1305->final();
    buffer += std::make_pair(mac.data(), tag_size());
    m_ctext_len = 0;
+   m_nonce_len = 0;
    }
 
 size_t ChaCha20Poly1305_Decryption::process(uint8_t buf[], size_t sz)
@@ -11224,6 +11807,7 @@ void ChaCha20Poly1305_Decryption::finish(secure_vector<uint8_t>& buffer, size_t 
    const uint8_t* included_tag = &buf[remaining];
 
    m_ctext_len = 0;
+   m_nonce_len = 0;
 
    if(!constant_time_compare(mac.data(), included_tag, tag_size()))
       throw Integrity_Failure("ChaCha20Poly1305 tag check failed");
@@ -11307,8 +11891,7 @@ void ChaCha_RNG::randomize_with_input(uint8_t output[], size_t output_len,
       update(input, input_len);
       }
 
-   clear_mem(output, output_len);
-   m_chacha->cipher1(output, output_len);
+   m_chacha->write_keystream(output, output_len);
    }
 
 void ChaCha_RNG::update(const uint8_t input[], size_t input_len)
@@ -11317,7 +11900,7 @@ void ChaCha_RNG::update(const uint8_t input[], size_t input_len)
    m_chacha->set_key(m_hmac->final());
 
    secure_vector<uint8_t> mac_key(m_hmac->output_length());
-   m_chacha->cipher1(mac_key.data(), mac_key.size());
+   m_chacha->write_keystream(mac_key.data(), mac_key.size());
    m_hmac->set_key(mac_key);
    }
 
@@ -11338,258 +11921,205 @@ size_t ChaCha_RNG::security_level() const
 
 }
 /*
-* SSE2 ChaCha
-* (C) 2016 Jack Lloyd
+* (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <emmintrin.h>
 
 namespace Botan {
 
 //static
-BOTAN_FUNC_ISA("sse2")
-void ChaCha::chacha_sse2_x4(uint8_t output[64*4], uint32_t input[16], size_t rounds)
+void ChaCha::chacha_simd32_x4(uint8_t output[64*4], uint32_t state[16], size_t rounds)
    {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
+   const SIMD_4x32 CTR0 = SIMD_4x32(0, 1, 2, 3);
 
-   const __m128i* input_mm = reinterpret_cast<const __m128i*>(input);
-   __m128i* output_mm = reinterpret_cast<__m128i*>(output);
+   const uint32_t C = 0xFFFFFFFF - state[12];
+   const SIMD_4x32 CTR1 = SIMD_4x32(0, C < 1, C < 2, C < 3);
 
-   __m128i input0 = _mm_loadu_si128(input_mm);
-   __m128i input1 = _mm_loadu_si128(input_mm + 1);
-   __m128i input2 = _mm_loadu_si128(input_mm + 2);
-   __m128i input3 = _mm_loadu_si128(input_mm + 3);
-
-   // TODO: try transposing, which would avoid the permutations each round
-
-#define mm_rotl(r, n) \
-   _mm_or_si128(_mm_slli_epi32(r, n), _mm_srli_epi32(r, 32-n))
-
-   __m128i r0_0 = input0;
-   __m128i r0_1 = input1;
-   __m128i r0_2 = input2;
-   __m128i r0_3 = input3;
-
-   __m128i r1_0 = input0;
-   __m128i r1_1 = input1;
-   __m128i r1_2 = input2;
-   __m128i r1_3 = _mm_add_epi64(r0_3, _mm_set_epi32(0, 0, 0, 1));
-
-   __m128i r2_0 = input0;
-   __m128i r2_1 = input1;
-   __m128i r2_2 = input2;
-   __m128i r2_3 = _mm_add_epi64(r0_3, _mm_set_epi32(0, 0, 0, 2));
-
-   __m128i r3_0 = input0;
-   __m128i r3_1 = input1;
-   __m128i r3_2 = input2;
-   __m128i r3_3 = _mm_add_epi64(r0_3, _mm_set_epi32(0, 0, 0, 3));
+   SIMD_4x32 R00 = SIMD_4x32::splat(state[ 0]);
+   SIMD_4x32 R01 = SIMD_4x32::splat(state[ 1]);
+   SIMD_4x32 R02 = SIMD_4x32::splat(state[ 2]);
+   SIMD_4x32 R03 = SIMD_4x32::splat(state[ 3]);
+   SIMD_4x32 R04 = SIMD_4x32::splat(state[ 4]);
+   SIMD_4x32 R05 = SIMD_4x32::splat(state[ 5]);
+   SIMD_4x32 R06 = SIMD_4x32::splat(state[ 6]);
+   SIMD_4x32 R07 = SIMD_4x32::splat(state[ 7]);
+   SIMD_4x32 R08 = SIMD_4x32::splat(state[ 8]);
+   SIMD_4x32 R09 = SIMD_4x32::splat(state[ 9]);
+   SIMD_4x32 R10 = SIMD_4x32::splat(state[10]);
+   SIMD_4x32 R11 = SIMD_4x32::splat(state[11]);
+   SIMD_4x32 R12 = SIMD_4x32::splat(state[12]) + CTR0;
+   SIMD_4x32 R13 = SIMD_4x32::splat(state[13]) + CTR1;
+   SIMD_4x32 R14 = SIMD_4x32::splat(state[14]);
+   SIMD_4x32 R15 = SIMD_4x32::splat(state[15]);
 
    for(size_t r = 0; r != rounds / 2; ++r)
       {
-      r0_0 = _mm_add_epi32(r0_0, r0_1);
-      r1_0 = _mm_add_epi32(r1_0, r1_1);
-      r2_0 = _mm_add_epi32(r2_0, r2_1);
-      r3_0 = _mm_add_epi32(r3_0, r3_1);
+      R00 += R04;
+      R01 += R05;
+      R02 += R06;
+      R03 += R07;
 
-      r0_3 = _mm_xor_si128(r0_3, r0_0);
-      r1_3 = _mm_xor_si128(r1_3, r1_0);
-      r2_3 = _mm_xor_si128(r2_3, r2_0);
-      r3_3 = _mm_xor_si128(r3_3, r3_0);
+      R12 ^= R00;
+      R13 ^= R01;
+      R14 ^= R02;
+      R15 ^= R03;
 
-      r0_3 = mm_rotl(r0_3, 16);
-      r1_3 = mm_rotl(r1_3, 16);
-      r2_3 = mm_rotl(r2_3, 16);
-      r3_3 = mm_rotl(r3_3, 16);
+      R12 = R12.rotl<16>();
+      R13 = R13.rotl<16>();
+      R14 = R14.rotl<16>();
+      R15 = R15.rotl<16>();
 
-      r0_2 = _mm_add_epi32(r0_2, r0_3);
-      r1_2 = _mm_add_epi32(r1_2, r1_3);
-      r2_2 = _mm_add_epi32(r2_2, r2_3);
-      r3_2 = _mm_add_epi32(r3_2, r3_3);
+      R08 += R12;
+      R09 += R13;
+      R10 += R14;
+      R11 += R15;
 
-      r0_1 = _mm_xor_si128(r0_1, r0_2);
-      r1_1 = _mm_xor_si128(r1_1, r1_2);
-      r2_1 = _mm_xor_si128(r2_1, r2_2);
-      r3_1 = _mm_xor_si128(r3_1, r3_2);
+      R04 ^= R08;
+      R05 ^= R09;
+      R06 ^= R10;
+      R07 ^= R11;
 
-      r0_1 = mm_rotl(r0_1, 12);
-      r1_1 = mm_rotl(r1_1, 12);
-      r2_1 = mm_rotl(r2_1, 12);
-      r3_1 = mm_rotl(r3_1, 12);
+      R04 = R04.rotl<12>();
+      R05 = R05.rotl<12>();
+      R06 = R06.rotl<12>();
+      R07 = R07.rotl<12>();
 
-      r0_0 = _mm_add_epi32(r0_0, r0_1);
-      r1_0 = _mm_add_epi32(r1_0, r1_1);
-      r2_0 = _mm_add_epi32(r2_0, r2_1);
-      r3_0 = _mm_add_epi32(r3_0, r3_1);
+      R00 += R04;
+      R01 += R05;
+      R02 += R06;
+      R03 += R07;
 
-      r0_3 = _mm_xor_si128(r0_3, r0_0);
-      r1_3 = _mm_xor_si128(r1_3, r1_0);
-      r2_3 = _mm_xor_si128(r2_3, r2_0);
-      r3_3 = _mm_xor_si128(r3_3, r3_0);
+      R12 ^= R00;
+      R13 ^= R01;
+      R14 ^= R02;
+      R15 ^= R03;
 
-      r0_3 = mm_rotl(r0_3, 8);
-      r1_3 = mm_rotl(r1_3, 8);
-      r2_3 = mm_rotl(r2_3, 8);
-      r3_3 = mm_rotl(r3_3, 8);
+      R12 = R12.rotl<8>();
+      R13 = R13.rotl<8>();
+      R14 = R14.rotl<8>();
+      R15 = R15.rotl<8>();
 
-      r0_2 = _mm_add_epi32(r0_2, r0_3);
-      r1_2 = _mm_add_epi32(r1_2, r1_3);
-      r2_2 = _mm_add_epi32(r2_2, r2_3);
-      r3_2 = _mm_add_epi32(r3_2, r3_3);
+      R08 += R12;
+      R09 += R13;
+      R10 += R14;
+      R11 += R15;
 
-      r0_1 = _mm_xor_si128(r0_1, r0_2);
-      r1_1 = _mm_xor_si128(r1_1, r1_2);
-      r2_1 = _mm_xor_si128(r2_1, r2_2);
-      r3_1 = _mm_xor_si128(r3_1, r3_2);
+      R04 ^= R08;
+      R05 ^= R09;
+      R06 ^= R10;
+      R07 ^= R11;
 
-      r0_1 = mm_rotl(r0_1, 7);
-      r1_1 = mm_rotl(r1_1, 7);
-      r2_1 = mm_rotl(r2_1, 7);
-      r3_1 = mm_rotl(r3_1, 7);
+      R04 = R04.rotl<7>();
+      R05 = R05.rotl<7>();
+      R06 = R06.rotl<7>();
+      R07 = R07.rotl<7>();
 
-      r0_1 = _mm_shuffle_epi32(r0_1, _MM_SHUFFLE(0, 3, 2, 1));
-      r0_2 = _mm_shuffle_epi32(r0_2, _MM_SHUFFLE(1, 0, 3, 2));
-      r0_3 = _mm_shuffle_epi32(r0_3, _MM_SHUFFLE(2, 1, 0, 3));
+      R00 += R05;
+      R01 += R06;
+      R02 += R07;
+      R03 += R04;
 
-      r1_1 = _mm_shuffle_epi32(r1_1, _MM_SHUFFLE(0, 3, 2, 1));
-      r1_2 = _mm_shuffle_epi32(r1_2, _MM_SHUFFLE(1, 0, 3, 2));
-      r1_3 = _mm_shuffle_epi32(r1_3, _MM_SHUFFLE(2, 1, 0, 3));
+      R15 ^= R00;
+      R12 ^= R01;
+      R13 ^= R02;
+      R14 ^= R03;
 
-      r2_1 = _mm_shuffle_epi32(r2_1, _MM_SHUFFLE(0, 3, 2, 1));
-      r2_2 = _mm_shuffle_epi32(r2_2, _MM_SHUFFLE(1, 0, 3, 2));
-      r2_3 = _mm_shuffle_epi32(r2_3, _MM_SHUFFLE(2, 1, 0, 3));
+      R15 = R15.rotl<16>();
+      R12 = R12.rotl<16>();
+      R13 = R13.rotl<16>();
+      R14 = R14.rotl<16>();
 
-      r3_1 = _mm_shuffle_epi32(r3_1, _MM_SHUFFLE(0, 3, 2, 1));
-      r3_2 = _mm_shuffle_epi32(r3_2, _MM_SHUFFLE(1, 0, 3, 2));
-      r3_3 = _mm_shuffle_epi32(r3_3, _MM_SHUFFLE(2, 1, 0, 3));
+      R10 += R15;
+      R11 += R12;
+      R08 += R13;
+      R09 += R14;
 
-      r0_0 = _mm_add_epi32(r0_0, r0_1);
-      r1_0 = _mm_add_epi32(r1_0, r1_1);
-      r2_0 = _mm_add_epi32(r2_0, r2_1);
-      r3_0 = _mm_add_epi32(r3_0, r3_1);
+      R05 ^= R10;
+      R06 ^= R11;
+      R07 ^= R08;
+      R04 ^= R09;
 
-      r0_3 = _mm_xor_si128(r0_3, r0_0);
-      r1_3 = _mm_xor_si128(r1_3, r1_0);
-      r2_3 = _mm_xor_si128(r2_3, r2_0);
-      r3_3 = _mm_xor_si128(r3_3, r3_0);
+      R05 = R05.rotl<12>();
+      R06 = R06.rotl<12>();
+      R07 = R07.rotl<12>();
+      R04 = R04.rotl<12>();
 
-      r0_3 = mm_rotl(r0_3, 16);
-      r1_3 = mm_rotl(r1_3, 16);
-      r2_3 = mm_rotl(r2_3, 16);
-      r3_3 = mm_rotl(r3_3, 16);
+      R00 += R05;
+      R01 += R06;
+      R02 += R07;
+      R03 += R04;
 
-      r0_2 = _mm_add_epi32(r0_2, r0_3);
-      r1_2 = _mm_add_epi32(r1_2, r1_3);
-      r2_2 = _mm_add_epi32(r2_2, r2_3);
-      r3_2 = _mm_add_epi32(r3_2, r3_3);
+      R15 ^= R00;
+      R12 ^= R01;
+      R13 ^= R02;
+      R14 ^= R03;
 
-      r0_1 = _mm_xor_si128(r0_1, r0_2);
-      r1_1 = _mm_xor_si128(r1_1, r1_2);
-      r2_1 = _mm_xor_si128(r2_1, r2_2);
-      r3_1 = _mm_xor_si128(r3_1, r3_2);
+      R15 = R15.rotl<8>();
+      R12 = R12.rotl<8>();
+      R13 = R13.rotl<8>();
+      R14 = R14.rotl<8>();
 
-      r0_1 = mm_rotl(r0_1, 12);
-      r1_1 = mm_rotl(r1_1, 12);
-      r2_1 = mm_rotl(r2_1, 12);
-      r3_1 = mm_rotl(r3_1, 12);
+      R10 += R15;
+      R11 += R12;
+      R08 += R13;
+      R09 += R14;
 
-      r0_0 = _mm_add_epi32(r0_0, r0_1);
-      r1_0 = _mm_add_epi32(r1_0, r1_1);
-      r2_0 = _mm_add_epi32(r2_0, r2_1);
-      r3_0 = _mm_add_epi32(r3_0, r3_1);
+      R05 ^= R10;
+      R06 ^= R11;
+      R07 ^= R08;
+      R04 ^= R09;
 
-      r0_3 = _mm_xor_si128(r0_3, r0_0);
-      r1_3 = _mm_xor_si128(r1_3, r1_0);
-      r2_3 = _mm_xor_si128(r2_3, r2_0);
-      r3_3 = _mm_xor_si128(r3_3, r3_0);
-
-      r0_3 = mm_rotl(r0_3, 8);
-      r1_3 = mm_rotl(r1_3, 8);
-      r2_3 = mm_rotl(r2_3, 8);
-      r3_3 = mm_rotl(r3_3, 8);
-
-      r0_2 = _mm_add_epi32(r0_2, r0_3);
-      r1_2 = _mm_add_epi32(r1_2, r1_3);
-      r2_2 = _mm_add_epi32(r2_2, r2_3);
-      r3_2 = _mm_add_epi32(r3_2, r3_3);
-
-      r0_1 = _mm_xor_si128(r0_1, r0_2);
-      r1_1 = _mm_xor_si128(r1_1, r1_2);
-      r2_1 = _mm_xor_si128(r2_1, r2_2);
-      r3_1 = _mm_xor_si128(r3_1, r3_2);
-
-      r0_1 = mm_rotl(r0_1, 7);
-      r1_1 = mm_rotl(r1_1, 7);
-      r2_1 = mm_rotl(r2_1, 7);
-      r3_1 = mm_rotl(r3_1, 7);
-
-      r0_1 = _mm_shuffle_epi32(r0_1, _MM_SHUFFLE(2, 1, 0, 3));
-      r0_2 = _mm_shuffle_epi32(r0_2, _MM_SHUFFLE(1, 0, 3, 2));
-      r0_3 = _mm_shuffle_epi32(r0_3, _MM_SHUFFLE(0, 3, 2, 1));
-
-      r1_1 = _mm_shuffle_epi32(r1_1, _MM_SHUFFLE(2, 1, 0, 3));
-      r1_2 = _mm_shuffle_epi32(r1_2, _MM_SHUFFLE(1, 0, 3, 2));
-      r1_3 = _mm_shuffle_epi32(r1_3, _MM_SHUFFLE(0, 3, 2, 1));
-
-      r2_1 = _mm_shuffle_epi32(r2_1, _MM_SHUFFLE(2, 1, 0, 3));
-      r2_2 = _mm_shuffle_epi32(r2_2, _MM_SHUFFLE(1, 0, 3, 2));
-      r2_3 = _mm_shuffle_epi32(r2_3, _MM_SHUFFLE(0, 3, 2, 1));
-
-      r3_1 = _mm_shuffle_epi32(r3_1, _MM_SHUFFLE(2, 1, 0, 3));
-      r3_2 = _mm_shuffle_epi32(r3_2, _MM_SHUFFLE(1, 0, 3, 2));
-      r3_3 = _mm_shuffle_epi32(r3_3, _MM_SHUFFLE(0, 3, 2, 1));
+      R05 = R05.rotl<7>();
+      R06 = R06.rotl<7>();
+      R07 = R07.rotl<7>();
+      R04 = R04.rotl<7>();
       }
 
-   r0_0 = _mm_add_epi32(r0_0, input0);
-   r0_1 = _mm_add_epi32(r0_1, input1);
-   r0_2 = _mm_add_epi32(r0_2, input2);
-   r0_3 = _mm_add_epi32(r0_3, input3);
+   R00 += SIMD_4x32::splat(state[0]);
+   R01 += SIMD_4x32::splat(state[1]);
+   R02 += SIMD_4x32::splat(state[2]);
+   R03 += SIMD_4x32::splat(state[3]);
+   R04 += SIMD_4x32::splat(state[4]);
+   R05 += SIMD_4x32::splat(state[5]);
+   R06 += SIMD_4x32::splat(state[6]);
+   R07 += SIMD_4x32::splat(state[7]);
+   R08 += SIMD_4x32::splat(state[8]);
+   R09 += SIMD_4x32::splat(state[9]);
+   R10 += SIMD_4x32::splat(state[10]);
+   R11 += SIMD_4x32::splat(state[11]);
+   R12 += SIMD_4x32::splat(state[12]) + CTR0;
+   R13 += SIMD_4x32::splat(state[13]) + CTR1;
+   R14 += SIMD_4x32::splat(state[14]);
+   R15 += SIMD_4x32::splat(state[15]);
 
-   r1_0 = _mm_add_epi32(r1_0, input0);
-   r1_1 = _mm_add_epi32(r1_1, input1);
-   r1_2 = _mm_add_epi32(r1_2, input2);
-   r1_3 = _mm_add_epi32(r1_3, input3);
-   r1_3 = _mm_add_epi64(r1_3, _mm_set_epi32(0, 0, 0, 1));
+   SIMD_4x32::transpose(R00, R01, R02, R03);
+   SIMD_4x32::transpose(R04, R05, R06, R07);
+   SIMD_4x32::transpose(R08, R09, R10, R11);
+   SIMD_4x32::transpose(R12, R13, R14, R15);
 
-   r2_0 = _mm_add_epi32(r2_0, input0);
-   r2_1 = _mm_add_epi32(r2_1, input1);
-   r2_2 = _mm_add_epi32(r2_2, input2);
-   r2_3 = _mm_add_epi32(r2_3, input3);
-   r2_3 = _mm_add_epi64(r2_3, _mm_set_epi32(0, 0, 0, 2));
+   R00.store_le(output + 0*16);
+   R04.store_le(output + 1*16);
+   R08.store_le(output + 2*16);
+   R12.store_le(output + 3*16);
+   R01.store_le(output + 4*16);
+   R05.store_le(output + 5*16);
+   R09.store_le(output + 6*16);
+   R13.store_le(output + 7*16);
+   R02.store_le(output + 8*16);
+   R06.store_le(output + 9*16);
+   R10.store_le(output + 10*16);
+   R14.store_le(output + 11*16);
+   R03.store_le(output + 12*16);
+   R07.store_le(output + 13*16);
+   R11.store_le(output + 14*16);
+   R15.store_le(output + 15*16);
 
-   r3_0 = _mm_add_epi32(r3_0, input0);
-   r3_1 = _mm_add_epi32(r3_1, input1);
-   r3_2 = _mm_add_epi32(r3_2, input2);
-   r3_3 = _mm_add_epi32(r3_3, input3);
-   r3_3 = _mm_add_epi64(r3_3, _mm_set_epi32(0, 0, 0, 3));
-
-   _mm_storeu_si128(output_mm + 0, r0_0);
-   _mm_storeu_si128(output_mm + 1, r0_1);
-   _mm_storeu_si128(output_mm + 2, r0_2);
-   _mm_storeu_si128(output_mm + 3, r0_3);
-
-   _mm_storeu_si128(output_mm + 4, r1_0);
-   _mm_storeu_si128(output_mm + 5, r1_1);
-   _mm_storeu_si128(output_mm + 6, r1_2);
-   _mm_storeu_si128(output_mm + 7, r1_3);
-
-   _mm_storeu_si128(output_mm + 8, r2_0);
-   _mm_storeu_si128(output_mm + 9, r2_1);
-   _mm_storeu_si128(output_mm + 10, r2_2);
-   _mm_storeu_si128(output_mm + 11, r2_3);
-
-   _mm_storeu_si128(output_mm + 12, r3_0);
-   _mm_storeu_si128(output_mm + 13, r3_1);
-   _mm_storeu_si128(output_mm + 14, r3_2);
-   _mm_storeu_si128(output_mm + 15, r3_3);
-
-#undef mm_rotl
-
-   input[12] += 4;
-   if(input[12] < 4)
-      input[13]++;
+   state[12] += 4;
+   if(state[12] < 4)
+      state[13]++;
    }
 
 }
@@ -12181,309 +12711,6 @@ void Comb4P::final_result(uint8_t out[])
 }
 
 /*
-* Compression Utils
-* (C) 2014,2016 Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-#include <cstdlib>
-
-namespace Botan {
-
-void* Compression_Alloc_Info::do_malloc(size_t n, size_t size)
-   {
-   // TODO maximum length check here?
-   void* ptr = std::calloc(n, size);
-
-   /*
-   * Return null rather than throwing here as we are being called by a
-   * C library and it may not be possible for an exception to unwind
-   * the call stack from here. The compression library is expecting a
-   * function written in C and a null return on error, which it will
-   * send upwards to the compression wrappers.
-   */
-
-   if(ptr)
-      {
-      m_current_allocs[ptr] = n * size;
-      }
-
-   return ptr;
-   }
-
-void Compression_Alloc_Info::do_free(void* ptr)
-   {
-   if(ptr)
-      {
-      auto i = m_current_allocs.find(ptr);
-
-      if(i == m_current_allocs.end())
-         throw Exception("Compression_Alloc_Info::free got pointer not allocated by us");
-
-      secure_scrub_memory(ptr, i->second);
-      std::free(ptr);
-      m_current_allocs.erase(i);
-      }
-   }
-
-void Stream_Compression::clear()
-   {
-   m_stream.reset();
-   }
-
-void Stream_Compression::start(size_t level)
-   {
-   m_stream.reset(make_stream(level));
-   }
-
-void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags)
-   {
-   BOTAN_ASSERT(m_stream, "Initialized");
-   BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
-
-   // bzip doesn't like being called with no input and BZ_RUN
-   if(buf.size() == offset && flags == m_stream->run_flag())
-      {
-      return;
-      }
-
-   if(m_buffer.size() < buf.size() + offset)
-      m_buffer.resize(buf.size() + offset);
-
-   // If the output buffer has zero length, .data() might return nullptr. This would
-   // make some compression algorithms (notably those provided by zlib) fail.
-   // Any small positive value works fine, but we choose 32 as it is the smallest power
-   // of two that is large enough to hold all the headers and trailers of the common
-   // formats, preventing further resizings to make room for output data.
-   if(m_buffer.size() == 0)
-      m_buffer.resize(32);
-
-   m_stream->next_in(buf.data() + offset, buf.size() - offset);
-   m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
-
-   while(true)
-      {
-      const bool stream_end = m_stream->run(flags);
-
-      if(stream_end)
-         {
-         BOTAN_ASSERT(m_stream->avail_in() == 0, "After stream is done, no input remains to be processed");
-         m_buffer.resize(m_buffer.size() - m_stream->avail_out());
-         break;
-         }
-      else if(m_stream->avail_out() == 0)
-         {
-         const size_t added = 8 + m_buffer.size();
-         m_buffer.resize(m_buffer.size() + added);
-         m_stream->next_out(m_buffer.data() + m_buffer.size() - added, added);
-         }
-      else if(m_stream->avail_in() == 0)
-         {
-         m_buffer.resize(m_buffer.size() - m_stream->avail_out());
-         break;
-         }
-      }
-
-   copy_mem(m_buffer.data(), buf.data(), offset);
-   buf.swap(m_buffer);
-   }
-
-void Stream_Compression::update(secure_vector<uint8_t>& buf, size_t offset, bool flush)
-   {
-   BOTAN_ASSERT(m_stream, "Initialized");
-   process(buf, offset, flush ? m_stream->flush_flag() : m_stream->run_flag());
-   }
-
-void Stream_Compression::finish(secure_vector<uint8_t>& buf, size_t offset)
-   {
-   BOTAN_ASSERT(m_stream, "Initialized");
-   process(buf, offset, m_stream->finish_flag());
-   clear();
-   }
-
-void Stream_Decompression::clear()
-   {
-   m_stream.reset();
-   }
-
-void Stream_Decompression::start()
-   {
-   m_stream.reset(make_stream());
-   }
-
-void Stream_Decompression::process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags)
-   {
-   BOTAN_ASSERT(m_stream, "Initialized");
-   BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
-
-   if(m_buffer.size() < buf.size() + offset)
-      m_buffer.resize(buf.size() + offset);
-
-   m_stream->next_in(buf.data() + offset, buf.size() - offset);
-   m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
-
-   while(true)
-      {
-      const bool stream_end = m_stream->run(flags);
-
-      if(stream_end)
-         {
-         if(m_stream->avail_in() == 0) // all data consumed?
-            {
-            m_buffer.resize(m_buffer.size() - m_stream->avail_out());
-            clear();
-            break;
-            }
-
-         // More data follows: try to process as a following stream
-         const size_t read = (buf.size() - offset) - m_stream->avail_in();
-         start();
-         m_stream->next_in(buf.data() + offset + read, buf.size() - offset - read);
-         }
-
-      if(m_stream->avail_out() == 0)
-         {
-         const size_t added = 8 + m_buffer.size();
-         m_buffer.resize(m_buffer.size() + added);
-         m_stream->next_out(m_buffer.data() + m_buffer.size() - added, added);
-         }
-      else if(m_stream->avail_in() == 0)
-         {
-         m_buffer.resize(m_buffer.size() - m_stream->avail_out());
-         break;
-         }
-      }
-
-   copy_mem(m_buffer.data(), buf.data(), offset);
-   buf.swap(m_buffer);
-   }
-
-void Stream_Decompression::update(secure_vector<uint8_t>& buf, size_t offset)
-   {
-   process(buf, offset, m_stream->run_flag());
-   }
-
-void Stream_Decompression::finish(secure_vector<uint8_t>& buf, size_t offset)
-   {
-   if(buf.size() != offset || m_stream.get())
-      process(buf, offset, m_stream->finish_flag());
-
-   if(m_stream.get())
-      throw Exception(name() + " finished but not at stream end");
-   }
-
-}
-/*
-* Compression Factory
-* (C) 2014,2016 Jack Lloyd
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-#if defined(BOTAN_HAS_ZLIB)
-#endif
-
-#if defined(BOTAN_HAS_BZIP2)
-#endif
-
-#if defined(BOTAN_HAS_LZMA)
-#endif
-
-namespace Botan {
-
-Compression_Algorithm* make_compressor(const std::string& name)
-   {
-#if defined(BOTAN_HAS_ZLIB)
-   if(name == "Zlib" || name == "zlib")
-      return new Zlib_Compression;
-   if(name == "Gzip" || name == "gzip" || name == "gz")
-      return new Gzip_Compression;
-   if(name == "Deflate" || name == "deflate")
-      return new Deflate_Compression;
-#endif
-
-#if defined(BOTAN_HAS_BZIP2)
-   if(name == "bzip2" || name == "bz2" || name == "Bzip2")
-      return new Bzip2_Compression;
-#endif
-
-#if defined(BOTAN_HAS_LZMA)
-   if(name == "lzma" || name == "xz" || name == "LZMA")
-      return new LZMA_Compression;
-#endif
-
-   BOTAN_UNUSED(name);
-   return nullptr;
-   }
-
-//static
-std::unique_ptr<Compression_Algorithm>
-Compression_Algorithm::create(const std::string& algo)
-   {
-   std::unique_ptr<Compression_Algorithm> compressor(make_compressor(algo));
-   return compressor;
-   }
-
-//static
-std::unique_ptr<Compression_Algorithm>
-Compression_Algorithm::create_or_throw(const std::string& algo)
-   {
-   if(auto compressor = Compression_Algorithm::create(algo))
-      {
-      return compressor;
-      }
-   throw Lookup_Error("Compression", algo, "");
-   }
-
-Decompression_Algorithm* make_decompressor(const std::string& name)
-   {
-#if defined(BOTAN_HAS_ZLIB)
-   if(name == "Zlib" || name == "zlib")
-      return new Zlib_Decompression;
-   if(name == "Gzip" || name == "gzip" || name == "gz")
-      return new Gzip_Decompression;
-   if(name == "Deflate" || name == "deflate")
-      return new Deflate_Decompression;
-#endif
-
-#if defined(BOTAN_HAS_BZIP2)
-   if(name == "bzip2" || name == "bz2" || name == "Bzip2")
-      return new Bzip2_Decompression;
-#endif
-
-#if defined(BOTAN_HAS_LZMA)
-   if(name == "lzma" || name == "xz" || name == "LZMA")
-      return new LZMA_Decompression;
-#endif
-
-   BOTAN_UNUSED(name);
-   return nullptr;
-   }
-
-//static
-std::unique_ptr<Decompression_Algorithm>
-Decompression_Algorithm::create(const std::string& algo)
-   {
-   std::unique_ptr<Decompression_Algorithm> decompressor(make_decompressor(algo));
-   return decompressor;
-   }
-
-//static
-std::unique_ptr<Decompression_Algorithm>
-Decompression_Algorithm::create_or_throw(const std::string& algo)
-   {
-   if(auto decompressor = Decompression_Algorithm::create(algo))
-      {
-      return decompressor;
-      }
-   throw Lookup_Error("Decompression", algo, "");
-   }
-
-}
-
-/*
 * Runtime CPU detection
 * (C) 2009,2010,2013,2017 Jack Lloyd
 *
@@ -12544,10 +12771,16 @@ std::string CPUID::to_string()
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
    CPUID_PRINT(neon);
+   CPUID_PRINT(arm_sve);
+
    CPUID_PRINT(arm_sha1);
    CPUID_PRINT(arm_sha2);
    CPUID_PRINT(arm_aes);
    CPUID_PRINT(arm_pmull);
+   CPUID_PRINT(arm_sha2_512);
+   CPUID_PRINT(arm_sha3);
+   CPUID_PRINT(arm_sm3);
+   CPUID_PRINT(arm_sm4);
 #endif
 
 #undef CPUID_PRINT
@@ -12636,6 +12869,8 @@ CPUID::bit_from_string(const std::string& tok)
 #elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    if(tok == "altivec" || tok == "simd")
       return {Botan::CPUID::CPUID_ALTIVEC_BIT};
+   if(tok == "ppc_crypto")
+      return {Botan::CPUID::CPUID_PPC_CRYPTO_BIT};
 
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
    if(tok == "neon" || tok == "simd")
@@ -12648,6 +12883,14 @@ CPUID::bit_from_string(const std::string& tok)
       return {Botan::CPUID::CPUID_ARM_AES_BIT};
    if(tok == "armv8pmull")
       return {Botan::CPUID::CPUID_ARM_PMULL_BIT};
+   if(tok == "armv8sha3")
+      return {Botan::CPUID::CPUID_ARM_SHA3_BIT};
+   if(tok == "armv8sha2_512")
+      return {Botan::CPUID::CPUID_ARM_SHA2_512_BIT};
+   if(tok == "armv8sm3")
+      return {Botan::CPUID::CPUID_ARM_SM3_BIT};
+   if(tok == "armv8sm4")
+      return {Botan::CPUID::CPUID_ARM_SM4_BIT};
 
 #else
    BOTAN_UNUSED(tok);
@@ -12787,6 +13030,11 @@ uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
       PMULL_bit = (1 << 4),
       SHA1_bit  = (1 << 5),
       SHA2_bit  = (1 << 6),
+      SHA3_bit  = (1 << 17),
+      SM3_bit  = (1 << 18),
+      SM4_bit  = (1 << 19),
+      SHA2_512_bit  = (1 << 21),
+      SVE_bit = (1 << 22),
 
       ARCH_hwcap_neon   = 16, // AT_HWCAP
       ARCH_hwcap_crypto = 16, // AT_HWCAP
@@ -12819,6 +13067,19 @@ uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
       detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
    if(hwcap_crypto & ARM_hwcap_bit::SHA2_bit)
       detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
+
+#if defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   if(hwcap_crypto & ARM_hwcap_bit::SHA3_bit)
+      detected_features |= CPUID::CPUID_ARM_SHA3_BIT;
+   if(hwcap_crypto & ARM_hwcap_bit::SM3_bit)
+      detected_features |= CPUID::CPUID_ARM_SM3_BIT;
+   if(hwcap_crypto & ARM_hwcap_bit::SM4_bit)
+      detected_features |= CPUID::CPUID_ARM_SM4_BIT;
+   if(hwcap_crypto & ARM_hwcap_bit::SHA2_512_bit)
+      detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
+   if(hwcap_crypto & ARM_hwcap_bit::SVE_bit)
+      detected_features |= CPUID::CPUID_ARM_SVE_BIT;
+#endif
 
 #elif defined(BOTAN_TARGET_OS_IS_IOS)
 
@@ -12967,8 +13228,10 @@ uint64_t CPUID::detect_cpu_features(size_t* cache_line_size)
          0x003E, // IBM POWER6
          0x003F, // IBM POWER7
          0x004A, // IBM POWER7p
-         0x004D, // IBM POWER8
          0x004B, // IBM POWER8E
+         0x004C, // IBM POWER8 NVL
+         0x004D, // IBM POWER8
+         0x004E, // IBM POWER9
          0x000C, // G4-7400
          0x0039, // G5 970
          0x003C, // G5 970FX
@@ -13739,6 +14002,26 @@ void CTR_BE::clear()
    m_pad_pos = 0;
    }
 
+size_t CTR_BE::default_iv_length() const
+   {
+   return m_block_size;
+   }
+
+bool CTR_BE::valid_iv_length(size_t iv_len) const
+   {
+   return (iv_len <= m_block_size);
+   }
+
+Key_Length_Specification CTR_BE::key_spec() const
+   {
+   return m_cipher->key_spec();
+   }
+
+CTR_BE* CTR_BE::clone() const
+   {
+   return new CTR_BE(m_cipher->clone(), m_ctr_size);
+   }
+
 void CTR_BE::key_schedule(const uint8_t key[], size_t key_len)
    {
    m_cipher->set_key(key, key_len);
@@ -13801,7 +14084,7 @@ void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
 
-   m_iv.resize(m_cipher->block_size());
+   m_iv.resize(m_block_size);
    zeroise(m_iv);
    buffer_insert(m_iv, 0, iv, iv_len);
 
@@ -13817,37 +14100,42 @@ void CTR_BE::add_counter(const uint64_t counter)
    if(ctr_size == 4)
       {
       size_t off = (BS - 4);
+      uint32_t low32 = static_cast<uint32_t>(counter + load_be<uint32_t>(&m_counter[off], 0));
+
       for(size_t i = 0; i != ctr_blocks; ++i)
          {
-         uint32_t low32 = load_be<uint32_t>(&m_counter[off], 0);
-         low32 += counter;
          store_be(low32, &m_counter[off]);
          off += BS;
+         low32 += 1;
          }
       }
    else if(ctr_size == 8)
       {
       size_t off = (BS - 8);
+      uint64_t low64 = counter + load_be<uint64_t>(&m_counter[off], 0);
+
       for(size_t i = 0; i != ctr_blocks; ++i)
          {
-         uint64_t low64 = load_be<uint64_t>(&m_counter[off], 0);
-         low64 += counter;
          store_be(low64, &m_counter[off]);
          off += BS;
+         low64 += 1;
          }
       }
    else if(ctr_size == 16)
       {
       size_t off = (BS - 16);
+      uint64_t b0 = load_be<uint64_t>(&m_counter[off], 0);
+      uint64_t b1 = load_be<uint64_t>(&m_counter[off], 1);
+      b1 += counter;
+      b0 += (b1 < counter) ? 1 : 0; // carry
+
       for(size_t i = 0; i != ctr_blocks; ++i)
          {
-         uint64_t b0 = load_be<uint64_t>(&m_counter[off], 0);
-         uint64_t b1 = load_be<uint64_t>(&m_counter[off], 1);
-         b1 += counter;
-         b0 += (b1 < counter) ? 1 : 0; // carry
          store_be(b0, &m_counter[off]);
          store_be(b1, &m_counter[off+8]);
          off += BS;
+         b1 += 1;
+         b0 += (b1 == 0); // carry
          }
       }
    else
@@ -13880,13 +14168,27 @@ void CTR_BE::seek(uint64_t offset)
    const size_t BS = m_block_size;
 
    // Set m_counter blocks to IV, IV + 1, ... IV + n
-   for(size_t i = 1; i != m_ctr_blocks; ++i)
-      {
-      buffer_insert(m_counter, i*BS, &m_counter[(i-1)*BS], BS);
 
-      for(size_t j = 0; j != m_ctr_size; ++j)
-         if(++m_counter[i*BS + (BS - 1 - j)])
-            break;
+   if(m_ctr_size == 4 && BS >= 8)
+      {
+      const uint32_t low32 = load_be<uint32_t>(&m_counter[BS-4], 0);
+      for(size_t i = 1; i != m_ctr_blocks; ++i)
+         {
+         copy_mem(&m_counter[i*BS], &m_counter[0], BS);
+         const uint32_t c = static_cast<uint32_t>(low32 + i);
+         store_be(c, &m_counter[(BS-4)+i*BS]);
+         }
+      }
+   else
+      {
+      for(size_t i = 1; i != m_ctr_blocks; ++i)
+         {
+         buffer_insert(m_counter, i*BS, &m_counter[(i-1)*BS], BS);
+
+         for(size_t j = 0; j != m_ctr_size; ++j)
+            if(++m_counter[i*BS + (BS - 1 - j)])
+               break;
+         }
       }
 
    if(base_counter > 0)
@@ -13932,10 +14234,7 @@ secure_vector<uint8_t> curve25519(const secure_vector<uint8_t>& secret,
 
 AlgorithmIdentifier Curve25519_PublicKey::algorithm_identifier() const
    {
-   // AlgorithmIdentifier::USE_NULL_PARAM puts 0x05 0x00 in parameters
-   // We want nothing
-   std::vector<uint8_t> empty;
-   return AlgorithmIdentifier(get_oid(), empty);
+   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
 bool Curve25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
@@ -14013,6 +14312,8 @@ class Curve25519_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
       Curve25519_KA_Operation(const Curve25519_PrivateKey& key, const std::string& kdf) :
          PK_Ops::Key_Agreement_with_KDF(kdf),
          m_key(key) {}
+
+      size_t agreed_value_size() const override { return 32; }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
@@ -14193,7 +14494,7 @@ inline void fmul(uint64_t out[5], const uint64_t in[5], const uint64_t in2[5])
    out[4] = r4;
    }
 
-inline void fsquare_times(uint64_t out[5], const uint64_t in[5], size_t count)
+inline void fsquare(uint64_t out[5], const uint64_t in[5], size_t count = 1)
    {
    uint64_t r0 = in[0];
    uint64_t r1 = in[1];
@@ -14231,11 +14532,6 @@ inline void fsquare_times(uint64_t out[5], const uint64_t in[5], size_t count)
    out[2] = r2;
    out[3] = r3;
    out[4] = r4;
-   }
-
-inline void fsquare(uint64_t out[5], const uint64_t in[5])
-   {
-   return fsquare_times(out, in, 1);
    }
 
 /* Take a little-endian, 32-byte number and expand it into polynomial form */
@@ -14311,7 +14607,6 @@ inline void fcontract(uint8_t *out, const uint64_t input[5])
 *   in_q_dash: short form, destroyed
 *   in_q_minus_q_dash: short form, preserved
 */
-
 void fmonty(uint64_t result_two_q_x[5],
             uint64_t result_two_q_z[5],
             uint64_t result_q_plus_q_dash_x[5],
@@ -14359,15 +14654,20 @@ void fmonty(uint64_t result_two_q_x[5],
 * This function performs the swap without leaking any side-channel
 * information.
 */
-void swap_conditional(uint64_t a[5], uint64_t b[5], uint64_t iswap)
+inline void swap_conditional(uint64_t a[5], uint64_t b[5],
+                             uint64_t c[5], uint64_t d[5],
+                             uint64_t iswap)
    {
-   const uint64_t swap = static_cast<uint64_t>(-static_cast<int64_t>(iswap));
+   const uint64_t swap = 0 - iswap;
 
    for(size_t i = 0; i < 5; ++i)
       {
-      const uint64_t x = swap & (a[i] ^ b[i]);
-      a[i] ^= x;
-      b[i] ^= x;
+      const uint64_t x0 = swap & (a[i] ^ b[i]);
+      const uint64_t x1 = swap & (c[i] ^ d[i]);
+      a[i] ^= x0;
+      b[i] ^= x0;
+      c[i] ^= x1;
+      d[i] ^= x1;
       }
    }
 
@@ -14401,40 +14701,31 @@ void cmult(uint64_t resultx[5], uint64_t resultz[5], const uint8_t n[32], const 
       const uint64_t bit6 = (n[31 - i] >> 1) & 1;
       const uint64_t bit7 = (n[31 - i] >> 0) & 1;
 
-      swap_conditional(c, a, bit0);
-      swap_conditional(d, b, bit0);
+      swap_conditional(c, a, d, b, bit0);
       fmonty(g, h, e, f, c, d, a, b, q);
 
-      swap_conditional(g, e, bit0 ^ bit1);
-      swap_conditional(h, f, bit0 ^ bit1);
+      swap_conditional(g, e, h, f, bit0 ^ bit1);
       fmonty(c, d, a, b, g, h, e, f, q);
 
-      swap_conditional(c, a, bit1 ^ bit2);
-      swap_conditional(d, b, bit1 ^ bit2);
+      swap_conditional(c, a, d, b, bit1 ^ bit2);
       fmonty(g, h, e, f, c, d, a, b, q);
 
-      swap_conditional(g, e, bit2 ^ bit3);
-      swap_conditional(h, f, bit2 ^ bit3);
+      swap_conditional(g, e, h, f, bit2 ^ bit3);
       fmonty(c, d, a, b, g, h, e, f, q);
 
-      swap_conditional(c, a, bit3 ^ bit4);
-      swap_conditional(d, b, bit3 ^ bit4);
+      swap_conditional(c, a, d, b, bit3 ^ bit4);
       fmonty(g, h, e, f, c, d, a, b, q);
 
-      swap_conditional(g, e, bit4 ^ bit5);
-      swap_conditional(h, f, bit4 ^ bit5);
+      swap_conditional(g, e, h, f, bit4 ^ bit5);
       fmonty(c, d, a, b, g, h, e, f, q);
 
-      swap_conditional(c, a, bit5 ^ bit6);
-      swap_conditional(d, b, bit5 ^ bit6);
+      swap_conditional(c, a, d, b, bit5 ^ bit6);
       fmonty(g, h, e, f, c, d, a, b, q);
 
-      swap_conditional(g, e, bit6 ^ bit7);
-      swap_conditional(h, f, bit6 ^ bit7);
+      swap_conditional(g, e, h, f, bit6 ^ bit7);
       fmonty(c, d, a, b, g, h, e, f, q);
 
-      swap_conditional(c, a, bit7);
-      swap_conditional(d, b, bit7);
+      swap_conditional(c, a, d, b, bit7);
       }
 
    copy_mem(resultx, c, 5);
@@ -14452,34 +14743,34 @@ void crecip(uint64_t out[5], const uint64_t z[5])
    uint64_t c[5];
    uint64_t t0[5];
 
-   /* 2 */ fsquare(a, z); // a = 2
-   /* 8 */ fsquare_times(t0, a, 2);
-   /* 9 */ fmul(b, t0, z); // b = 9
-   /* 11 */ fmul(a, b, a); // a = 11
-   /* 22 */ fsquare(t0, a);
-   /* 2^5 - 2^0 = 31 */ fmul(b, t0, b);
-   /* 2^10 - 2^5 */ fsquare_times(t0, b, 5);
-   /* 2^10 - 2^0 */ fmul(b, t0, b);
-   /* 2^20 - 2^10 */ fsquare_times(t0, b, 10);
-   /* 2^20 - 2^0 */ fmul(c, t0, b);
-   /* 2^40 - 2^20 */ fsquare_times(t0, c, 20);
-   /* 2^40 - 2^0 */ fmul(t0, t0, c);
-   /* 2^50 - 2^10 */ fsquare_times(t0, t0, 10);
-   /* 2^50 - 2^0 */ fmul(b, t0, b);
-   /* 2^100 - 2^50 */ fsquare_times(t0, b, 50);
-   /* 2^100 - 2^0 */ fmul(c, t0, b);
-   /* 2^200 - 2^100 */ fsquare_times(t0, c, 100);
-   /* 2^200 - 2^0 */ fmul(t0, t0, c);
-   /* 2^250 - 2^50 */ fsquare_times(t0, t0, 50);
-   /* 2^250 - 2^0 */ fmul(t0, t0, b);
-   /* 2^255 - 2^5 */ fsquare_times(t0, t0, 5);
-   /* 2^255 - 21 */ fmul(out, t0, a);
+   fsquare(a, z);       // 2
+   fsquare(t0, a, 2);   // 8
+   fmul(b, t0, z);      // 9
+   fmul(a, b, a);       // 11
+   fsquare(t0, a);      // 22
+   fmul(b, t0, b);      // 2^5 - 2^0 = 31
+   fsquare(t0, b, 5);   // 2^10 - 2^5
+   fmul(b, t0, b);      // 2^10 - 2^0
+   fsquare(t0, b, 10);  // 2^20 - 2^10
+   fmul(c, t0, b);      // 2^20 - 2^0
+   fsquare(t0, c, 20);  // 2^40 - 2^20
+   fmul(t0, t0, c);     // 2^40 - 2^0
+   fsquare(t0, t0, 10); // 2^50 - 2^10
+   fmul(b, t0, b);      // 2^50 - 2^0
+   fsquare(t0, b, 50);  // 2^100 - 2^50
+   fmul(c, t0, b);      // 2^100 - 2^0
+   fsquare(t0, c, 100); // 2^200 - 2^100
+   fmul(t0, t0, c);     // 2^200 - 2^0
+   fsquare(t0, t0, 50); // 2^250 - 2^50
+   fmul(t0, t0, b);     // 2^250 - 2^0
+   fsquare(t0, t0, 5);  // 2^255 - 2^5
+   fmul(out, t0, a);    // 2^255 - 21
    }
 
 }
 
 void
-curve25519_donna(uint8_t *mypublic, const uint8_t *secret, const uint8_t *basepoint)
+curve25519_donna(uint8_t mypublic[32], const uint8_t secret[32], const uint8_t basepoint[32])
    {
    CT::poison(secret, 32);
    CT::poison(basepoint, 32);
@@ -14501,35 +14792,6 @@ curve25519_donna(uint8_t *mypublic, const uint8_t *secret, const uint8_t *basepo
    CT::unpoison(secret, 32);
    CT::unpoison(basepoint, 32);
    CT::unpoison(mypublic, 32);
-   }
-
-}
-/*
-* Darwin SecRandomCopyBytes EntropySource
-* (C) 2015 Daniel Seither (Kullo GmbH)
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-#include <Security/Security.h>
-#include <Security/SecRandom.h>
-
-namespace Botan {
-
-/**
-* Gather entropy from SecRandomCopyBytes
-*/
-size_t Darwin_SecRandom::poll(RandomNumberGenerator& rng)
-   {
-   secure_vector<uint8_t> buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
-
-   if(0 == SecRandomCopyBytes(kSecRandomDefault, buf.size(), buf.data()))
-      {
-      rng.add_entropy(buf.data(), buf.size());
-      return buf.size() * 8;
-      }
-
-   return 0;
    }
 
 }
@@ -15658,15 +15920,14 @@ Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnam
          either a bug in the application or file descriptor exhaustion.
          */
          if(errno != ENOENT && errno != EACCES)
-            throw Exception("Opening OS RNG device failed with errno " +
-                            std::to_string(errno));
+            throw System_Error("Opening OS RNG device failed", errno);
          }
       else
          {
          if(fd > FD_SETSIZE)
             {
             ::close(fd);
-            throw Exception("Open of OS RNG succeeded but fd is too large for fd_set");
+            throw Invalid_State("Open of OS RNG succeeded but returned fd is too large for fd_set");
             }
 
          m_dev_fds.push_back(fd);
@@ -15822,6 +16083,8 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
                    [](const BigInt& k) { return k; },
                    [this](const BigInt& k) { return m_powermod_x_p(inverse_mod(k, m_p)); })
          {}
+
+      size_t agreed_value_size() const override { return m_p.bytes(); }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override;
    private:
@@ -15998,6 +16261,7 @@ class DL_Group_Data final
       size_t p_bits() const { return m_p_bits; }
       size_t q_bits() const { return m_q_bits; }
       size_t p_bytes() const { return (m_p_bits + 7) / 8; }
+      size_t q_bytes() const { return (m_q_bits + 7) / 8; }
 
       size_t estimated_strength() const { return m_estimated_strength; }
 
@@ -16377,6 +16641,12 @@ size_t DL_Group::q_bits() const
    {
    data().assert_q_is_set("q_bits");
    return data().q_bits();
+   }
+
+size_t DL_Group::q_bytes() const
+   {
+   data().assert_q_is_set("q_bytes");
+   return data().q_bytes();
    }
 
 size_t DL_Group::estimated_strength() const
@@ -16809,20 +17079,17 @@ std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length,
 
 /**
 * Return the max size, in bytes, of a message
-* Not_Implemented if DLIES is used in XOR encryption mode
+* We assume DLIES is only used for key transport and limit the maximum size
+* to 512 bits
 */
 size_t DLIES_Encryptor::maximum_input_size() const
    {
-   if(m_cipher)
-      {
-      // no limit in block cipher mode
-      return std::numeric_limits<size_t>::max();
-      }
-   else
-      {
-      // No way to determine if the KDF will output enough bits for XORing with the plaintext?!
-      throw Not_Implemented("Not implemented for XOR encryption mode");
-      }
+   return 64;
+   }
+
+size_t DLIES_Encryptor::ciphertext_length(size_t ptext_len) const
+   {
+   return m_own_pub_key.size() + m_mac->output_length() + m_cipher->output_length(ptext_len);
    }
 
 DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
@@ -16852,6 +17119,14 @@ DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
                                  size_t mac_key_length) :
    DLIES_Decryptor(own_priv_key, rng, kdf, nullptr, 0, mac, mac_key_length)
    {}
+
+size_t DLIES_Decryptor::plaintext_length(size_t ctext_len) const
+   {
+   if(ctext_len < m_pub_key_size + m_mac->output_length())
+      return 0; // will throw if attempted
+
+   return ctext_len - (m_pub_key_size + m_mac->output_length());
+   }
 
 secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask,
       const uint8_t msg[], size_t length) const
@@ -16887,7 +17162,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask,
    secure_vector<uint8_t> tag(msg + m_pub_key_size + ciphertext_len,
                            msg + m_pub_key_size + ciphertext_len + m_mac->output_length());
 
-   valid_mask = CT::expand_mask<uint8_t>(constant_time_compare(tag.data(), calculated_tag.data(), tag.size()));
+   valid_mask = ct_compare_u8(tag.data(), calculated_tag.data(), tag.size());
 
    // decrypt
    if(m_cipher)
@@ -17013,7 +17288,8 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          m_b_inv = m_group.inverse_mod_q(m_b);
          }
 
-      size_t max_input_bits() const override { return m_group.get_q().bits(); }
+      size_t signature_length() const override { return 2*m_group.q_bytes(); }
+      size_t max_input_bits() const override { return m_group.q_bits(); }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator& rng) override;
@@ -17047,7 +17323,16 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
    const BigInt k_inv = m_group.inverse_mod_q(k);
 
-   const BigInt r = m_group.mod_q(m_group.power_g_p(k, m_group.q_bits()));
+   /*
+   * It may not be strictly necessary for the reduction (g^k mod p) mod q to be
+   * const time, since r is published as part of the signature, and deriving
+   * anything useful about k from g^k mod p would seem to require computing a
+   * discrete logarithm.
+   *
+   * However it only increases the cost of signatures by about 7-10%, and DSA is
+   * only for legacy use anyway so we don't care about the performance so much.
+   */
+   const BigInt r = ct_modulo(m_group.power_g_p(k, m_group.q_bits()), m_group.get_q());
 
    /*
    * Blind the input message and compute x*r+m as (x*r*b + m*b)/b
@@ -17081,7 +17366,7 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
          {
          }
 
-      size_t max_input_bits() const override { return m_group.get_q().bits(); }
+      size_t max_input_bits() const override { return m_group.q_bits(); }
 
       bool with_recovery() const override { return false; }
 
@@ -17115,7 +17400,8 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    s = m_group.multi_exponentiate(si, m_y, sr);
 
-   return (m_group.mod_q(s) == r);
+   // s is too big for Barrett, and verification doesn't need to be const-time
+   return (s % m_group.get_q() == r);
    }
 
 }
@@ -17196,6 +17482,12 @@ void EAX_Mode::reset()
    {
    m_ad_mac.clear();
    m_nonce_mac.clear();
+
+   // Clear out any data added to the CMAC calculation
+   try {
+      m_cmac->final();
+   }
+   catch(Key_Not_Set&) {}
    }
 
 std::string EAX_Mode::name() const
@@ -17235,6 +17527,8 @@ void EAX_Mode::key_schedule(const uint8_t key[], size_t length)
 */
 void EAX_Mode::set_associated_data(const uint8_t ad[], size_t length)
    {
+   if(m_nonce_mac.empty() == false)
+      throw Invalid_State("Cannot set AD for EAX while processing a message");
    m_ad_mac = eax_prf(1, block_size(), *m_cmac, ad, length);
    }
 
@@ -17254,6 +17548,7 @@ void EAX_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
 size_t EAX_Encryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(m_nonce_mac.size() > 0);
    m_ctr->cipher(buf, buf, sz);
    m_cmac->update(buf, sz);
    return sz;
@@ -17261,6 +17556,7 @@ size_t EAX_Encryption::process(uint8_t buf[], size_t sz)
 
 void EAX_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   BOTAN_ASSERT_NOMSG(m_nonce_mac.empty() == false);
    update(buffer, offset);
 
    secure_vector<uint8_t> data_mac = m_cmac->final();
@@ -17278,6 +17574,7 @@ void EAX_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 size_t EAX_Decryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(m_nonce_mac.size() > 0);
    m_cmac->update(buf, sz);
    m_ctr->cipher(buf, buf, sz);
    return sz;
@@ -17315,6 +17612,8 @@ void EAX_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
       throw Integrity_Failure("EAX tag check failed");
 
    buffer.resize(offset + remaining);
+
+   m_nonce_mac.clear();
    }
 
 }
@@ -17374,8 +17673,6 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
 
       size_t get_ws_size() const override { return 2*m_p_words + 4; }
 
-      void redc_mod_p(BigInt& z, secure_vector<word>& ws) const override;
-
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
 
       void to_curve_rep(BigInt& x, secure_vector<word>& ws) const override;
@@ -17406,11 +17703,6 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr
       bool m_a_is_zero;
       bool m_a_is_minus_3;
    };
-
-void CurveGFp_Montgomery::redc_mod_p(BigInt& z, secure_vector<word>& ws) const
-   {
-   z.reduce_below(m_p, ws);
-   }
 
 BigInt CurveGFp_Montgomery::invert_element(const BigInt& x, secure_vector<word>& ws) const
    {
@@ -17520,6 +17812,8 @@ class CurveGFp_NIST : public CurveGFp_Repr
 
       void from_curve_rep(BigInt& x, secure_vector<word>& ws) const override
          { redc_mod_p(x, ws); }
+
+      virtual void redc_mod_p(BigInt& z, secure_vector<word>& ws) const = 0;
 
       BigInt invert_element(const BigInt& x, secure_vector<word>& ws) const override;
 
@@ -17899,10 +18193,6 @@ CurveGFp::choose_repr(const BigInt& p, const BigInt& a, const BigInt& b)
 */
 
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-#elif defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32)
-#endif
-
 namespace Botan {
 
 class EC_Group_Data final
@@ -18196,23 +18486,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
          .end_cons()
          .verify_end();
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-      System_RNG rng;
-#elif defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_32)
-      /*
-      * This is not ideal because the data is attacker controlled, but
-      * it seems like it would be difficult for someone to come up
-      * with an valid ASN.1 encoding where the prime happened to pass
-      * Miller-Rabin test with exactly the values chosen when
-      * HMAC_DRBG is seeded with the overall data.
-      */
-      HMAC_DRBG rng("SHA-256");
-      rng.add_entropy(bits, len);
-#else
-      Null_RNG rng;
-#endif
-
-      if(p.bits() < 64 || p.is_negative() || (is_prime(p, rng) == false))
+      if(p.bits() < 64 || p.is_negative() || !is_bailie_psw_probable_prime(p))
          throw Decoding_Error("Invalid ECC p parameter");
 
       if(a.is_negative() || a >= p)
@@ -18221,7 +18495,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
       if(b <= 0 || b >= p)
          throw Decoding_Error("Invalid ECC b parameter");
 
-      if(order <= 0)
+      if(order <= 0 || !is_bailie_psw_probable_prime(order))
          throw Decoding_Error("Invalid ECC order parameter");
 
       if(cofactor <= 0 || cofactor >= 16)
@@ -18423,6 +18697,15 @@ BigInt EC_Group::inverse_mod_order(const BigInt& x) const
 const OID& EC_Group::get_curve_oid() const
    {
    return data().oid();
+   }
+
+size_t EC_Group::point_size(PointGFp::Compression_Type format) const
+   {
+   // Hybrid and standard format are (x,y), compressed is y, +1 format byte
+   if(format == PointGFp::COMPRESSED)
+      return (1 + get_p_bytes());
+   else
+      return (1 + 2*get_p_bytes());
    }
 
 PointGFp EC_Group::OS2ECP(const uint8_t bits[], size_t len) const
@@ -18933,7 +19216,7 @@ const std::set<std::string>& EC_Group::known_named_groups()
 * Point arithmetic on elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2008-2011,2012,2014,2015 Jack Lloyd
+*     2008-2011,2012,2014,2015,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -19003,12 +19286,12 @@ inline void resize_ws(std::vector<BigInt>& ws_bn, size_t cap_size)
          ws_bn[i].get_word_vector().resize(cap_size);
    }
 
-inline bool all_zeros(const word x[], size_t len)
+inline word all_zeros(const word x[], size_t len)
    {
    word z = 0;
    for(size_t i = 0; i != len; ++i)
       z |= x[i];
-   return (z == 0);
+   return CT::Mask<word>::is_zero(z).value();
    }
 
 }
@@ -19017,8 +19300,10 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
                           const word y_words[], size_t y_size,
                           std::vector<BigInt>& ws_bn)
    {
-   if(all_zeros(x_words, x_size) && all_zeros(y_words, y_size))
+   if(all_zeros(x_words, x_size) & all_zeros(y_words, y_size))
+      {
       return;
+      }
 
    if(is_zero())
       {
@@ -19065,9 +19350,9 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
          }
 
       // setting to zero:
-      m_coord_x = 0;
+      m_coord_x.clear();
       m_coord_y = m_curve.get_1_rep();
-      m_coord_z = 0;
+      m_coord_z.clear();
       return;
       }
 
@@ -19079,19 +19364,19 @@ void PointGFp::add_affine(const word x_words[], size_t x_size,
 
    m_curve.sqr(m_coord_x, T0, ws);
    m_coord_x.mod_sub(T1, p, sub_ws);
+
    m_coord_x.mod_sub(T3, p, sub_ws);
    m_coord_x.mod_sub(T3, p, sub_ws);
 
    T3.mod_sub(m_coord_x, p, sub_ws);
 
-   T2 = m_coord_y;
    m_curve.mul(T2, T0, T3, ws);
-   m_curve.mul(T3, m_coord_y, T1, ws);
-   T2.mod_sub(T3, p, sub_ws);
-   m_coord_y = T2;
+   m_curve.mul(T0, m_coord_y, T1, ws);
+   T2.mod_sub(T0, p, sub_ws);
+   m_coord_y.swap(T2);
 
-   m_curve.mul(T3, m_coord_z, T4, ws);
-   m_coord_z = T3;
+   m_curve.mul(T0, m_coord_z, T4, ws);
+   m_coord_z.swap(T0);
    }
 
 void PointGFp::add(const word x_words[], size_t x_size,
@@ -19099,7 +19384,7 @@ void PointGFp::add(const word x_words[], size_t x_size,
                    const word z_words[], size_t z_size,
                    std::vector<BigInt>& ws_bn)
    {
-   if(all_zeros(x_words, x_size) && all_zeros(z_words, z_size))
+   if(all_zeros(x_words, x_size) & all_zeros(z_words, z_size))
       return;
 
    if(is_zero())
@@ -19152,9 +19437,9 @@ void PointGFp::add(const word x_words[], size_t x_size,
          }
 
       // setting to zero:
-      m_coord_x = 0;
+      m_coord_x.clear();
       m_coord_y = m_curve.get_1_rep();
-      m_coord_z = 0;
+      m_coord_z.clear();
       return;
       }
 
@@ -19230,15 +19515,13 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    m_curve.sqr(T0, m_coord_y, ws);
 
    m_curve.mul(T1, m_coord_x, T0, ws);
-   T1 <<= 2; // * 4
-   m_curve.redc_mod_p(T1, sub_ws);
+   T1.mod_mul(4, p, sub_ws);
 
    if(m_curve.a_is_zero())
       {
       // if a == 0 then 3*x^2 + a*z^4 is just 3*x^2
       m_curve.sqr(T4, m_coord_x, ws); // x^2
-      T4 *= 3; // 3*x^2
-      m_curve.redc_mod_p(T4, sub_ws);
+      T4.mod_mul(3, p, sub_ws); // 3*x^2
       }
    else if(m_curve.a_is_minus_3())
       {
@@ -19257,8 +19540,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 
       m_curve.mul(T4, T2, T3, ws); // (x-z^2)*(x+z^2)
 
-      T4 *= 3; // 3*(x-z^2)*(x+z^2)
-      m_curve.redc_mod_p(T4, sub_ws);
+      T4.mod_mul(3, p, sub_ws); // 3*(x-z^2)*(x+z^2)
       }
    else
       {
@@ -19267,7 +19549,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
       m_curve.mul(T3, m_curve.get_a_rep(), T4, ws); // a*z^4
 
       m_curve.sqr(T4, m_coord_x, ws); // x^2
-      T4 *= 3; // 3*x^2
+      T4.mod_mul(3, p, sub_ws);
       T4.mod_add(T3, p, sub_ws); // 3*x^2 + a*z^4
       }
 
@@ -19276,22 +19558,20 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    T2.mod_sub(T1, p, sub_ws);
 
    m_curve.sqr(T3, T0, ws);
-   T3 <<= 3;
-   m_curve.redc_mod_p(T3, sub_ws);
+   T3.mod_mul(8, p, sub_ws);
 
    T1.mod_sub(T2, p, sub_ws);
 
    m_curve.mul(T0, T4, T1, ws);
    T0.mod_sub(T3, p, sub_ws);
 
-   m_coord_x = T2;
+   m_coord_x.swap(T2);
 
    m_curve.mul(T2, m_coord_y, m_coord_z, ws);
-   T2 <<= 1;
-   m_curve.redc_mod_p(T2, sub_ws);
+   T2.mod_mul(2, p, sub_ws);
 
-   m_coord_y = T0;
-   m_coord_z = T2;
+   m_coord_y.swap(T0);
+   m_coord_z.swap(T2);
    }
 
 // arithmetic operators
@@ -19706,25 +19986,30 @@ PointGFp_Base_Point_Precompute::PointGFp_Base_Point_Precompute(const PointGFp& b
    * the size of the prime modulus. In all cases they are at most 1 bit
    * longer. The +1 compensates for this.
    */
-   const size_t T_bits = round_up(p_bits + PointGFp_SCALAR_BLINDING_BITS + 1, 2) / 2;
+   const size_t T_bits = round_up(p_bits + PointGFp_SCALAR_BLINDING_BITS + 1, WINDOW_BITS) / WINDOW_BITS;
 
-   std::vector<PointGFp> T(3*T_bits);
-   T.resize(3*T_bits);
+   std::vector<PointGFp> T(WINDOW_SIZE*T_bits);
 
-   T[0] = base;
-   T[1] = T[0];
-   T[1].mult2(ws);
-   T[2] = T[1];
-   T[2].add(T[0], ws);
+   PointGFp g = base;
+   PointGFp g2, g4;
 
-   for(size_t i = 1; i != T_bits; ++i)
+   for(size_t i = 0; i != T_bits; i++)
       {
-      T[3*i+0] = T[3*i - 2];
-      T[3*i+0].mult2(ws);
-      T[3*i+1] = T[3*i+0];
-      T[3*i+1].mult2(ws);
-      T[3*i+2] = T[3*i+1];
-      T[3*i+2].add(T[3*i+0], ws);
+      g2 = g;
+      g2.mult2(ws);
+      g4 = g2;
+      g4.mult2(ws);
+
+      T[7*i+0] = g;
+      T[7*i+1] = std::move(g2);
+      T[7*i+2] = T[7*i+1].plus(T[7*i+0], ws); // g2+g
+      T[7*i+3] = g4;
+      T[7*i+4] = T[7*i+3].plus(T[7*i+0], ws); // g4+g
+      T[7*i+5] = T[7*i+3].plus(T[7*i+1], ws); // g4+g2
+      T[7*i+6] = T[7*i+3].plus(T[7*i+2], ws); // g4+g2+g
+
+      g.swap(g4);
+      g.mult2(ws);
       }
 
    PointGFp::force_all_affine(T, ws[0].get_word_vector());
@@ -19749,13 +20034,30 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
    if(k.is_negative())
       throw Invalid_Argument("PointGFp_Base_Point_Precompute scalar must be positive");
 
-   // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
-   const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS);
-
    // Instead of reducing k mod group order should we alter the mask size??
-   const BigInt scalar = m_mod_order.reduce(k) + group_order * mask;
+   BigInt scalar = m_mod_order.reduce(k);
 
-   const size_t windows = round_up(scalar.bits(), 2) / 2;
+   if(rng.is_seeded())
+      {
+      // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
+      const BigInt mask(rng, PointGFp_SCALAR_BLINDING_BITS);
+      scalar += group_order * mask;
+      }
+   else
+      {
+      /*
+      When we don't have an RNG we cannot do scalar blinding. Instead use the
+      same trick as OpenSSL and add one or two copies of the order to normalize
+      the length of the scalar at order.bits()+1. This at least ensures the loop
+      bound does not leak information about the high bits of the scalar.
+      */
+      scalar += group_order;
+      if(scalar.bits() == group_order.bits())
+         scalar += group_order;
+      BOTAN_DEBUG_ASSERT(scalar.bits() == group_order.bits() + 1);
+      }
+
+   const size_t windows = round_up(scalar.bits(), WINDOW_BITS) / WINDOW_BITS;
 
    const size_t elem_size = 2*m_p_words;
 
@@ -19773,26 +20075,34 @@ PointGFp PointGFp_Base_Point_Precompute::mul(const BigInt& k,
    for(size_t i = 0; i != windows; ++i)
       {
       const size_t window = windows - i - 1;
-      const size_t base_addr = (3*window)*elem_size;
+      const size_t base_addr = (WINDOW_SIZE*window)*elem_size;
 
-      const word w = scalar.get_substring(2*window, 2);
+      const word w = scalar.get_substring(WINDOW_BITS*window, WINDOW_BITS);
 
-      const word w_is_1 = CT::is_equal<word>(w, 1);
-      const word w_is_2 = CT::is_equal<word>(w, 2);
-      const word w_is_3 = CT::is_equal<word>(w, 3);
+      const auto w_is_1 = CT::Mask<word>::is_equal(w, 1);
+      const auto w_is_2 = CT::Mask<word>::is_equal(w, 2);
+      const auto w_is_3 = CT::Mask<word>::is_equal(w, 3);
+      const auto w_is_4 = CT::Mask<word>::is_equal(w, 4);
+      const auto w_is_5 = CT::Mask<word>::is_equal(w, 5);
+      const auto w_is_6 = CT::Mask<word>::is_equal(w, 6);
+      const auto w_is_7 = CT::Mask<word>::is_equal(w, 7);
 
       for(size_t j = 0; j != elem_size; ++j)
          {
-         const word w1 = m_W[base_addr + 0*elem_size + j];
-         const word w2 = m_W[base_addr + 1*elem_size + j];
-         const word w3 = m_W[base_addr + 2*elem_size + j];
+         const word w1 = w_is_1.if_set_return(m_W[base_addr + 0*elem_size + j]);
+         const word w2 = w_is_2.if_set_return(m_W[base_addr + 1*elem_size + j]);
+         const word w3 = w_is_3.if_set_return(m_W[base_addr + 2*elem_size + j]);
+         const word w4 = w_is_4.if_set_return(m_W[base_addr + 3*elem_size + j]);
+         const word w5 = w_is_5.if_set_return(m_W[base_addr + 4*elem_size + j]);
+         const word w6 = w_is_6.if_set_return(m_W[base_addr + 5*elem_size + j]);
+         const word w7 = w_is_7.if_set_return(m_W[base_addr + 6*elem_size + j]);
 
-         Wt[j] = CT::select3<word>(w_is_1, w1, w_is_2, w2, w_is_3, w3, 0);
+         Wt[j] = w1 | w2 | w3 | w4 | w5 | w6 | w7;
          }
 
       R.add_affine(&Wt[0], m_p_words, &Wt[m_p_words], m_p_words, ws);
 
-      if(i == 0)
+      if(i == 0 && rng.is_seeded())
          {
          /*
          * Since we start with the top bit of the exponent we know the
@@ -19819,7 +20129,7 @@ PointGFp_Var_Point_Precompute::PointGFp_Var_Point_Precompute(const PointGFp& poi
    if(ws.size() < PointGFp::WORKSPACE_SIZE)
       ws.resize(PointGFp::WORKSPACE_SIZE);
 
-   std::vector<PointGFp> U(1U << m_window_bits);
+   std::vector<PointGFp> U(static_cast<size_t>(1) << m_window_bits);
    U[0] = point.zero();
    U[1] = point;
 
@@ -19904,11 +20214,11 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       clear_mem(e.data(), e.size());
       for(size_t i = 1; i != window_elems; ++i)
          {
-         const word wmask = CT::is_equal<word>(w, i);
+         const auto wmask = CT::Mask<word>::is_equal(w, i);
 
          for(size_t j = 0; j != elem_size; ++j)
             {
-            e[j] |= wmask & m_T[i * elem_size + j];
+            e[j] |= wmask.if_set_return(m_T[i * elem_size + j]);
             }
          }
 
@@ -19931,10 +20241,12 @@ PointGFp PointGFp_Var_Point_Precompute::mul(const BigInt& k,
       clear_mem(e.data(), e.size());
       for(size_t i = 1; i != window_elems; ++i)
          {
-         const word wmask = CT::is_equal<word>(w, i);
+         const auto wmask = CT::Mask<word>::is_equal(w, i);
 
          for(size_t j = 0; j != elem_size; ++j)
-            e[j] |= wmask & m_T[i * elem_size + j];
+            {
+            e[j] |= wmask.if_set_return(m_T[i * elem_size + j]);
+            }
          }
 
       R.add(&e[0], m_p_words, &e[m_p_words], m_p_words, &e[2*m_p_words], m_p_words, ws);
@@ -20003,10 +20315,10 @@ PointGFp PointGFp_Multi_Point_Precompute::multi_exp(const BigInt& z1,
          H.mult2i(2, ws);
          }
 
-      const uint8_t z1_b = z1.get_substring(z_bits - i - 2, 2);
-      const uint8_t z2_b = z2.get_substring(z_bits - i - 2, 2);
+      const uint32_t z1_b = z1.get_substring(z_bits - i - 2, 2);
+      const uint32_t z2_b = z2.get_substring(z_bits - i - 2, 2);
 
-      const uint8_t z12 = (4*z2_b) + z1_b;
+      const uint32_t z12 = (4*z2_b) + z1_b;
 
       // This function is not intended to be const time
       if(z12)
@@ -20144,15 +20456,17 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
       m_private_key = x;
       }
 
-   // Can't use rng here because ffi load functions use Null_RNG
+   std::vector<BigInt> ws;
+
    if(with_modular_inverse)
       {
       // ECKCDSA
-      m_public_key = domain().get_base_point() * m_domain_params.inverse_mod_order(m_private_key);
+      m_public_key = domain().blinded_base_point_multiply(
+         m_domain_params.inverse_mod_order(m_private_key), rng, ws);
       }
    else
       {
-      m_public_key = domain().get_base_point() * m_private_key;
+      m_public_key = domain().blinded_base_point_multiply(m_private_key, rng, ws);
       }
 
    BOTAN_ASSERT(m_public_key.on_the_curve(),
@@ -20164,8 +20478,10 @@ secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .encode(static_cast<size_t>(1))
-         .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()),
-                 OCTET_STRING)
+         .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()), OCTET_STRING)
+         .start_cons(ASN1_Tag(1), PRIVATE)
+            .encode(m_public_key.encode(PointGFp::Compression_Type::UNCOMPRESSED), BIT_STRING)
+         .end_cons()
       .end_cons()
       .get_contents();
    }
@@ -20248,6 +20564,8 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          m_l_times_priv = m_group.inverse_mod_order(m_group.get_cofactor()) * key.private_value();
          }
 
+      size_t agreed_value_size() const override { return m_group.get_p_bytes(); }
+
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
          PointGFp input_point = m_group.get_cofactor() * m_group.OS2ECP(w, w_len);
@@ -20319,6 +20637,90 @@ ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
 
 namespace Botan {
 
+namespace {
+
+PointGFp recover_ecdsa_public_key(const EC_Group& group,
+                                  const std::vector<uint8_t>& msg,
+                                  const BigInt& r,
+                                  const BigInt& s,
+                                  uint8_t v)
+   {
+   if(group.get_cofactor() != 1)
+      throw Invalid_Argument("ECDSA public key recovery only supported for prime order groups");
+
+   if(v > 4)
+      throw Invalid_Argument("Unexpected v param for ECDSA public key recovery");
+
+   const uint8_t y_odd = v % 2;
+   const uint8_t add_order = v >> 1;
+
+   const BigInt& group_order = group.get_order();
+   const size_t p_bytes = group.get_p_bytes();
+
+   try
+      {
+      const BigInt e(msg.data(), msg.size(), group.get_order_bits());
+      const BigInt r_inv = group.inverse_mod_order(r);
+
+      BigInt x = r + add_order*group_order;
+
+      std::vector<uint8_t> X(p_bytes + 1);
+
+      X[0] = 0x02 | y_odd;
+      BigInt::encode_1363(&X[1], p_bytes, x);
+
+      const PointGFp R = group.OS2ECP(X);
+
+      if((R*group_order).is_zero() == false)
+         throw Decoding_Error("Unable to recover ECDSA public key");
+
+      // Compute r_inv * (s*R - eG)
+      PointGFp_Multi_Point_Precompute RG_mul(R, group.get_base_point());
+      const BigInt ne = group.mod_order(group_order - e);
+      return r_inv * RG_mul.multi_exp(s, ne);
+      }
+   catch(...)
+      {
+      // continue on and throw
+      }
+
+   throw Decoding_Error("Failed to recover ECDSA public key from signature/msg pair");
+   }
+
+}
+
+ECDSA_PublicKey::ECDSA_PublicKey(const EC_Group& group,
+                                 const std::vector<uint8_t>& msg,
+                                 const BigInt& r,
+                                 const BigInt& s,
+                                 uint8_t v) :
+   EC_PublicKey(group, recover_ecdsa_public_key(group, msg, r, s, v)) {}
+
+
+uint8_t ECDSA_PublicKey::recovery_param(const std::vector<uint8_t>& msg,
+                                        const BigInt& r,
+                                        const BigInt& s) const
+   {
+   for(uint8_t v = 0; v != 4; ++v)
+      {
+      try
+         {
+         PointGFp R = recover_ecdsa_public_key(this->domain(), msg, r, s, v);
+
+         if(R == this->public_point())
+            {
+            return v;
+            }
+         }
+      catch(Decoding_Error&)
+         {
+         // try the next v
+         }
+      }
+
+   throw Internal_Error("Could not determine ECDSA recovery parameter");
+   }
+
 bool ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
                                  bool strong) const
    {
@@ -20348,12 +20750,14 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          m_x(ecdsa.private_value())
          {
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-         m_rfc6979_hash = hash_for_emsa(emsa);
+         m_rfc6979.reset(new RFC6979_Nonce_Generator(hash_for_emsa(emsa), m_group.get_order(), m_x));
 #endif
 
          m_b = m_group.random_scalar(rng);
          m_b_inv = m_group.inverse_mod_order(m_b);
          }
+
+      size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
 
       size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
@@ -20365,7 +20769,7 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
       const BigInt& m_x;
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-      std::string m_rfc6979_hash;
+      std::unique_ptr<RFC6979_Nonce_Generator> m_rfc6979;
 #endif
 
       std::vector<BigInt> m_ws;
@@ -20380,7 +20784,7 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    BigInt m(msg, msg_len, m_group.get_order_bits());
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-   const BigInt k = generate_rfc6979_nonce(m_x, m_group.get_order(), m, m_rfc6979_hash);
+   const BigInt k = m_rfc6979->nonce_for(m);
 #else
    const BigInt k = m_group.random_scalar(rng);
 #endif
@@ -20396,10 +20800,10 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    m_b = m_group.square_mod_order(m_b);
    m_b_inv = m_group.square_mod_order(m_b_inv);
 
-   m = m_group.multiply_mod_order(m_b, m);
-   const BigInt xr = m_group.multiply_mod_order(m_x, m_b, r);
+   m = m_group.multiply_mod_order(m_b, m_group.mod_order(m));
+   const BigInt xr_m = m_group.mod_order(m_group.multiply_mod_order(m_x, m_b, r) + m);
 
-   const BigInt s = m_group.multiply_mod_order(k_inv, xr + m, m_b_inv);
+   const BigInt s = m_group.multiply_mod_order(k_inv, xr_m, m_b_inv);
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero())
@@ -20587,6 +20991,8 @@ class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                       RandomNumberGenerator& rng) override;
 
+      size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
+
       size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
    private:
@@ -20701,7 +21107,6 @@ ECGDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
 */
 
 
-
 namespace Botan {
 
 namespace {
@@ -20751,6 +21156,8 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF
          m_rng(rng)
          {
          }
+
+      size_t agreed_value_size() const override { return m_key.domain().get_p_bytes(); }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
@@ -20932,6 +21339,8 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
       // convert only if necessary; m_eph_public_key_bin has been initialized with the uncompressed format
       m_eph_public_key_bin = m_params.domain().OS2ECP(m_eph_public_key_bin).encode(ecies_params.compression_type());
       }
+   m_mac = m_params.create_mac();
+   m_cipher = m_params.create_cipher(ENCRYPTION);
    }
 
 /*
@@ -20942,6 +21351,21 @@ ECIES_Encryptor::ECIES_Encryptor(RandomNumberGenerator& rng, const ECIES_System_
    {
    }
 
+size_t ECIES_Encryptor::maximum_input_size() const
+   {
+   /*
+   ECIES should just be used for key transport so this (arbitrary) limit
+   seems sufficient
+   */
+   return 64;
+   }
+
+size_t ECIES_Encryptor::ciphertext_length(size_t ptext_len) const
+   {
+   return m_eph_public_key_bin.size() +
+          m_mac->output_length() +
+          m_cipher->output_length(ptext_len);
+   }
 
 /*
 * ECIES Encryption according to ISO 18033-2
@@ -20956,35 +21380,31 @@ std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[], size_t length, R
    const SymmetricKey secret_key = m_ka.derive_secret(m_eph_public_key_bin, m_other_point);
 
    // encryption
-   std::unique_ptr<Cipher_Mode> cipher = m_params.create_cipher(ENCRYPTION);
-   BOTAN_ASSERT(cipher != nullptr, "Cipher is found");
 
-   cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
+   m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
    if(m_iv.size() != 0)
       {
-      cipher->start(m_iv.bits_of());
+      m_cipher->start(m_iv.bits_of());
       }
    secure_vector<uint8_t> encrypted_data(data, data + length);
-   cipher->finish(encrypted_data);
+   m_cipher->finish(encrypted_data);
 
    // concat elements
-   std::unique_ptr<MessageAuthenticationCode> mac = m_params.create_mac();
-   BOTAN_ASSERT(mac != nullptr, "MAC is found");
 
-   secure_vector<uint8_t> out(m_eph_public_key_bin.size() + encrypted_data.size() + mac->output_length());
+   std::vector<uint8_t> out(m_eph_public_key_bin.size() + encrypted_data.size() + m_mac->output_length());
    buffer_insert(out, 0, m_eph_public_key_bin);
    buffer_insert(out, m_eph_public_key_bin.size(), encrypted_data);
 
    // mac
-   mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
-   mac->update(encrypted_data);
+   m_mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
+   m_mac->update(encrypted_data);
    if(!m_label.empty())
       {
-      mac->update(m_label);
+      m_mac->update(m_label);
       }
-   mac->final(out.data() + m_eph_public_key_bin.size() + encrypted_data.size());
+   m_mac->final(out.data() + m_eph_public_key_bin.size() + encrypted_data.size());
 
-   return unlock(out);
+   return out;
    }
 
 
@@ -21005,6 +21425,20 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
          throw Invalid_Argument("ECIES: gcd of cofactor and order must be 1 if check_mode is 0");
          }
       }
+
+   m_mac = m_params.create_mac();
+   m_cipher = m_params.create_cipher(DECRYPTION);
+   }
+
+size_t ECIES_Decryptor::plaintext_length(size_t ctext_len) const
+   {
+   const size_t point_size = m_params.domain().point_size(m_params.compression_type());
+   const size_t overhead = point_size + m_mac->output_length();
+
+   if(ctext_len < overhead)
+      return 0;
+
+   return m_cipher->output_length(ctext_len - overhead);
    }
 
 /**
@@ -21012,25 +21446,17 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
 */
 secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const
    {
-   size_t point_size = m_params.domain().get_p_bytes();
-   if(m_params.compression_type() != PointGFp::COMPRESSED)
-      {
-      point_size *= 2;		// uncompressed and hybrid contains x AND y
-      }
-   point_size += 1;			// format byte
+   const size_t point_size = m_params.domain().point_size(m_params.compression_type());
 
-   std::unique_ptr<MessageAuthenticationCode> mac = m_params.create_mac();
-   BOTAN_ASSERT(mac != nullptr, "MAC is found");
-
-   if(in_len < point_size + mac->output_length())
+   if(in_len < point_size + m_mac->output_length())
       {
       throw Decoding_Error("ECIES decryption: ciphertext is too short");
       }
 
    // extract data
    const std::vector<uint8_t> other_public_key_bin(in, in + point_size);	// the received (ephemeral) public key
-   const std::vector<uint8_t> encrypted_data(in + point_size, in + in_len - mac->output_length());
-   const std::vector<uint8_t> mac_data(in + in_len - mac->output_length(), in + in_len);
+   const std::vector<uint8_t> encrypted_data(in + point_size, in + in_len - m_mac->output_length());
+   const std::vector<uint8_t> mac_data(in + in_len - m_mac->output_length(), in + in_len);
 
    // ISO 18033: step a
    PointGFp other_public_key = m_params.domain().OS2ECP(other_public_key_bin);
@@ -21046,25 +21472,23 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    const SymmetricKey secret_key = m_ka.derive_secret(other_public_key_bin, other_public_key);
 
    // validate mac
-   mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
-   mac->update(encrypted_data);
+   m_mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
+   m_mac->update(encrypted_data);
    if(!m_label.empty())
       {
-      mac->update(m_label);
+      m_mac->update(m_label);
       }
-   const secure_vector<uint8_t> calculated_mac = mac->final();
-   valid_mask = CT::expand_mask<uint8_t>(constant_time_compare(mac_data.data(), calculated_mac.data(), mac_data.size()));
+   const secure_vector<uint8_t> calculated_mac = m_mac->final();
+   valid_mask = ct_compare_u8(mac_data.data(), calculated_mac.data(), mac_data.size());
 
    if(valid_mask)
       {
       // decrypt data
-      std::unique_ptr<Cipher_Mode> cipher = m_params.create_cipher(DECRYPTION);
-      BOTAN_ASSERT(cipher != nullptr, "Cipher is found");
 
-      cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
+      m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
       if(m_iv.size() != 0)
          {
-         cipher->start(m_iv.bits_of());
+         m_cipher->start(m_iv.bits_of());
          }
       
       try
@@ -21072,7 +21496,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
          // the decryption can fail:
          // e.g. Integrity_Failure is thrown if GCM is used and the message does not have a valid tag
          secure_vector<uint8_t> decrypted_data(encrypted_data.begin(), encrypted_data.end());
-         cipher->finish(decrypted_data);
+         m_cipher->finish(decrypted_data);
          return decrypted_data;
          }
       catch(...)
@@ -21139,6 +21563,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                       RandomNumberGenerator& rng) override;
 
+      size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
       size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
       bool has_prefix() override { return true; }
@@ -21310,8 +21735,8 @@ void ed25519_gen_keypair(uint8_t* pk, uint8_t* sk, const uint8_t seed[32])
    ge_scalarmult_base(pk, az);
 
    // todo copy_mem
-   memmove(sk, seed, 32);
-   memmove(sk + 32, pk, 32);
+   copy_mem(sk, seed, 32);
+   copy_mem(sk + 32, pk, 32);
    }
 
 void ed25519_sign(uint8_t sig[64],
@@ -21821,16 +22246,16 @@ FE_25519 FE_25519::sqr_iter(const FE_25519& f, size_t iter)
       carry<25,19>(h9, h0);
       carry<26>(h0, h1);
 
-      f0 = h0;
-      f1 = h1;
-      f2 = h2;
-      f3 = h3;
-      f4 = h4;
-      f5 = h5;
-      f6 = h6;
-      f7 = h7;
-      f8 = h8;
-      f9 = h9;
+      f0 = static_cast<int32_t>(h0);
+      f1 = static_cast<int32_t>(h1);
+      f2 = static_cast<int32_t>(h2);
+      f3 = static_cast<int32_t>(h3);
+      f4 = static_cast<int32_t>(h4);
+      f5 = static_cast<int32_t>(h5);
+      f6 = static_cast<int32_t>(h6);
+      f7 = static_cast<int32_t>(h7);
+      f8 = static_cast<int32_t>(h8);
+      f9 = static_cast<int32_t>(h9);
       }
 
    return FE_25519(f0, f1, f2, f3, f4, f5, f6, f7, f8, f9);
@@ -22003,16 +22428,16 @@ void FE_25519::from_bytes(const uint8_t s[32])
    carry<26>(h6, h7);
    carry<26>(h8, h9);
 
-   m_fe[0] = h0;
-   m_fe[1] = h1;
-   m_fe[2] = h2;
-   m_fe[3] = h3;
-   m_fe[4] = h4;
-   m_fe[5] = h5;
-   m_fe[6] = h6;
-   m_fe[7] = h7;
-   m_fe[8] = h8;
-   m_fe[9] = h9;
+   m_fe[0] = static_cast<int32_t>(h0);
+   m_fe[1] = static_cast<int32_t>(h1);
+   m_fe[2] = static_cast<int32_t>(h2);
+   m_fe[3] = static_cast<int32_t>(h3);
+   m_fe[4] = static_cast<int32_t>(h4);
+   m_fe[5] = static_cast<int32_t>(h5);
+   m_fe[6] = static_cast<int32_t>(h6);
+   m_fe[7] = static_cast<int32_t>(h7);
+   m_fe[8] = static_cast<int32_t>(h8);
+   m_fe[9] = static_cast<int32_t>(h9);
    }
 
 /*
@@ -22093,38 +22518,38 @@ void FE_25519::to_bytes(uint8_t s[32]) const
    Goal: Output h0+...+2^230 h9.
    */
 
-   s[0] = h0 >> 0;
-   s[1] = h0 >> 8;
-   s[2] = h0 >> 16;
-   s[3] = (h0 >> 24) | (h1 << 2);
-   s[4] = h1 >> 6;
-   s[5] = h1 >> 14;
-   s[6] = (h1 >> 22) | (h2 << 3);
-   s[7] = h2 >> 5;
-   s[8] = h2 >> 13;
-   s[9] = (h2 >> 21) | (h3 << 5);
-   s[10] = h3 >> 3;
-   s[11] = h3 >> 11;
-   s[12] = (h3 >> 19) | (h4 << 6);
-   s[13] = h4 >> 2;
-   s[14] = h4 >> 10;
-   s[15] = h4 >> 18;
-   s[16] = h5 >> 0;
-   s[17] = h5 >> 8;
-   s[18] = h5 >> 16;
-   s[19] = (h5 >> 24) | (h6 << 1);
-   s[20] = h6 >> 7;
-   s[21] = h6 >> 15;
-   s[22] = (h6 >> 23) | (h7 << 3);
-   s[23] = h7 >> 5;
-   s[24] = h7 >> 13;
-   s[25] = (h7 >> 21) | (h8 << 4);
-   s[26] = h8 >> 4;
-   s[27] = h8 >> 12;
-   s[28] = (h8 >> 20) | (h9 << 6);
-   s[29] = h9 >> 2;
-   s[30] = h9 >> 10;
-   s[31] = h9 >> 18;
+   s[0] = static_cast<uint8_t>(h0 >> 0);
+   s[1] = static_cast<uint8_t>(h0 >> 8);
+   s[2] = static_cast<uint8_t>(h0 >> 16);
+   s[3] = static_cast<uint8_t>((h0 >> 24) | (h1 << 2));
+   s[4] = static_cast<uint8_t>(h1 >> 6);
+   s[5] = static_cast<uint8_t>(h1 >> 14);
+   s[6] = static_cast<uint8_t>((h1 >> 22) | (h2 << 3));
+   s[7] = static_cast<uint8_t>(h2 >> 5);
+   s[8] = static_cast<uint8_t>(h2 >> 13);
+   s[9] = static_cast<uint8_t>((h2 >> 21) | (h3 << 5));
+   s[10] = static_cast<uint8_t>(h3 >> 3);
+   s[11] = static_cast<uint8_t>(h3 >> 11);
+   s[12] = static_cast<uint8_t>((h3 >> 19) | (h4 << 6));
+   s[13] = static_cast<uint8_t>(h4 >> 2);
+   s[14] = static_cast<uint8_t>(h4 >> 10);
+   s[15] = static_cast<uint8_t>(h4 >> 18);
+   s[16] = static_cast<uint8_t>(h5 >> 0);
+   s[17] = static_cast<uint8_t>(h5 >> 8);
+   s[18] = static_cast<uint8_t>(h5 >> 16);
+   s[19] = static_cast<uint8_t>((h5 >> 24) | (h6 << 1));
+   s[20] = static_cast<uint8_t>(h6 >> 7);
+   s[21] = static_cast<uint8_t>(h6 >> 15);
+   s[22] = static_cast<uint8_t>((h6 >> 23) | (h7 << 3));
+   s[23] = static_cast<uint8_t>(h7 >> 5);
+   s[24] = static_cast<uint8_t>(h7 >> 13);
+   s[25] = static_cast<uint8_t>((h7 >> 21) | (h8 << 4));
+   s[26] = static_cast<uint8_t>(h8 >> 4);
+   s[27] = static_cast<uint8_t>(h8 >> 12);
+   s[28] = static_cast<uint8_t>((h8 >> 20) | (h9 << 6));
+   s[29] = static_cast<uint8_t>(h9 >> 2);
+   s[30] = static_cast<uint8_t>(h9 >> 10);
+   s[31] = static_cast<uint8_t>(h9 >> 18);
    }
 
 }
@@ -22143,10 +22568,7 @@ namespace Botan {
 
 AlgorithmIdentifier Ed25519_PublicKey::algorithm_identifier() const
    {
-   // AlgorithmIdentifier::USE_NULL_PARAM puts 0x05 0x00 in parameters
-   // We want nothing
-   std::vector<uint8_t> empty;
-   return AlgorithmIdentifier(get_oid(), empty);
+   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
 bool Ed25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
@@ -22302,6 +22724,8 @@ class Ed25519_Pure_Sign_Operation final : public PK_Ops::Signature
          return sig;
          }
 
+      size_t signature_length() const override { return 64; }
+
    private:
       std::vector<uint8_t> m_msg;
       const Ed25519_PrivateKey& m_key;
@@ -22317,6 +22741,8 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature
          {
          m_hash = HashFunction::create_or_throw(hash);
          }
+
+      size_t signature_length() const override { return 64; }
 
       void update(const uint8_t msg[], size_t msg_len) override
          {
@@ -24372,7 +24798,7 @@ inline uint8_t equal(int8_t b, int8_t c)
    uint32_t y = x; /* 0: yes; 1..255: no */
    y -= 1; /* 4294967295: yes; 0..254: no */
    y >>= 31; /* 1: yes; 0: no */
-   return y;
+   return static_cast<uint8_t>(y);
    }
 
 inline int32_t equal32(int8_t b, int8_t c)
@@ -24384,7 +24810,7 @@ inline uint8_t negative(int8_t b)
    {
    uint64_t x = b; /* 18446744073709551361..18446744073709551615: yes; 0..255: no */
    x >>= 63; /* 1: yes; 0: no */
-   return x;
+   return static_cast<uint8_t>(x);
    }
 
 inline void ge_precomp_0(ge_precomp* h)
@@ -24727,38 +25153,38 @@ void sc_muladd(uint8_t* s, const uint8_t* a, const uint8_t* b, const uint8_t* c)
    carry0<21>(s9, s10);
    carry0<21>(s10, s11);
 
-   s[0] = s0 >> 0;
-   s[1] = s0 >> 8;
-   s[2] = (s0 >> 16) | (s1 << 5);
-   s[3] = s1 >> 3;
-   s[4] = s1 >> 11;
-   s[5] = (s1 >> 19) | (s2 << 2);
-   s[6] = s2 >> 6;
-   s[7] = (s2 >> 14) | (s3 << 7);
-   s[8] = s3 >> 1;
-   s[9] = s3 >> 9;
-   s[10] = (s3 >> 17) | (s4 << 4);
-   s[11] = s4 >> 4;
-   s[12] = s4 >> 12;
-   s[13] = (s4 >> 20) | (s5 << 1);
-   s[14] = s5 >> 7;
-   s[15] = (s5 >> 15) | (s6 << 6);
-   s[16] = s6 >> 2;
-   s[17] = s6 >> 10;
-   s[18] = (s6 >> 18) | (s7 << 3);
-   s[19] = s7 >> 5;
-   s[20] = s7 >> 13;
-   s[21] = s8 >> 0;
-   s[22] = s8 >> 8;
-   s[23] = (s8 >> 16) | (s9 << 5);
-   s[24] = s9 >> 3;
-   s[25] = s9 >> 11;
-   s[26] = (s9 >> 19) | (s10 << 2);
-   s[27] = s10 >> 6;
-   s[28] = (s10 >> 14) | (s11 << 7);
-   s[29] = s11 >> 1;
-   s[30] = s11 >> 9;
-   s[31] = s11 >> 17;
+   s[0] = static_cast<uint8_t>(s0 >> 0);
+   s[1] = static_cast<uint8_t>(s0 >> 8);
+   s[2] = static_cast<uint8_t>((s0 >> 16) | (s1 << 5));
+   s[3] = static_cast<uint8_t>(s1 >> 3);
+   s[4] = static_cast<uint8_t>(s1 >> 11);
+   s[5] = static_cast<uint8_t>((s1 >> 19) | (s2 << 2));
+   s[6] = static_cast<uint8_t>(s2 >> 6);
+   s[7] = static_cast<uint8_t>((s2 >> 14) | (s3 << 7));
+   s[8] = static_cast<uint8_t>(s3 >> 1);
+   s[9] = static_cast<uint8_t>(s3 >> 9);
+   s[10] = static_cast<uint8_t>((s3 >> 17) | (s4 << 4));
+   s[11] = static_cast<uint8_t>(s4 >> 4);
+   s[12] = static_cast<uint8_t>(s4 >> 12);
+   s[13] = static_cast<uint8_t>((s4 >> 20) | (s5 << 1));
+   s[14] = static_cast<uint8_t>(s5 >> 7);
+   s[15] = static_cast<uint8_t>((s5 >> 15) | (s6 << 6));
+   s[16] = static_cast<uint8_t>(s6 >> 2);
+   s[17] = static_cast<uint8_t>(s6 >> 10);
+   s[18] = static_cast<uint8_t>((s6 >> 18) | (s7 << 3));
+   s[19] = static_cast<uint8_t>(s7 >> 5);
+   s[20] = static_cast<uint8_t>(s7 >> 13);
+   s[21] = static_cast<uint8_t>(s8 >> 0);
+   s[22] = static_cast<uint8_t>(s8 >> 8);
+   s[23] = static_cast<uint8_t>((s8 >> 16) | (s9 << 5));
+   s[24] = static_cast<uint8_t>(s9 >> 3);
+   s[25] = static_cast<uint8_t>(s9 >> 11);
+   s[26] = static_cast<uint8_t>((s9 >> 19) | (s10 << 2));
+   s[27] = static_cast<uint8_t>(s10 >> 6);
+   s[28] = static_cast<uint8_t>((s10 >> 14) | (s11 << 7));
+   s[29] = static_cast<uint8_t>(s11 >> 1);
+   s[30] = static_cast<uint8_t>(s11 >> 9);
+   s[31] = static_cast<uint8_t>(s11 >> 17);
    }
 
 }
@@ -24885,38 +25311,38 @@ void sc_reduce(uint8_t* s)
    carry0<21>(s10, s11);
    carry0<21>(s11, s12);
 
-   s[0] = s0 >> 0;
-   s[1] = s0 >> 8;
-   s[2] = (s0 >> 16) | (s1 << 5);
-   s[3] = s1 >> 3;
-   s[4] = s1 >> 11;
-   s[5] = (s1 >> 19) | (s2 << 2);
-   s[6] = s2 >> 6;
-   s[7] = (s2 >> 14) | (s3 << 7);
-   s[8] = s3 >> 1;
-   s[9] = s3 >> 9;
-   s[10] = (s3 >> 17) | (s4 << 4);
-   s[11] = s4 >> 4;
-   s[12] = s4 >> 12;
-   s[13] = (s4 >> 20) | (s5 << 1);
-   s[14] = s5 >> 7;
-   s[15] = (s5 >> 15) | (s6 << 6);
-   s[16] = s6 >> 2;
-   s[17] = s6 >> 10;
-   s[18] = (s6 >> 18) | (s7 << 3);
-   s[19] = s7 >> 5;
-   s[20] = s7 >> 13;
-   s[21] = s8 >> 0;
-   s[22] = s8 >> 8;
-   s[23] = (s8 >> 16) | (s9 << 5);
-   s[24] = s9 >> 3;
-   s[25] = s9 >> 11;
-   s[26] = (s9 >> 19) | (s10 << 2);
-   s[27] = s10 >> 6;
-   s[28] = (s10 >> 14) | (s11 << 7);
-   s[29] = s11 >> 1;
-   s[30] = s11 >> 9;
-   s[31] = s11 >> 17;
+   s[0] = static_cast<uint8_t>(s0 >> 0);
+   s[1] = static_cast<uint8_t>(s0 >> 8);
+   s[2] = static_cast<uint8_t>((s0 >> 16) | (s1 << 5));
+   s[3] = static_cast<uint8_t>(s1 >> 3);
+   s[4] = static_cast<uint8_t>(s1 >> 11);
+   s[5] = static_cast<uint8_t>((s1 >> 19) | (s2 << 2));
+   s[6] = static_cast<uint8_t>(s2 >> 6);
+   s[7] = static_cast<uint8_t>((s2 >> 14) | (s3 << 7));
+   s[8] = static_cast<uint8_t>(s3 >> 1);
+   s[9] = static_cast<uint8_t>(s3 >> 9);
+   s[10] = static_cast<uint8_t>((s3 >> 17) | (s4 << 4));
+   s[11] = static_cast<uint8_t>(s4 >> 4);
+   s[12] = static_cast<uint8_t>(s4 >> 12);
+   s[13] = static_cast<uint8_t>((s4 >> 20) | (s5 << 1));
+   s[14] = static_cast<uint8_t>(s5 >> 7);
+   s[15] = static_cast<uint8_t>((s5 >> 15) | (s6 << 6));
+   s[16] = static_cast<uint8_t>(s6 >> 2);
+   s[17] = static_cast<uint8_t>(s6 >> 10);
+   s[18] = static_cast<uint8_t>((s6 >> 18) | (s7 << 3));
+   s[19] = static_cast<uint8_t>(s7 >> 5);
+   s[20] = static_cast<uint8_t>(s7 >> 13);
+   s[21] = static_cast<uint8_t>(s8 >> 0);
+   s[22] = static_cast<uint8_t>(s8 >> 8);
+   s[23] = static_cast<uint8_t>((s8 >> 16) | (s9 << 5));
+   s[24] = static_cast<uint8_t>(s9 >> 3);
+   s[25] = static_cast<uint8_t>(s9 >> 11);
+   s[26] = static_cast<uint8_t>((s9 >> 19) | (s10 << 2));
+   s[27] = static_cast<uint8_t>(s10 >> 6);
+   s[28] = static_cast<uint8_t>((s10 >> 14) | (s11 << 7));
+   s[29] = static_cast<uint8_t>(s11 >> 1);
+   s[30] = static_cast<uint8_t>(s11 >> 9);
+   s[31] = static_cast<uint8_t>(s11 >> 17);
    }
 
 }
@@ -24991,6 +25417,8 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME
    {
    public:
 
+      size_t ciphertext_length(size_t) const override { return 2*m_group.p_bytes(); }
+
       size_t max_raw_input_bits() const override { return m_group.p_bits() - 1; }
 
       ElGamal_Encryption_Operation(const ElGamal_PublicKey& key, const std::string& eme);
@@ -25039,6 +25467,8 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME
       ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
                                    const std::string& eme,
                                    RandomNumberGenerator& rng);
+
+      size_t plaintext_length(size_t) const override { return m_group.p_bytes(); }
 
       secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t msg_len) override;
    private:
@@ -25151,7 +25581,7 @@ secure_vector<uint8_t> OAEP::pad(const uint8_t in[], size_t in_length,
 * OAEP Unpad Operation
 */
 secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
-                                const uint8_t in[], size_t in_length) const
+                                   const uint8_t in[], size_t in_length) const
    {
    /*
    Must be careful about error messages here; if an attacker can
@@ -25162,8 +25592,8 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
 
    Also have to be careful about timing attacks! Pointed out by Falko
    Strenzke.
-    
-   According to the standard (Section 7.1.1), the encryptor always 
+
+   According to the standard (Section 7.1.1), the encryptor always
    creates a message as follows:
       i. Concatenate a single octet with hexadecimal value 0x00,
          maskedSeed, and maskedDB to form an encoded message EM of
@@ -25173,11 +25603,9 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
    Therefore, the first byte can always be skipped safely.
    */
 
-   uint8_t skip_first = CT::is_zero<uint8_t>(in[0]) & 0x01;
-   
-   secure_vector<uint8_t> input(in + skip_first, in + in_length);
+   const uint8_t skip_first = CT::Mask<uint8_t>::is_zero(in[0]).if_set_return(1);
 
-   CT::poison(input.data(), input.size());
+   secure_vector<uint8_t> input(in + skip_first, in + in_length);
 
    const size_t hlen = m_Phash.size();
 
@@ -25189,36 +25617,52 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
              input.data(), hlen,
              &input[hlen], input.size() - hlen);
 
-   size_t delim_idx = 2 * hlen;
-   uint8_t waiting_for_delim = 0xFF;
-   uint8_t bad_input = 0;
+   return oaep_find_delim(valid_mask, input.data(), input.size(), m_Phash);
+   }
 
-   for(size_t i = delim_idx; i < input.size(); ++i)
+secure_vector<uint8_t>
+oaep_find_delim(uint8_t& valid_mask,
+                const uint8_t input[], size_t input_len,
+                const secure_vector<uint8_t>& Phash)
+   {
+   const size_t hlen = Phash.size();
+
+   // Too short to be valid, reject immediately
+   if(input_len < 1 + 2*hlen)
       {
-      const uint8_t zero_m = CT::is_zero<uint8_t>(input[i]);
-      const uint8_t one_m = CT::is_equal<uint8_t>(input[i], 1);
+      return secure_vector<uint8_t>();
+      }
 
-      const uint8_t add_m = waiting_for_delim & zero_m;
+   CT::poison(input, input_len);
 
-      bad_input |= waiting_for_delim & ~(zero_m | one_m);
+   size_t delim_idx = 2 * hlen;
+   CT::Mask<uint8_t> waiting_for_delim = CT::Mask<uint8_t>::set();
+   CT::Mask<uint8_t> bad_input_m = CT::Mask<uint8_t>::cleared();
 
-      delim_idx += CT::select<uint8_t>(add_m, 1, 0);
+   for(size_t i = delim_idx; i < input_len; ++i)
+      {
+      const auto zero_m = CT::Mask<uint8_t>::is_zero(input[i]);
+      const auto one_m = CT::Mask<uint8_t>::is_equal(input[i], 1);
+
+      const auto add_m = waiting_for_delim & zero_m;
+
+      bad_input_m |= waiting_for_delim & ~(zero_m | one_m);
+
+      delim_idx += add_m.if_set_return(1);
 
       waiting_for_delim &= zero_m;
       }
 
    // If we never saw any non-zero byte, then it's not valid input
-   bad_input |= waiting_for_delim;
-   bad_input |= CT::is_equal<uint8_t>(constant_time_compare(&input[hlen], m_Phash.data(), hlen), false);
+   bad_input_m |= waiting_for_delim;
+   bad_input_m |= CT::Mask<uint8_t>::is_zero(ct_compare_u8(&input[hlen], Phash.data(), hlen));
 
-   CT::unpoison(input.data(), input.size());
-   CT::unpoison(&bad_input, 1);
-   CT::unpoison(&delim_idx, 1);
+   delim_idx += 1;
 
-   valid_mask = ~bad_input;
+   valid_mask = (~bad_input_m).unpoisoned_value();
+   const secure_vector<uint8_t> output = CT::copy_output(bad_input_m, input, input_len, delim_idx);
 
-   secure_vector<uint8_t> output(input.begin() + delim_idx + 1, input.end());
-   CT::cond_zero_mem(bad_input, output.data(), output.size());
+   CT::unpoison(input, input_len);
 
    return output;
    }
@@ -25299,7 +25743,13 @@ secure_vector<uint8_t> EME_PKCS1v15::pad(const uint8_t in[], size_t inlen,
 secure_vector<uint8_t> EME_PKCS1v15::unpad(uint8_t& valid_mask,
                                         const uint8_t in[], size_t inlen) const
    {
-   if(inlen < 2)
+   /*
+   * RSA decryption pads the ciphertext up to the modulus size, so this only
+   * occurs with very (!) small keys, or when fuzzing.
+   *
+   * 11 bytes == 00,02 + 8 bytes mandatory padding + 00
+   */
+   if(inlen < 11)
       {
       valid_mask = false;
       return secure_vector<uint8_t>();
@@ -25307,33 +25757,34 @@ secure_vector<uint8_t> EME_PKCS1v15::unpad(uint8_t& valid_mask,
 
    CT::poison(in, inlen);
 
-   uint8_t bad_input_m = 0;
-   uint8_t seen_zero_m = 0;
-   size_t delim_idx = 0;
+   CT::Mask<uint8_t> bad_input_m = CT::Mask<uint8_t>::cleared();
+   CT::Mask<uint8_t> seen_zero_m = CT::Mask<uint8_t>::cleared();
+   size_t delim_idx = 2; // initial 0002
 
-   bad_input_m |= ~CT::is_equal<uint8_t>(in[0], 0);
-   bad_input_m |= ~CT::is_equal<uint8_t>(in[1], 2);
+   bad_input_m |= ~CT::Mask<uint8_t>::is_equal(in[0], 0);
+   bad_input_m |= ~CT::Mask<uint8_t>::is_equal(in[1], 2);
 
    for(size_t i = 2; i < inlen; ++i)
       {
-      const uint8_t is_zero_m = CT::is_zero<uint8_t>(in[i]);
-
-      delim_idx += CT::select<uint8_t>(~seen_zero_m, 1, 0);
-
-      bad_input_m |= is_zero_m & CT::expand_mask<uint8_t>(i < 10);
+      const auto is_zero_m = CT::Mask<uint8_t>::is_zero(in[i]);
+      delim_idx += seen_zero_m.if_not_set_return(1);
       seen_zero_m |= is_zero_m;
       }
 
+   // no zero delim -> bad padding
    bad_input_m |= ~seen_zero_m;
-   bad_input_m |= CT::is_less<size_t>(delim_idx, 8);
+   /*
+   delim indicates < 8 bytes padding -> bad padding
+
+   We require 11 here because we are counting also the 00 delim byte
+   */
+   bad_input_m |= CT::Mask<uint8_t>(CT::Mask<size_t>::is_lt(delim_idx, 11));
+
+   valid_mask = (~bad_input_m).unpoisoned_value();
+   const secure_vector<uint8_t> output = CT::copy_output(bad_input_m, in, inlen, delim_idx);
 
    CT::unpoison(in, inlen);
-   CT::unpoison(bad_input_m);
-   CT::unpoison(delim_idx);
 
-   secure_vector<uint8_t> output(&in[delim_idx + 2], &in[inlen]);
-   CT::cond_zero_mem(bad_input_m, output.data(), output.size());
-   valid_mask = ~bad_input_m;
    return output;
    }
 
@@ -25717,9 +26168,10 @@ secure_vector<uint8_t> pss_encode(HashFunction& hash,
    }
 
 bool pss_verify(HashFunction& hash,
-                const secure_vector<uint8_t>& const_coded,
-                const secure_vector<uint8_t>& raw,
-                size_t key_bits)
+                const secure_vector<uint8_t>& pss_repr,
+                const secure_vector<uint8_t>& message_hash,
+                size_t key_bits,
+                size_t* out_salt_size)
    {
    const size_t HASH_SIZE = hash.output_length();
    const size_t KEY_BYTES = (key_bits + 7) / 8;
@@ -25727,16 +26179,16 @@ bool pss_verify(HashFunction& hash,
    if(key_bits < 8*HASH_SIZE + 9)
       return false;
 
-   if(raw.size() != HASH_SIZE)
+   if(message_hash.size() != HASH_SIZE)
       return false;
 
-   if(const_coded.size() > KEY_BYTES || const_coded.size() <= 1)
+   if(pss_repr.size() > KEY_BYTES || pss_repr.size() <= 1)
       return false;
 
-   if(const_coded[const_coded.size()-1] != 0xBC)
+   if(pss_repr[pss_repr.size()-1] != 0xBC)
       return false;
 
-   secure_vector<uint8_t> coded = const_coded;
+   secure_vector<uint8_t> coded = pss_repr;
    if(coded.size() < KEY_BYTES)
       {
       secure_vector<uint8_t> temp(KEY_BYTES);
@@ -25772,23 +26224,32 @@ bool pss_verify(HashFunction& hash,
 
    for(size_t j = 0; j != 8; ++j)
       hash.update(0);
-   hash.update(raw);
+   hash.update(message_hash);
    hash.update(&DB[salt_offset], salt_size);
 
-   secure_vector<uint8_t> H2 = hash.final();
+   const secure_vector<uint8_t> H2 = hash.final();
 
-   return constant_time_compare(H, H2.data(), HASH_SIZE);
+   const bool ok = constant_time_compare(H, H2.data(), HASH_SIZE);
+
+   if(out_salt_size && ok)
+      *out_salt_size = salt_size;
+
+   return ok;
    }
 
 }
 
 PSSR::PSSR(HashFunction* h) :
-   m_hash(h), m_SALT_SIZE(m_hash->output_length())
+   m_hash(h),
+   m_salt_size(m_hash->output_length()),
+   m_required_salt_len(false)
    {
    }
 
 PSSR::PSSR(HashFunction* h, size_t salt_size) :
-   m_hash(h), m_SALT_SIZE(salt_size)
+   m_hash(h),
+   m_salt_size(salt_size),
+   m_required_salt_len(true)
    {
    }
 
@@ -25812,7 +26273,7 @@ secure_vector<uint8_t> PSSR::encoding_of(const secure_vector<uint8_t>& msg,
                                          size_t output_bits,
                                          RandomNumberGenerator& rng)
    {
-   secure_vector<uint8_t> salt = rng.random_vec(m_SALT_SIZE);
+   const secure_vector<uint8_t> salt = rng.random_vec(m_salt_size);
    return pss_encode(*m_hash, msg, salt, output_bits);
    }
 
@@ -25823,12 +26284,23 @@ bool PSSR::verify(const secure_vector<uint8_t>& coded,
                   const secure_vector<uint8_t>& raw,
                   size_t key_bits)
    {
-   return pss_verify(*m_hash, coded, raw, key_bits);
+   size_t salt_size = 0;
+   const bool ok = pss_verify(*m_hash, coded, raw, key_bits, &salt_size);
+
+   if(m_required_salt_len && salt_size != m_salt_size)
+      return false;
+
+   return ok;
+   }
+
+EMSA* PSSR::clone()
+   {
+   return new PSSR(m_hash->clone(), m_salt_size);
    }
 
 std::string PSSR::name() const
    {
-   return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_SALT_SIZE) + ")";
+   return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
    }
 
 AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
@@ -25855,7 +26327,7 @@ AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
       .start_cons(SEQUENCE)
       .start_cons(ASN1_Tag(0), CONTEXT_SPECIFIC).encode(hash_id).end_cons()
       .start_cons(ASN1_Tag(1), CONTEXT_SPECIFIC).encode(mgf_id).end_cons()
-      .start_cons(ASN1_Tag(2), CONTEXT_SPECIFIC).encode(m_SALT_SIZE).end_cons()
+      .start_cons(ASN1_Tag(2), CONTEXT_SPECIFIC).encode(m_salt_size).end_cons()
       .start_cons(ASN1_Tag(3), CONTEXT_SPECIFIC).encode(size_t(1)).end_cons() // trailer field
       .end_cons();
 
@@ -25863,12 +26335,16 @@ AlgorithmIdentifier PSSR::config_for_x509(const Private_Key& key,
    }
 
 PSSR_Raw::PSSR_Raw(HashFunction* h) :
-   m_hash(h), m_SALT_SIZE(m_hash->output_length())
+   m_hash(h),
+   m_salt_size(m_hash->output_length()),
+   m_required_salt_len(false)
    {
    }
 
 PSSR_Raw::PSSR_Raw(HashFunction* h, size_t salt_size) :
-   m_hash(h), m_SALT_SIZE(salt_size)
+   m_hash(h),
+   m_salt_size(salt_size),
+   m_required_salt_len(true)
    {
    }
 
@@ -25898,7 +26374,7 @@ secure_vector<uint8_t> PSSR_Raw::encoding_of(const secure_vector<uint8_t>& msg,
                                              size_t output_bits,
                                              RandomNumberGenerator& rng)
    {
-   secure_vector<uint8_t> salt = rng.random_vec(m_SALT_SIZE);
+   secure_vector<uint8_t> salt = rng.random_vec(m_salt_size);
    return pss_encode(*m_hash, msg, salt, output_bits);
    }
 
@@ -25909,12 +26385,23 @@ bool PSSR_Raw::verify(const secure_vector<uint8_t>& coded,
                       const secure_vector<uint8_t>& raw,
                       size_t key_bits)
    {
-   return pss_verify(*m_hash, coded, raw, key_bits);
+   size_t salt_size = 0;
+   const bool ok = pss_verify(*m_hash, coded, raw, key_bits, &salt_size);
+
+   if(m_required_salt_len && salt_size != m_salt_size)
+      return false;
+
+   return ok;
+   }
+
+EMSA* PSSR_Raw::clone()
+   {
+   return new PSSR_Raw(m_hash->clone(), m_salt_size);
    }
 
 std::string PSSR_Raw::name() const
    {
-   return "PSSR_Raw(" + m_hash->name() + ",MGF1," + std::to_string(m_SALT_SIZE) + ")";
+   return "PSSR_Raw(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
    }
 
 }
@@ -26133,9 +26620,6 @@ EMSA_X931::EMSA_X931(HashFunction* hash) : m_hash(hash)
 #if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_GETENTROPY)
 #endif
 
@@ -26185,13 +26669,6 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       }
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
-   if(name == "darwin_secrandom")
-      {
-      return std::unique_ptr<Entropy_Source>(new Darwin_SecRandom);
-      }
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_GETENTROPY)
    if(name == "getentropy")
       {
@@ -26207,7 +26684,7 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
-   if(name == "proc_walk")
+   if(name == "proc_walk" && OS::running_in_privileged_state() == false)
       {
       const std::string root_dir = BOTAN_ENTROPY_PROC_FS_PATH;
       if(!root_dir.empty())
@@ -26354,13 +26831,100 @@ int operator>>(int fd, Pipe& pipe)
 */
 
 #include <cstdio>
+#include <cstdlib>
 
 namespace Botan_FFI {
 
-int ffi_error_exception_thrown(const char* func_name, const char* exn)
+int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc)
    {
-   fprintf(stderr, "in %s exception %s\n", func_name, exn);
-   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
+   if(Botan::OS::read_env_variable("BOTAN_FFI_PRINT_EXCEPTIONS") != nullptr)
+      {
+      std::fprintf(stderr, "in %s exception '%s' returning %d\n", func_name, exn, rc);
+      }
+   return rc;
+   }
+
+namespace {
+
+int ffi_map_error_type(Botan::ErrorType err)
+   {
+   switch(err)
+      {
+      case Botan::ErrorType::Unknown:
+         return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
+      case Botan::ErrorType::SystemError:
+      case Botan::ErrorType::IoError:
+      case Botan::ErrorType::OpenSSLError:
+      case Botan::ErrorType::Pkcs11Error:
+      case Botan::ErrorType::CommonCryptoError:
+      case Botan::ErrorType::TPMError:
+      case Botan::ErrorType::ZlibError:
+      case Botan::ErrorType::Bzip2Error:
+      case Botan::ErrorType::LzmaError:
+         return BOTAN_FFI_ERROR_SYSTEM_ERROR;
+
+      case Botan::ErrorType::NotImplemented:
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      case Botan::ErrorType::OutOfMemory:
+         return BOTAN_FFI_ERROR_OUT_OF_MEMORY;
+      case Botan::ErrorType::InternalError:
+         return BOTAN_FFI_ERROR_INTERNAL_ERROR;
+      case Botan::ErrorType::InvalidObjectState:
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      case Botan::ErrorType::KeyNotSet:
+         return BOTAN_FFI_ERROR_KEY_NOT_SET;
+      case Botan::ErrorType::InvalidArgument:
+      case Botan::ErrorType::InvalidNonceLength:
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+
+      case Botan::ErrorType::EncodingFailure:
+      case Botan::ErrorType::DecodingFailure:
+         return BOTAN_FFI_ERROR_INVALID_INPUT;
+
+      case Botan::ErrorType::InvalidKeyLength:
+         return BOTAN_FFI_ERROR_INVALID_KEY_LENGTH;
+      case Botan::ErrorType::LookupError:
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+
+      case Botan::ErrorType::HttpError:
+         return BOTAN_FFI_ERROR_HTTP_ERROR;
+      case Botan::ErrorType::TLSError:
+         return BOTAN_FFI_ERROR_TLS_ERROR;
+      }
+
+   return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
+   }
+
+}
+
+int ffi_guard_thunk(const char* func_name, std::function<int ()> thunk)
+   {
+   try
+      {
+      return thunk();
+      }
+   catch(std::bad_alloc&)
+      {
+      return ffi_error_exception_thrown(func_name, "bad_alloc", BOTAN_FFI_ERROR_OUT_OF_MEMORY);
+      }
+   catch(Botan_FFI::FFI_Error& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what(), e.error_code());
+      }
+   catch(Botan::Exception& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what(), ffi_map_error_type(e.error_type()));
+      }
+   catch(std::exception& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what());
+      }
+   catch(...)
+      {
+      return ffi_error_exception_thrown(func_name, "unknown exception");
+      }
+
+   return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
    }
 
 }
@@ -26391,6 +26955,15 @@ const char* botan_error_description(int err)
       case BOTAN_FFI_ERROR_EXCEPTION_THROWN:
          return "Exception thrown";
 
+      case BOTAN_FFI_ERROR_OUT_OF_MEMORY:
+         return "Out of memory";
+
+      case BOTAN_FFI_ERROR_SYSTEM_ERROR:
+         return "Error while calling system API";
+
+      case BOTAN_FFI_ERROR_INTERNAL_ERROR:
+         return "Internal error";
+
       case BOTAN_FFI_ERROR_BAD_FLAG:
          return "Bad flag";
 
@@ -26400,11 +26973,26 @@ const char* botan_error_description(int err)
       case BOTAN_FFI_ERROR_BAD_PARAMETER:
          return "Bad parameter";
 
+      case BOTAN_FFI_ERROR_KEY_NOT_SET:
+         return "Key not set on object";
+
+      case BOTAN_FFI_ERROR_INVALID_KEY_LENGTH:
+         return "Invalid key length";
+
+      case BOTAN_FFI_ERROR_INVALID_OBJECT_STATE:
+         return "Invalid object state";
+
       case BOTAN_FFI_ERROR_NOT_IMPLEMENTED:
          return "Not implemented";
 
       case BOTAN_FFI_ERROR_INVALID_OBJECT:
          return "Invalid object handle";
+
+      case BOTAN_FFI_ERROR_TLS_ERROR:
+         return "TLS error";
+
+      case BOTAN_FFI_ERROR_HTTP_ERROR:
+         return "HTTP error";
 
       case BOTAN_FFI_ERROR_UNKNOWN_ERROR:
          return "Unknown error";
@@ -26423,20 +27011,23 @@ uint32_t botan_ffi_api_version()
 
 int botan_ffi_supports_api(uint32_t api_version)
    {
-   // Current API version
-   if(api_version == BOTAN_HAS_FFI)
+   // This is the API introduced in 2.8
+   if(api_version == 20180713)
       return BOTAN_FFI_SUCCESS;
 
-   // Older versions that are still supported
+   // This is the API introduced in 2.3
+   if(api_version == 20170815)
+      return BOTAN_FFI_SUCCESS;
 
-   // This is the 2.1/2.2 API
+   // This is the API introduced in 2.1
    if(api_version == 20170327)
       return BOTAN_FFI_SUCCESS;
 
-   // This is the 2.0 API
+   // This is the API introduced in 2.0
    if(api_version == 20150515)
       return BOTAN_FFI_SUCCESS;
 
+   // Something else:
    return -1;
    }
 
@@ -26468,7 +27059,7 @@ int botan_scrub_mem(void* mem, size_t bytes)
 
 int botan_hex_encode(const uint8_t* in, size_t len, char* out, uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const bool uppercase = (flags & BOTAN_FFI_HEX_LOWER_CASE) == 0;
       Botan::hex_encode(out, in, len, uppercase);
       return BOTAN_FFI_SUCCESS;
@@ -26477,7 +27068,7 @@ int botan_hex_encode(const uint8_t* in, size_t len, char* out, uint32_t flags)
 
 int botan_hex_decode(const char* hex_str, size_t in_len, uint8_t* out, size_t* out_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const std::vector<uint8_t> bin = Botan::hex_decode(hex_str, in_len);
       return Botan_FFI::write_vec_output(out, out_len, bin);
       });
@@ -26485,7 +27076,7 @@ int botan_hex_decode(const char* hex_str, size_t in_len, uint8_t* out, size_t* o
 
 int botan_base64_encode(const uint8_t* in, size_t len, char* out, size_t* out_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const std::string base64 = Botan::base64_encode(in, len);
       return Botan_FFI::write_str_output(out, out_len, base64);
       });
@@ -26494,7 +27085,7 @@ int botan_base64_encode(const uint8_t* in, size_t len, char* out, size_t* out_le
 int botan_base64_decode(const char* base64_str, size_t in_len,
                         uint8_t* out, size_t* out_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(*out_len < Botan::base64_decode_max_output(in_len))
          {
          *out_len = Botan::base64_decode_max_output(in_len);
@@ -26522,7 +27113,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_block_cipher_struct, Botan::BlockCipher, 0x64C297
 
 int botan_block_cipher_init(botan_block_cipher_t* bc, const char* bc_name)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(bc == nullptr || bc_name == nullptr || *bc_name == 0)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -26556,6 +27147,8 @@ int botan_block_cipher_clear(botan_block_cipher_t bc)
 int botan_block_cipher_set_key(botan_block_cipher_t bc,
                                const uint8_t key[], size_t len)
    {
+   if(key == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_DO(Botan::BlockCipher, bc, b, { b.set_key(key, len); });
    }
 
@@ -26574,6 +27167,8 @@ int botan_block_cipher_encrypt_blocks(botan_block_cipher_t bc,
                                       uint8_t out[],
                                       size_t blocks)
    {
+   if(in == nullptr || out == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_DO(Botan::BlockCipher, bc, b, { b.encrypt_n(in, out, blocks); });
    }
 
@@ -26582,138 +27177,281 @@ int botan_block_cipher_decrypt_blocks(botan_block_cipher_t bc,
                                       uint8_t out[],
                                       size_t blocks)
    {
+   if(in == nullptr || out == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_DO(Botan::BlockCipher, bc, b, { b.decrypt_n(in, out, blocks); });
+   }
+
+int botan_block_cipher_name(botan_block_cipher_t cipher, char* name, size_t* name_len)
+   {
+   if(name_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_DO(Botan::BlockCipher, cipher, bc, {
+      return write_str_output(name, name_len, bc.name()); });
+   }
+
+int botan_block_cipher_get_keyspec(botan_block_cipher_t cipher,
+                                   size_t* out_minimum_keylength,
+                                   size_t* out_maximum_keylength,
+                                   size_t* out_keylength_modulo)
+   {
+   return BOTAN_FFI_DO(Botan::BlockCipher, cipher, bc, {
+      if(out_minimum_keylength)
+         *out_minimum_keylength = bc.minimum_keylength();
+      if(out_maximum_keylength)
+         *out_maximum_keylength = bc.maximum_keylength();
+      if(out_keylength_modulo)
+         *out_keylength_modulo = bc.key_spec().keylength_multiple();
+      });
    }
 
 }
 /*
-* (C) 2015,2017 Jack Lloyd
+* (C) 2015,2017,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+#endif
+
 extern "C" {
 
 using namespace Botan_FFI;
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+
 BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_struct, Botan::X509_Certificate, 0x8F628937);
+
+#endif
 
 int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      if(!cert_obj || !cert_path)
-         return BOTAN_FFI_ERROR_NULL_POINTER;
+   if(!cert_obj || !cert_path)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
 
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::X509_Certificate> c(new Botan::X509_Certificate(cert_path));
       *cert_obj = new botan_x509_cert_struct(c.release());
       return BOTAN_FFI_SUCCESS;
-#else
-      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
       });
+
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert)
+   {
+   if(!cert_obj)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      std::unique_ptr<Botan::X509_Certificate> c(new Botan::X509_Certificate(safe_get(cert)));
+      *cert_obj = new botan_x509_cert_struct(c.release());
+      return BOTAN_FFI_SUCCESS;
+      });
+
+#else
+   BOTAN_UNUSED(cert);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[], size_t cert_bits_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      if(!cert_obj || !cert_bits)
-         return BOTAN_FFI_ERROR_NULL_POINTER;
+   if(!cert_obj || !cert_bits)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DataSource_Memory bits(cert_bits, cert_bits_len);
-
       std::unique_ptr<Botan::X509_Certificate> c(new Botan::X509_Certificate(bits));
       *cert_obj = new botan_x509_cert_struct(c.release());
       return BOTAN_FFI_SUCCESS;
       });
+#else
+   BOTAN_UNUSED(cert_bits_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      if(key == nullptr)
-         return BOTAN_FFI_ERROR_NULL_POINTER;
+   if(key == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
 
-      *key = nullptr;
+   *key = nullptr;
 
-#if defined(BOTAN_HAS_RSA)
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::Public_Key> publicKey = safe_get(cert).load_subject_public_key();
       *key = new botan_pubkey_struct(publicKey.release());
       return BOTAN_FFI_SUCCESS;
+      });
 #else
+   BOTAN_UNUSED(cert);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
-      });
    }
 
 int botan_x509_cert_get_issuer_dn(botan_x509_cert_t cert,
                                   const char* key, size_t index,
                                   uint8_t out[], size_t* out_len)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.issuer_info(key).at(index)); });
+#else
+   BOTAN_UNUSED(cert, key, index, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_get_subject_dn(botan_x509_cert_t cert,
                                    const char* key, size_t index,
                                    uint8_t out[], size_t* out_len)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.subject_info(key).at(index)); });
+#else
+   BOTAN_UNUSED(cert, key, index, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.to_string()); });
+#else
+   BOTAN_UNUSED(cert, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, {
       const Botan::Key_Constraints k = static_cast<Botan::Key_Constraints>(key_usage);
       if(c.allowed_usage(k))
          return BOTAN_FFI_SUCCESS;
       return 1;
       });
+#else
+   BOTAN_UNUSED(cert, key_usage);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_destroy(botan_x509_cert_t cert)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_CHECKED_DELETE(cert);
+#else
+   BOTAN_UNUSED(cert);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.not_before().to_string()); });
+#else
+   BOTAN_UNUSED(cert, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t* out_len)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.not_after().to_string()); });
+#else
+   BOTAN_UNUSED(cert, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_x509_cert_not_before(botan_x509_cert_t cert, uint64_t* time_since_epoch)
+   {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, {
+      *time_since_epoch = c.not_before().time_since_epoch();
+      });
+#else
+   BOTAN_UNUSED(cert, time_since_epoch);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_x509_cert_not_after(botan_x509_cert_t cert, uint64_t* time_since_epoch)
+   {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, {
+      *time_since_epoch = c.not_after().time_since_epoch();
+      });
+#else
+   BOTAN_UNUSED(cert, time_since_epoch);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_vec_output(out, out_len, c.serial_number()); });
+#else
+   BOTAN_UNUSED(cert, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_get_fingerprint(botan_x509_cert_t cert, const char* hash, uint8_t out[], size_t* out_len)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_str_output(out, out_len, c.fingerprint(hash)); });
+#else
+   BOTAN_UNUSED(cert, hash, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_vec_output(out, out_len, c.authority_key_id()); });
+#else
+   BOTAN_UNUSED(cert, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_get_subject_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_vec_output(out, out_len, c.subject_key_id()); });
+#else
+   BOTAN_UNUSED(cert, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
    {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c, { return write_vec_output(out, out_len, c.subject_public_key_bits()); });
+#else
+   BOTAN_UNUSED(cert, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname)
@@ -26721,8 +27459,97 @@ int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname)
    if(hostname == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_DO(Botan::X509_Certificate, cert, c,
                        { return c.matches_dns_name(hostname) ? 0 : -1; });
+#else
+   BOTAN_UNUSED(cert);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_x509_cert_verify(int* result_code,
+                           botan_x509_cert_t cert,
+                           const botan_x509_cert_t* intermediates,
+                           size_t intermediates_len,
+                           const botan_x509_cert_t* trusted,
+                           size_t trusted_len,
+                           const char* trusted_path,
+                           size_t required_strength,
+                           const char* hostname_cstr,
+                           uint64_t reference_time)
+   {
+   if(required_strength == 0)
+      required_strength = 110;
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const std::string hostname((hostname_cstr == nullptr) ? "" : hostname_cstr);
+      const Botan::Usage_Type usage = Botan::Usage_Type::UNSPECIFIED;
+      const auto validation_time = reference_time == 0 ?
+         std::chrono::system_clock::now() :
+         std::chrono::system_clock::from_time_t(static_cast<time_t>(reference_time));
+
+      std::vector<Botan::X509_Certificate> end_certs;
+      end_certs.push_back(safe_get(cert));
+      for(size_t i = 0; i != intermediates_len; ++i)
+         end_certs.push_back(safe_get(intermediates[i]));
+
+      std::unique_ptr<Botan::Certificate_Store> trusted_from_path;
+      std::unique_ptr<Botan::Certificate_Store_In_Memory> trusted_extra;
+      std::vector<Botan::Certificate_Store*> trusted_roots;
+
+      if(trusted_path && *trusted_path)
+         {
+         trusted_from_path.reset(new Botan::Certificate_Store_In_Memory(trusted_path));
+         trusted_roots.push_back(trusted_from_path.get());
+         }
+
+      if(trusted_len > 0)
+         {
+         trusted_extra.reset(new Botan::Certificate_Store_In_Memory);
+         for(size_t i = 0; i != trusted_len; ++i)
+            {
+            trusted_extra->add_certificate(safe_get(trusted[i]));
+            }
+         trusted_roots.push_back(trusted_extra.get());
+         }
+
+      Botan::Path_Validation_Restrictions restrictions(false, required_strength);
+
+      auto validation_result = Botan::x509_path_validate(end_certs,
+                                                         restrictions,
+                                                         trusted_roots,
+                                                         hostname,
+                                                         usage,
+                                                         validation_time);
+
+      if(result_code)
+         *result_code = static_cast<int>(validation_result.result());
+
+      if(validation_result.successful_validation())
+         return 0;
+      else
+         return 1;
+      });
+#else
+   BOTAN_UNUSED(result_code, cert, intermediates, intermediates_len, trusted);
+   BOTAN_UNUSED(trusted_len, trusted_path, hostname_cstr, reference_time);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+const char* botan_x509_cert_validation_status(int code)
+   {
+   if(code < 0)
+      return nullptr;
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   Botan::Certificate_Status_Code sc = static_cast<Botan::Certificate_Status_Code>(code);
+   return Botan::to_string(sc);
+#else
+   return nullptr;
+#endif
    }
 
 }
@@ -26745,7 +27572,7 @@ struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A
 
 int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const bool encrypt_p = ((flags & BOTAN_CIPHER_INIT_FLAG_MASK_DIRECTION) == BOTAN_CIPHER_INIT_FLAG_ENCRYPT);
       const Botan::Cipher_Dir dir = encrypt_p ? Botan::ENCRYPTION : Botan::DECRYPTION;
       std::unique_ptr<Botan::Cipher_Mode> mode(Botan::Cipher_Mode::create(cipher_name, dir));
@@ -26766,6 +27593,19 @@ int botan_cipher_clear(botan_cipher_t cipher)
    return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, { c.clear(); });
    }
 
+int botan_cipher_reset(botan_cipher_t cipher)
+   {
+   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, { c.reset(); });
+   }
+
+int botan_cipher_output_length(botan_cipher_t cipher, size_t in_len, size_t* out_len)
+   {
+   if(out_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, { *out_len = c.output_length(in_len); });
+   }
+
 int botan_cipher_query_keylen(botan_cipher_t cipher,
                               size_t* out_minimum_keylength,
                               size_t* out_maximum_keylength)
@@ -26773,6 +27613,21 @@ int botan_cipher_query_keylen(botan_cipher_t cipher,
    return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, {
       *out_minimum_keylength = c.key_spec().minimum_keylength();
       *out_maximum_keylength = c.key_spec().maximum_keylength();
+      });
+   }
+
+int botan_cipher_get_keyspec(botan_cipher_t cipher,
+                             size_t* out_minimum_keylength,
+                             size_t* out_maximum_keylength,
+                             size_t* out_keylength_modulo)
+   {
+   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, {
+      if(out_minimum_keylength)
+         *out_minimum_keylength = c.key_spec().minimum_keylength();
+      if(out_maximum_keylength)
+         *out_maximum_keylength = c.key_spec().maximum_keylength();
+      if(out_keylength_modulo)
+         *out_keylength_modulo = c.key_spec().keylength_multiple();
       });
    }
 
@@ -26785,7 +27640,7 @@ int botan_cipher_set_key(botan_cipher_t cipher,
 int botan_cipher_start(botan_cipher_t cipher_obj,
                        const uint8_t* nonce, size_t nonce_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Cipher_Mode& cipher = safe_get(cipher_obj);
       cipher.start(nonce, nonce_len);
       cipher_obj->m_buf.reserve(cipher.update_granularity());
@@ -26802,7 +27657,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
                         size_t orig_input_size,
                         size_t* input_consumed)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
 
       size_t input_size = orig_input_size;
       size_t output_size = orig_output_size;
@@ -26864,6 +27719,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
 
       while(input_size >= ud && output_size >= ud)
          {
+         // FIXME we can use process here and avoid the copy
          copy_mem(mbuf.data(), input, ud);
          cipher.update(mbuf);
 
@@ -26918,6 +27774,101 @@ int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tl)
    return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, { *tl = c.tag_size(); });
    }
 
+int botan_cipher_name(botan_cipher_t cipher, char* name, size_t* name_len)
+   {
+   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, c, {
+      return write_str_output(name, name_len, c.name()); });
+   }
+
+}
+/*
+* (C) 2018 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+#if defined(BOTAN_HAS_FPE_FE1)
+#endif
+
+extern "C" {
+
+using namespace Botan_FFI;
+
+#if defined(BOTAN_HAS_FPE_FE1)
+
+BOTAN_FFI_DECLARE_STRUCT(botan_fpe_struct, Botan::FPE_FE1, 0xD49FB820);
+
+#endif
+
+int botan_fpe_fe1_init(botan_fpe_t* fpe, botan_mp_t n,
+                       const uint8_t key[], size_t key_len,
+                       size_t rounds, uint32_t flags)
+   {
+#if defined(BOTAN_HAS_FPE_FE1)
+
+   return ffi_guard_thunk(__func__, [=]() {
+
+      if(fpe == nullptr || key == nullptr)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+
+      *fpe = nullptr;
+
+      if(flags != 0 && flags != BOTAN_FPE_FLAG_FE1_COMPAT_MODE)
+         return BOTAN_FFI_ERROR_BAD_FLAG;
+
+      const bool compat_mode = (flags & BOTAN_FPE_FLAG_FE1_COMPAT_MODE);
+
+      std::unique_ptr<Botan::FPE_FE1> fpe_obj(
+         new Botan::FPE_FE1(safe_get(n), rounds, compat_mode));
+
+      fpe_obj->set_key(key, key_len);
+
+      *fpe = new botan_fpe_struct(fpe_obj.release());
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   *fpe = nullptr;
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_fpe_destroy(botan_fpe_t fpe)
+   {
+#if defined(BOTAN_HAS_FPE_FE1)
+   return BOTAN_FFI_CHECKED_DELETE(fpe);
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_fpe_encrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len)
+   {
+#if defined(BOTAN_HAS_FPE_FE1)
+   return ffi_guard_thunk(__func__, [=]() {
+      Botan::BigInt r = safe_get(fpe).encrypt(safe_get(x), tweak, tweak_len);
+      safe_get(x) = r;
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_fpe_decrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len)
+   {
+#if defined(BOTAN_HAS_FPE_FE1)
+   return ffi_guard_thunk(__func__, [=]() {
+      Botan::BigInt r = safe_get(fpe).decrypt(safe_get(x), tweak, tweak_len);
+      safe_get(x) = r;
+      return BOTAN_FFI_SUCCESS;
+      });
+
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 }
 /*
 * (C) 2015,2017 Jack Lloyd
@@ -26934,7 +27885,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_hash_struct, Botan::HashFunction, 0x1F0A4F84);
 
 int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(hash == nullptr || hash_name == nullptr || *hash_name == 0)
          return BOTAN_FFI_ERROR_NULL_POINTER;
       if(flags != 0)
@@ -26956,11 +27907,15 @@ int botan_hash_destroy(botan_hash_t hash)
 
 int botan_hash_output_length(botan_hash_t hash, size_t* out)
    {
+   if(out == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_DO(Botan::HashFunction, hash, h, { *out = h.output_length(); });
    }
 
 int botan_hash_block_size(botan_hash_t hash, size_t* out)
    {
+   if(out == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_DO(Botan::HashFunction, hash, h, { *out = h.hash_block_size(); });
    }
 
@@ -26971,11 +27926,19 @@ int botan_hash_clear(botan_hash_t hash)
 
 int botan_hash_update(botan_hash_t hash, const uint8_t* buf, size_t len)
    {
+   if(len == 0)
+      return 0;
+
+   if(buf == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
    return BOTAN_FFI_DO(Botan::HashFunction, hash, h, { h.update(buf, len); });
    }
 
 int botan_hash_final(botan_hash_t hash, uint8_t out[])
    {
+   if(out == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
    return BOTAN_FFI_DO(Botan::HashFunction, hash, h, { h.final(out); });
    }
 
@@ -26983,6 +27946,111 @@ int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source)
    {
    return BOTAN_FFI_DO(Botan::HashFunction, source, src, {
       *dest = new botan_hash_struct(src.copy_state().release()); });
+   }
+
+int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len)
+   {
+   if(name_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_DO(Botan::HashFunction, hash, h, {
+      return write_str_output(name, name_len, h.name()); });
+   }
+
+}
+/*
+* (C) 2018 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+#if defined(BOTAN_HAS_HOTP)
+#endif
+
+extern "C" {
+
+using namespace Botan_FFI;
+
+#if defined(BOTAN_HAS_HOTP)
+
+BOTAN_FFI_DECLARE_STRUCT(botan_hotp_struct, Botan::HOTP, 0x89CBF191);
+
+#endif
+
+int botan_hotp_init(botan_hotp_t* hotp,
+                    const uint8_t key[], size_t key_len,
+                    const char* hash_algo,
+                    size_t digits)
+   {
+   if(hotp == nullptr || key == nullptr || hash_algo == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   *hotp = nullptr;
+
+#if defined(BOTAN_HAS_HOTP)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+
+      *hotp = new botan_hotp_struct(
+         new Botan::HOTP(key, key_len, hash_algo, digits));
+
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(hotp, key, key_len, hash_algo, digits);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_hotp_destroy(botan_hotp_t hotp)
+   {
+#if defined(BOTAN_HAS_HOTP)
+   return BOTAN_FFI_CHECKED_DELETE(hotp);
+#else
+   BOTAN_UNUSED(hotp);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_hotp_generate(botan_hotp_t hotp,
+                        uint32_t* hotp_code,
+                        uint64_t hotp_counter)
+   {
+#if defined(BOTAN_HAS_HOTP)
+   if(hotp == nullptr || hotp_code == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_DO(Botan::HOTP, hotp, h, {
+      *hotp_code = h.generate_hotp(hotp_counter);
+      });
+
+#else
+   BOTAN_UNUSED(hotp, hotp_code, hotp_counter);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_hotp_check(botan_hotp_t hotp,
+                     uint64_t* next_hotp_counter,
+                     uint32_t hotp_code,
+                     uint64_t hotp_counter,
+                     size_t resync_range)
+   {
+#if defined(BOTAN_HAS_HOTP)
+   return BOTAN_FFI_DO(Botan::HOTP, hotp, h, {
+
+      auto resp = h.verify_hotp(hotp_code, hotp_counter, resync_range);
+
+      if(next_hotp_counter)
+         *next_hotp_counter = resp.second;
+
+      return (resp.first == true) ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER;
+      });
+
+#else
+   BOTAN_UNUSED(hotp, next_hotp_counter, hotp_code, hotp_counter, resync_range);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 }
@@ -27000,29 +28068,109 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-int botan_pbkdf(const char* pbkdf_algo, uint8_t out[], size_t out_len,
+int botan_pbkdf(const char* algo, uint8_t out[], size_t out_len,
                 const char* pass, const uint8_t salt[], size_t salt_len,
                 size_t iterations)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_algo));
-      pbkdf->pbkdf_iterations(out, out_len, pass, salt, salt_len, iterations);
-      return BOTAN_FFI_SUCCESS;
-      });
+   return botan_pwdhash(algo,
+                        iterations,
+                        0,
+                        0,
+                        out, out_len,
+                        pass, 0,
+                        salt, salt_len);
    }
 
-int botan_pbkdf_timed(const char* pbkdf_algo,
+int botan_pbkdf_timed(const char* algo,
                       uint8_t out[], size_t out_len,
                       const char* password,
                       const uint8_t salt[], size_t salt_len,
                       size_t ms_to_run,
                       size_t* iterations_used)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_algo));
-      pbkdf->pbkdf_timed(out, out_len, password, salt, salt_len,
-                         std::chrono::milliseconds(ms_to_run),
-                         *iterations_used);
+   return botan_pwdhash_timed(algo,
+                              static_cast<uint32_t>(ms_to_run),
+                              iterations_used,
+                              nullptr,
+                              nullptr,
+                              out, out_len,
+                              password, 0,
+                              salt, salt_len);
+   }
+
+int botan_pwdhash(
+   const char* algo,
+   size_t param1,
+   size_t param2,
+   size_t param3,
+   uint8_t out[],
+   size_t out_len,
+   const char* password,
+   size_t password_len,
+   const uint8_t salt[],
+   size_t salt_len)
+   {
+   if(algo == nullptr || password == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   if(password_len == 0)
+      password_len = std::strlen(password);
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
+
+      if(!pwdhash_fam)
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+
+      auto pwdhash = pwdhash_fam->from_params(param1, param2, param3);
+
+      pwdhash->derive_key(out, out_len,
+                          password, password_len,
+                          salt, salt_len);
+
+      return BOTAN_FFI_SUCCESS;
+      });
+   }
+
+int botan_pwdhash_timed(
+   const char* algo,
+   uint32_t msec,
+   size_t* param1,
+   size_t* param2,
+   size_t* param3,
+   uint8_t out[],
+   size_t out_len,
+   const char* password,
+   size_t password_len,
+   const uint8_t salt[],
+   size_t salt_len)
+   {
+   if(algo == nullptr || password == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   if(password_len == 0)
+      password_len = std::strlen(password);
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+
+      auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
+
+      if(!pwdhash_fam)
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+
+      auto pwdhash = pwdhash_fam->tune(out_len, std::chrono::milliseconds(msec));
+
+      if(param1)
+         *param1 = pwdhash->iterations();
+      if(param2)
+         *param2 = pwdhash->parallelism();
+      if(param3)
+         *param3 = pwdhash->memory_param();
+
+      pwdhash->derive_key(out, out_len,
+                          password, password_len,
+                          salt, salt_len);
+
       return BOTAN_FFI_SUCCESS;
       });
    }
@@ -27033,11 +28181,22 @@ int botan_kdf(const char* kdf_algo,
               const uint8_t salt[], size_t salt_len,
               const uint8_t label[], size_t label_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::KDF> kdf(Botan::get_kdf(kdf_algo));
       kdf->kdf(out, out_len, secret, secret_len, salt, salt_len, label, label_len);
       return BOTAN_FFI_SUCCESS;
       });
+   }
+
+int botan_scrypt(uint8_t out[], size_t out_len,
+                 const char* password,
+                 const uint8_t salt[], size_t salt_len,
+                 size_t N, size_t r, size_t p)
+   {
+   return botan_pwdhash("Scrypt", N, r, p,
+                        out, out_len,
+                        password, 0,
+                        salt, salt_len);
    }
 
 int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
@@ -27046,7 +28205,7 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
                           uint32_t flags)
    {
 #if defined(BOTAN_HAS_BCRYPT)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(out == nullptr || out_len == nullptr || pass == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -27054,7 +28213,7 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
       if(wf < 4 || wf > 18)
-         throw FFI_Error("Bad bcrypt work factor " + std::to_string(wf));
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
 
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       const std::string bcrypt = Botan::generate_bcrypt(pass, rng, static_cast<uint16_t>(wf));
@@ -27068,7 +28227,7 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
 int botan_bcrypt_is_valid(const char* pass, const char* hash)
    {
 #if defined(BOTAN_HAS_BCRYPT)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       return Botan::check_bcrypt(pass, hash) ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER;
       });
 #else
@@ -27096,7 +28255,7 @@ int botan_key_wrap3394(const uint8_t key[], size_t key_len,
                        uint8_t wrapped_key[], size_t* wrapped_key_len)
    {
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const Botan::SymmetricKey kek_sym(kek, kek_len);
       const Botan::secure_vector<uint8_t> key_pt(key, key + key_len);
       const Botan::secure_vector<uint8_t> key_ct = Botan::rfc3394_keywrap(key_pt, kek_sym);
@@ -27112,7 +28271,7 @@ int botan_key_unwrap3394(const uint8_t wrapped_key[], size_t wrapped_key_len,
                          uint8_t key[], size_t* key_len)
    {
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const Botan::SymmetricKey kek_sym(kek, kek_len);
       const Botan::secure_vector<uint8_t> key_ct(wrapped_key, wrapped_key + wrapped_key_len);
       const Botan::secure_vector<uint8_t> key_pt = Botan::rfc3394_keyunwrap(key_ct, kek_sym);
@@ -27139,7 +28298,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_mac_struct, Botan::MessageAuthenticationCode, 0xA
 
 int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(!mac || !mac_name || flags != 0)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -27184,6 +28343,27 @@ int botan_mac_final(botan_mac_t mac, uint8_t out[])
    return BOTAN_FFI_DO(Botan::MessageAuthenticationCode, mac, m, { m.final(out); });
    }
 
+int botan_mac_name(botan_mac_t mac, char* name, size_t* name_len)
+   {
+   return BOTAN_FFI_DO(Botan::MessageAuthenticationCode, mac, m, {
+      return write_str_output(name, name_len, m.name()); });
+   }
+
+int botan_mac_get_keyspec(botan_mac_t mac,
+                          size_t* out_minimum_keylength,
+                          size_t* out_maximum_keylength,
+                          size_t* out_keylength_modulo)
+   {
+   return BOTAN_FFI_DO(Botan::MessageAuthenticationCode, mac, m, {
+      if(out_minimum_keylength)
+         *out_minimum_keylength = m.minimum_keylength();
+      if(out_maximum_keylength)
+         *out_maximum_keylength = m.maximum_keylength();
+      if(out_keylength_modulo)
+         *out_keylength_modulo = m.key_spec().keylength_multiple();
+      });
+   }
+
 }
 /*
 * (C) 2015,2017 Jack Lloyd
@@ -27199,7 +28379,7 @@ using namespace Botan_FFI;
 
 int botan_mp_init(botan_mp_t* mp_out)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(mp_out == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -27247,7 +28427,7 @@ int botan_mp_set_from_radix_str(botan_mp_t mp, const char* str, size_t radix)
       const uint8_t* bytes = Botan::cast_char_ptr_to_uint8(str);
       const size_t len = strlen(str);
 
-      bn = Botan::BigInt::decode(bytes, len, base);
+      bn = Botan::BigInt(bytes, len, base);
       });
    }
 
@@ -27279,26 +28459,21 @@ int botan_mp_from_bin(botan_mp_t mp, const uint8_t bin[], size_t bin_len)
 int botan_mp_to_hex(const botan_mp_t mp, char* out)
    {
    return BOTAN_FFI_DO(Botan::BigInt, mp, bn, {
-      std::vector<uint8_t> hex = Botan::BigInt::encode(bn, Botan::BigInt::Hexadecimal);
-      std::memcpy(out, hex.data(), hex.size());
-      out[hex.size()] = 0; // null terminate
+      const std::string hex = bn.to_hex_string();
+      std::memcpy(out, hex.c_str(), 1 + hex.size());
       });
    }
 
 int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* out_len)
    {
    return BOTAN_FFI_DO(Botan::BigInt, mp, bn, {
-      Botan::BigInt::Base base;
-      if(digit_base == 0 || digit_base == 10)
-         base = Botan::BigInt::Decimal;
-      else if(digit_base == 16)
-         base = Botan::BigInt::Hexadecimal;
-      else
-         throw FFI_Error("botan_mp_to_str invalid digit base");
 
-      std::vector<uint8_t> hex = Botan::BigInt::encode(bn, base);
-      hex.push_back(0); // null terminator
-      return write_str_output(out, out_len, hex);
+      if(digit_base == 0 || digit_base == 10)
+         return write_str_output(out, out_len, bn.to_dec_string());
+      else if(digit_base == 16)
+         return write_str_output(out, out_len, bn.to_hex_string());
+      else
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
       });
    }
 
@@ -27323,17 +28498,52 @@ int botan_mp_destroy(botan_mp_t mp)
 
 int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, result, res, { res = safe_get(x) + safe_get(y); });
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, {
+      if(result == x)
+         res += safe_get(y);
+      else
+         res = safe_get(x) + safe_get(y);
+      });
    }
 
 int botan_mp_sub(botan_mp_t result, const botan_mp_t x, const botan_mp_t y)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, result, res, { res = safe_get(x) - safe_get(y); });
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, {
+      if(result == x)
+         res -= safe_get(y);
+      else
+         res = safe_get(x) - safe_get(y);
+      });
+   }
+
+int botan_mp_add_u32(botan_mp_t result, const botan_mp_t x, uint32_t y)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, {
+      if(result == x)
+         res += static_cast<Botan::word>(y);
+      else
+         res = safe_get(x) + static_cast<Botan::word>(y);
+      });
+   }
+
+int botan_mp_sub_u32(botan_mp_t result, const botan_mp_t x, uint32_t y)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, {
+      if(result == x)
+         res -= static_cast<Botan::word>(y);
+      else
+         res = safe_get(x) - static_cast<Botan::word>(y);
+      });
    }
 
 int botan_mp_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y)
    {
-   return BOTAN_FFI_DO(Botan::BigInt, result, res, { res = safe_get(x) * safe_get(y); });
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, {
+      if(result == x)
+         res *= safe_get(y);
+      else
+         res = safe_get(x) * safe_get(y);
+      });
    }
 
 int botan_mp_div(botan_mp_t quotient,
@@ -27482,13 +28692,14 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
                                const char* padding,
                                uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      BOTAN_ASSERT_NONNULL(op);
+   if(op == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
 
+   if(flags != 0)
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
-
-      if(flags != 0)
-         return BOTAN_FFI_ERROR_BAD_FLAG;
 
       std::unique_ptr<Botan::PK_Encryptor> pk(new Botan::PK_Encryptor_EME(safe_get(key_obj), Botan::system_rng(), padding));
       *op = new botan_pk_op_encrypt_struct(pk.release());
@@ -27499,6 +28710,13 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
 int botan_pk_op_encrypt_destroy(botan_pk_op_encrypt_t op)
    {
    return BOTAN_FFI_CHECKED_DELETE(op);
+   }
+
+int botan_pk_op_encrypt_output_length(botan_pk_op_encrypt_t op, size_t ptext_len, size_t* ctext_len)
+   {
+   if(ctext_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   return BOTAN_FFI_DO(Botan::PK_Encryptor, op, o, { *ctext_len = o.ciphertext_length(ptext_len); });
    }
 
 int botan_pk_op_encrypt(botan_pk_op_encrypt_t op,
@@ -27519,13 +28737,14 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
                                const char* padding,
                                uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      BOTAN_ASSERT_NONNULL(op);
+   if(op == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
 
+   if(flags != 0)
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
-
-      if(flags != 0)
-         return BOTAN_FFI_ERROR_BAD_FLAG;
 
       std::unique_ptr<Botan::PK_Decryptor> pk(new Botan::PK_Decryptor_EME(safe_get(key_obj), Botan::system_rng(), padding));
       *op = new botan_pk_op_decrypt_struct(pk.release());
@@ -27536,6 +28755,13 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
 int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op)
    {
    return BOTAN_FFI_CHECKED_DELETE(op);
+   }
+
+int botan_pk_op_decrypt_output_length(botan_pk_op_decrypt_t op, size_t ctext_len, size_t* ptext_len)
+   {
+   if(ptext_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   return BOTAN_FFI_DO(Botan::PK_Decryptor, op, o, { *ptext_len = o.plaintext_length(ctext_len); });
    }
 
 int botan_pk_op_decrypt(botan_pk_op_decrypt_t op,
@@ -27555,15 +28781,16 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
                             const char* hash,
                             uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      BOTAN_ASSERT_NONNULL(op);
+   if(op == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
 
+   if(flags != 0)
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
 
-      if(flags != 0)
-         return BOTAN_FFI_ERROR_BAD_FLAG;
-
-      std::unique_ptr<Botan::PK_Signer> pk(new Botan::PK_Signer(safe_get(key_obj),Botan::system_rng(),  hash));
+      std::unique_ptr<Botan::PK_Signer> pk(new Botan::PK_Signer(safe_get(key_obj), Botan::system_rng(), hash));
       *op = new botan_pk_op_sign_struct(pk.release());
       return BOTAN_FFI_SUCCESS;
       });
@@ -27572,6 +28799,14 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
 int botan_pk_op_sign_destroy(botan_pk_op_sign_t op)
    {
    return BOTAN_FFI_CHECKED_DELETE(op);
+   }
+
+int botan_pk_op_sign_output_length(botan_pk_op_sign_t op, size_t* sig_len)
+   {
+   if(sig_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_DO(Botan::PK_Signer, op, o, { *sig_len = o.signature_length(); });
    }
 
 int botan_pk_op_sign_update(botan_pk_op_sign_t op, const uint8_t in[], size_t in_len)
@@ -27591,12 +28826,14 @@ int botan_pk_op_verify_create(botan_pk_op_verify_t* op,
                               const char* hash,
                               uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      BOTAN_ASSERT_NONNULL(op);
+   if(op == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
 
-      if(flags != 0)
-         return BOTAN_FFI_ERROR_BAD_FLAG;
+   if(flags != 0)
+      return BOTAN_FFI_ERROR_BAD_FLAG;
 
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      *op = nullptr;
       std::unique_ptr<Botan::PK_Verifier> pk(new Botan::PK_Verifier(safe_get(key_obj), hash));
       *op = new botan_pk_op_verify_struct(pk.release());
       return BOTAN_FFI_SUCCESS;
@@ -27630,14 +28867,14 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op,
                                      const char* kdf,
                                      uint32_t flags)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      BOTAN_ASSERT_NONNULL(op);
+   if(op == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
 
+   if(flags != 0)
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
-
-      if(flags != 0)
-         return BOTAN_FFI_ERROR_BAD_FLAG;
-
       std::unique_ptr<Botan::PK_Key_Agreement> pk(new Botan::PK_Key_Agreement(safe_get(key_obj), Botan::system_rng(), kdf));
       *op = new botan_pk_op_ka_struct(pk.release());
       return BOTAN_FFI_SUCCESS;
@@ -27656,6 +28893,15 @@ int botan_pk_op_key_agreement_export_public(botan_privkey_t key,
       if(auto kak = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(&k))
          return write_vec_output(out, out_len, kak->public_value());
       return BOTAN_FFI_ERROR_BAD_FLAG;
+      });
+   }
+
+int botan_pk_op_key_agreement_size(botan_pk_op_ka_t op, size_t* out_len)
+   {
+   return BOTAN_FFI_DO(Botan::PK_Key_Agreement, op, o, {
+      if(out_len == nullptr)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      *out_len = o.agreed_value_size();
       });
    }
 
@@ -27690,7 +28936,7 @@ int botan_privkey_create(botan_privkey_t* key_obj,
                          const char* algo_params,
                          botan_rng_t rng_obj)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(key_obj == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -27720,22 +28966,22 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
                        const uint8_t bits[], size_t len,
                        const char* password)
    {
+   BOTAN_UNUSED(rng_obj);
+
    *key = nullptr;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DataSource_Memory src(bits, len);
-
-      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
       std::unique_ptr<Botan::Private_Key> pkcs8;
 
       if(password == nullptr)
          {
-         pkcs8.reset(Botan::PKCS8::load_key(src, rng));
+         pkcs8 = Botan::PKCS8::load_key(src);
          }
       else
          {
-         pkcs8.reset(Botan::PKCS8::load_key(src, rng, static_cast<std::string>(password)));
+         pkcs8 = Botan::PKCS8::load_key(src, std::string(password));
          }
 
       if(pkcs8)
@@ -27757,7 +29003,7 @@ int botan_pubkey_load(botan_pubkey_t* key,
    {
    *key = nullptr;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DataSource_Memory src(bits, bits_len);
       std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(src));
 
@@ -27776,13 +29022,18 @@ int botan_pubkey_destroy(botan_pubkey_t key)
 
 int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::Public_Key>
          pubkey(Botan::X509::load_key(Botan::X509::BER_encode(safe_get(key_obj))));
 
       *pubout = new botan_pubkey_struct(pubkey.release());
       return BOTAN_FFI_SUCCESS;
       });
+   }
+
+int botan_privkey_algo_name(botan_privkey_t key, char out[], size_t* out_len)
+   {
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, { return write_str_output(out, out_len, k.algo_name()); });
    }
 
 int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len)
@@ -27922,7 +29173,7 @@ int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash_fn,
 int botan_pkcs_hash_id(const char* hash_name, uint8_t pkcs_id[], size_t* pkcs_id_len)
    {
 #if defined(BOTAN_HAS_HASH_ID)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const std::vector<uint8_t> hash_id = Botan::pkcs_hash_id(hash_name);
       return write_output(pkcs_id, pkcs_id_len, hash_id.data(), hash_id.size());
       });
@@ -27935,6 +29186,7 @@ int botan_pkcs_hash_id(const char* hash_name, uint8_t pkcs_id[], size_t* pkcs_id
 /*
 * (C) 2015,2017 Jack Lloyd
 * (C) 2017 Ribose Inc
+* (C) 2018 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -28030,7 +29282,7 @@ Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
       else if(field == "e")
          return rsa->get_e();
       else
-         throw Botan::Exception("Field not supported");
+         throw Botan_FFI::FFI_Error("Bad field", BOTAN_FFI_ERROR_BAD_PARAMETER);
       }
 #endif
 
@@ -28047,7 +29299,7 @@ Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
       else if(field == "y")
          return dl->get_y();
       else
-         throw Botan::Exception("Field not supported");
+         throw Botan_FFI::FFI_Error("Bad field", BOTAN_FFI_ERROR_BAD_PARAMETER);
       }
 #endif
 
@@ -28073,12 +29325,13 @@ Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
       else if(field == "order")
          return ecc->domain().get_order();
       else
-         throw Botan::Exception("Field not supported");
+         throw Botan_FFI::FFI_Error("Bad field", BOTAN_FFI_ERROR_BAD_PARAMETER);
       }
 #endif
 
    // Some other algorithm type not supported by this function
-   throw Botan::Exception("Unsupported algorithm type for botan_pubkey_get_field");
+   throw Botan_FFI::FFI_Error("Field getter not implemented for this algorithm type",
+                              BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
    }
 
 Botan::BigInt privkey_get_field(const Botan::Private_Key& key,
@@ -28128,8 +29381,7 @@ Botan::BigInt privkey_get_field(const Botan::Private_Key& key,
       }
 #endif
 
-   // Some other algorithm type not supported by this function
-   throw Botan::Exception("Unsupported algorithm type for botan_privkey_get_field");
+   return pubkey_get_field(key, field);
    }
 
 }
@@ -28184,7 +29436,7 @@ int botan_privkey_load_rsa(botan_privkey_t* key,
 #if defined(BOTAN_HAS_RSA)
    *key = nullptr;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *key = new botan_privkey_struct(new Botan::RSA_PrivateKey(safe_get(rsa_p),
                                                                 safe_get(rsa_q),
                                                                 safe_get(rsa_e)));
@@ -28196,12 +29448,31 @@ int botan_privkey_load_rsa(botan_privkey_t* key,
 #endif
    }
 
+int botan_privkey_load_rsa_pkcs1(botan_privkey_t* key,
+                                 const uint8_t bits[],
+                                 size_t len)
+   {
+#if defined(BOTAN_HAS_RSA)
+   *key = nullptr;
+
+   Botan::secure_vector<uint8_t> src(bits, bits + len);
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      Botan::AlgorithmIdentifier alg_id("RSA", Botan::AlgorithmIdentifier::USE_NULL_PARAM);
+      *key = new botan_privkey_struct(new Botan::RSA_PrivateKey(alg_id, src));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, bits, len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 int botan_pubkey_load_rsa(botan_pubkey_t* key,
                           botan_mp_t n, botan_mp_t e)
    {
 #if defined(BOTAN_HAS_RSA)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       *key = new botan_pubkey_struct(new Botan::RSA_PublicKey(safe_get(n), safe_get(e)));
       return BOTAN_FFI_SUCCESS;
       });
@@ -28246,6 +29517,33 @@ int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t key)
    return botan_pubkey_get_field(n, key, "n");
    }
 
+int botan_privkey_rsa_get_privkey(botan_privkey_t rsa_key,
+                                  uint8_t out[], size_t* out_len,
+                                  uint32_t flags)
+   {
+#if defined(BOTAN_HAS_RSA)
+   return BOTAN_FFI_DO(Botan::Private_Key, rsa_key, k, {
+      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<const Botan::RSA_PrivateKey*>(&k))
+         {
+         if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+            return write_vec_output(out, out_len, rsa->private_key_bits());
+         else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+            return write_str_output(out, out_len, Botan::PEM_Code::encode(rsa->private_key_bits(),
+                  "RSA PRIVATE KEY"));
+         else
+            return BOTAN_FFI_ERROR_BAD_FLAG;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(rsa_key, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 /* DSA specific operations */
 int botan_privkey_create_dsa(botan_privkey_t* key, botan_rng_t rng_obj, size_t pbits, size_t qbits)
    {
@@ -28260,7 +29558,7 @@ int botan_privkey_create_dsa(botan_privkey_t* key, botan_rng_t rng_obj, size_t p
       return BOTAN_FFI_ERROR_BAD_PARAMETER;
     }
 
-    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       Botan::DL_Group group(rng, Botan::DL_Group::Prime_Subgroup, pbits, qbits);
       *key = new botan_privkey_struct(new Botan::DSA_PrivateKey(rng, group));
@@ -28278,7 +29576,7 @@ int botan_privkey_load_dsa(botan_privkey_t* key,
 #if defined(BOTAN_HAS_DSA)
    *key = nullptr;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Null_RNG null_rng;
       Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
       *key = new botan_privkey_struct(new Botan::DSA_PrivateKey(null_rng, group, safe_get(x)));
@@ -28296,7 +29594,7 @@ int botan_pubkey_load_dsa(botan_pubkey_t* key,
 #if defined(BOTAN_HAS_DSA)
    *key = nullptr;
 
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
       *key = new botan_pubkey_struct(new Botan::DSA_PublicKey(group, safe_get(y)));
       return BOTAN_FFI_SUCCESS;
@@ -28345,7 +29643,7 @@ int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
                             const char* curve_name)
    {
 #if defined(BOTAN_HAS_ECDSA)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDSA_PublicKey> p_key;
 
       int rc = pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name);
@@ -28365,7 +29663,7 @@ int botan_privkey_load_ecdsa(botan_privkey_t* key,
                              const char* curve_name)
    {
 #if defined(BOTAN_HAS_ECDSA)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDSA_PrivateKey> p_key;
       int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
       if(rc == BOTAN_FFI_SUCCESS)
@@ -28397,7 +29695,7 @@ int botan_privkey_create_elgamal(botan_privkey_t* key,
       ? Botan::DL_Group::Strong
       : Botan::DL_Group::Prime_Subgroup;
 
-    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       Botan::DL_Group group(rng, prime_type, pbits, qbits);
       *key = new botan_privkey_struct(new Botan::ElGamal_PrivateKey(rng, group));
@@ -28414,7 +29712,7 @@ int botan_pubkey_load_elgamal(botan_pubkey_t* key,
    {
 #if defined(BOTAN_HAS_ELGAMAL)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DL_Group group(safe_get(p), safe_get(g));
       *key = new botan_pubkey_struct(new Botan::ElGamal_PublicKey(group, safe_get(y)));
       return BOTAN_FFI_SUCCESS;
@@ -28430,7 +29728,7 @@ int botan_privkey_load_elgamal(botan_privkey_t* key,
    {
 #if defined(BOTAN_HAS_ELGAMAL)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Null_RNG null_rng;
       Botan::DL_Group group(safe_get(p), safe_get(g));
       *key = new botan_privkey_struct(new Botan::ElGamal_PrivateKey(null_rng, group, safe_get(x)));
@@ -28454,7 +29752,7 @@ int botan_privkey_load_dh(botan_privkey_t* key,
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Null_RNG null_rng;
       Botan::DL_Group group(safe_get(p), safe_get(g));
       *key = new botan_privkey_struct(new Botan::DH_PrivateKey(null_rng, group, safe_get(x)));
@@ -28471,7 +29769,7 @@ int botan_pubkey_load_dh(botan_pubkey_t* key,
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DL_Group group(safe_get(p), safe_get(g));
       *key = new botan_pubkey_struct(new Botan::DH_PublicKey(group, safe_get(y)));
       return BOTAN_FFI_SUCCESS;
@@ -28503,7 +29801,7 @@ int botan_pubkey_load_ecdh(botan_pubkey_t* key,
                            const char* curve_name)
    {
 #if defined(BOTAN_HAS_ECDH)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDH_PublicKey> p_key;
       int rc = pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name);
 
@@ -28522,7 +29820,7 @@ int botan_privkey_load_ecdh(botan_privkey_t* key,
                             const char* curve_name)
    {
 #if defined(BOTAN_HAS_ECDH)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDH_PrivateKey> p_key;
       int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
       if(rc == BOTAN_FFI_SUCCESS)
@@ -28549,14 +29847,14 @@ int botan_pubkey_sm2_compute_za(uint8_t out[],
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
 #if defined(BOTAN_HAS_SM2)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const Botan::Public_Key& pub_key = safe_get(key);
       const Botan::EC_PublicKey* ec_key = dynamic_cast<const Botan::EC_PublicKey*>(&pub_key);
 
       if(ec_key == nullptr)
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
 
-      if(ec_key->algo_name() != "SM2_Sig" && ec_key->algo_name() != "SM2_Enc")
+      if(ec_key->algo_name() != "SM2")
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
 
       const std::string ident_str(ident);
@@ -28579,8 +29877,8 @@ int botan_pubkey_load_sm2(botan_pubkey_t* key,
                           const char* curve_name)
    {
 #if defined(BOTAN_HAS_SM2)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      std::unique_ptr<Botan::SM2_Signature_PublicKey> p_key;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      std::unique_ptr<Botan::SM2_PublicKey> p_key;
       if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
          {
          *key = new botan_pubkey_struct(p_key.release());
@@ -28599,8 +29897,8 @@ int botan_privkey_load_sm2(botan_privkey_t* key,
                            const char* curve_name)
    {
 #if defined(BOTAN_HAS_SM2)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      std::unique_ptr<Botan::SM2_Signature_PrivateKey> p_key;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      std::unique_ptr<Botan::SM2_PrivateKey> p_key;
       int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
 
       if(rc == BOTAN_FFI_SUCCESS)
@@ -28618,39 +29916,14 @@ int botan_pubkey_load_sm2_enc(botan_pubkey_t* key,
                               const botan_mp_t public_y,
                               const char* curve_name)
    {
-#if defined(BOTAN_HAS_SM2)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      std::unique_ptr<Botan::SM2_Encryption_PublicKey> p_key;
-      if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
-         {
-         *key = new botan_pubkey_struct(p_key.release());
-         return BOTAN_FFI_SUCCESS;
-         }
-      return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
-      });
-#else
-   BOTAN_UNUSED(key, public_x, public_y, curve_name);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_pubkey_load_sm2(key, public_x, public_y, curve_name);
    }
 
 int botan_privkey_load_sm2_enc(botan_privkey_t* key,
                                const botan_mp_t scalar,
                                const char* curve_name)
    {
-#if defined(BOTAN_HAS_SM2)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
-      std::unique_ptr<Botan::SM2_Encryption_PrivateKey> p_key;
-      int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
-
-      if(rc == BOTAN_FFI_SUCCESS)
-         *key = new botan_privkey_struct(p_key.release());
-      return rc;
-      });
-#else
-   BOTAN_UNUSED(key, scalar, curve_name);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_privkey_load_sm2(key, scalar, curve_name);
    }
 
 /* Ed25519 specific operations */
@@ -28660,7 +29933,7 @@ int botan_privkey_load_ed25519(botan_privkey_t* key,
    {
 #if defined(BOTAN_HAS_ED25519)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 32);
       *key = new botan_privkey_struct(new Botan::Ed25519_PrivateKey(privkey_vec));
       return BOTAN_FFI_SUCCESS;
@@ -28676,7 +29949,7 @@ int botan_pubkey_load_ed25519(botan_pubkey_t* key,
    {
 #if defined(BOTAN_HAS_ED25519)
    *key = nullptr;
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 32);
       *key = new botan_pubkey_struct(new Botan::Ed25519_PublicKey(pubkey_vec));
       return BOTAN_FFI_SUCCESS;
@@ -28735,6 +30008,88 @@ int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
 #endif
    }
 
+/* X25519 specific operations */
+
+int botan_privkey_load_x25519(botan_privkey_t* key,
+                              const uint8_t privkey[32])
+   {
+#if defined(BOTAN_HAS_X25519)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 32);
+      *key = new botan_privkey_struct(new Botan::X25519_PrivateKey(privkey_vec));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, privkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_load_x25519(botan_pubkey_t* key,
+                             const uint8_t pubkey[32])
+   {
+#if defined(BOTAN_HAS_X25519)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 32);
+      *key = new botan_pubkey_struct(new Botan::X25519_PublicKey(pubkey_vec));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, pubkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_x25519_get_privkey(botan_privkey_t key,
+                                     uint8_t output[32])
+   {
+#if defined(BOTAN_HAS_X25519)
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+      if(Botan::X25519_PrivateKey* x25519 = dynamic_cast<Botan::X25519_PrivateKey*>(&k))
+         {
+         const Botan::secure_vector<uint8_t>& x25519_key = x25519->get_x();
+         if(x25519_key.size() != 32)
+            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         Botan::copy_mem(output, x25519_key.data(), x25519_key.size());
+         return BOTAN_FFI_SUCCESS;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key,
+                                   uint8_t output[32])
+   {
+#if defined(BOTAN_HAS_X25519)
+   return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
+      if(Botan::X25519_PublicKey* x25519 = dynamic_cast<Botan::X25519_PublicKey*>(&k))
+         {
+         const std::vector<uint8_t>& x25519_key = x25519->public_value();
+         if(x25519_key.size() != 32)
+            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+         Botan::copy_mem(output, x25519_key.data(), x25519_key.size());
+         return BOTAN_FFI_SUCCESS;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 int botan_privkey_create_mceliece(botan_privkey_t* key_obj, botan_rng_t rng_obj, size_t n, size_t t)
    {
    const std::string mce_params = std::to_string(n) + "," + std::to_string(t);
@@ -28747,7 +30102,7 @@ int botan_mceies_decrypt(botan_privkey_t mce_key_obj,
                          const uint8_t ad[], size_t ad_len,
                          uint8_t out[], size_t* out_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Private_Key& key = safe_get(mce_key_obj);
 
 #if defined(BOTAN_HAS_MCELIECE) && defined(BOTAN_HAS_MCEIES)
@@ -28770,7 +30125,7 @@ int botan_mceies_encrypt(botan_pubkey_t mce_key_obj,
                          const uint8_t ad[], size_t ad_len,
                          uint8_t out[], size_t* out_len)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Public_Key& key = safe_get(mce_key_obj);
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
@@ -28795,13 +30150,16 @@ int botan_mceies_encrypt(botan_pubkey_t mce_key_obj,
 */
 
 
+#if defined(BOTAN_HAS_RDRAND_RNG)
+#endif
+
 extern "C" {
 
 using namespace Botan_FFI;
 
 int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() -> int {
+   return ffi_guard_thunk(__func__, [=]() -> int {
       if(rng_out == nullptr)
          return BOTAN_FFI_ERROR_NULL_POINTER;
 
@@ -28810,11 +30168,34 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
       if(rng_type_s == "system")
+         {
          rng.reset(new Botan::System_RNG);
+         }
       else if(rng_type_s == "user")
+         {
          rng.reset(new Botan::AutoSeeded_RNG);
-      else
-         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         }
+      else if(rng_type_s == "null")
+         {
+         rng.reset(new Botan::Null_RNG);
+         }
+#if defined(BOTAN_HAS_RDRAND_RNG)
+      else if(rng_type_s == "rdrand" && Botan::RDRAND_RNG::available())
+         {
+         rng.reset(new Botan::RDRAND_RNG);
+         }
+#endif
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+      else if(rng_type_s == "user-threadsafe")
+         {
+         rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
+         }
+#endif
+
+      if(!rng)
+         {
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+         }
 
       *rng_out = new botan_rng_struct(rng.release());
       return BOTAN_FFI_SUCCESS;
@@ -28834,6 +30215,107 @@ int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
 int botan_rng_reseed(botan_rng_t rng, size_t bits)
    {
    return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed_from_rng(Botan::system_rng(), bits); });
+   }
+
+int botan_rng_add_entropy(botan_rng_t rng, const uint8_t* input, size_t len)
+   {
+   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.add_entropy(input, len); });
+   }
+
+int botan_rng_reseed_from_rng(botan_rng_t rng, botan_rng_t source_rng, size_t bits)
+   {
+   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed_from_rng(safe_get(source_rng), bits); });
+   }
+
+}
+/*
+* (C) 2018 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+#if defined(BOTAN_HAS_TOTP)
+#endif
+
+extern "C" {
+
+using namespace Botan_FFI;
+
+#if defined(BOTAN_HAS_TOTP)
+
+BOTAN_FFI_DECLARE_STRUCT(botan_totp_struct, Botan::TOTP, 0x3D9D2CD1);
+
+#endif
+
+int botan_totp_init(botan_totp_t* totp,
+                    const uint8_t key[], size_t key_len,
+                    const char* hash_algo,
+                    size_t digits,
+                    size_t time_step)
+   {
+   if(totp == nullptr || key == nullptr || hash_algo == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   *totp = nullptr;
+
+#if defined(BOTAN_HAS_TOTP)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+
+      *totp = new botan_totp_struct(
+         new Botan::TOTP(key, key_len, hash_algo, digits, time_step));
+
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(totp, key, key_len, hash_algo, digits, time_step);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_totp_destroy(botan_totp_t totp)
+   {
+#if defined(BOTAN_HAS_TOTP)
+   return BOTAN_FFI_CHECKED_DELETE(totp);
+#else
+   BOTAN_UNUSED(totp);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_totp_generate(botan_totp_t totp,
+                        uint32_t* totp_code,
+                        uint64_t timestamp)
+   {
+#if defined(BOTAN_HAS_TOTP)
+   if(totp == nullptr || totp_code == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   return BOTAN_FFI_DO(Botan::TOTP, totp, t, {
+      *totp_code = t.generate_totp(timestamp);
+      });
+
+#else
+   BOTAN_UNUSED(totp, totp_code, timestamp);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_totp_check(botan_totp_t totp,
+                     uint32_t totp_code,
+                     uint64_t timestamp,
+                     size_t acceptable_clock_drift)
+   {
+#if defined(BOTAN_HAS_TOTP)
+   return BOTAN_FFI_DO(Botan::TOTP, totp, t, {
+      const bool ok = t.verify_totp(totp_code, timestamp, acceptable_clock_drift);
+      return (ok ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER);
+      });
+
+#else
+   BOTAN_UNUSED(totp, totp_code, timestamp, acceptable_clock_drift);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 }
@@ -29079,7 +30561,7 @@ void Buffered_Filter::write(const uint8_t input[], size_t input_size)
 void Buffered_Filter::end_msg()
    {
    if(m_buffer_pos < m_final_minimum)
-      throw Exception("Buffered filter end_msg without enough input");
+      throw Invalid_State("Buffered filter end_msg without enough input");
 
    size_t spare_blocks = (m_buffer_pos - m_final_minimum) / m_main_block_mod;
 
@@ -30629,7 +32111,7 @@ void factor(BigInt n, BigInt& a, BigInt& b)
    a *= n;
 
    if(a <= 1 || b <= 1)
-      throw Exception("Could not factor n for use in FPE");
+      throw Internal_Error("Could not factor n for use in FPE");
    }
 
 }
@@ -30648,7 +32130,7 @@ FPE_FE1::FPE_FE1(const BigInt& n,
    m_n_bytes = BigInt::encode(n);
 
    if(m_n_bytes.size() > MAX_N_BYTES)
-      throw Exception("N is too large for FPE encryption");
+      throw Invalid_Argument("N is too large for FPE encryption");
 
    factor(n, m_a, m_b);
 
@@ -30713,7 +32195,8 @@ secure_vector<uint8_t> FPE_FE1::compute_tweak_mac(const uint8_t tweak[], size_t 
    m_mac->update(m_n_bytes.data(), m_n_bytes.size());
 
    m_mac->update_be(static_cast<uint32_t>(tweak_len));
-   m_mac->update(tweak, tweak_len);
+   if(tweak_len > 0)
+      m_mac->update(tweak, tweak_len);
 
    return m_mac->final();
    }
@@ -30729,7 +32212,7 @@ BigInt FPE_FE1::encrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
    BigInt L, R, Fi;
    for(size_t i = 0; i != m_rounds; ++i)
       {
-      divide(X, m_b, L, R);
+      ct_divide(X, m_b, L, R);
       Fi = F(R, i, tweak_mac, tmp);
       X = m_a * R + mod_a->reduce(L + Fi);
       }
@@ -30747,7 +32230,7 @@ BigInt FPE_FE1::decrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
    BigInt W, R, Fi;
    for(size_t i = 0; i != m_rounds; ++i)
       {
-      divide(X, m_a, R, W);
+      ct_divide(X, m_a, R, W);
 
       Fi = F(R, m_rounds-i-1, tweak_mac, tmp);
       X = m_b * mod_a->reduce(W - Fi) + R;
@@ -30850,7 +32333,7 @@ std::string GCM_Mode::provider() const
 
 size_t GCM_Mode::update_granularity() const
    {
-   return GCM_BS;
+   return GCM_BS * std::max<size_t>(2, BOTAN_BLOCK_CIPHER_PAR_MULT);
    }
 
 bool GCM_Mode::valid_nonce_length(size_t len) const
@@ -30941,7 +32424,7 @@ void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    uint8_t* buf = buffer.data() + offset;
 
    if(sz < tag_size())
-      throw Exception("Insufficient input for GCM decryption, tag missing");
+      throw Decoding_Error("Insufficient input for GCM decryption, tag missing");
 
    const size_t remaining = sz - tag_size();
 
@@ -31069,6 +32552,8 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x,
 void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
                          const uint8_t input[], size_t length)
    {
+   verify_key_set(m_HM.size());
+
    /*
    This assumes if less than block size input then we're just on the
    final block and should pad with zeros
@@ -31143,12 +32628,16 @@ void GHASH::key_schedule(const uint8_t key[], size_t length)
 
 void GHASH::start(const uint8_t nonce[], size_t len)
    {
+   BOTAN_ARG_CHECK(len == 16, "GHASH requires a 128-bit nonce");
    m_nonce.assign(nonce, nonce + len);
    m_ghash = m_H_ad;
    }
 
 void GHASH::set_associated_data(const uint8_t input[], size_t length)
    {
+   if(m_ghash.empty() == false)
+      throw Invalid_State("Too late to set AD in GHASH");
+
    zeroise(m_H_ad);
 
    ghash_update(m_H_ad, input, length);
@@ -31164,7 +32653,7 @@ void GHASH::update_associated_data(const uint8_t ad[], size_t length)
 
 void GHASH::update(const uint8_t input[], size_t length)
    {
-   BOTAN_ASSERT(m_ghash.size() == GCM_BS, "Key was set");
+   verify_key_set(m_ghash.size() == GCM_BS);
    m_text_len += length;
    ghash_update(m_ghash, input, length);
    }
@@ -31206,8 +32695,8 @@ secure_vector<uint8_t> GHASH::nonce_hash(const uint8_t nonce[], size_t nonce_len
 
 void GHASH::clear()
    {
-   zeroise(m_H);
-   zeroise(m_HM);
+   zap(m_H);
+   zap(m_HM);
    reset();
    }
 
@@ -31638,6 +33127,8 @@ class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_EMSA
          m_group(gost_3410.domain()),
          m_x(gost_3410.private_value())
          {}
+
+      size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
 
       size_t max_input_bits() const override { return m_group.get_order_bits(); }
 
@@ -32077,11 +33568,26 @@ void GOST_34_11::final_result(uint8_t out[])
 #if defined(BOTAN_HAS_OPENSSL)
 #endif
 
+#if defined(BOTAN_HAS_COMMONCRYPTO)
+#endif
+
 namespace Botan {
 
 std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
                                                    const std::string& provider)
    {
+
+#if defined(BOTAN_HAS_COMMONCRYPTO)
+   if(provider.empty() || provider == "commoncrypto")
+      {
+      if(auto hash = make_commoncrypto_hash(algo_spec))
+         return hash;
+
+      if(!provider.empty())
+         return nullptr;
+      }
+#endif
+
 #if defined(BOTAN_HAS_OPENSSL)
    if(provider.empty() || provider == "openssl")
       {
@@ -32103,8 +33609,6 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
          return nullptr;
       }
 #endif
-
-   // TODO: CommonCrypto hashes
 
    if(provider.empty() == false && provider != "base")
       return nullptr; // unknown provider
@@ -32330,7 +33834,7 @@ HashFunction::create_or_throw(const std::string& algo,
 
 std::vector<std::string> HashFunction::providers(const std::string& algo_spec)
    {
-   return probe_providers_of<HashFunction>(algo_spec, {"base", "bearssl", "openssl"});
+   return probe_providers_of<HashFunction>(algo_spec, {"base", "bearssl", "openssl", "commoncrypto"});
    }
 
 }
@@ -33116,7 +34620,8 @@ size_t HMAC_DRBG::security_level() const
 
 namespace Botan {
 
-HOTP::HOTP(const SymmetricKey& key, const std::string& hash_algo, size_t digits)
+HOTP::HOTP(const uint8_t key[], size_t key_len,
+           const std::string& hash_algo, size_t digits)
    {
    BOTAN_ARG_CHECK(digits == 6 || digits == 7 || digits == 8, "Invalid HOTP digits");
 
@@ -33140,14 +34645,12 @@ HOTP::HOTP(const SymmetricKey& key, const std::string& hash_algo, size_t digits)
    else
       throw Invalid_Argument("Unsupported HOTP hash function");
 
-   m_mac->set_key(key);
+   m_mac->set_key(key, key_len);
    }
 
 uint32_t HOTP::generate_hotp(uint64_t counter)
    {
-   uint8_t counter8[8] = { 0 };
-   store_be(counter, counter8);
-   m_mac->update(counter8, sizeof(counter8));
+   m_mac->update_be(counter);
    const secure_vector<uint8_t> mac = m_mac->final();
 
    const size_t offset = mac[mac.size()-1] & 0x0F;
@@ -33177,9 +34680,10 @@ std::pair<bool,uint64_t> HOTP::verify_hotp(uint32_t otp, uint64_t starting_count
 
 namespace Botan {
 
-TOTP::TOTP(const SymmetricKey& key, const std::string& hash_algo,
+TOTP::TOTP(const uint8_t key[], size_t key_len,
+           const std::string& hash_algo,
            size_t digits, size_t time_step)
-   : m_hotp(key, hash_algo, digits)
+   : m_hotp(key, key_len, hash_algo, digits)
    , m_time_step(time_step)
    , m_unix_epoch(calendar_point(1970, 1, 1, 0, 0, 0).to_std_timepoint())
    {
@@ -33258,7 +34762,7 @@ std::string http_transact(const std::string& hostname,
       {
       socket = OS::open_socket(hostname, "http", timeout);
       if(!socket)
-         throw Exception("No socket support enabled in build");
+         throw Not_Implemented("No socket support enabled in build");
       }
    catch(std::exception& e)
       {
@@ -33491,8 +34995,7 @@ namespace {
 inline uint16_t mul(uint16_t x, uint16_t y)
    {
    const uint32_t P = static_cast<uint32_t>(x) * y;
-
-   const uint16_t Z_mask = static_cast<uint16_t>(CT::expand_mask(P) & 0xFFFF);
+   const auto P_mask = CT::Mask<uint16_t>(CT::Mask<uint32_t>::is_zero(P));
 
    const uint32_t P_hi = P >> 16;
    const uint32_t P_lo = P & 0xFFFF;
@@ -33501,7 +35004,7 @@ inline uint16_t mul(uint16_t x, uint16_t y)
    const uint16_t r_1 = static_cast<uint16_t>((P_lo - P_hi) + carry);
    const uint16_t r_2 = 1 - x - y;
 
-   return CT::select(Z_mask, r_1, r_2);
+   return P_mask.select(r_2, r_1);;
    }
 
 /*
@@ -33551,10 +35054,10 @@ void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[
          X3 += K[6*j+2];
          X4 = mul(X4, K[6*j+3]);
 
-         uint16_t T0 = X3;
+         const uint16_t T0 = X3;
          X3 = mul(X3 ^ X1, K[6*j+4]);
 
-         uint16_t T1 = X2;
+         const uint16_t T1 = X2;
          X2 = mul((X2 ^ X4) + X3, K[6*j+5]);
          X3 += X2;
 
@@ -33669,7 +35172,7 @@ void IDEA::key_schedule(const uint8_t key[], size_t)
    for(size_t off = 0; off != 48; off += 8)
       {
       for(size_t i = 0; i != 8; ++i)
-         m_EK[off+i] = K[i/4] >> (48-16*(i % 4));
+         m_EK[off+i] = static_cast<uint16_t>(K[i/4] >> (48-16*(i % 4)));
 
       const uint64_t Kx = (K[0] >> 39);
       const uint64_t Ky = (K[1] >> 39);
@@ -33679,7 +35182,7 @@ void IDEA::key_schedule(const uint8_t key[], size_t)
       }
 
    for(size_t i = 0; i != 4; ++i)
-      m_EK[48+i] = K[i/4] >> (48-16*(i % 4));
+      m_EK[48+i] = static_cast<uint16_t>(K[i/4] >> (48-16*(i % 4)));
 
    m_DK[0] = mul_inv(m_EK[48]);
    m_DK[1] = -m_EK[49];
@@ -33717,6 +35220,7 @@ void IDEA::clear()
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <emmintrin.h>
 
 namespace Botan {
 
@@ -34052,26 +35556,29 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
 
    //recover msg1 and salt
    size_t msg1_offset = 1;
-   uint8_t waiting_for_delim = 0xFF;
-   uint8_t bad_input = 0;
+
+   auto waiting_for_delim = CT::Mask<uint8_t>::set();
+   auto bad_input = CT::Mask<uint8_t>::cleared();
+
    for(size_t j = 0; j < DB_size; ++j)
       {
-      const uint8_t one_m = CT::is_equal<uint8_t>(DB[j], 0x01);
-      const uint8_t zero_m = CT::is_zero(DB[j]);
-      const uint8_t add_m = waiting_for_delim & zero_m;
+      const auto is_zero = CT::Mask<uint8_t>::is_zero(DB[j]);
+      const auto is_one = CT::Mask<uint8_t>::is_equal(DB[j], 0x01);
 
-      bad_input |= waiting_for_delim & ~(zero_m | one_m);
-      msg1_offset += CT::select<uint8_t>(add_m, 1, 0);
+      const auto add_m = waiting_for_delim & is_zero;
 
-      waiting_for_delim &= zero_m;
+      bad_input |= waiting_for_delim & ~(is_zero | is_one);
+      msg1_offset += add_m.if_set_return(1);
+
+      waiting_for_delim &= is_zero;
       }
 
    //invalid, if delimiter 0x01 was not found or msg1_offset is too big
    bad_input |= waiting_for_delim;
-   bad_input |= CT::is_less(coded.size(), tLength + HASH_SIZE + msg1_offset + SALT_SIZE);
+   bad_input |= CT::Mask<size_t>::is_lt(coded.size(), tLength + HASH_SIZE + msg1_offset + SALT_SIZE);
 
    //in case that msg1_offset is too big, just continue with offset = 0.
-   msg1_offset = CT::select<size_t>(bad_input, 0, msg1_offset);
+   msg1_offset = CT::Mask<size_t>::expand(bad_input.value()).if_not_set_return(msg1_offset);
 
    CT::unpoison(coded.data(), coded.size());
    CT::unpoison(msg1_offset);
@@ -34082,8 +35589,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
                             coded.end() - tLength - HASH_SIZE);
 
    //compute H2(C||msg1||H(msg2)||S*). * indicates a recovered value
-   const size_t capacity = (key_bits - 2 + 7) / 8 - HASH_SIZE
-                           - SALT_SIZE - tLength - 1;
+   const size_t capacity = (key_bits - 2 + 7) / 8 - HASH_SIZE - SALT_SIZE - tLength - 1;
    secure_vector<uint8_t> msg1raw;
    secure_vector<uint8_t> msg2;
    if(raw.size() > capacity)
@@ -34098,7 +35604,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
       }
    msg2 = hash->final();
 
-   uint64_t msg1rawLength = msg1raw.size();
+   const uint64_t msg1rawLength = msg1raw.size();
    hash->update_be(msg1rawLength * 8);
    hash->update(msg1raw);
    hash->update(msg2);
@@ -34106,7 +35612,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
    secure_vector<uint8_t> H3 = hash->final();
 
    //compute H3(C*||msg1*||H(msg2)||S*) * indicates a recovered value
-   uint64_t msgLength = msg1.size();
+   const uint64_t msgLength = msg1.size();
    hash->update_be(msgLength * 8);
    hash->update(msg1);
    hash->update(msg2);
@@ -34114,10 +35620,10 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
    secure_vector<uint8_t> H2 = hash->final();
 
    //check if H3 == H2
-   bad_input |= CT::is_equal<uint8_t>(constant_time_compare(H3.data(), H2.data(), HASH_SIZE), false);
+   bad_input |= CT::Mask<uint8_t>::is_zero(ct_compare_u8(H3.data(), H2.data(), HASH_SIZE));
 
    CT::unpoison(bad_input);
-   return (bad_input == 0);
+   return (bad_input.is_set() == false);
    }
 
 }
@@ -35104,7 +36610,7 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
    return m_pool->allocate(n);
    }
 
-bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) BOTAN_NOEXCEPT
+bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) noexcept
    {
    if(!m_pool)
       return false;
@@ -35514,7 +37020,7 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
       }
    for (i = 0; i < code_length; ++i)
       {
-      L[i] = Laux[i];
+      L[i] = static_cast<gf2m>(Laux[i]);
       }
    return result;
    }
@@ -35522,10 +37028,8 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
 
 McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t ext_deg, uint32_t code_length, uint32_t t)
    {
-   uint32_t i, j, k, l;
-   std::unique_ptr<binary_matrix> R;
+   const size_t codimension = t * ext_deg;
 
-   uint32_t codimension = t * ext_deg;
    if(code_length <= codimension)
       {
       throw Invalid_Argument("invalid McEliece parameters");
@@ -35535,22 +37039,26 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t
    //pick the support.........
    std::vector<gf2m> L(code_length);
 
-   for(i=0;i<code_length;i++)
+   for(size_t i = 0; i != L.size(); i++)
       {
-      L[i]=i;
+      L[i] = static_cast<gf2m>(i);
       }
    randomize_support(L, rng);
    polyn_gf2m g(sp_field); // create as zero
+
    bool success = false;
+   std::unique_ptr<binary_matrix> R;
+
    do
       {
       // create a random irreducible polynomial
       g = polyn_gf2m (t, rng, sp_field);
 
-      try{
-      R = generate_R(L,&g, sp_field, code_length, t);
-      success = true;
-      }
+      try
+         {
+         R = generate_R(L, &g, sp_field, code_length, t);
+         success = true;
+         }
       catch(const Invalid_State &)
          {
          }
@@ -35568,12 +37076,12 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t
    //
    std::vector<uint32_t> H(bit_size_to_32bit_size(codimension) * code_length );
    uint32_t* sk = H.data();
-   for (i = 0; i < code_length; ++i)
+   for(size_t i = 0; i < code_length; ++i)
       {
-      for (l = 0; l < t; ++l)
+      for(size_t l = 0; l < t; ++l)
          {
-         k = (l * ext_deg) / 32;
-         j = (l * ext_deg) % 32;
+         const uint32_t k = (l * ext_deg) / 32;
+         const uint32_t j = (l * ext_deg) % 32;
          sk[k] ^= static_cast<uint32_t>(F[i].get_coef(l)) << j;
          if (j + ext_deg > 32)
             {
@@ -35587,12 +37095,12 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t
    // inverse is needed
 
    std::vector<gf2m> Linv(code_length) ;
-   for (i = 0; i < code_length; ++i)
+   for (size_t i = 0; i != Linv.size(); ++i)
       {
       Linv[L[i]] = i;
       }
    std::vector<uint8_t> pubmat (R->m_elem.size() * 4);
-   for(i = 0; i < R->m_elem.size(); i++)
+   for(size_t i = 0; i < R->m_elem.size(); i++)
       {
       store_le(R->m_elem[i], &pubmat[i*4]);
       }
@@ -35972,7 +37480,7 @@ const std::vector<gf2m>& exp_table(size_t deg)
    static std::vector<gf2m> tabs[MAX_EXT_DEG + 1];
 
    if(deg < 2 || deg > MAX_EXT_DEG)
-      throw Exception("GF2m_Field does not support degree " + std::to_string(deg));
+      throw Invalid_Argument("GF2m_Field does not support degree " + std::to_string(deg));
 
    if(tabs[deg].empty())
       tabs[deg] = gf_exp_table(deg, prim_poly[deg]);
@@ -35997,7 +37505,7 @@ const std::vector<gf2m>& log_table(size_t deg)
    static std::vector<gf2m> tabs[MAX_EXT_DEG + 1];
 
    if(deg < 2 || deg > MAX_EXT_DEG)
-      throw Exception("GF2m_Field does not support degree " + std::to_string(deg));
+      throw Invalid_Argument("GF2m_Field does not support degree " + std::to_string(deg));
 
    if(tabs[deg].empty())
       tabs[deg] = gf_log_table(deg, exp_table(deg));
@@ -36147,14 +37655,15 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m & syndrom_polyn,
    // sigma = u^2+z*v^2
    polyn_gf2m sigma ( t , g.get_sp_field());
 
-   const size_t u_deg = u.get_degree();
-   for(size_t i = 0; i <= u_deg; ++i)
+   const int u_deg = u.get_degree();
+   BOTAN_ASSERT(u_deg >= 0, "Valid degree");
+   for(int i = 0; i <= u_deg; ++i)
       {
       sigma.set_coef(2*i, sp_field->gf_square(u.get_coef(i)));
       }
 
    const int v_deg = v.get_degree();
-   BOTAN_ASSERT(v_deg > 0, "Valid degree");
+   BOTAN_ASSERT(v_deg >= 0, "Valid degree");
    for(int i = 0; i <= v_deg; ++i)
       {
       sigma.set_coef(2*i+1, sp_field->gf_square(v.get_coef(i)));
@@ -36587,7 +38096,7 @@ secure_vector<uint8_t> McEliece_PublicKey::random_plaintext_element(RandomNumber
 
 AlgorithmIdentifier McEliece_PublicKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), std::vector<uint8_t>());
+   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_EMPTY_PARAM);
    }
 
 std::vector<uint8_t> McEliece_PublicKey::public_key_bits() const
@@ -37775,7 +39284,7 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
       const size_t nonce_len = aead->default_nonce_length();
 
       if(ct_len < mce_code_bytes + nonce_len + aead->tag_size())
-         throw Exception("Input message too small to be valid");
+         throw Decoding_Error("Input message too small to be valid");
 
       const secure_vector<uint8_t> mce_key = kem_op.decrypt(ct, mce_code_bytes, 64);
 
@@ -37794,7 +39303,7 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
       }
    catch(std::exception& e)
       {
-      throw Exception("mce_decrypt failed: " + std::string(e.what()));
+      throw Decoding_Error("mce_decrypt failed: " + std::string(e.what()));
       }
    }
 
@@ -38079,7 +39588,7 @@ void MD5::clear()
 }
 /*
 * Merkle-Damgard Hash Function
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -38091,16 +39600,23 @@ namespace Botan {
 * MDx_HashFunction Constructor
 */
 MDx_HashFunction::MDx_HashFunction(size_t block_len,
-                                   bool byte_end,
-                                   bool bit_end,
-                                   size_t cnt_size) :
-   m_buffer(block_len),
+                                   bool byte_big_endian,
+                                   bool bit_big_endian,
+                                   uint8_t cnt_size) :
+   m_pad_char(bit_big_endian == true ? 0x80 : 0x01),
+   m_counter_size(cnt_size),
+   m_block_bits(static_cast<uint8_t>(ceil_log2(block_len))),
+   m_count_big_endian(byte_big_endian),
    m_count(0),
-   m_position(0),
-   BIG_BYTE_ENDIAN(byte_end),
-   BIG_BIT_ENDIAN(bit_end),
-   COUNT_SIZE(cnt_size)
+   m_buffer(block_len),
+   m_position(0)
    {
+   if(!is_power_of_2(block_len))
+      throw Invalid_Argument("MDx_HashFunction block length must be a power of 2");
+   if(m_block_bits < 3 || m_block_bits > 16)
+      throw Invalid_Argument("MDx_HashFunction block size too large or too small");
+   if(m_counter_size < 8 || m_counter_size > block_len)
+      throw Invalid_State("MDx_HashFunction invalid counter length");
    }
 
 /*
@@ -38117,28 +39633,33 @@ void MDx_HashFunction::clear()
 */
 void MDx_HashFunction::add_data(const uint8_t input[], size_t length)
    {
+   const size_t block_len = static_cast<size_t>(1) << m_block_bits;
+
    m_count += length;
 
    if(m_position)
       {
       buffer_insert(m_buffer, m_position, input, length);
 
-      if(m_position + length >= m_buffer.size())
+      if(m_position + length >= block_len)
          {
          compress_n(m_buffer.data(), 1);
-         input += (m_buffer.size() - m_position);
-         length -= (m_buffer.size() - m_position);
+         input += (block_len - m_position);
+         length -= (block_len - m_position);
          m_position = 0;
          }
       }
 
-   const size_t full_blocks = length / m_buffer.size();
-   const size_t remaining   = length % m_buffer.size();
+   // Just in case the compiler can't figure out block_len is a power of 2
+   const size_t full_blocks = length >> m_block_bits;
+   const size_t remaining   = length & (block_len - 1);
 
-   if(full_blocks)
+   if(full_blocks > 0)
+      {
       compress_n(input, full_blocks);
+      }
 
-   buffer_insert(m_buffer, m_position, input + full_blocks * m_buffer.size(), remaining);
+   buffer_insert(m_buffer, m_position, input + full_blocks * block_len, remaining);
    m_position += remaining;
    }
 
@@ -38147,16 +39668,18 @@ void MDx_HashFunction::add_data(const uint8_t input[], size_t length)
 */
 void MDx_HashFunction::final_result(uint8_t output[])
    {
-   clear_mem(&m_buffer[m_position], m_buffer.size() - m_position);
-   m_buffer[m_position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
+   const size_t block_len = static_cast<size_t>(1) << m_block_bits;
 
-   if(m_position >= m_buffer.size() - COUNT_SIZE)
+   clear_mem(&m_buffer[m_position], block_len - m_position);
+   m_buffer[m_position] = m_pad_char;
+
+   if(m_position >= block_len - m_counter_size)
       {
       compress_n(m_buffer.data(), 1);
       zeroise(m_buffer);
       }
 
-   write_count(&m_buffer[m_buffer.size() - COUNT_SIZE]);
+   write_count(&m_buffer[block_len - m_counter_size]);
 
    compress_n(m_buffer.data(), 1);
    copy_out(output);
@@ -38168,17 +39691,15 @@ void MDx_HashFunction::final_result(uint8_t output[])
 */
 void MDx_HashFunction::write_count(uint8_t out[])
    {
-   if(COUNT_SIZE < 8)
-      throw Invalid_State("MDx_HashFunction::write_count: COUNT_SIZE < 8");
-   if(COUNT_SIZE >= output_length() || COUNT_SIZE >= hash_block_size())
-      throw Invalid_Argument("MDx_HashFunction: COUNT_SIZE is too big");
+   BOTAN_ASSERT_NOMSG(m_counter_size <= output_length());
+   BOTAN_ASSERT_NOMSG(m_counter_size >= 8);
 
    const uint64_t bit_count = m_count * 8;
 
-   if(BIG_BYTE_ENDIAN)
-      store_be(bit_count, out + COUNT_SIZE - 8);
+   if(m_count_big_endian)
+      store_be(bit_count, out + m_counter_size - 8);
    else
-      store_le(bit_count, out + COUNT_SIZE - 8);
+      store_le(bit_count, out + m_counter_size - 8);
    }
 
 }
@@ -38241,7 +39762,7 @@ Memory_Pool::Memory_Pool(uint8_t* pool,
 
 void* Memory_Pool::allocate(size_t req)
    {
-   const size_t alignment = (1 << m_align_bit);
+   const size_t alignment = (static_cast<size_t>(1) << m_align_bit);
 
    if(req > m_pool_size)
       return nullptr;
@@ -38314,7 +39835,7 @@ void* Memory_Pool::allocate(size_t req)
    return nullptr;
    }
 
-bool Memory_Pool::deallocate(void* p, size_t n) BOTAN_NOEXCEPT
+bool Memory_Pool::deallocate(void* p, size_t n) noexcept
    {
    if(!ptr_in_pool(m_pool, m_pool_size, p, n))
       return false;
@@ -38382,13 +39903,14 @@ void mgf1_mask(HashFunction& hash,
    {
    uint32_t counter = 0;
 
+   secure_vector<uint8_t> buffer(hash.output_length());
    while(out_len)
       {
       hash.update(in, in_len);
       hash.update_be(counter);
-      secure_vector<uint8_t> buffer = hash.final();
+      hash.final(buffer.data());
 
-      size_t xored = std::min<size_t>(buffer.size(), out_len);
+      const size_t xored = std::min<size_t>(buffer.size(), out_len);
       xor_buf(out, buffer.data(), xored);
       out += xored;
       out_len -= xored;
@@ -38661,7 +40183,7 @@ void MISTY1::clear()
 }
 /*
 * CBC Padding Methods
-* (C) 1999-2007,2013 Jack Lloyd
+* (C) 1999-2007,2013,2018 Jack Lloyd
 * (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -38709,26 +40231,36 @@ void PKCS7_Padding::add_padding(secure_vector<uint8_t>& buffer,
 /*
 * Unpad with PKCS #7 Method
 */
-size_t PKCS7_Padding::unpad(const uint8_t block[], size_t size) const
+size_t PKCS7_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   CT::poison(block,size);
-   size_t bad_input = 0;
-   const uint8_t last_byte = block[size-1];
+   if(!valid_blocksize(input_length))
+      return input_length;
 
-   bad_input |= CT::expand_mask<size_t>(last_byte > size);
+   CT::poison(input, input_length);
 
-   size_t pad_pos = size - last_byte;
-   size_t i = size - 2;
-   while(i)
+   const uint8_t last_byte = input[input_length-1];
+
+   /*
+   The input should == the block size so if the last byte exceeds
+   that then the padding is certainly invalid
+   */
+   auto bad_input = CT::Mask<size_t>::is_gt(last_byte, input_length);
+
+   const size_t pad_pos = input_length - last_byte;
+
+   for(size_t i = 0; i != input_length - 1; ++i)
       {
-      bad_input |= (~CT::is_equal(block[i],last_byte)) & CT::expand_mask<uint8_t>(i >= pad_pos);
-      --i;
+      // Does this byte equal the expected pad byte?
+      const auto pad_eq = CT::Mask<size_t>::is_equal(input[i], last_byte);
+
+      // Ignore values that are not part of the padding
+      const auto in_range = CT::Mask<size_t>::is_gte(i, pad_pos);
+      bad_input |= in_range & (~pad_eq);
       }
 
-   CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
-   CT::unpoison(block,size);
-   CT::unpoison(pad_pos);
-   return pad_pos;
+   CT::unpoison(input, input_length);
+
+   return bad_input.select_and_unpoison(input_length, pad_pos);
    }
 
 /*
@@ -38750,25 +40282,30 @@ void ANSI_X923_Padding::add_padding(secure_vector<uint8_t>& buffer,
 /*
 * Unpad with ANSI X9.23 Method
 */
-size_t ANSI_X923_Padding::unpad(const uint8_t block[], size_t size) const
+size_t ANSI_X923_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   CT::poison(block,size);
-   size_t bad_input = 0;
-   const size_t last_byte = block[size-1];
+   if(!valid_blocksize(input_length))
+      return input_length;
 
-   bad_input |= CT::expand_mask<size_t>(last_byte > size);
+   CT::poison(input, input_length);
 
-   size_t pad_pos = size - last_byte;
-   size_t i = size - 2;
-   while(i)
+   const size_t last_byte = input[input_length-1];
+
+   auto bad_input = CT::Mask<size_t>::is_gt(last_byte, input_length);
+
+   const size_t pad_pos = input_length - last_byte;
+
+   for(size_t i = 0; i != input_length - 1; ++i)
       {
-      bad_input |= (~CT::is_zero(block[i])) & CT::expand_mask<uint8_t>(i >= pad_pos);
-      --i;
+      // Ignore values that are not part of the padding
+      const auto in_range = CT::Mask<size_t>::is_gte(i, pad_pos);
+      const auto pad_is_nonzero = CT::Mask<size_t>::expand(input[i]);
+      bad_input |= pad_is_nonzero & in_range;
       }
-   CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
-   CT::unpoison(block,size);
-   CT::unpoison(pad_pos);
-   return pad_pos;
+
+   CT::unpoison(input, input_length);
+
+   return bad_input.select_and_unpoison(input_length, pad_pos);
    }
 
 /*
@@ -38787,28 +40324,34 @@ void OneAndZeros_Padding::add_padding(secure_vector<uint8_t>& buffer,
 /*
 * Unpad with One and Zeros Method
 */
-size_t OneAndZeros_Padding::unpad(const uint8_t block[], size_t size) const
+size_t OneAndZeros_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   CT::poison(block, size);
-   uint8_t bad_input = 0;
-   uint8_t seen_one = 0;
-   size_t pad_pos = size - 1;
-   size_t i = size;
+   if(!valid_blocksize(input_length))
+      return input_length;
+
+   CT::poison(input, input_length);
+
+   auto bad_input = CT::Mask<uint8_t>::cleared();
+   auto seen_0x80 = CT::Mask<uint8_t>::cleared();
+
+   size_t pad_pos = input_length - 1;
+   size_t i = input_length;
 
    while(i)
       {
-      seen_one |= CT::is_equal<uint8_t>(block[i-1],0x80);
-      pad_pos -= CT::select<uint8_t>(~seen_one, 1, 0);
-      bad_input |= ~CT::is_zero<uint8_t>(block[i-1]) & ~seen_one;
+      const auto is_0x80 = CT::Mask<uint8_t>::is_equal(input[i-1], 0x80);
+      const auto is_zero = CT::Mask<uint8_t>::is_zero(input[i-1]);
+
+      seen_0x80 |= is_0x80;
+      pad_pos -= seen_0x80.if_not_set_return(1);
+      bad_input |= ~seen_0x80 & ~is_zero;
       i--;
       }
-   bad_input |= ~seen_one;
+   bad_input |= ~seen_0x80;
 
-   CT::conditional_copy_mem(size_t(bad_input),&pad_pos,&size,&pad_pos,1);
-   CT::unpoison(block, size);
-   CT::unpoison(pad_pos);
+   CT::unpoison(input, input_length);
 
-   return pad_pos;
+   return CT::Mask<size_t>::expand(bad_input).select_and_unpoison(input_length, pad_pos);
    }
 
 /*
@@ -38829,25 +40372,32 @@ void ESP_Padding::add_padding(secure_vector<uint8_t>& buffer,
 /*
 * Unpad with ESP Padding Method
 */
-size_t ESP_Padding::unpad(const uint8_t block[], size_t size) const
+size_t ESP_Padding::unpad(const uint8_t input[], size_t input_length) const
    {
-   CT::poison(block,size);
+   if(!valid_blocksize(input_length))
+      return input_length;
 
-   const size_t last_byte = block[size-1];
-   size_t bad_input = 0;
-   bad_input |= CT::expand_mask<size_t>(last_byte > size);
+   CT::poison(input, input_length);
 
-   size_t pad_pos = size - last_byte;
-   size_t i = size - 1;
+   const uint8_t input_length_8 = static_cast<uint8_t>(input_length);
+   const uint8_t last_byte = input[input_length-1];
+
+   auto bad_input = CT::Mask<uint8_t>::is_zero(last_byte) |
+      CT::Mask<uint8_t>::is_gt(last_byte, input_length_8);
+
+   const uint8_t pad_pos = input_length_8 - last_byte;
+   size_t i = input_length_8 - 1;
    while(i)
       {
-      bad_input |= ~CT::is_equal<uint8_t>(size_t(block[i-1]),size_t(block[i])-1) & CT::expand_mask<uint8_t>(i > pad_pos);
+      const auto in_range = CT::Mask<size_t>::is_gt(i, pad_pos);
+      const auto incrementing = CT::Mask<uint8_t>::is_equal(input[i-1], input[i]-1);
+
+      bad_input |= CT::Mask<uint8_t>(in_range) & ~incrementing;
       --i;
       }
-   CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
-   CT::unpoison(block, size);
-   CT::unpoison(pad_pos);
-   return pad_pos;
+
+   CT::unpoison(input, input_length);
+   return bad_input.select_and_unpoison(input_length_8, pad_pos);
    }
 
 
@@ -38878,6 +40428,9 @@ size_t ESP_Padding::unpad(const uint8_t block[], size_t size) const
 #if defined(BOTAN_HAS_OPENSSL)
 #endif
 
+#if defined(BOTAN_HAS_COMMONCRYPTO)
+#endif
+
 namespace Botan {
 
 std::unique_ptr<Cipher_Mode> Cipher_Mode::create_or_throw(const std::string& algo,
@@ -38894,6 +40447,19 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
                                                  Cipher_Dir direction,
                                                  const std::string& provider)
    {
+#if defined(BOTAN_HAS_COMMONCRYPTO)
+   if(provider.empty() || provider == "commoncrypto")
+      {
+      std::unique_ptr<Cipher_Mode> commoncrypto_cipher(make_commoncrypto_cipher_mode(algo, direction));
+
+      if(commoncrypto_cipher)
+         return commoncrypto_cipher;
+
+      if(!provider.empty())
+         return std::unique_ptr<Cipher_Mode>();
+      }
+#endif
+
 #if defined(BOTAN_HAS_OPENSSL)
    if(provider.empty() || provider == "openssl")
       {
@@ -39015,7 +40581,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(const std::string& algo,
 //static
 std::vector<std::string> Cipher_Mode::providers(const std::string& algo_spec)
    {
-   const std::vector<std::string>& possible = { "base", "openssl" };
+   const std::vector<std::string>& possible = { "base", "openssl", "commoncrypto" };
    std::vector<std::string> providers;
    for(auto&& prov : possible)
       {
@@ -41239,528 +42805,6 @@ void bigint_comba_mul24(word z[48], const word x[24], const word y[24])
 
 }
 /*
-* MPI Add, Subtract, Word Multiply
-* (C) 1999-2010,2016 Jack Lloyd
-*     2006 Luca Piccarreta
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-
-namespace Botan {
-
-/*
-* If cond == 0, does nothing.
-* If cond > 0, swaps x[0:size] with y[0:size]
-* Runs in constant time
-*/
-void bigint_cnd_swap(word cnd, word x[], word y[], size_t size)
-   {
-   const word mask = CT::expand_mask(cnd);
-
-   for(size_t i = 0; i != size; ++i)
-      {
-      const word a = x[i];
-      const word b = y[i];
-      x[i] = CT::select(mask, b, a);
-      y[i] = CT::select(mask, a, b);
-      }
-   }
-
-/*
-* If cond > 0 adds x[0:size] to y[0:size] and returns carry
-* Runs in constant time
-*/
-word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
-   {
-   const word mask = CT::expand_mask(cnd);
-
-   word carry = 0;
-
-   const size_t blocks = size - (size % 8);
-   word z[8] = { 0 };
-
-   for(size_t i = 0; i != blocks; i += 8)
-      {
-      carry = word8_add3(z, x + i, y + i, carry);
-
-      for(size_t j = 0; j != 8; ++j)
-         x[i+j] = CT::select(mask, z[j], x[i+j]);
-      }
-
-   for(size_t i = blocks; i != size; ++i)
-      {
-      z[0] = word_add(x[i], y[i], &carry);
-      x[i] = CT::select(mask, z[0], x[i]);
-      }
-
-   return carry & mask;
-   }
-
-/*
-* If cond > 0 subs x[0:size] to y[0:size] and returns borrow
-* Runs in constant time
-*/
-word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
-   {
-   const word mask = CT::expand_mask(cnd);
-
-   word carry = 0;
-
-   const size_t blocks = size - (size % 8);
-   word z[8] = { 0 };
-
-   for(size_t i = 0; i != blocks; i += 8)
-      {
-      carry = word8_sub3(z, x + i, y + i, carry);
-
-      for(size_t j = 0; j != 8; ++j)
-         x[i+j] = CT::select(mask, z[j], x[i+j]);
-      }
-
-   for(size_t i = blocks; i != size; ++i)
-      {
-      z[0] = word_sub(x[i], y[i], &carry);
-      x[i] = CT::select(mask, z[0], x[i]);
-      }
-
-   return carry & mask;
-   }
-
-void bigint_cnd_addsub(word mask, word x[], const word y[], size_t size)
-   {
-   const size_t blocks = size - (size % 8);
-
-   word carry = 0;
-   word borrow = 0;
-
-   word t0[8] = { 0 };
-   word t1[8] = { 0 };
-
-   for(size_t i = 0; i != blocks; i += 8)
-      {
-      carry = word8_add3(t0, x + i, y + i, carry);
-      borrow = word8_sub3(t1, x + i, y + i, borrow);
-
-      for(size_t j = 0; j != 8; ++j)
-         x[i+j] = CT::select(mask, t0[j], t1[j]);
-      }
-
-   for(size_t i = blocks; i != size; ++i)
-      {
-      const word a = word_add(x[i], y[i], &carry);
-      const word s = word_sub(x[i], y[i], &borrow);
-
-      x[i] = CT::select(mask, a, s);
-      }
-   }
-
-void bigint_cnd_abs(word cnd, word x[], size_t size)
-   {
-   const word mask = CT::expand_mask(cnd);
-
-   word carry = mask & 1;
-   for(size_t i = 0; i != size; ++i)
-      {
-      const word z = word_add(~x[i], 0, &carry);
-      x[i] = CT::select(mask, z, x[i]);
-      }
-   }
-
-/*
-* Two Operand Addition, No Carry
-*/
-word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size)
-   {
-   word carry = 0;
-
-   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
-
-   const size_t blocks = y_size - (y_size % 8);
-
-   for(size_t i = 0; i != blocks; i += 8)
-      carry = word8_add2(x + i, y + i, carry);
-
-   for(size_t i = blocks; i != y_size; ++i)
-      x[i] = word_add(x[i], y[i], &carry);
-
-   for(size_t i = y_size; i != x_size; ++i)
-      x[i] = word_add(x[i], 0, &carry);
-
-   return carry;
-   }
-
-/*
-* Three Operand Addition, No Carry
-*/
-word bigint_add3_nc(word z[], const word x[], size_t x_size,
-                              const word y[], size_t y_size)
-   {
-   if(x_size < y_size)
-      { return bigint_add3_nc(z, y, y_size, x, x_size); }
-
-   word carry = 0;
-
-   const size_t blocks = y_size - (y_size % 8);
-
-   for(size_t i = 0; i != blocks; i += 8)
-      carry = word8_add3(z + i, x + i, y + i, carry);
-
-   for(size_t i = blocks; i != y_size; ++i)
-      z[i] = word_add(x[i], y[i], &carry);
-
-   for(size_t i = y_size; i != x_size; ++i)
-      z[i] = word_add(x[i], 0, &carry);
-
-   return carry;
-   }
-
-/*
-* Two Operand Addition
-*/
-void bigint_add2(word x[], size_t x_size, const word y[], size_t y_size)
-   {
-   x[x_size] += bigint_add2_nc(x, x_size, y, y_size);
-   }
-
-/*
-* Three Operand Addition
-*/
-void bigint_add3(word z[], const word x[], size_t x_size,
-                           const word y[], size_t y_size)
-   {
-   z[x_size > y_size ? x_size : y_size] +=
-      bigint_add3_nc(z, x, x_size, y, y_size);
-   }
-
-/*
-* Two Operand Subtraction
-*/
-word bigint_sub2(word x[], size_t x_size, const word y[], size_t y_size)
-   {
-   word borrow = 0;
-
-   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
-
-   const size_t blocks = y_size - (y_size % 8);
-
-   for(size_t i = 0; i != blocks; i += 8)
-      borrow = word8_sub2(x + i, y + i, borrow);
-
-   for(size_t i = blocks; i != y_size; ++i)
-      x[i] = word_sub(x[i], y[i], &borrow);
-
-   for(size_t i = y_size; i != x_size; ++i)
-      x[i] = word_sub(x[i], 0, &borrow);
-
-   return borrow;
-   }
-
-/*
-* Two Operand Subtraction x = y - x
-*/
-void bigint_sub2_rev(word x[],  const word y[], size_t y_size)
-   {
-   word borrow = 0;
-
-   const size_t blocks = y_size - (y_size % 8);
-
-   for(size_t i = 0; i != blocks; i += 8)
-      borrow = word8_sub2_rev(x + i, y + i, borrow);
-
-   for(size_t i = blocks; i != y_size; ++i)
-      x[i] = word_sub(y[i], x[i], &borrow);
-
-   BOTAN_ASSERT(!borrow, "y must be greater than x");
-   }
-
-word bigint_sub_abs(word z[],
-                    const word x[], const word y[], size_t N,
-                    word ws[])
-   {
-   // Subtract in both direction then conditional copy out the result
-
-   word* ws0 = ws;
-   word* ws1 = ws + N;
-
-   word borrow0 = 0;
-   word borrow1 = 0;
-
-   const size_t blocks = N - (N % 8);
-
-   for(size_t i = 0; i != blocks; i += 8)
-      {
-      borrow0 = word8_sub3(ws0 + i, x + i, y + i, borrow0);
-      borrow1 = word8_sub3(ws1 + i, y + i, x + i, borrow1);
-      }
-
-   for(size_t i = blocks; i != N; ++i)
-      {
-      ws0[i] = word_sub(x[i], y[i], &borrow0);
-      ws1[i] = word_sub(y[i], x[i], &borrow1);
-      }
-
-   word mask = CT::conditional_copy_mem(borrow1, z, ws0, ws1, N);
-
-   return CT::select<word>(mask, 0, 1);
-   }
-
-/*
-* Three Operand Subtraction
-*/
-word bigint_sub3(word z[], const word x[], size_t x_size,
-                           const word y[], size_t y_size)
-   {
-   word borrow = 0;
-
-   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
-
-   const size_t blocks = y_size - (y_size % 8);
-
-   for(size_t i = 0; i != blocks; i += 8)
-      borrow = word8_sub3(z + i, x + i, y + i, borrow);
-
-   for(size_t i = blocks; i != y_size; ++i)
-      z[i] = word_sub(x[i], y[i], &borrow);
-
-   for(size_t i = y_size; i != x_size; ++i)
-      z[i] = word_sub(x[i], 0, &borrow);
-
-   return borrow;
-   }
-
-/*
-* Two Operand Linear Multiply
-*/
-void bigint_linmul2(word x[], size_t x_size, word y)
-   {
-   const size_t blocks = x_size - (x_size % 8);
-
-   word carry = 0;
-
-   for(size_t i = 0; i != blocks; i += 8)
-      carry = word8_linmul2(x + i, y, carry);
-
-   for(size_t i = blocks; i != x_size; ++i)
-      x[i] = word_madd2(x[i], y, &carry);
-
-   x[x_size] = carry;
-   }
-
-/*
-* Three Operand Linear Multiply
-*/
-void bigint_linmul3(word z[], const word x[], size_t x_size, word y)
-   {
-   const size_t blocks = x_size - (x_size % 8);
-
-   word carry = 0;
-
-   for(size_t i = 0; i != blocks; i += 8)
-      carry = word8_linmul3(z + i, x + i, y, carry);
-
-   for(size_t i = blocks; i != x_size; ++i)
-      z[i] = word_madd2(x[i], y, &carry);
-
-   z[x_size] = carry;
-   }
-
-/*
-* Single Operand Left Shift
-*/
-void bigint_shl1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
-   {
-   if(word_shift)
-      {
-      copy_mem(x + word_shift, x, x_size);
-      clear_mem(x, word_shift);
-      }
-
-   if(bit_shift)
-      {
-      word carry = 0;
-      for(size_t j = word_shift; j != x_size + word_shift + 1; ++j)
-         {
-         word temp = x[j];
-         x[j] = (temp << bit_shift) | carry;
-         carry = (temp >> (BOTAN_MP_WORD_BITS - bit_shift));
-         }
-      }
-   }
-
-/*
-* Single Operand Right Shift
-*/
-void bigint_shr1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
-   {
-   if(x_size < word_shift)
-      {
-      clear_mem(x, x_size);
-      return;
-      }
-
-   if(word_shift)
-      {
-      copy_mem(x, x + word_shift, x_size - word_shift);
-      clear_mem(x + x_size - word_shift, word_shift);
-      }
-
-   if(bit_shift)
-      {
-      word carry = 0;
-
-      size_t top = x_size - word_shift;
-
-      while(top >= 4)
-         {
-         word w = x[top-1];
-         x[top-1] = (w >> bit_shift) | carry;
-         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
-
-         w = x[top-2];
-         x[top-2] = (w >> bit_shift) | carry;
-         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
-
-         w = x[top-3];
-         x[top-3] = (w >> bit_shift) | carry;
-         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
-
-         w = x[top-4];
-         x[top-4] = (w >> bit_shift) | carry;
-         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
-
-         top -= 4;
-         }
-
-      while(top)
-         {
-         word w = x[top-1];
-         x[top-1] = (w >> bit_shift) | carry;
-         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
-
-         top--;
-         }
-      }
-   }
-
-/*
-* Two Operand Left Shift
-*/
-void bigint_shl2(word y[], const word x[], size_t x_size,
-                 size_t word_shift, size_t bit_shift)
-   {
-   for(size_t j = 0; j != x_size; ++j)
-      y[j + word_shift] = x[j];
-   if(bit_shift)
-      {
-      word carry = 0;
-      for(size_t j = word_shift; j != x_size + word_shift + 1; ++j)
-         {
-         word w = y[j];
-         y[j] = (w << bit_shift) | carry;
-         carry = (w >> (BOTAN_MP_WORD_BITS - bit_shift));
-         }
-      }
-   }
-
-/*
-* Two Operand Right Shift
-*/
-void bigint_shr2(word y[], const word x[], size_t x_size,
-                 size_t word_shift, size_t bit_shift)
-   {
-   if(x_size < word_shift) return;
-
-   for(size_t j = 0; j != x_size - word_shift; ++j)
-      y[j] = x[j + word_shift];
-   if(bit_shift)
-      {
-      word carry = 0;
-      for(size_t j = x_size - word_shift; j > 0; --j)
-         {
-         word w = y[j-1];
-         y[j-1] = (w >> bit_shift) | carry;
-         carry = (w << (BOTAN_MP_WORD_BITS - bit_shift));
-         }
-      }
-   }
-
-/*
-* Compare two MP integers
-*/
-int32_t bigint_cmp(const word x[], size_t x_size,
-                   const word y[], size_t y_size)
-   {
-   if(x_size < y_size) { return (-bigint_cmp(y, y_size, x, x_size)); }
-
-   while(x_size > y_size)
-      {
-      if(x[x_size-1])
-         return 1;
-      x_size--;
-      }
-
-   for(size_t i = x_size; i > 0; --i)
-      {
-      if(x[i-1] > y[i-1])
-         return 1;
-      if(x[i-1] < y[i-1])
-         return -1;
-      }
-
-   return 0;
-   }
-
-/*
-* Do a 2-word/1-word Division
-*/
-word bigint_divop(word n1, word n0, word d)
-   {
-   if(d == 0)
-      throw Invalid_Argument("bigint_divop divide by zero");
-
-#if defined(BOTAN_HAS_MP_DWORD)
-   return ((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) / d;
-#else
-
-   word high = n1 % d, quotient = 0;
-
-   for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i)
-      {
-      word high_top_bit = (high & MP_WORD_TOP_BIT);
-
-      high <<= 1;
-      high |= (n0 >> (BOTAN_MP_WORD_BITS-1-i)) & 1;
-      quotient <<= 1;
-
-      if(high_top_bit || high >= d)
-         {
-         high -= d;
-         quotient |= 1;
-         }
-      }
-
-   return quotient;
-#endif
-   }
-
-/*
-* Do a 2-word/1-word Modulo
-*/
-word bigint_modop(word n1, word n0, word d)
-   {
-#if defined(BOTAN_HAS_MP_DWORD)
-   return ((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) % d;
-#else
-   word z = bigint_divop(n1, n0, d);
-   word dummy = 0;
-   z = word_madd2(z, d, &dummy);
-   return (n0-z);
-#endif
-   }
-
-}
-/*
 * Multiplication and Squaring
 * (C) 1999-2010,2018 Jack Lloyd
 *     2016 Matthias Gierlings
@@ -41840,18 +42884,21 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    {
    if(N < KARATSUBA_MULTIPLY_THRESHOLD || N % 2)
       {
-      if(N == 6)
-         return bigint_comba_mul6(z, x, y);
-      else if(N == 8)
-         return bigint_comba_mul8(z, x, y);
-      else if(N == 9)
-         return bigint_comba_mul9(z, x, y);
-      else if(N == 16)
-         return bigint_comba_mul16(z, x, y);
-      else if(N == 24)
-         return bigint_comba_mul24(z, x, y);
-      else
-         return basecase_mul(z, 2*N, x, N, y, N);
+      switch(N)
+         {
+         case 6:
+            return bigint_comba_mul6(z, x, y);
+         case 8:
+            return bigint_comba_mul8(z, x, y);
+         case 9:
+            return bigint_comba_mul9(z, x, y);
+         case 16:
+            return bigint_comba_mul16(z, x, y);
+         case 24:
+            return bigint_comba_mul24(z, x, y);
+         default:
+            return basecase_mul(z, 2*N, x, N, y, N);
+         }
       }
 
    const size_t N2 = N / 2;
@@ -41878,8 +42925,9 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    */
 
    // First compute (X_lo - X_hi)*(Y_hi - Y_lo)
-   const word cmp0 = bigint_sub_abs(z0, x0, x1, N2, workspace);
-   const word cmp1 = bigint_sub_abs(z1, y1, y0, N2, workspace);
+   const auto cmp0 = bigint_sub_abs(z0, x0, x1, N2, workspace);
+   const auto cmp1 = bigint_sub_abs(z1, y1, y0, N2, workspace);
+   const auto neg_mask = ~(cmp0 ^ cmp1);
 
    karatsuba_mul(ws0, z0, z1, N2, ws1);
 
@@ -41897,9 +42945,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
 
    clear_mem(workspace + N, N2);
 
-   const word neg_mask = CT::is_equal<word>(cmp0, cmp1);
-
-   bigint_cnd_addsub(neg_mask, z + N2, workspace, 2*N-N2);
+   bigint_cnd_add_or_sub(neg_mask, z + N2, workspace, 2*N-N2);
    }
 
 /*
@@ -41909,18 +42955,21 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    {
    if(N < KARATSUBA_SQUARE_THRESHOLD || N % 2)
       {
-      if(N == 6)
-         return bigint_comba_sqr6(z, x);
-      else if(N == 8)
-         return bigint_comba_sqr8(z, x);
-      else if(N == 9)
-         return bigint_comba_sqr9(z, x);
-      else if(N == 16)
-         return bigint_comba_sqr16(z, x);
-      else if(N == 24)
-         return bigint_comba_sqr24(z, x);
-      else
-         return basecase_sqr(z, 2*N, x, N);
+      switch(N)
+         {
+         case 6:
+            return bigint_comba_sqr6(z, x);
+         case 8:
+            return bigint_comba_sqr8(z, x);
+         case 9:
+            return bigint_comba_sqr9(z, x);
+         case 16:
+            return bigint_comba_sqr16(z, x);
+         case 24:
+            return bigint_comba_sqr24(z, x);
+         default:
+            return basecase_sqr(z, 2*N, x, N);
+         }
       }
 
    const size_t N2 = N / 2;
@@ -42251,12 +43300,10 @@ void bigint_monty_redc_generic(word z[], size_t z_size,
       ws[p_size + 1 + i] = word_sub(ws[i], p[i], &borrow);
    ws[2*p_size+1] = word_sub(ws[p_size], 0, &borrow);
 
+   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
+
    CT::conditional_copy_mem(borrow, z, ws, ws + (p_size + 1), (p_size + 1));
    clear_mem(z + p_size, z_size - p_size - 2);
-
-   // This check comes after we've used it but that's ok here
-   CT::unpoison(&borrow, 1);
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow");
    }
 
 }
@@ -44956,7 +46003,7 @@ inline void ntt(uint16_t* a, const uint16_t* omega)
    for(size_t i = 0; i < 10; i+=2)
       {
       // Even level
-      size_t distance = (1<<i);
+      size_t distance = (1ULL << i);
       for(size_t start = 0; start < distance; start++)
          {
          size_t jTwiddle = 0;
@@ -45031,12 +46078,12 @@ inline void poly_tobytes(uint8_t* r, const poly* p)
       t3 = m ^ ((t3^m)&c); // <Make sure that coefficients are in [0,q]
 
       r[7*i+0] =  t0 & 0xff;
-      r[7*i+1] = (t0 >> 8) | (t1 << 6);
-      r[7*i+2] = (t1 >> 2);
-      r[7*i+3] = (t1 >> 10) | (t2 << 4);
-      r[7*i+4] = (t2 >> 4);
-      r[7*i+5] = (t2 >> 12) | (t3 << 2);
-      r[7*i+6] = (t3 >> 6);
+      r[7*i+1] = static_cast<uint8_t>((t0 >> 8) | (t1 << 6));
+      r[7*i+2] = static_cast<uint8_t>((t1 >> 2));
+      r[7*i+3] = static_cast<uint8_t>((t1 >> 10) | (t2 << 4));
+      r[7*i+4] = static_cast<uint8_t>((t2 >> 4));
+      r[7*i+5] = static_cast<uint8_t>((t2 >> 12) | (t3 << 2));
+      r[7*i+6] = static_cast<uint8_t>((t3 >> 6));
       }
    }
 
@@ -45056,7 +46103,7 @@ inline void poly_getnoise(Botan::RandomNumberGenerator& rng, poly* r)
          }
       const uint32_t a = ((d >> 8) & 0xff) + (d & 0xff);
       const uint32_t b = (d >> 24) + ((d >> 16) & 0xff);
-      r->coeffs[i] = a + PARAM_Q - b;
+      r->coeffs[i] = static_cast<uint16_t>(a + PARAM_Q - b);
       }
    }
 
@@ -45430,7 +46477,10 @@ inline void encode_b(uint8_t* r, const poly* b, const poly* c)
    poly_tobytes(r, b);
    for(size_t i = 0; i < PARAM_N/4; i++)
       {
-      r[NEWHOPE_POLY_BYTES+i] = c->coeffs[4*i] | (c->coeffs[4*i+1] << 2) | (c->coeffs[4*i+2] << 4) | (c->coeffs[4*i+3] << 6);
+      r[NEWHOPE_POLY_BYTES+i] = static_cast<uint8_t>(c->coeffs[4*i] |
+                                                     (c->coeffs[4*i+1] << 2) |
+                                                     (c->coeffs[4*i+2] << 4) |
+                                                     (c->coeffs[4*i+3] << 6));
       }
    }
 
@@ -46166,7 +47216,7 @@ namespace Botan {
 */
 #define NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3)  \
    do {                                                 \
-      SIMD_32 T = A0 ^ A2;                              \
+      SIMD_4x32 T = A0 ^ A2;                            \
       T ^= T.rotl<8>() ^ T.rotr<8>();                   \
       A1 ^= T;                                          \
       A3 ^= T;                                          \
@@ -46191,7 +47241,7 @@ namespace Botan {
       A1 ^= A3.andc(~A2);                                               \
       A0 ^= A2 & A1;                                                    \
                                                                         \
-      SIMD_32 T = A3;                                                   \
+      SIMD_4x32 T = A3;                                                 \
       A3 = A0;                                                          \
       A0 = T;                                                           \
                                                                         \
@@ -46206,21 +47256,21 @@ namespace Botan {
 */
 void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const
    {
-   const SIMD_32 K0 = SIMD_32::splat(m_EK[0]);
-   const SIMD_32 K1 = SIMD_32::splat(m_EK[1]);
-   const SIMD_32 K2 = SIMD_32::splat(m_EK[2]);
-   const SIMD_32 K3 = SIMD_32::splat(m_EK[3]);
+   const SIMD_4x32 K0 = SIMD_4x32::splat(m_EK[0]);
+   const SIMD_4x32 K1 = SIMD_4x32::splat(m_EK[1]);
+   const SIMD_4x32 K2 = SIMD_4x32::splat(m_EK[2]);
+   const SIMD_4x32 K3 = SIMD_4x32::splat(m_EK[3]);
 
-   SIMD_32 A0 = SIMD_32::load_be(in     );
-   SIMD_32 A1 = SIMD_32::load_be(in + 16);
-   SIMD_32 A2 = SIMD_32::load_be(in + 32);
-   SIMD_32 A3 = SIMD_32::load_be(in + 48);
+   SIMD_4x32 A0 = SIMD_4x32::load_be(in     );
+   SIMD_4x32 A1 = SIMD_4x32::load_be(in + 16);
+   SIMD_4x32 A2 = SIMD_4x32::load_be(in + 32);
+   SIMD_4x32 A3 = SIMD_4x32::load_be(in + 48);
 
-   SIMD_32::transpose(A0, A1, A2, A3);
+   SIMD_4x32::transpose(A0, A1, A2, A3);
 
    for(size_t i = 0; i != 16; ++i)
       {
-      A0 ^= SIMD_32::splat(RC[i]);
+      A0 ^= SIMD_4x32::splat(RC[i]);
 
       NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
 
@@ -46235,10 +47285,10 @@ void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const
       A3 = A3.rotr<2>();
       }
 
-   A0 ^= SIMD_32::splat(RC[16]);
+   A0 ^= SIMD_4x32::splat(RC[16]);
    NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
 
-   SIMD_32::transpose(A0, A1, A2, A3);
+   SIMD_4x32::transpose(A0, A1, A2, A3);
 
    A0.store_be(out);
    A1.store_be(out + 16);
@@ -46251,23 +47301,23 @@ void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const
 */
 void Noekeon::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const
    {
-   const SIMD_32 K0 = SIMD_32::splat(m_DK[0]);
-   const SIMD_32 K1 = SIMD_32::splat(m_DK[1]);
-   const SIMD_32 K2 = SIMD_32::splat(m_DK[2]);
-   const SIMD_32 K3 = SIMD_32::splat(m_DK[3]);
+   const SIMD_4x32 K0 = SIMD_4x32::splat(m_DK[0]);
+   const SIMD_4x32 K1 = SIMD_4x32::splat(m_DK[1]);
+   const SIMD_4x32 K2 = SIMD_4x32::splat(m_DK[2]);
+   const SIMD_4x32 K3 = SIMD_4x32::splat(m_DK[3]);
 
-   SIMD_32 A0 = SIMD_32::load_be(in     );
-   SIMD_32 A1 = SIMD_32::load_be(in + 16);
-   SIMD_32 A2 = SIMD_32::load_be(in + 32);
-   SIMD_32 A3 = SIMD_32::load_be(in + 48);
+   SIMD_4x32 A0 = SIMD_4x32::load_be(in     );
+   SIMD_4x32 A1 = SIMD_4x32::load_be(in + 16);
+   SIMD_4x32 A2 = SIMD_4x32::load_be(in + 32);
+   SIMD_4x32 A3 = SIMD_4x32::load_be(in + 48);
 
-   SIMD_32::transpose(A0, A1, A2, A3);
+   SIMD_4x32::transpose(A0, A1, A2, A3);
 
    for(size_t i = 0; i != 16; ++i)
       {
       NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
 
-      A0 ^= SIMD_32::splat(RC[16-i]);
+      A0 ^= SIMD_4x32::splat(RC[16-i]);
 
       A1 = A1.rotl<1>();
       A2 = A2.rotl<5>();
@@ -46281,9 +47331,9 @@ void Noekeon::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const
       }
 
    NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
-   A0 ^= SIMD_32::splat(RC[0]);
+   A0 ^= SIMD_4x32::splat(RC[0]);
 
-   SIMD_32::transpose(A0, A1, A2, A3);
+   SIMD_4x32::transpose(A0, A1, A2, A3);
 
    A0.store_be(out);
    A1.store_be(out + 16);
@@ -46439,12 +47489,11 @@ namespace Botan {
 */
 int32_t jacobi(const BigInt& a, const BigInt& n)
    {
-   if(a.is_negative())
-      throw Invalid_Argument("jacobi: first argument must be non-negative");
    if(n.is_even() || n < 2)
       throw Invalid_Argument("jacobi: second argument must be odd and > 1");
 
-   BigInt x = a, y = n;
+   BigInt x = a % n;
+   BigInt y = n;
    int32_t J = 1;
 
    while(y > 1)
@@ -46488,10 +47537,11 @@ namespace Botan {
 
 namespace {
 
-class Prime_Sieve
+class Prime_Sieve final
    {
    public:
-      Prime_Sieve(const BigInt& init_value) : m_sieve(PRIME_TABLE_SIZE)
+      Prime_Sieve(const BigInt& init_value, size_t sieve_size) :
+         m_sieve(std::min(sieve_size, PRIME_TABLE_SIZE))
          {
          for(size_t i = 0; i != m_sieve.size(); ++i)
             m_sieve[i] = static_cast<uint16_t>(init_value % PRIMES[i]);
@@ -46607,7 +47657,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
       // Force p to be equal to equiv mod modulo
       p += (modulo - (p % modulo)) + equiv;
 
-      Prime_Sieve sieve(p);
+      Prime_Sieve sieve(p, bits);
 
       size_t counter = 0;
       while(true)
@@ -46675,7 +47725,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
       p.set_bit(bits - 2);
       p.set_bit(0);
 
-      Prime_Sieve sieve(p);
+      Prime_Sieve sieve(p, bits);
 
       const word step = 2;
 
@@ -46743,6 +47793,9 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
       Generate q == 2 (mod 3)
 
       Otherwise [q == 1 (mod 3) case], 2*q+1 == 3 (mod 3) and not prime.
+
+      Initially allow a very high error prob (1/2**8) to allow for fast checks,
+      then if 2*q+1 turns out to be a prime go back and strongly check q.
       */
       q = random_prime(rng, bits - 1, 0, 2, 3, 8);
       p = (q << 1) + 1;
@@ -46769,7 +47822,7 @@ namespace Botan {
 Montgomery_Params::Montgomery_Params(const BigInt& p,
                                      const Modular_Reducer& mod_p)
    {
-   if(p.is_negative() || p.is_even())
+   if(p.is_even() || p < 3)
       throw Invalid_Argument("Montgomery_Params invalid modulus");
 
    m_p = p;
@@ -46986,8 +48039,9 @@ Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params> pa
       }
    else
       {
+      BOTAN_ASSERT_NOMSG(m_v < m_params->p());
       secure_vector<word> ws;
-      m_v = m_params->mul(v % m_params->p(), m_params->R2(), ws);
+      m_v = m_params->mul(v, m_params->R2(), ws);
       }
    }
 
@@ -46999,8 +48053,9 @@ Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
    {
    if(redc_needed)
       {
+      BOTAN_ASSERT_NOMSG(m_v < m_params->p());
       secure_vector<word> ws;
-      m_v = m_params->mul(m_v % m_params->p(), m_params->R2(), ws);
+      m_v = m_params->mul(m_v, m_params->R2(), ws);
       }
    }
 
@@ -47012,8 +48067,9 @@ Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
    {
    if(redc_needed)
       {
+      BOTAN_ASSERT_NOMSG(m_v < m_params->p());
       secure_vector<word> ws;
-      m_v = m_params->mul(m_v % m_params->p(), m_params->R2(), ws);
+      m_v = m_params->mul(m_v, m_params->R2(), ws);
       }
    }
 
@@ -47068,17 +48124,17 @@ BigInt Montgomery_Int::value() const
 
 Montgomery_Int Montgomery_Int::operator+(const Montgomery_Int& other) const
    {
-   BigInt z = m_v + other.m_v;
    secure_vector<word> ws;
-   z.reduce_below(m_params->p(), ws);
+   BigInt z = m_v;
+   z.mod_add(other.m_v, m_params->p(), ws);
    return Montgomery_Int(m_params, z, false);
    }
 
 Montgomery_Int Montgomery_Int::operator-(const Montgomery_Int& other) const
    {
-   BigInt z = m_v - other.m_v;
-   if(z.is_negative())
-      z += m_params->p();
+   secure_vector<word> ws;
+   BigInt z = m_v;
+   z.mod_sub(other.m_v, m_params->p(), ws);
    return Montgomery_Int(m_params, z, false);
    }
 
@@ -47176,29 +48232,25 @@ Montgomery_Int Montgomery_Int::additive_inverse() const
 
 Montgomery_Int& Montgomery_Int::mul_by_2(secure_vector<word>& ws)
    {
-   m_v <<= 1;
-   m_v.reduce_below(m_params->p(), ws);
+   m_v.mod_mul(2, m_params->p(), ws);
    return (*this);
    }
 
 Montgomery_Int& Montgomery_Int::mul_by_3(secure_vector<word>& ws)
    {
-   m_v *= 3;
-   m_v.reduce_below(m_params->p(), ws);
+   m_v.mod_mul(3, m_params->p(), ws);
    return (*this);
    }
 
 Montgomery_Int& Montgomery_Int::mul_by_4(secure_vector<word>& ws)
    {
-   m_v <<= 2;
-   m_v.reduce_below(m_params->p(), ws);
+   m_v.mod_mul(4, m_params->p(), ws);
    return (*this);
    }
 
 Montgomery_Int& Montgomery_Int::mul_by_8(secure_vector<word>& ws)
    {
-   m_v <<= 3;
-   m_v.reduce_below(m_params->p(), ws);
+   m_v.mod_mul(8, m_params->p(), ws);
    return (*this);
    }
 
@@ -47240,10 +48292,12 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(std::shared_ptr<c
    m_window_bits(window_bits == 0 ? 4 : window_bits),
    m_const_time(const_time)
    {
+   BOTAN_ARG_CHECK(g < m_params->p(), "Montgomery base too big");
+
    if(m_window_bits < 1 || m_window_bits > 12) // really even 8 is too large ...
       throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
 
-   const size_t window_size = (1U << m_window_bits);
+   const size_t window_size = (static_cast<size_t>(1) << m_window_bits);
 
    m_g.reserve(window_size);
 
@@ -47273,21 +48327,27 @@ void const_time_lookup(secure_vector<word>& output,
                        const std::vector<Montgomery_Int>& g,
                        size_t nibble)
    {
+   BOTAN_ASSERT_NOMSG(g.size() % 2 == 0); // actually a power of 2
+
    const size_t words = output.size();
 
    clear_mem(output.data(), output.size());
 
-   for(size_t i = 0; i != g.size(); ++i)
+   for(size_t i = 0; i != g.size(); i += 2)
       {
-      const secure_vector<word>& vec = g[i].repr().get_word_vector();
+      const secure_vector<word>& vec_0 = g[i  ].repr().get_word_vector();
+      const secure_vector<word>& vec_1 = g[i+1].repr().get_word_vector();
 
-      BOTAN_ASSERT(vec.size() >= words,
-                   "Word size as expected in const_time_lookup");
+      BOTAN_ASSERT_NOMSG(vec_0.size() >= words && vec_1.size() >= words);
 
-      const word mask = CT::is_equal<word>(i, nibble);
+      const auto mask_0 = CT::Mask<word>::is_equal(nibble, i);
+      const auto mask_1 = CT::Mask<word>::is_equal(nibble, i+1);
 
       for(size_t w = 0; w != words; ++w)
-         output[w] |= (mask & vec[w]);
+         {
+         output[w] |= mask_0.if_set_return(vec_0[w]);
+         output[w] |= mask_1.if_set_return(vec_1[w]);
+         }
       }
    }
 
@@ -47432,10 +48492,10 @@ BigInt monty_multi_exp(std::shared_ptr<const Montgomery_Params> params_p,
          H.square_this(ws);
          }
 
-      const uint8_t z1_b = z1.get_substring(z_bits - i - 2, 2);
-      const uint8_t z2_b = z2.get_substring(z_bits - i - 2, 2);
+      const uint32_t z1_b = z1.get_substring(z_bits - i - 2, 2);
+      const uint32_t z2_b = z2.get_substring(z_bits - i - 2, 2);
 
-      const uint8_t z12 = (4*z2_b) + z1_b;
+      const uint32_t z12 = (4*z2_b) + z1_b;
 
       H.mul_by(*M[z12], ws);
       }
@@ -47549,58 +48609,53 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    const size_t p_top_bits = 521 % BOTAN_MP_WORD_BITS;
    const size_t p_words = p_full_words + 1;
 
-   const size_t x_sw = x.sig_words();
-
-   if(x_sw < p_words)
-      return; // already smaller
+#if (BOTAN_MP_WORD_BITS == 64)
+   static const word p521_words[p_words] = {
+      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
+      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
+      0x1FF };
+#else
+   static const word p521_words[p_words] = {
+      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+      0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+      0x1FF };
+#endif
 
    if(ws.size() < p_words + 1)
       ws.resize(p_words + 1);
 
    clear_mem(ws.data(), ws.size());
-   bigint_shr2(ws.data(), x.data(), x_sw, p_full_words, p_top_bits);
+   bigint_shr2(ws.data(), x.data(), std::min(x.size(), 2*p_words), p_full_words, p_top_bits);
 
    x.mask_bits(521);
+   x.grow_to(p_words);
 
    // Word-level carry will be zero
    word carry = bigint_add3_nc(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
    BOTAN_ASSERT_EQUAL(carry, 0, "Final carry in P-521 reduction");
 
-   // Now find the actual carry in bit 522
-   const uint8_t bit_522_set = x.word_at(p_full_words) >> (p_top_bits);
-
-#if (BOTAN_MP_WORD_BITS == 64)
-   static const word p521_words[9] = {
-      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
-      0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF,
-      0x1FF };
-#endif
+   const word top_word = x.word_at(p_full_words);
 
    /*
-   * If bit 522 is set then we overflowed and must reduce. Otherwise, if the
-   * top bit is set, it is possible we have x == 2**521 - 1 so check for that.
+   * Check if we need to reduce modulo P
+   * There are two possible cases:
+   * - The result overflowed past 521 bits, in which case bit 522 will be set
+   * - The result is exactly 2**521 - 1
    */
-   if(bit_522_set)
-      {
-#if (BOTAN_MP_WORD_BITS == 64)
-      bigint_sub2(x.mutable_data(), x.size(), p521_words, 9);
-#else
-      x -= prime_p521();
-#endif
-      }
-   else if(x.word_at(p_full_words) >> (p_top_bits - 1))
-      {
-      /*
-      * Otherwise we must reduce if p is exactly 2^512-1
-      */
+   const auto bit_522_set = CT::Mask<word>::expand(top_word >> p_top_bits);
 
-      word possibly_521 = MP_WORD_MAX;
-      for(size_t i = 0; i != p_full_words; ++i)
-         possibly_521 &= x.word_at(i);
+   word and_512 = MP_WORD_MAX;
+   for(size_t i = 0; i != p_full_words; ++i)
+      and_512 &= x.word_at(i);
+   const auto all_512_low_bits_set = CT::Mask<word>::is_equal(and_512, MP_WORD_MAX);
+   const auto has_p521_top_word = CT::Mask<word>::is_equal(top_word, 0x1FF);
+   const auto is_p521 = all_512_low_bits_set & has_p521_top_word;
 
-      if(possibly_521 == MP_WORD_MAX)
-         x.reduce_below(prime_p521(), ws);
-      }
+   const auto needs_reduction = is_p521 | bit_522_set;
+
+   bigint_cnd_sub(needs_reduction.value(), x.mutable_data(), p521_words, p_words);
    }
 
 #if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
@@ -47611,26 +48666,22 @@ namespace {
 * Treating this MPI as a sequence of 32-bit words in big-endian
 * order, return word i (or 0 if out of range)
 */
-inline uint32_t get_uint32_t(const BigInt& x, size_t i)
+inline uint32_t get_uint32(const BigInt& x, size_t i)
    {
 #if (BOTAN_MP_WORD_BITS == 32)
    return x.word_at(i);
-#elif (BOTAN_MP_WORD_BITS == 64)
-   return static_cast<uint32_t>(x.word_at(i/2) >> ((i % 2)*32));
 #else
-  #error "Not implemented"
+   return static_cast<uint32_t>(x.word_at(i/2) >> ((i % 2)*32));
 #endif
    }
 
-inline void set_words(BigInt& x, size_t i, uint32_t R0, uint32_t R1)
+inline void set_words(word x[], size_t i, uint32_t R0, uint32_t R1)
    {
 #if (BOTAN_MP_WORD_BITS == 32)
-   x.set_word_at(i, R0);
-   x.set_word_at(i+1, R1);
-#elif (BOTAN_MP_WORD_BITS == 64)
-   x.set_word_at(i/2, (static_cast<uint64_t>(R1) << 32) | R0);
+   x[i] = R0;
+   x[i+1] = R1;
 #else
-  #error "Not implemented"
+   x[i/2] = (static_cast<uint64_t>(R1) << 32) | R0;
 #endif
    }
 
@@ -47648,18 +48699,18 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
 
    static const size_t p192_limbs = 192 / BOTAN_MP_WORD_BITS;
 
-   const uint64_t X00 = get_uint32_t(x,  0);
-   const uint64_t X01 = get_uint32_t(x,  1);
-   const uint64_t X02 = get_uint32_t(x,  2);
-   const uint64_t X03 = get_uint32_t(x,  3);
-   const uint64_t X04 = get_uint32_t(x,  4);
-   const uint64_t X05 = get_uint32_t(x,  5);
-   const uint64_t X06 = get_uint32_t(x,  6);
-   const uint64_t X07 = get_uint32_t(x,  7);
-   const uint64_t X08 = get_uint32_t(x,  8);
-   const uint64_t X09 = get_uint32_t(x,  9);
-   const uint64_t X10 = get_uint32_t(x, 10);
-   const uint64_t X11 = get_uint32_t(x, 11);
+   const uint64_t X00 = get_uint32(x,  0);
+   const uint64_t X01 = get_uint32(x,  1);
+   const uint64_t X02 = get_uint32(x,  2);
+   const uint64_t X03 = get_uint32(x,  3);
+   const uint64_t X04 = get_uint32(x,  4);
+   const uint64_t X05 = get_uint32(x,  5);
+   const uint64_t X06 = get_uint32(x,  6);
+   const uint64_t X07 = get_uint32(x,  7);
+   const uint64_t X08 = get_uint32(x,  8);
+   const uint64_t X09 = get_uint32(x,  9);
+   const uint64_t X10 = get_uint32(x, 10);
+   const uint64_t X11 = get_uint32(x, 11);
 
    const uint64_t S0 = X00 + X06 + X10;
    const uint64_t S1 = X01 + X07 + X11;
@@ -47669,6 +48720,9 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    const uint64_t S5 = X05 + X09 + X11;
 
    x.mask_bits(192);
+   x.resize(p192_limbs + 1);
+
+   word* xw = x.mutable_data();
 
    uint64_t S = 0;
    uint32_t R0 = 0, R1 = 0;
@@ -47681,7 +48735,7 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 0, R0, R1);
+   set_words(xw, 0, R0, R1);
 
    S += S2;
    R0 = static_cast<uint32_t>(S);
@@ -47691,7 +48745,7 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 2, R0, R1);
+   set_words(xw, 2, R0, R1);
 
    S += S4;
    R0 = static_cast<uint32_t>(S);
@@ -47701,11 +48755,9 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 4, R0, R1);
+   set_words(xw, 4, R0, R1);
 
    // No underflow possible
-
-   BOTAN_ASSERT(S <= 2, "Expected overflow in P-192 reduce");
 
    /*
    This is a table of (i*P-192) % 2**192 for i in 1...3
@@ -47722,19 +48774,13 @@ void redc_p192(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
-   if(S == 0 && x.word_at(p192_limbs-1) < p192_mults[0][p192_limbs-1])
-      {
-      return;
-      }
+   CT::unpoison(S);
+   BOTAN_ASSERT(S <= 2, "Expected overflow");
 
-   word borrow = bigint_sub2(x.mutable_data(), x.size(), p192_mults[S], p192_limbs);
-
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-192 reduction");
-
-   if(borrow)
-      {
-      bigint_add2(x.mutable_data(), x.size() - 1, p192_mults[0], p192_limbs);
-      }
+   BOTAN_ASSERT_NOMSG(x.size() == p192_limbs + 1);
+   word borrow = bigint_sub2(x.mutable_data(), p192_limbs + 1, p192_mults[S], p192_limbs);
+   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
+   bigint_cnd_add(borrow, x.mutable_data(), p192_limbs + 1, p192_mults[0], p192_limbs);
    }
 
 const BigInt& prime_p224()
@@ -47749,20 +48795,20 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_UNUSED(ws);
 
-   const int64_t X00 = get_uint32_t(x,  0);
-   const int64_t X01 = get_uint32_t(x,  1);
-   const int64_t X02 = get_uint32_t(x,  2);
-   const int64_t X03 = get_uint32_t(x,  3);
-   const int64_t X04 = get_uint32_t(x,  4);
-   const int64_t X05 = get_uint32_t(x,  5);
-   const int64_t X06 = get_uint32_t(x,  6);
-   const int64_t X07 = get_uint32_t(x,  7);
-   const int64_t X08 = get_uint32_t(x,  8);
-   const int64_t X09 = get_uint32_t(x,  9);
-   const int64_t X10 = get_uint32_t(x, 10);
-   const int64_t X11 = get_uint32_t(x, 11);
-   const int64_t X12 = get_uint32_t(x, 12);
-   const int64_t X13 = get_uint32_t(x, 13);
+   const int64_t X00 = get_uint32(x,  0);
+   const int64_t X01 = get_uint32(x,  1);
+   const int64_t X02 = get_uint32(x,  2);
+   const int64_t X03 = get_uint32(x,  3);
+   const int64_t X04 = get_uint32(x,  4);
+   const int64_t X05 = get_uint32(x,  5);
+   const int64_t X06 = get_uint32(x,  6);
+   const int64_t X07 = get_uint32(x,  7);
+   const int64_t X08 = get_uint32(x,  8);
+   const int64_t X09 = get_uint32(x,  9);
+   const int64_t X10 = get_uint32(x, 10);
+   const int64_t X11 = get_uint32(x, 11);
+   const int64_t X12 = get_uint32(x, 12);
+   const int64_t X13 = get_uint32(x, 13);
 
    // One full copy of P224 is added, so the result is always positive
 
@@ -47775,7 +48821,9 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    const int64_t S6 = 0xFFFFFFFF + X06 + X10 - X13;
 
    x.mask_bits(224);
-   x.shrink_to_fit(p224_limbs + 1);
+   x.resize(p224_limbs + 1);
+
+   word* xw = x.mutable_data();
 
    int64_t S = 0;
    uint32_t R0 = 0, R1 = 0;
@@ -47788,7 +48836,7 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 0, R0, R1);
+   set_words(xw, 0, R0, R1);
 
    S += S2;
    R0 = static_cast<uint32_t>(S);
@@ -47798,7 +48846,7 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 2, R0, R1);
+   set_words(xw, 2, R0, R1);
 
    S += S4;
    R0 = static_cast<uint32_t>(S);
@@ -47808,15 +48856,13 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 4, R0, R1);
+   set_words(xw, 4, R0, R1);
 
    S += S6;
    R0 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 6, R0, 0);
-
-   BOTAN_ASSERT(S >= 0 && S <= 2, "Expected overflow in P-224 reduce");
+   set_words(xw, 6, R0, 0);
 
    static const word p224_mults[3][p224_limbs] = {
 #if (BOTAN_MP_WORD_BITS == 64)
@@ -47831,19 +48877,13 @@ void redc_p224(BigInt& x, secure_vector<word>& ws)
 
    };
 
-   if(S == 0 && x.word_at(p224_limbs-1) < p224_mults[0][p224_limbs-1])
-      {
-      return;
-      }
+   CT::unpoison(S);
+   BOTAN_ASSERT(S >= 0 && S <= 2, "Expected overflow");
 
-   word borrow = bigint_sub2(x.mutable_data(), x.size(), p224_mults[S], p224_limbs);
-
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-224 reduction");
-
-   if(borrow)
-      {
-      bigint_add2(x.mutable_data(), x.size() - 1, p224_mults[0], p224_limbs);
-      }
+   BOTAN_ASSERT_NOMSG(x.size() == p224_limbs + 1);
+   word borrow = bigint_sub2(x.mutable_data(), p224_limbs + 1, p224_mults[S], p224_limbs);
+   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
+   bigint_cnd_add(borrow, x.mutable_data(), p224_limbs + 1, p224_mults[0], p224_limbs);
    }
 
 const BigInt& prime_p256()
@@ -47858,35 +48898,37 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_UNUSED(ws);
 
-   const int64_t X00 = get_uint32_t(x,  0);
-   const int64_t X01 = get_uint32_t(x,  1);
-   const int64_t X02 = get_uint32_t(x,  2);
-   const int64_t X03 = get_uint32_t(x,  3);
-   const int64_t X04 = get_uint32_t(x,  4);
-   const int64_t X05 = get_uint32_t(x,  5);
-   const int64_t X06 = get_uint32_t(x,  6);
-   const int64_t X07 = get_uint32_t(x,  7);
-   const int64_t X08 = get_uint32_t(x,  8);
-   const int64_t X09 = get_uint32_t(x,  9);
-   const int64_t X10 = get_uint32_t(x, 10);
-   const int64_t X11 = get_uint32_t(x, 11);
-   const int64_t X12 = get_uint32_t(x, 12);
-   const int64_t X13 = get_uint32_t(x, 13);
-   const int64_t X14 = get_uint32_t(x, 14);
-   const int64_t X15 = get_uint32_t(x, 15);
+   const int64_t X00 = get_uint32(x,  0);
+   const int64_t X01 = get_uint32(x,  1);
+   const int64_t X02 = get_uint32(x,  2);
+   const int64_t X03 = get_uint32(x,  3);
+   const int64_t X04 = get_uint32(x,  4);
+   const int64_t X05 = get_uint32(x,  5);
+   const int64_t X06 = get_uint32(x,  6);
+   const int64_t X07 = get_uint32(x,  7);
+   const int64_t X08 = get_uint32(x,  8);
+   const int64_t X09 = get_uint32(x,  9);
+   const int64_t X10 = get_uint32(x, 10);
+   const int64_t X11 = get_uint32(x, 11);
+   const int64_t X12 = get_uint32(x, 12);
+   const int64_t X13 = get_uint32(x, 13);
+   const int64_t X14 = get_uint32(x, 14);
+   const int64_t X15 = get_uint32(x, 15);
 
    // Adds 6 * P-256 to prevent underflow
-   const int64_t S0 = 0xFFFFFFFA + X00 + X08 + X09 - X11 - X12 - X13 - X14;
-   const int64_t S1 = 0xFFFFFFFF + X01 + X09 + X10 - X12 - X13 - X14 - X15;
-   const int64_t S2 = 0xFFFFFFFF + X02 + X10 + X11 - X13 - X14 - X15;
+   const int64_t S0 = 0xFFFFFFFA + X00 + X08 + X09 - (X11 + X12 + X13) - X14;
+   const int64_t S1 = 0xFFFFFFFF + X01 + X09 + X10 - X12 - (X13 + X14 + X15);
+   const int64_t S2 = 0xFFFFFFFF + X02 + X10 + X11 - (X13 + X14 + X15);
    const int64_t S3 = 0x00000005 + X03 + (X11 + X12)*2 + X13 - X15 - X08 - X09;
    const int64_t S4 = 0x00000000 + X04 + (X12 + X13)*2 + X14 - X09 - X10;
    const int64_t S5 = 0x00000000 + X05 + (X13 + X14)*2 + X15 - X10 - X11;
    const int64_t S6 = 0x00000006 + X06 + X13 + X14*3 + X15*2 - X08 - X09;
-   const int64_t S7 = 0xFFFFFFFA + X07 + X15*3 + X08 - X10 - X11 - X12 - X13;
+   const int64_t S7 = 0xFFFFFFFA + X07 + X15*3 + X08 - X10 - (X11 + X12 + X13);
 
    x.mask_bits(256);
-   x.shrink_to_fit(p256_limbs + 1);
+   x.resize(p256_limbs + 1);
+
+   word* xw = x.mutable_data();
 
    int64_t S = 0;
 
@@ -47900,7 +48942,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 0, R0, R1);
+   set_words(xw, 0, R0, R1);
 
    S += S2;
    R0 = static_cast<uint32_t>(S);
@@ -47910,7 +48952,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 2, R0, R1);
+   set_words(xw, 2, R0, R1);
 
    S += S4;
    R0 = static_cast<uint32_t>(S);
@@ -47920,7 +48962,7 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 4, R0, R1);
+   set_words(xw, 4, R0, R1);
 
    S += S6;
    R0 = static_cast<uint32_t>(S);
@@ -47929,11 +48971,9 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
    S += S7;
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
-   set_words(x, 6, R0, R1);
+   set_words(xw, 6, R0, R1);
 
    S += 5; // the top digits of 6*P-256
-
-   BOTAN_ASSERT(S >= 0 && S <= 10, "Expected overflow");
 
    /*
    This is a table of (i*P-256) % 2**256 for i in 1...10
@@ -47966,19 +49006,13 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
-   if(S == 0 && x.word_at(p256_limbs-1) < p256_mults[0][p256_limbs-1])
-      {
-      return;
-      }
+   CT::unpoison(S);
+   BOTAN_ASSERT(S >= 0 && S <= 10, "Expected overflow");
 
-   word borrow = bigint_sub2(x.mutable_data(), x.size(), p256_mults[S], p256_limbs);
-
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-256 reduction");
-
-   if(borrow)
-      {
-      bigint_add2(x.mutable_data(), x.size() - 1, p256_mults[0], p256_limbs);
-      }
+   BOTAN_ASSERT_NOMSG(x.size() == p256_limbs + 1);
+   word borrow = bigint_sub2(x.mutable_data(), p256_limbs + 1, p256_mults[S], p256_limbs);
+   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
+   bigint_cnd_add(borrow, x.mutable_data(), p256_limbs + 1, p256_mults[0], p256_limbs);
    }
 
 const BigInt& prime_p384()
@@ -47993,30 +49027,30 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 
    static const size_t p384_limbs = (BOTAN_MP_WORD_BITS == 32) ? 12 : 6;
 
-   const int64_t X00 = get_uint32_t(x,  0);
-   const int64_t X01 = get_uint32_t(x,  1);
-   const int64_t X02 = get_uint32_t(x,  2);
-   const int64_t X03 = get_uint32_t(x,  3);
-   const int64_t X04 = get_uint32_t(x,  4);
-   const int64_t X05 = get_uint32_t(x,  5);
-   const int64_t X06 = get_uint32_t(x,  6);
-   const int64_t X07 = get_uint32_t(x,  7);
-   const int64_t X08 = get_uint32_t(x,  8);
-   const int64_t X09 = get_uint32_t(x,  9);
-   const int64_t X10 = get_uint32_t(x, 10);
-   const int64_t X11 = get_uint32_t(x, 11);
-   const int64_t X12 = get_uint32_t(x, 12);
-   const int64_t X13 = get_uint32_t(x, 13);
-   const int64_t X14 = get_uint32_t(x, 14);
-   const int64_t X15 = get_uint32_t(x, 15);
-   const int64_t X16 = get_uint32_t(x, 16);
-   const int64_t X17 = get_uint32_t(x, 17);
-   const int64_t X18 = get_uint32_t(x, 18);
-   const int64_t X19 = get_uint32_t(x, 19);
-   const int64_t X20 = get_uint32_t(x, 20);
-   const int64_t X21 = get_uint32_t(x, 21);
-   const int64_t X22 = get_uint32_t(x, 22);
-   const int64_t X23 = get_uint32_t(x, 23);
+   const int64_t X00 = get_uint32(x,  0);
+   const int64_t X01 = get_uint32(x,  1);
+   const int64_t X02 = get_uint32(x,  2);
+   const int64_t X03 = get_uint32(x,  3);
+   const int64_t X04 = get_uint32(x,  4);
+   const int64_t X05 = get_uint32(x,  5);
+   const int64_t X06 = get_uint32(x,  6);
+   const int64_t X07 = get_uint32(x,  7);
+   const int64_t X08 = get_uint32(x,  8);
+   const int64_t X09 = get_uint32(x,  9);
+   const int64_t X10 = get_uint32(x, 10);
+   const int64_t X11 = get_uint32(x, 11);
+   const int64_t X12 = get_uint32(x, 12);
+   const int64_t X13 = get_uint32(x, 13);
+   const int64_t X14 = get_uint32(x, 14);
+   const int64_t X15 = get_uint32(x, 15);
+   const int64_t X16 = get_uint32(x, 16);
+   const int64_t X17 = get_uint32(x, 17);
+   const int64_t X18 = get_uint32(x, 18);
+   const int64_t X19 = get_uint32(x, 19);
+   const int64_t X20 = get_uint32(x, 20);
+   const int64_t X21 = get_uint32(x, 21);
+   const int64_t X22 = get_uint32(x, 22);
+   const int64_t X23 = get_uint32(x, 23);
 
    // One copy of P-384 is added to prevent underflow
    const int64_t S0 = 0xFFFFFFFF + X00 + X12 + X20 + X21 - X23;
@@ -48033,7 +49067,9 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    const int64_t SB = 0xFFFFFFFF + X11 + X19 + X20 + X23 - X22;
 
    x.mask_bits(384);
-   x.shrink_to_fit(p384_limbs + 1);
+   x.resize(p384_limbs + 1);
+
+   word* xw = x.mutable_data();
 
    int64_t S = 0;
 
@@ -48047,7 +49083,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 0, R0, R1);
+   set_words(xw, 0, R0, R1);
 
    S += S2;
    R0 = static_cast<uint32_t>(S);
@@ -48057,7 +49093,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 2, R0, R1);
+   set_words(xw, 2, R0, R1);
 
    S += S4;
    R0 = static_cast<uint32_t>(S);
@@ -48067,7 +49103,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 4, R0, R1);
+   set_words(xw, 4, R0, R1);
 
    S += S6;
    R0 = static_cast<uint32_t>(S);
@@ -48077,7 +49113,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 6, R0, R1);
+   set_words(xw, 6, R0, R1);
 
    S += S8;
    R0 = static_cast<uint32_t>(S);
@@ -48087,7 +49123,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 8, R0, R1);
+   set_words(xw, 8, R0, R1);
 
    S += SA;
    R0 = static_cast<uint32_t>(S);
@@ -48097,9 +49133,7 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    R1 = static_cast<uint32_t>(S);
    S >>= 32;
 
-   set_words(x, 10, R0, R1);
-
-   BOTAN_ASSERT(S >= 0 && S <= 4, "Expected overflow in P-384 reduction");
+   set_words(xw, 10, R0, R1);
 
    /*
    This is a table of (i*P-384) % 2**384 for i in 1...4
@@ -48126,23 +49160,16 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
 #endif
    };
 
-   if(S == 0 && x.word_at(p384_limbs-1) < p384_mults[0][p384_limbs-1])
-      {
-      return;
-      }
+   CT::unpoison(S);
+   BOTAN_ASSERT(S >= 0 && S <= 4, "Expected overflow");
 
-   word borrow = bigint_sub2(x.mutable_data(), x.size(), p384_mults[S], p384_limbs);
-
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow during P-384 reduction");
-
-   if(borrow)
-      {
-      bigint_add2(x.mutable_data(), x.size() - 1, p384_mults[0], p384_limbs);
-      }
+   BOTAN_ASSERT_NOMSG(x.size() == p384_limbs + 1);
+   word borrow = bigint_sub2(x.mutable_data(), p384_limbs + 1, p384_mults[S], p384_limbs);
+   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
+   bigint_cnd_add(borrow, x.mutable_data(), p384_limbs + 1, p384_mults[0], p384_limbs);
    }
 
 #endif
-
 
 }
 /*
@@ -48219,7 +49246,7 @@ BigInt gcd(const BigInt& a, const BigInt& b)
 */
 BigInt lcm(const BigInt& a, const BigInt& b)
    {
-   return ((a * b) / gcd(a, b));
+   return ct_divide(a * b, gcd(a, b));
    }
 
 /*
@@ -48428,9 +49455,8 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
       throw BigInt::DivideByZero();
    if(mod.is_negative() || n.is_negative())
       throw Invalid_Argument("inverse_mod: arguments must be non-negative");
-
-   if(n.is_zero() || (n.is_even() && mod.is_even()))
-      return 0; // fast fail checks
+   if(n.is_zero())
+      return 0;
 
    if(mod.is_odd() && n < mod)
       return ct_inverse_mod_odd_modulus(n, mod);
@@ -48450,83 +49476,100 @@ BigInt inverse_euclid(const BigInt& n, const BigInt& mod)
 
    BigInt u = mod, v = n;
    BigInt A = 1, B = 0, C = 0, D = 1;
+   BigInt T0, T1, T2;
 
    while(u.is_nonzero())
       {
       const size_t u_zero_bits = low_zero_bits(u);
       u >>= u_zero_bits;
-      for(size_t i = 0; i != u_zero_bits; ++i)
-         {
-         if(A.is_odd() || B.is_odd())
-            { A += n; B -= mod; }
-         A >>= 1; B >>= 1;
-         }
 
       const size_t v_zero_bits = low_zero_bits(v);
       v >>= v_zero_bits;
-      for(size_t i = 0; i != v_zero_bits; ++i)
+
+      const bool u_gte_v = (u >= v);
+
+      for(size_t i = 0; i != u_zero_bits; ++i)
          {
-         if(C.is_odd() || D.is_odd())
-            { C += n; D -= mod; }
-         C >>= 1; D >>= 1;
+         const bool needs_adjust = A.is_odd() || B.is_odd();
+
+         T0 = A + n;
+         T1 = B - mod;
+
+         A.ct_cond_assign(needs_adjust, T0);
+         B.ct_cond_assign(needs_adjust, T1);
+
+         A >>= 1;
+         B >>= 1;
          }
 
-      if(u >= v) { u -= v; A -= C; B -= D; }
-      else       { v -= u; C -= A; D -= B; }
+      for(size_t i = 0; i != v_zero_bits; ++i)
+         {
+         const bool needs_adjust = C.is_odd() || D.is_odd();
+         T0 = C + n;
+         T1 = D - mod;
+
+         C.ct_cond_assign(needs_adjust, T0);
+         D.ct_cond_assign(needs_adjust, T1);
+
+         C >>= 1;
+         D >>= 1;
+         }
+
+      T0 = u - v;
+      T1 = A - C;
+      T2 = B - D;
+
+      T0.cond_flip_sign(!u_gte_v);
+      T1.cond_flip_sign(!u_gte_v);
+      T2.cond_flip_sign(!u_gte_v);
+
+      u.ct_cond_assign(u_gte_v, T0);
+      A.ct_cond_assign(u_gte_v, T1);
+      B.ct_cond_assign(u_gte_v, T2);
+
+      v.ct_cond_assign(!u_gte_v, T0);
+      C.ct_cond_assign(!u_gte_v, T1);
+      D.ct_cond_assign(!u_gte_v, T2);
       }
 
    if(v != 1)
       return 0; // no modular inverse
 
-   while(D.is_negative()) D += mod;
-   while(D >= mod) D -= mod;
+   while(D.is_negative())
+      D += mod;
+   while(D >= mod)
+      D -= mod;
 
    return D;
    }
 
-word monty_inverse(word input)
+word monty_inverse(word a)
    {
-   if(input == 0)
-      throw Exception("monty_inverse: divide by zero");
+   if(a % 2 == 0)
+      throw Invalid_Argument("monty_inverse only valid for odd integers");
 
-   word b = input;
-   word x2 = 1, x1 = 0, y2 = 0, y1 = 1;
+   /*
+   * From "A New Algorithm for Inversion mod p^k" by Çetin Kaya Koç
+   * https://eprint.iacr.org/2017/411.pdf sections 5 and 7.
+   */
 
-   // First iteration, a = n+1
-   word q = bigint_divop(1, 0, b);
-   word r = (MP_WORD_MAX - q*b) + 1;
-   word x = x2 - q*x1;
-   word y = y2 - q*y1;
+   word b = 1;
+   word r = 0;
 
-   word a = b;
-   b = r;
-   x2 = x1;
-   x1 = x;
-   y2 = y1;
-   y1 = y;
-
-   while(b > 0)
+   for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i)
       {
-      q = a / b;
-      r = a - q*b;
-      x = x2 - q*x1;
-      y = y2 - q*y1;
+      const word bi = b % 2;
+      r >>= 1;
+      r += bi << (BOTAN_MP_WORD_BITS - 1);
 
-      a = b;
-      b = r;
-      x2 = x1;
-      x1 = x;
-      y2 = y1;
-      y1 = y;
+      b -= a * bi;
+      b >>= 1;
       }
 
-   const word check = y2 * input;
-   BOTAN_ASSERT_EQUAL(check, 1, "monty_inverse result is inverse of input");
-
    // Now invert in addition space
-   y2 = (MP_WORD_MAX - y2) + 1;
+   r = (MP_WORD_MAX - r) + 1;
 
-   return y2;
+   return r;
    }
 
 /*
@@ -48571,133 +49614,74 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
       }
    }
 
-namespace {
 
-bool mr_witness(BigInt&& y,
-                const Modular_Reducer& reducer_n,
-                const BigInt& n_minus_1, size_t s)
+BigInt is_perfect_square(const BigInt& C)
    {
-   if(y == 1 || y == n_minus_1)
-      return false;
+   if(C < 1)
+      throw Invalid_Argument("is_perfect_square requires C >= 1");
+   if(C == 1)
+      return 1;
 
-   for(size_t i = 1; i != s; ++i)
+   const size_t n = C.bits();
+   const size_t m = (n + 1) / 2;
+   const BigInt B = C + BigInt::power_of_2(m);
+
+   BigInt X = BigInt::power_of_2(m) - 1;
+   BigInt X2 = (X*X);
+
+   for(;;)
       {
-      y = reducer_n.square(y);
+      X = (X2 + C) / (2*X);
+      X2 = (X*X);
 
-      if(y == 1) // found a non-trivial square root
-         return true;
-
-      /*
-      -1 is the trivial square root of unity, so ``a`` is not a
-      witness for this number - give up
-      */
-      if(y == n_minus_1)
-         return false;
+      if(X2 < B)
+         break;
       }
 
-   return true; // is a witness
+   if(X2 == C)
+      return X;
+   else
+      return 0;
    }
-
-size_t mr_test_iterations(size_t n_bits, size_t prob, bool random)
-   {
-   const size_t base = (prob + 2) / 2; // worst case 4^-t error rate
-
-   /*
-   * If the candidate prime was maliciously constructed, we can't rely
-   * on arguments based on p being random.
-   */
-   if(random == false)
-      return base;
-
-   /*
-   * For randomly chosen numbers we can use the estimates from
-   * http://www.math.dartmouth.edu/~carlp/PDF/paper88.pdf
-   *
-   * These values are derived from the inequality for p(k,t) given on
-   * the second page.
-   */
-   if(prob <= 128)
-      {
-      if(n_bits >= 1536)
-         return 4; // < 2^-133
-      if(n_bits >= 1024)
-         return 6; // < 2^-133
-      if(n_bits >= 512)
-         return 12; // < 2^-129
-      if(n_bits >= 256)
-         return 29; // < 2^-128
-      }
-
-   /*
-   If the user desires a smaller error probability than we have
-   precomputed error estimates for, just fall back to using the worst
-   case error rate.
-   */
-   return base;
-   }
-
-}
 
 /*
 * Test for primality using Miller-Rabin
 */
-bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
-              size_t prob, bool is_random)
+bool is_prime(const BigInt& n,
+              RandomNumberGenerator& rng,
+              size_t prob,
+              bool is_random)
    {
    if(n == 2)
       return true;
    if(n <= 1 || n.is_even())
       return false;
 
+   const size_t n_bits = n.bits();
+
    // Fast path testing for small numbers (<= 65521)
-   if(n <= PRIMES[PRIME_TABLE_SIZE-1])
+   if(n_bits <= 16)
       {
       const uint16_t num = static_cast<uint16_t>(n.word_at(0));
 
       return std::binary_search(PRIMES, PRIMES + PRIME_TABLE_SIZE, num);
       }
 
-   const size_t test_iterations =
-      mr_test_iterations(n.bits(), prob, is_random && rng.is_seeded());
+   Modular_Reducer mod_n(n);
 
-   const BigInt n_minus_1 = n - 1;
-   const size_t s = low_zero_bits(n_minus_1);
-   const BigInt nm1_s = n_minus_1 >> s;
-   const size_t n_bits = n.bits();
-
-   const Modular_Reducer mod_n(n);
-   auto monty_n = std::make_shared<Montgomery_Params>(n, mod_n);
-
-   const size_t powm_window = 4;
-
-   for(size_t i = 0; i != test_iterations; ++i)
+   if(rng.is_seeded())
       {
-      BigInt a;
+      const size_t t = miller_rabin_test_iterations(n_bits, prob, is_random);
 
-      if(rng.is_seeded())
-         {
-         a = BigInt::random_integer(rng, 2, n_minus_1);
-         }
-      else
-         {
-         /*
-         * If passed a null RNG just use 2,3,5, ... as bases
-         *
-         * This is not ideal but in certain circumstances we need to
-         * test for primality but have no RNG available.
-         */
-         a = PRIMES[i];
-         }
-
-      auto powm_a_n = monty_precompute(monty_n, a, powm_window);
-
-      BigInt y = monty_execute(*powm_a_n, nm1_s, n_bits);
-
-      if(mr_witness(std::move(y), mod_n, n_minus_1, s))
+      if(is_miller_rabin_probable_prime(n, mod_n, rng, t) == false)
          return false;
-      }
 
-   return true;
+      return is_lucas_probable_prime(n, mod_n);
+      }
+   else
+      {
+      return is_bailie_psw_probable_prime(n, mod_n);
+      }
    }
 
 }
@@ -48920,9 +49904,9 @@ void Fixed_Window_Exponentiator::set_base(const BigInt& base)
    {
    m_window_bits = Power_Mod::window_bits(m_exp.bits(), base.bits(), m_hints);
 
-   m_g.resize(1U << m_window_bits);
+   m_g.resize(static_cast<size_t>(1) << m_window_bits);
    m_g[0] = 1;
-   m_g[1] = base;
+   m_g[1] = m_reducer.reduce(base);
 
    for(size_t i = 2; i != m_g.size(); ++i)
       m_g[i] = m_reducer.multiply(m_g[i-1], m_g[1]);
@@ -48977,7 +49961,7 @@ void Montgomery_Exponentiator::set_exponent(const BigInt& exp)
 void Montgomery_Exponentiator::set_base(const BigInt& base)
    {
    size_t window_bits = Power_Mod::window_bits(m_e.bits(), base.bits(), m_hints);
-   m_monty = monty_precompute(m_monty_params, base, window_bits);
+   m_monty = monty_precompute(m_monty_params, m_mod_p.reduce(base), window_bits);
    }
 
 BigInt Montgomery_Exponentiator::execute() const
@@ -48996,6 +49980,205 @@ Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
    m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
    m_hints(hints)
    {
+   }
+
+}
+/*
+* (C) 2016,2018 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+bool is_lucas_probable_prime(const BigInt& C, const Modular_Reducer& mod_C)
+   {
+   if(C <= 1)
+      return false;
+   else if(C == 2)
+      return true;
+   else if(C.is_even())
+      return false;
+   else if(C == 3 || C == 5 || C == 7 || C == 11 || C == 13)
+      return true;
+
+   BigInt D = 5;
+
+   for(;;)
+      {
+      int32_t j = jacobi(D, C);
+      if(j == 0)
+         return false;
+
+      if(j == -1)
+         break;
+
+      // Check 5, -7, 9, -11, 13, -15, 17, ...
+      if(D.is_negative())
+         {
+         D.flip_sign();
+         D += 2;
+         }
+      else
+         {
+         D += 2;
+         D.flip_sign();
+         }
+
+      if(D == 17 && is_perfect_square(C).is_nonzero())
+         return false;
+      }
+
+   const BigInt K = C + 1;
+   const size_t K_bits = K.bits() - 1;
+
+   BigInt U = 1;
+   BigInt V = 1;
+
+   BigInt Ut, Vt, U2, V2;
+
+   for(size_t i = 0; i != K_bits; ++i)
+      {
+      const uint8_t k_bit = K.get_bit(K_bits - 1 - i);
+
+      Ut = mod_C.multiply(U, V);
+
+      Vt = mod_C.reduce(mod_C.square(V) + mod_C.multiply(D, mod_C.square(U)));
+      if(Vt.is_odd())
+         Vt += C;
+      Vt >>= 1;
+      Vt = mod_C.reduce(Vt);
+
+      U = Ut;
+      V = Vt;
+
+      U2 = mod_C.reduce(Ut + Vt);
+      if(U2.is_odd())
+         U2 += C;
+      U2 >>= 1;
+
+      V2 = mod_C.reduce(Vt + Ut*D);
+      if(V2.is_odd())
+         V2 += C;
+      V2 >>= 1;
+
+      U.ct_cond_assign(k_bit, U2);
+      V.ct_cond_assign(k_bit, V2);
+      }
+
+   return (U == 0);
+   }
+
+bool is_bailie_psw_probable_prime(const BigInt& n, const Modular_Reducer& mod_n)
+   {
+   auto monty_n = std::make_shared<Montgomery_Params>(n, mod_n);
+   return passes_miller_rabin_test(n, mod_n, monty_n, 2) && is_lucas_probable_prime(n, mod_n);
+   }
+
+bool is_bailie_psw_probable_prime(const BigInt& n)
+   {
+   Modular_Reducer mod_n(n);
+   return is_bailie_psw_probable_prime(n, mod_n);
+   }
+
+bool passes_miller_rabin_test(const BigInt& n,
+                              const Modular_Reducer& mod_n,
+                              const std::shared_ptr<Montgomery_Params>& monty_n,
+                              const BigInt& a)
+   {
+   BOTAN_ASSERT_NOMSG(n > 1);
+
+   const BigInt n_minus_1 = n - 1;
+   const size_t s = low_zero_bits(n_minus_1);
+   const BigInt nm1_s = n_minus_1 >> s;
+   const size_t n_bits = n.bits();
+
+   const size_t powm_window = 4;
+
+   auto powm_a_n = monty_precompute(monty_n, a, powm_window);
+
+   BigInt y = monty_execute(*powm_a_n, nm1_s, n_bits);
+
+   if(y == 1 || y == n_minus_1)
+      return true;
+
+   for(size_t i = 1; i != s; ++i)
+      {
+      y = mod_n.square(y);
+
+      if(y == 1) // found a non-trivial square root
+         return false;
+
+      /*
+      -1 is the trivial square root of unity, so ``a`` is not a
+      witness for this number - give up
+      */
+      if(y == n_minus_1)
+         return true;
+      }
+
+   return false;
+   }
+
+bool is_miller_rabin_probable_prime(const BigInt& n,
+                                    const Modular_Reducer& mod_n,
+                                    RandomNumberGenerator& rng,
+                                    size_t test_iterations)
+   {
+   BOTAN_ASSERT_NOMSG(n > 1);
+
+   auto monty_n = std::make_shared<Montgomery_Params>(n, mod_n);
+
+   for(size_t i = 0; i != test_iterations; ++i)
+      {
+      const BigInt a = BigInt::random_integer(rng, 2, n);
+
+      if(!passes_miller_rabin_test(n, mod_n, monty_n, a))
+         return false;
+      }
+
+   // Failed to find a counterexample
+   return true;
+   }
+
+
+size_t miller_rabin_test_iterations(size_t n_bits, size_t prob, bool random)
+   {
+   const size_t base = (prob + 2) / 2; // worst case 4^-t error rate
+
+   /*
+   * If the candidate prime was maliciously constructed, we can't rely
+   * on arguments based on p being random.
+   */
+   if(random == false)
+      return base;
+
+   /*
+   * For randomly chosen numbers we can use the estimates from
+   * http://www.math.dartmouth.edu/~carlp/PDF/paper88.pdf
+   *
+   * These values are derived from the inequality for p(k,t) given on
+   * the second page.
+   */
+   if(prob <= 128)
+      {
+      if(n_bits >= 1536)
+         return 4; // < 2^-133
+      if(n_bits >= 1024)
+         return 6; // < 2^-133
+      if(n_bits >= 512)
+         return 12; // < 2^-129
+      if(n_bits >= 256)
+         return 29; // < 2^-128
+      }
+
+   /*
+   If the user desires a smaller error probability than we have
+   precomputed error estimates for, just fall back to using the worst
+   case error rate.
+   */
+   return base;
    }
 
 }
@@ -49633,31 +50816,62 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod)
       m_modulus = mod;
       m_mod_words = m_modulus.sig_words();
 
-      m_modulus_2 = Botan::square(m_modulus);
-
-      m_mu = BigInt::power_of_2(2 * BOTAN_MP_WORD_BITS * m_mod_words) / m_modulus;
+      // Compute mu = floor(2^{2k} / m)
+      m_mu.set_bit(2 * BOTAN_MP_WORD_BITS * m_mod_words);
+      m_mu = ct_divide(m_mu, m_modulus);
       }
    }
 
-/*
-* Barrett Reduction
-*/
 BigInt Modular_Reducer::reduce(const BigInt& x) const
    {
+   BigInt r;
+   secure_vector<word> ws;
+   reduce(r, x, ws);
+   return r;
+   }
+
+namespace {
+
+/*
+* Like if(cnd) x.rev_sub(...) but in const time
+*/
+void cnd_rev_sub(bool cnd, BigInt& x, const word y[], size_t y_sw, secure_vector<word>& ws)
+   {
+   if(x.sign() != BigInt::Positive)
+      throw Invalid_State("BigInt::sub_rev requires this is positive");
+
+   const size_t x_sw = x.sig_words();
+
+   const size_t max_words = std::max(x_sw, y_sw);
+   ws.resize(std::max(x_sw, y_sw));
+   clear_mem(ws.data(), ws.size());
+   x.grow_to(max_words);
+
+   const int32_t relative_size = bigint_sub_abs(ws.data(), x.data(), x_sw, y, y_sw);
+
+   x.cond_flip_sign((relative_size > 0) && cnd);
+   bigint_cnd_swap(cnd, x.mutable_data(), ws.data(), max_words);
+   }
+
+}
+
+void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& ws) const
+   {
+   if(&t1 == &x)
+      throw Invalid_State("Modular_Reducer arguments cannot alias");
    if(m_mod_words == 0)
       throw Invalid_State("Modular_Reducer: Never initalized");
 
    const size_t x_sw = x.sig_words();
 
-   if(x_sw >= (2*m_mod_words - 1) && x.cmp(m_modulus_2, false) >= 0)
+   if(x_sw > 2*m_mod_words)
       {
-      // too big, fall back to normal division
-      return (x % m_modulus);
+      // too big, fall back to slow boat division
+      t1 = ct_modulo(x, m_modulus);
+      return;
       }
 
-   secure_vector<word> ws;
-
-   BigInt t1 = x;
+   t1 = x;
    t1.set_sign(BigInt::Positive);
    t1 >>= (BOTAN_MP_WORD_BITS * (m_mod_words - 1));
 
@@ -49684,14 +50898,10 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
 
    t1.add(ws.data(), m_mod_words + 2, BigInt::Positive);
 
-   t1.reduce_below(m_modulus, ws);
+   // Per HAC this step requires at most 2 subtractions
+   t1.ct_reduce_below(m_modulus, ws, 2);
 
-   if(x.is_negative() && t1.is_nonzero())
-      {
-      t1.rev_sub(m_modulus.data(), m_modulus.size(), ws);
-      }
-
-   return t1;
+   cnd_rev_sub(t1.is_nonzero() && x.is_negative(), t1, m_modulus.data(), m_modulus.size(), ws);
    }
 
 }
@@ -49815,6 +51025,8 @@ class L_computer final
          m_offset = offset;
          }
 
+      bool initialized() const { return m_offset.empty() == false; }
+
       const secure_vector<uint8_t>& star() const { return m_L_star; }
       const secure_vector<uint8_t>& dollar() const { return m_L_dollar; }
       const secure_vector<uint8_t>& offset() const { return m_offset; }
@@ -49845,7 +51057,7 @@ class L_computer final
                // ntz(4*i+2) == 1
                // ntz(4*i+3) == 0
                block_index += 4;
-               const size_t ntz4 = ctz<uint32_t>(block_index);
+               const size_t ntz4 = var_ctz32(static_cast<uint32_t>(block_index));
 
                xor_buf(offsets, m_offset.data(), L0.data(), m_BS);
                offsets += m_BS;
@@ -49867,7 +51079,7 @@ class L_computer final
 
          for(size_t i = 0; i != blocks; ++i)
             { // could be done in parallel
-            const size_t ntz = ctz<uint32_t>(block_index + i + 1);
+            const size_t ntz = var_ctz32(static_cast<uint32_t>(block_index + i + 1));
             xor_buf(m_offset.data(), get(ntz).data(), m_BS);
             copy_mem(offsets, m_offset.data(), m_BS);
             offsets += m_BS;
@@ -49912,7 +51124,7 @@ secure_vector<uint8_t> ocb_hash(const L_computer& L,
    for(size_t i = 0; i != ad_blocks; ++i)
       {
       // this loop could run in parallel
-      offset ^= L.get(ctz<uint32_t>(i+1));
+      offset ^= L.get(var_ctz32(static_cast<uint32_t>(i+1)));
       buf = offset;
       xor_buf(buf.data(), &ad[BS*i], BS);
       cipher.encrypt(buf);
@@ -50009,7 +51221,7 @@ void OCB_Mode::key_schedule(const uint8_t key[], size_t length)
 
 void OCB_Mode::set_associated_data(const uint8_t ad[], size_t ad_len)
    {
-   BOTAN_ASSERT(m_L, "A key was set");
+   verify_key_set(m_L != nullptr);
    m_ad_hash = ocb_hash(*m_L, *m_cipher, ad, ad_len);
    }
 
@@ -50109,7 +51321,7 @@ void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   BOTAN_ASSERT(m_L, "A key was set");
+   verify_key_set(m_L != nullptr);
 
    m_L->init(update_nonce(nonce, nonce_len));
    zeroise(m_checksum);
@@ -50118,9 +51330,10 @@ void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
 
 void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks)
    {
-   const size_t BS = block_size();
+   verify_key_set(m_L != nullptr);
+   BOTAN_STATE_CHECK(m_L->initialized());
 
-   BOTAN_ASSERT(m_L, "A key was set");
+   const size_t BS = block_size();
 
    while(blocks)
       {
@@ -50148,6 +51361,8 @@ size_t OCB_Encryption::process(uint8_t buf[], size_t sz)
 
 void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   verify_key_set(m_L != nullptr);
+
    const size_t BS = block_size();
 
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
@@ -50205,6 +51420,9 @@ void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
 void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks)
    {
+   verify_key_set(m_L != nullptr);
+   BOTAN_STATE_CHECK(m_L->initialized());
+
    const size_t BS = block_size();
 
    while(blocks)
@@ -50233,6 +51451,8 @@ size_t OCB_Decryption::process(uint8_t buf[], size_t sz)
 
 void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
+   verify_key_set(m_L != nullptr);
+
    const size_t BS = block_size();
 
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
@@ -50333,6 +51553,26 @@ void OFB::key_schedule(const uint8_t key[], size_t key_len)
 std::string OFB::name() const
    {
    return "OFB(" + m_cipher->name() + ")";
+   }
+
+size_t OFB::default_iv_length() const
+   {
+   return m_cipher->block_size();
+   }
+
+bool OFB::valid_iv_length(size_t iv_len) const
+   {
+   return (iv_len <= m_cipher->block_size());
+   }
+
+Key_Length_Specification OFB::key_spec() const
+   {
+   return m_cipher->key_spec();
+   }
+
+OFB* OFB::clone() const
+   {
+   return new OFB(m_cipher->clone());
    }
 
 void OFB::cipher(const uint8_t in[], uint8_t out[], size_t length)
@@ -50495,6 +51735,8 @@ std::string generate_passhash9(const std::string& pass,
                                uint16_t work_factor,
                                uint8_t alg_id)
    {
+   BOTAN_ARG_CHECK(work_factor > 0 && work_factor < 512, "Invalid Passhash9 work factor");
+
    std::unique_ptr<MessageAuthenticationCode> prf = get_pbkdf_prf(alg_id);
 
    if(!prf)
@@ -50590,6 +51832,7 @@ bool is_passhash9_alg_supported(uint8_t alg_id)
 /*
 * PKCS #5 PBES2
 * (C) 1999-2008,2014 Jack Lloyd
+* (C) 2018 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -50601,6 +51844,11 @@ bool is_passhash9_alg_supported(uint8_t alg_id)
 namespace Botan {
 
 namespace {
+
+bool known_pbes_cipher_mode(const std::string& mode)
+   {
+   return (mode == "CBC" || mode == "GCM" || mode == "SIV");
+   }
 
 SymmetricKey derive_key(const std::string& passphrase,
                         const AlgorithmIdentifier& kdf_algo,
@@ -50625,13 +51873,11 @@ SymmetricKey derive_key(const std::string& passphrase,
       if(salt.size() < 8)
          throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
 
-      const std::string prf = OIDS::lookup(prf_algo.get_oid());
-
-      std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
-
       if(key_length == 0)
          key_length = default_key_size;
 
+      const std::string prf = OIDS::lookup(prf_algo.get_oid());
+      std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
       return pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations);
       }
 #if defined(BOTAN_HAS_SCRYPT)
@@ -50680,24 +51926,39 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
       {
 #if defined(BOTAN_HAS_SCRYPT)
 
-      Scrypt_Params params(32768, 8, 4);
+      std::unique_ptr<PasswordHashFamily> pwhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
+
+      std::unique_ptr<PasswordHash> pwhash;
 
       if(msec_in_iterations_out)
-         params = Scrypt_Params(std::chrono::milliseconds(*msec_in_iterations_out));
+         {
+         const std::chrono::milliseconds msec(*msec_in_iterations_out);
+         pwhash = pwhash_fam->tune(key_length, msec);
+         }
       else
-         params = Scrypt_Params(iterations_if_msec_null);
+         {
+         pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
+         }
 
       secure_vector<uint8_t> key(key_length);
-      scrypt(key.data(), key.size(), passphrase,
-             salt.data(), salt.size(), params);
+      pwhash->derive_key(key.data(), key.size(),
+                         passphrase.c_str(), passphrase.size(),
+                         salt.data(), salt.size());
+
+      const size_t N = pwhash->memory_param();
+      const size_t r = pwhash->iterations();
+      const size_t p = pwhash->parallelism();
+
+      if(msec_in_iterations_out)
+         *msec_in_iterations_out = 0;
 
       std::vector<uint8_t> scrypt_params;
       DER_Encoder(scrypt_params)
          .start_cons(SEQUENCE)
             .encode(salt, OCTET_STRING)
-            .encode(params.N())
-            .encode(params.r())
-            .encode(params.p())
+            .encode(N)
+            .encode(r)
+            .encode(p)
             .encode(key_length)
          .end_cons();
 
@@ -50710,25 +51971,35 @@ secure_vector<uint8_t> derive_key(const std::string& passphrase,
    else
       {
       const std::string prf = "HMAC(" + digest + ")";
+      const std::string pbkdf_name = "PBKDF2(" + prf + ")";
 
-      std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
+      std::unique_ptr<PasswordHashFamily> pwhash_fam = PasswordHashFamily::create(pbkdf_name);
+      if(!pwhash_fam)
+         throw Invalid_Argument("Unknown password hash digest " + digest);
 
-      size_t iterations = iterations_if_msec_null;
-
-      secure_vector<uint8_t> key;
+      std::unique_ptr<PasswordHash> pwhash;
 
       if(msec_in_iterations_out)
          {
-         std::chrono::milliseconds msec(*msec_in_iterations_out);
-         key = pbkdf->derive_key(key_length, passphrase, salt.data(), salt.size(), msec, iterations).bits_of();
-         *msec_in_iterations_out = iterations;
+         const std::chrono::milliseconds msec(*msec_in_iterations_out);
+         pwhash = pwhash_fam->tune(key_length, msec);
          }
       else
          {
-         key = pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations);
+         pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
          }
 
+      secure_vector<uint8_t> key(key_length);
+      pwhash->derive_key(key.data(), key.size(),
+                         passphrase.c_str(), passphrase.size(),
+                         salt.data(), salt.size());
+
       std::vector<uint8_t> pbkdf2_params;
+
+      const size_t iterations = pwhash->iterations();
+
+      if(msec_in_iterations_out)
+         *msec_in_iterations_out = iterations;
 
       DER_Encoder(pbkdf2_params)
          .start_cons(SEQUENCE)
@@ -50760,7 +52031,7 @@ pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
    if(cipher_spec.size() != 2)
       throw Encoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
 
-   if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
+   if(!known_pbes_cipher_mode(cipher_spec[1]))
       throw Encoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
    const OID cipher_oid = OIDS::lookup(cipher);
@@ -50868,7 +52139,7 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
    const std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
       throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
-   if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
+   if(!known_pbes_cipher_mode(cipher_spec[1]))
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
    secure_vector<uint8_t> iv;
@@ -51017,6 +52288,88 @@ secure_vector<uint8_t> PBKDF::pbkdf_timed(size_t out_len,
 
 }
 /*
+* (C) 2018 Ribose Inc
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+#if defined(BOTAN_HAS_PBKDF2)
+#endif
+
+#if defined(BOTAN_HAS_PGP_S2K)
+#endif
+
+#if defined(BOTAN_HAS_SCRYPT)
+#endif
+
+namespace Botan {
+
+std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(const std::string& algo_spec,
+                                     const std::string& provider)
+   {
+   const SCAN_Name req(algo_spec);
+
+#if defined(BOTAN_HAS_PBKDF2)
+   if(req.algo_name() == "PBKDF2")
+      {
+      // TODO OpenSSL
+
+      if(provider.empty() || provider == "base")
+         {
+         if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
+            return std::unique_ptr<PasswordHashFamily>(new PBKDF2_Family(mac.release()));
+
+         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
+            return std::unique_ptr<PasswordHashFamily>(new PBKDF2_Family(mac.release()));
+         }
+
+      return nullptr;
+      }
+#endif
+
+#if defined(BOTAN_HAS_SCRYPT)
+   if(req.algo_name() == "Scrypt")
+      {
+      return std::unique_ptr<PasswordHashFamily>(new Scrypt_Family);
+      }
+#endif
+
+#if defined(BOTAN_HAS_PGP_S2K)
+   if(req.algo_name() == "OpenPGP-S2K" && req.arg_count() == 1)
+      {
+      if(auto hash = HashFunction::create(req.arg(0)))
+         {
+         return std::unique_ptr<PasswordHashFamily>(new RFC4880_S2K_Family(hash.release()));
+         }
+      }
+#endif
+
+   BOTAN_UNUSED(req);
+   BOTAN_UNUSED(provider);
+
+   return nullptr;
+   }
+
+//static
+std::unique_ptr<PasswordHashFamily>
+PasswordHashFamily::create_or_throw(const std::string& algo,
+                             const std::string& provider)
+   {
+   if(auto pbkdf = PasswordHashFamily::create(algo, provider))
+      {
+      return pbkdf;
+      }
+   throw Lookup_Error("PasswordHashFamily", algo, provider);
+   }
+
+std::vector<std::string> PasswordHashFamily::providers(const std::string& algo_spec)
+   {
+   return probe_providers_of<PasswordHashFamily>(algo_spec, { "base", "openssl" });
+   }
+
+}
+/*
 * PBKDF1
 * (C) 1999-2007 Jack Lloyd
 *
@@ -51071,6 +52424,7 @@ size_t PKCS5_PBKDF1::pbkdf(uint8_t output_buf[], size_t output_len,
 /*
 * PBKDF2
 * (C) 1999-2007 Jack Lloyd
+* (C) 2018 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -51078,38 +52432,111 @@ size_t PKCS5_PBKDF1::pbkdf(uint8_t output_buf[], size_t output_len,
 
 namespace Botan {
 
+namespace {
+
+void pbkdf2_set_key(MessageAuthenticationCode& prf,
+                    const char* password,
+                    size_t password_len)
+   {
+   try
+      {
+      prf.set_key(cast_char_ptr_to_uint8(password), password_len);
+      }
+   catch(Invalid_Key_Length&)
+      {
+      throw Invalid_Argument("PBKDF2 cannot accept passphrase of the given size");
+      }
+   }
+
+}
+
 size_t
 pbkdf2(MessageAuthenticationCode& prf,
        uint8_t out[],
        size_t out_len,
-       const std::string& passphrase,
+       const std::string& password,
        const uint8_t salt[], size_t salt_len,
        size_t iterations,
        std::chrono::milliseconds msec)
    {
+   if(iterations == 0)
+      {
+      iterations = PBKDF2(prf, out_len, msec).iterations();
+      }
+
+   PBKDF2 pbkdf2(prf, iterations);
+
+   pbkdf2.derive_key(out, out_len,
+                     password.c_str(), password.size(),
+                     salt, salt_len);
+
+   return iterations;
+   }
+
+namespace {
+
+size_t tune_pbkdf2(MessageAuthenticationCode& prf,
+                   size_t output_length,
+                   uint32_t msec)
+   {
+   const size_t prf_sz = prf.output_length();
+   BOTAN_ASSERT_NOMSG(prf_sz > 0);
+   secure_vector<uint8_t> U(prf_sz);
+
+   const size_t trial_iterations = 2000;
+
+   // Short output ensures we only need a single PBKDF2 block
+
+   Timer timer("PBKDF2");
+
+   const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
+
+   prf.set_key(nullptr, 0);
+
+   timer.run_until_elapsed(tune_time, [&]() {
+      uint8_t out[12] = { 0 };
+      uint8_t salt[12] = { 0 };
+      pbkdf2(prf, out, sizeof(out), salt, sizeof(salt), trial_iterations);
+      });
+
+   if(timer.events() == 0)
+      return trial_iterations;
+
+   const uint64_t duration_nsec = timer.value() / timer.events();
+
+   const uint64_t desired_nsec = static_cast<uint64_t>(msec) * 1000000;
+
+   if(duration_nsec > desired_nsec)
+      return trial_iterations;
+
+   const size_t blocks_needed = (output_length + prf_sz - 1) / prf_sz;
+
+   const size_t multiplier = (desired_nsec / duration_nsec / blocks_needed);
+
+   if(multiplier == 0)
+      return trial_iterations;
+   else
+      return trial_iterations * multiplier;
+   }
+
+}
+
+void pbkdf2(MessageAuthenticationCode& prf,
+            uint8_t out[],
+            size_t out_len,
+            const uint8_t salt[],
+            size_t salt_len,
+            size_t iterations)
+   {
    clear_mem(out, out_len);
 
    if(out_len == 0)
-      return 0;
-
-   try
-      {
-      prf.set_key(cast_char_ptr_to_uint8(passphrase.data()), passphrase.size());
-      }
-   catch(Invalid_Key_Length&)
-      {
-      throw Exception("PBKDF2 with " + prf.name() +
-                               " cannot accept passphrases of length " +
-                               std::to_string(passphrase.size()));
-      }
+      return;
 
    const size_t prf_sz = prf.output_length();
+   BOTAN_ASSERT_NOMSG(prf_sz > 0);
+
    secure_vector<uint8_t> U(prf_sz);
-
-   const size_t blocks_needed = round_up(out_len, prf_sz) / prf_sz;
-
-   std::chrono::microseconds usec_per_block =
-      std::chrono::duration_cast<std::chrono::microseconds>(msec) / blocks_needed;
 
    uint32_t counter = 1;
    while(out_len)
@@ -51122,65 +52549,94 @@ pbkdf2(MessageAuthenticationCode& prf,
 
       xor_buf(out, U.data(), prf_output);
 
-      if(iterations == 0)
+      for(size_t i = 1; i != iterations; ++i)
          {
-         /*
-         If no iterations set, run the first block to calibrate based
-         on how long hashing takes on whatever machine we're running on.
-         */
-
-         const auto start = std::chrono::high_resolution_clock::now();
-
-         iterations = 1; // the first iteration we did above
-
-         while(true)
-            {
-            prf.update(U);
-            prf.final(U.data());
-            xor_buf(out, U.data(), prf_output);
-            iterations++;
-
-            /*
-            Only break on relatively 'even' iterations. For one it
-            avoids confusion, and likely some broken implementations
-            break on getting completely randomly distributed values
-            */
-            if(iterations % 10000 == 0)
-               {
-               auto time_taken = std::chrono::high_resolution_clock::now() - start;
-               auto usec_taken = std::chrono::duration_cast<std::chrono::microseconds>(time_taken);
-               if(usec_taken > usec_per_block)
-                  break;
-               }
-            }
-         }
-      else
-         {
-         for(size_t i = 1; i != iterations; ++i)
-            {
-            prf.update(U);
-            prf.final(U.data());
-            xor_buf(out, U.data(), prf_output);
-            }
+         prf.update(U);
+         prf.final(U.data());
+         xor_buf(out, U.data(), prf_output);
          }
 
       out_len -= prf_output;
       out += prf_output;
       }
-
-   return iterations;
    }
 
+// PBKDF interface
 size_t
 PKCS5_PBKDF2::pbkdf(uint8_t key[], size_t key_len,
-                    const std::string& passphrase,
+                    const std::string& password,
                     const uint8_t salt[], size_t salt_len,
                     size_t iterations,
                     std::chrono::milliseconds msec) const
    {
-   return pbkdf2(*m_mac.get(), key, key_len, passphrase, salt, salt_len, iterations, msec);
+   if(iterations == 0)
+      {
+      iterations = PBKDF2(*m_mac, key_len, msec).iterations();
+      }
+
+   PBKDF2 pbkdf2(*m_mac, iterations);
+
+   pbkdf2.derive_key(key, key_len,
+                     password.c_str(), password.size(),
+                     salt, salt_len);
+
+   return iterations;
    }
 
+std::string PKCS5_PBKDF2::name() const
+   {
+   return "PBKDF2(" + m_mac->name() + ")";
+   }
+
+PBKDF* PKCS5_PBKDF2::clone() const
+   {
+   return new PKCS5_PBKDF2(m_mac->clone());
+   }
+
+// PasswordHash interface
+
+PBKDF2::PBKDF2(const MessageAuthenticationCode& prf, size_t olen, std::chrono::milliseconds msec) :
+   m_prf(prf.clone()),
+   m_iterations(tune_pbkdf2(*m_prf, olen, static_cast<uint32_t>(msec.count())))
+   {}
+
+std::string PBKDF2::to_string() const
+   {
+   return "PBKDF2(" + m_prf->name() + "," + std::to_string(m_iterations) + ")";
+   }
+
+void PBKDF2::derive_key(uint8_t out[], size_t out_len,
+                        const char* password, const size_t password_len,
+                        const uint8_t salt[], size_t salt_len) const
+   {
+   pbkdf2_set_key(*m_prf, password, password_len);
+   pbkdf2(*m_prf, out, out_len, salt, salt_len, m_iterations);
+   }
+
+std::string PBKDF2_Family::name() const
+   {
+   return "PBKDF2(" + m_prf->name() + ")";
+   }
+
+std::unique_ptr<PasswordHash> PBKDF2_Family::tune(size_t output_len, std::chrono::milliseconds msec, size_t) const
+   {
+   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, output_len, msec));
+   }
+
+std::unique_ptr<PasswordHash> PBKDF2_Family::default_params() const
+   {
+   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, 150000));
+   }
+
+std::unique_ptr<PasswordHash> PBKDF2_Family::from_params(size_t iter, size_t, size_t) const
+   {
+   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, iter));
+   }
+
+std::unique_ptr<PasswordHash> PBKDF2_Family::from_iterations(size_t iter) const
+   {
+   return std::unique_ptr<PasswordHash>(new PBKDF2(*m_prf, iter));
+   }
 
 }
 /*
@@ -51351,6 +52807,7 @@ bool matches(DataSource& source, const std::string& extra,
 /*
 * OpenPGP S2K
 * (C) 1999-2007,2017 Jack Lloyd
+* (C) 2018 Ribose Inc
 *
 * Distributed under the terms of the Botan license
 */
@@ -51398,53 +52855,48 @@ static const uint32_t OPENPGP_S2K_ITERS[256] = {
    44040192, 46137344, 48234496, 50331648, 52428800, 54525952,
    56623104, 58720256, 60817408, 62914560, 65011712 };
 
-//static
-uint8_t OpenPGP_S2K::encode_count(size_t desired_iterations)
+uint8_t RFC4880_encode_count(size_t desired_iterations)
    {
-   /*
-   Only 256 different iterations are actually representable in OpenPGP format ...
-   */
-   for(size_t c = 0; c < 256; ++c)
-      {
-      const uint32_t decoded_iter = OPENPGP_S2K_ITERS[c];
-      if(decoded_iter >= desired_iterations)
-         return static_cast<uint8_t>(c);
-      }
+   if(desired_iterations <= OPENPGP_S2K_ITERS[0])
+      return 0;
 
-   return 255;
+   if(desired_iterations >= OPENPGP_S2K_ITERS[255])
+      return 255;
+
+   auto i = std::upper_bound(OPENPGP_S2K_ITERS, OPENPGP_S2K_ITERS + 256, desired_iterations);
+
+   return static_cast<uint8_t>(i - OPENPGP_S2K_ITERS);
    }
 
-//static
-size_t OpenPGP_S2K::decode_count(uint8_t iter)
+size_t RFC4880_decode_count(uint8_t iter)
    {
    return OPENPGP_S2K_ITERS[iter];
    }
 
-size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
-                          const std::string& passphrase,
-                          const uint8_t salt[], size_t salt_len,
-                          size_t iterations,
-                          std::chrono::milliseconds msec) const
+namespace {
+
+void pgp_s2k(HashFunction& hash,
+             uint8_t output_buf[], size_t output_len,
+             const char* password, const size_t password_size,
+             const uint8_t salt[], size_t salt_len,
+             size_t iterations)
    {
-   if(iterations == 0 && msec.count() > 0) // FIXME
-      throw Not_Implemented("OpenPGP_S2K does not implemented timed KDF");
-
    if(iterations > 1 && salt_len == 0)
-      throw Invalid_Argument("OpenPGP_S2K requires a salt in iterated mode");
+      throw Invalid_Argument("OpenPGP S2K requires a salt in iterated mode");
 
-   secure_vector<uint8_t> input_buf(salt_len + passphrase.size());
+   secure_vector<uint8_t> input_buf(salt_len + password_size);
    if(salt_len > 0)
       {
       copy_mem(&input_buf[0], salt, salt_len);
       }
-   if(passphrase.empty() == false)
+   if(password_size > 0)
       {
       copy_mem(&input_buf[salt_len],
-               cast_char_ptr_to_uint8(passphrase.data()),
-               passphrase.size());
+               cast_char_ptr_to_uint8(password),
+               password_size);
       }
 
-   secure_vector<uint8_t> hash_buf(m_hash->output_length());
+   secure_vector<uint8_t> hash_buf(hash.output_length());
 
    size_t pass = 0;
    size_t generated = 0;
@@ -51456,7 +52908,7 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
 
       // Preload some number of zero bytes (empty first iteration)
       std::vector<uint8_t> zero_padding(pass);
-      m_hash->update(zero_padding);
+      hash.update(zero_padding);
 
       // The input is always fully processed even if iterations is very small
       if(input_buf.empty() == false)
@@ -51465,18 +52917,105 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
          while(left > 0)
             {
             const size_t input_to_take = std::min(left, input_buf.size());
-            m_hash->update(input_buf.data(), input_to_take);
+            hash.update(input_buf.data(), input_to_take);
             left -= input_to_take;
             }
          }
 
-      m_hash->final(hash_buf.data());
+      hash.final(hash_buf.data());
       copy_mem(output_buf + generated, hash_buf.data(), output_this_pass);
       generated += output_this_pass;
       ++pass;
       }
+   }
+
+}
+
+size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
+                          const std::string& password,
+                          const uint8_t salt[], size_t salt_len,
+                          size_t iterations,
+                          std::chrono::milliseconds msec) const
+   {
+   std::unique_ptr<PasswordHash> pwdhash;
+
+   if(iterations == 0)
+      {
+      RFC4880_S2K_Family s2k_params(m_hash->clone());
+      iterations = s2k_params.tune(output_len, msec, 0)->iterations();
+      }
+
+   pgp_s2k(*m_hash, output_buf, output_len,
+           password.c_str(), password.size(),
+           salt, salt_len,
+           iterations);
 
    return iterations;
+   }
+
+std::string RFC4880_S2K_Family::name() const
+   {
+   return "OpenPGP-S2K(" + m_hash->name() + ")";
+   }
+
+std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len, std::chrono::milliseconds msec, size_t) const
+   {
+   const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
+
+   const size_t buf_size = 1024;
+   std::vector<uint8_t> buffer(buf_size);
+
+   Timer timer("RFC4880_S2K", buf_size);
+   timer.run_until_elapsed(tune_time, [&]() {
+      m_hash->update(buffer);
+      });
+
+   const double hash_bytes_per_second = timer.bytes_per_second();
+   const uint64_t desired_nsec = msec.count() * 1000000;
+
+   const size_t hash_size = m_hash->output_length();
+   const size_t blocks_required = (output_len <= hash_size ? 1 : (output_len + hash_size - 1) / hash_size);
+
+   const double bytes_to_be_hashed = (hash_bytes_per_second * (desired_nsec / 1000000000.0)) / blocks_required;
+   const size_t iterations = RFC4880_round_iterations(static_cast<size_t>(bytes_to_be_hashed));
+
+   return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), iterations));
+   }
+
+std::unique_ptr<PasswordHash> RFC4880_S2K_Family::from_params(size_t iter, size_t, size_t) const
+   {
+   return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), iter));
+   }
+
+std::unique_ptr<PasswordHash> RFC4880_S2K_Family::default_params() const
+   {
+   return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), 50331648));
+   }
+
+std::unique_ptr<PasswordHash> RFC4880_S2K_Family::from_iterations(size_t iter) const
+   {
+   return std::unique_ptr<PasswordHash>(new RFC4880_S2K(m_hash->clone(), iter));
+   }
+
+RFC4880_S2K::RFC4880_S2K(HashFunction* hash, size_t iterations) :
+   m_hash(hash),
+   m_iterations(iterations)
+   {
+   }
+
+std::string RFC4880_S2K::to_string() const
+   {
+   return "OpenPGP-S2K(" + m_hash->name() + "," + std::to_string(m_iterations) + ")";
+   }
+
+void RFC4880_S2K::derive_key(uint8_t out[], size_t out_len,
+                             const char* password, const size_t password_len,
+                             const uint8_t salt[], size_t salt_len) const
+   {
+   pgp_s2k(*m_hash, out, out_len,
+           password, password_len,
+           salt, salt_len,
+           m_iterations);
    }
 
 }
@@ -51614,8 +53153,9 @@ EMSA* get_emsa(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)
    if(req.algo_name() == "EMSA_PKCS1" ||
-         req.algo_name() == "EMSA-PKCS1-v1_5" ||
-         req.algo_name() == "EMSA3")
+      req.algo_name() == "PKCS1v15" ||
+      req.algo_name() == "EMSA-PKCS1-v1_5" ||
+      req.algo_name() == "EMSA3")
       {
       if(req.arg_count() == 2 && req.arg(0) == "Raw")
          {
@@ -51639,25 +53179,45 @@ EMSA* get_emsa(const std::string& algo_spec)
 #endif
 
 #if defined(BOTAN_HAS_EMSA_PSSR)
-   if(req.algo_name() == "PSSR" ||
-      req.algo_name() == "EMSA-PSS" ||
-      req.algo_name() == "PSS-MGF1" ||
-      req.algo_name() == "EMSA4" ||
+   if(req.algo_name() == "PSS_Raw" ||
       req.algo_name() == "PSSR_Raw")
       {
-      if(req.arg_count_between(1, 3))
+      if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1")
          {
-         if(req.arg(1, "MGF1") != "MGF1")
-            return nullptr; // not supported
-
          if(auto h = HashFunction::create(req.arg(0)))
             {
-            const size_t salt_size = req.arg_as_integer(2, h->output_length());
-
-            if(req.algo_name() == "PSSR_Raw")
+            if(req.arg_count() == 3)
+               {
+               const size_t salt_size = req.arg_as_integer(2, 0);
                return new PSSR_Raw(h.release(), salt_size);
+               }
             else
+               {
+               return new PSSR_Raw(h.release());
+               }
+            }
+         }
+      }
+   
+   if(req.algo_name() == "PSS" ||
+      req.algo_name() == "PSSR" ||
+      req.algo_name() == "EMSA-PSS" ||
+      req.algo_name() == "PSS-MGF1" ||
+      req.algo_name() == "EMSA4")
+      {
+      if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1")
+         {
+         if(auto h = HashFunction::create(req.arg(0)))
+            {
+            if(req.arg_count() == 3)
+               {
+               const size_t salt_size = req.arg_as_integer(2, 0);
                return new PSSR(h.release(), salt_size);
+               }
+            else
+               {
+               return new PSSR(h.release());
+               }
             }
          }
       }
@@ -51824,34 +53384,41 @@ void poly1305_blocks(secure_vector<uint64_t>& X, const uint8_t *m, size_t blocks
    const uint64_t r1 = X[1];
    const uint64_t r2 = X[2];
 
+   const uint64_t M44 = 0xFFFFFFFFFFF;
+   const uint64_t M42 = 0x3FFFFFFFFFF;
+
    uint64_t h0 = X[3+0];
    uint64_t h1 = X[3+1];
    uint64_t h2 = X[3+2];
 
-   const uint64_t s1 = r1 * (5 << 2);
-   const uint64_t s2 = r2 * (5 << 2);
+   const uint64_t s1 = r1 * 20;
+   const uint64_t s2 = r2 * 20;
 
-   while(blocks--)
+   for(size_t i = 0; i != blocks; ++i)
       {
-      /* h += m[i] */
       const uint64_t t0 = load_le<uint64_t>(m, 0);
       const uint64_t t1 = load_le<uint64_t>(m, 1);
 
-      h0 += (( t0                    ) & 0xfffffffffff);
-      h1 += (((t0 >> 44) | (t1 << 20)) & 0xfffffffffff);
-      h2 += (((t1 >> 24)             ) & 0x3ffffffffff) | hibit;
+      h0 += (( t0                    ) & M44);
+      h1 += (((t0 >> 44) | (t1 << 20)) & M44);
+      h2 += (((t1 >> 24)             ) & M42) | hibit;
 
-      /* h *= r */
-      uint128_t d0 = uint128_t(h0) * r0 + uint128_t(h1) * s2 + uint128_t(h2) * s1;
-      uint128_t d1 = uint128_t(h0) * r1 + uint128_t(h1) * r0 + uint128_t(h2) * s2;
-      uint128_t d2 = uint128_t(h0) * r2 + uint128_t(h1) * r1 + uint128_t(h2) * r0;
+      const uint128_t d0 = uint128_t(h0) * r0 + uint128_t(h1) * s2 + uint128_t(h2) * s1;
+      const uint64_t c0 = carry_shift(d0, 44);
 
-      /* (partial) h %= p */
-      uint64_t     c = carry_shift(d0, 44); h0 = d0 & 0xfffffffffff;
-      d1 += c;     c = carry_shift(d1, 44); h1 = d1 & 0xfffffffffff;
-      d2 += c;     c = carry_shift(d2, 42); h2 = d2 & 0x3ffffffffff;
-      h0 += c * 5; c = carry_shift(h0, 44); h0 = h0 & 0xfffffffffff;
-      h1 += c;
+      const uint128_t d1 = uint128_t(h0) * r1 + uint128_t(h1) * r0 + uint128_t(h2) * s2 + c0;
+      const uint64_t c1 = carry_shift(d1, 44);
+
+      const uint128_t d2 = uint128_t(h0) * r2 + uint128_t(h1) * r1 + uint128_t(h2) * r0 + c1;
+      const uint64_t c2 = carry_shift(d2, 42);
+
+      h0 = d0 & M44;
+      h1 = d1 & M44;
+      h2 = d2 & M42;
+
+      h0 += c2 * 5;
+      h1 += carry_shift(h0, 44);
+      h0 = h0 & M44;
 
       m += 16;
       }
@@ -51863,42 +53430,41 @@ void poly1305_blocks(secure_vector<uint64_t>& X, const uint8_t *m, size_t blocks
 
 void poly1305_finish(secure_vector<uint64_t>& X, uint8_t mac[16])
    {
+   const uint64_t M44 = 0xFFFFFFFFFFF;
+   const uint64_t M42 = 0x3FFFFFFFFFF;
+
    /* fully carry h */
    uint64_t h0 = X[3+0];
    uint64_t h1 = X[3+1];
    uint64_t h2 = X[3+2];
 
    uint64_t c;
-                c = (h1 >> 44); h1 &= 0xfffffffffff;
-   h2 += c;     c = (h2 >> 42); h2 &= 0x3ffffffffff;
-   h0 += c * 5; c = (h0 >> 44); h0 &= 0xfffffffffff;
-   h1 += c;     c = (h1 >> 44); h1 &= 0xfffffffffff;
-   h2 += c;     c = (h2 >> 42); h2 &= 0x3ffffffffff;
-   h0 += c * 5; c = (h0 >> 44); h0 &= 0xfffffffffff;
+                c = (h1 >> 44); h1 &= M44;
+   h2 += c;     c = (h2 >> 42); h2 &= M42;
+   h0 += c * 5; c = (h0 >> 44); h0 &= M44;
+   h1 += c;     c = (h1 >> 44); h1 &= M44;
+   h2 += c;     c = (h2 >> 42); h2 &= M42;
+   h0 += c * 5; c = (h0 >> 44); h0 &= M44;
    h1 += c;
 
    /* compute h + -p */
-   uint64_t g0 = h0 + 5; c = (g0 >> 44); g0 &= 0xfffffffffff;
-   uint64_t g1 = h1 + c; c = (g1 >> 44); g1 &= 0xfffffffffff;
+   uint64_t g0 = h0 + 5; c = (g0 >> 44); g0 &= M44;
+   uint64_t g1 = h1 + c; c = (g1 >> 44); g1 &= M44;
    uint64_t g2 = h2 + c - (static_cast<uint64_t>(1) << 42);
 
    /* select h if h < p, or h + -p if h >= p */
-   c = (g2 >> ((sizeof(uint64_t) * 8) - 1)) - 1;
-   g0 &= c;
-   g1 &= c;
-   g2 &= c;
-   c = ~c;
-   h0 = (h0 & c) | g0;
-   h1 = (h1 & c) | g1;
-   h2 = (h2 & c) | g2;
+   const auto c_mask = CT::Mask<uint64_t>::expand(c);
+   h0 = c_mask.select(g0, h0);
+   h1 = c_mask.select(g1, h1);
+   h2 = c_mask.select(g2, h2);
 
    /* h = (h + pad) */
    const uint64_t t0 = X[6];
    const uint64_t t1 = X[7];
 
-   h0 += (( t0                    ) & 0xfffffffffff)    ; c = (h0 >> 44); h0 &= 0xfffffffffff;
-   h1 += (((t0 >> 44) | (t1 << 20)) & 0xfffffffffff) + c; c = (h1 >> 44); h1 &= 0xfffffffffff;
-   h2 += (((t1 >> 24)             ) & 0x3ffffffffff) + c;                 h2 &= 0x3ffffffffff;
+   h0 += (( t0                    ) & M44)    ; c = (h0 >> 44); h0 &= M44;
+   h1 += (((t0 >> 44) | (t1 << 20)) & M44) + c; c = (h1 >> 44); h1 &= M44;
+   h2 += (((t1 >> 24)             ) & M42) + c;                 h2 &= M42;
 
    /* mac = h % (2^128) */
    h0 = ((h0      ) | (h1 << 44));
@@ -52011,8 +53577,13 @@ void poly_double(uint8_t out[], const uint8_t in[])
    const uint64_t POLY = static_cast<uint64_t>(P);
 
    const uint64_t carry = POLY * (W[0] >> 63);
-   for(size_t i = 0; i != LIMBS - 1; ++i)
-      W[i] = (W[i] << 1) ^ (W[i+1] >> 63);
+
+   if(LIMBS > 0)
+      {
+      for(size_t i = 0; i != LIMBS - 1; ++i)
+         W[i] = (W[i] << 1) ^ (W[i+1] >> 63);
+      }
+
    W[LIMBS-1] = (W[LIMBS-1] << 1) ^ carry;
 
    copy_out_be(out, LIMBS*8, W);
@@ -52027,8 +53598,13 @@ void poly_double_le(uint8_t out[], const uint8_t in[])
    const uint64_t POLY = static_cast<uint64_t>(P);
 
    const uint64_t carry = POLY * (W[LIMBS-1] >> 63);
-   for(size_t i = 0; i != LIMBS - 1; ++i)
-      W[LIMBS-1-i] = (W[LIMBS-1-i] << 1) ^ (W[LIMBS-2-i] >> 63);
+
+   if(LIMBS > 0)
+      {
+      for(size_t i = 0; i != LIMBS - 1; ++i)
+         W[LIMBS-1-i] = (W[LIMBS-1-i] << 1) ^ (W[LIMBS-2-i] >> 63);
+      }
+
    W[0] = (W[0] << 1) ^ carry;
 
    copy_out_le(out, LIMBS*8, W);
@@ -52469,7 +54045,7 @@ BigInt Blinder::blinding_nonce() const
 BigInt Blinder::blind(const BigInt& i) const
    {
    if(!m_reducer.initialized())
-      throw Exception("Blinder not initialized, cannot blind");
+      throw Invalid_State("Blinder not initialized, cannot blind");
 
    ++m_counter;
 
@@ -52492,7 +54068,7 @@ BigInt Blinder::blind(const BigInt& i) const
 BigInt Blinder::unblind(const BigInt& i) const
    {
    if(!m_reducer.initialized())
-      throw Exception("Blinder not initialized, cannot unblind");
+      throw Invalid_State("Blinder not initialized, cannot unblind");
 
    return m_reducer.multiply(i, m_d);
    }
@@ -52631,10 +54207,8 @@ load_public_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_SM2)
-   if(alg_name == "SM2_Sig")
-      return std::unique_ptr<Public_Key>(new SM2_Signature_PublicKey(alg_id, key_bits));
-   if(alg_name == "SM2_Enc")
-      return std::unique_ptr<Public_Key>(new SM2_Encryption_PublicKey(alg_id, key_bits));
+   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
+      return std::unique_ptr<Public_Key>(new SM2_PublicKey(alg_id, key_bits));
 #endif
 
 #if defined(BOTAN_HAS_XMSS)
@@ -52709,10 +54283,8 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 #endif
 
 #if defined(BOTAN_HAS_SM2)
-   if(alg_name == "SM2_Sig")
-      return std::unique_ptr<Private_Key>(new SM2_Signature_PrivateKey(alg_id, key_bits));
-   if(alg_name == "SM2_Enc")
-      return std::unique_ptr<Private_Key>(new SM2_Encryption_PrivateKey(alg_id, key_bits));
+   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
+      return std::unique_ptr<Private_Key>(new SM2_PrivateKey(alg_id, key_bits));
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
@@ -52734,7 +54306,7 @@ namespace {
 
 std::string default_ec_group_for(const std::string& alg_name)
    {
-   if(alg_name == "SM2_Enc" || alg_name == "SM2_Sig")
+   if(alg_name == "SM2" || alg_name == "SM2_Enc" || alg_name == "SM2_Sig")
       return "sm2p256v1";
    if(alg_name == "GOST-34.10")
       return "gost_256A";
@@ -52820,6 +54392,7 @@ create_private_key(const std::string& alg_name,
       alg_name == "ECDH" ||
       alg_name == "ECKCDSA" ||
       alg_name == "ECGDSA" ||
+      alg_name == "SM2" ||
       alg_name == "SM2_Sig" ||
       alg_name == "SM2_Enc" ||
       alg_name == "GOST-34.10")
@@ -52847,10 +54420,8 @@ create_private_key(const std::string& alg_name,
 #endif
 
 #if defined(BOTAN_HAS_SM2)
-      if(alg_name == "SM2_Sig")
-         return std::unique_ptr<Private_Key>(new SM2_Signature_PrivateKey(rng, ec_group));
-      if(alg_name == "SM2_Enc")
-         return std::unique_ptr<Private_Key>(new SM2_Encryption_PrivateKey(rng, ec_group));
+      if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
+         return std::unique_ptr<Private_Key>(new SM2_PrivateKey(rng, ec_group));
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
@@ -53312,7 +54883,7 @@ secure_vector<uint8_t> PKCS8_decode(
       }
    catch(Decoding_Error& e)
       {
-      throw Decoding_Error("PKCS #8 private key decoding failed: " + std::string(e.what()));
+      throw Decoding_Error("PKCS #8 private key decoding", e);
       }
 
    try
@@ -53320,7 +54891,7 @@ secure_vector<uint8_t> PKCS8_decode(
       if(is_encrypted)
          {
          if(OIDS::lookup(pbe_alg_id.get_oid()) != "PBE-PKCS5v20")
-            throw Exception("Unknown PBE type " + pbe_alg_id.get_oid().as_string());
+            throw PKCS8_Exception("Unknown PBE type " + pbe_alg_id.get_oid().as_string());
 #if defined(BOTAN_HAS_PKCS5_PBES2)
          key = pbes2_decrypt(key_data, get_passphrase(), pbe_alg_id.get_parameters());
 #else
@@ -53341,7 +54912,7 @@ secure_vector<uint8_t> PKCS8_decode(
       }
    catch(std::exception& e)
       {
-      throw Decoding_Error("PKCS #8 private key decoding failed: " + std::string(e.what()));
+      throw Decoding_Error("PKCS #8 private key decoding", e);
       }
    return key;
    }
@@ -53382,8 +54953,13 @@ choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
       }
 
    SCAN_Name request(pbe_algo);
-   if(request.algo_name() != "PBE-PKCS5v20" || request.arg_count() != 2)
-      throw Exception("Unsupported PBE " + pbe_algo);
+
+   if(request.arg_count() != 2 ||
+      (request.algo_name() != "PBE-PKCS5v20" && request.algo_name() != "PBES2"))
+      {
+      throw Invalid_Argument("Unsupported PBE " + pbe_algo);
+      }
+
    return std::make_pair(request.arg(0), request.arg(1));
    }
 
@@ -53713,10 +55289,11 @@ PK_Decryptor::decrypt_or_random(const uint8_t in[],
    {
    const secure_vector<uint8_t> fake_pms = rng.random_vec(expected_pt_len);
 
-   uint8_t valid_mask = 0;
-   secure_vector<uint8_t> decoded = do_decrypt(valid_mask, in, length);
+   uint8_t decrypt_valid = 0;
+   secure_vector<uint8_t> decoded = do_decrypt(decrypt_valid, in, length);
 
-   valid_mask &= CT::is_equal(decoded.size(), expected_pt_len);
+   auto valid_mask = CT::Mask<uint8_t>::is_equal(decrypt_valid, 0xFF);
+   valid_mask &= CT::Mask<uint8_t>(CT::Mask<size_t>::is_zero(decoded.size() ^ expected_pt_len));
 
    decoded.resize(expected_pt_len);
 
@@ -53738,14 +55315,13 @@ PK_Decryptor::decrypt_or_random(const uint8_t in[],
 
       BOTAN_ASSERT(off < expected_pt_len, "Offset in range of plaintext");
 
-      valid_mask &= CT::is_equal(decoded[off], exp);
+      auto eq = CT::Mask<uint8_t>::is_equal(decoded[off], exp);
+
+      valid_mask &= eq;
       }
 
-   CT::conditional_copy_mem(valid_mask,
-                            /*output*/decoded.data(),
-                            /*from0*/decoded.data(),
-                            /*from1*/fake_pms.data(),
-                            expected_pt_len);
+   // If valid_mask is false, assign fake pre master instead
+   valid_mask.select_n(decoded.data(), decoded.data(), fake_pms.data(), expected_pt_len);
 
    return decoded;
    }
@@ -53772,6 +55348,11 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
 
 PK_Encryptor_EME::~PK_Encryptor_EME() { /* for unique_ptr */ }
 
+size_t PK_Encryptor_EME::ciphertext_length(size_t ptext_len) const
+   {
+   return m_op->ciphertext_length(ptext_len);
+   }
+
 std::vector<uint8_t>
 PK_Encryptor_EME::enc(const uint8_t in[], size_t length, RandomNumberGenerator& rng) const
    {
@@ -53794,6 +55375,11 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
    }
 
 PK_Decryptor_EME::~PK_Decryptor_EME() { /* for unique_ptr */ }
+
+size_t PK_Decryptor_EME::plaintext_length(size_t ctext_len) const
+   {
+   return m_op->plaintext_length(ctext_len);
+   }
 
 secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask,
                                                  const uint8_t in[], size_t in_len) const
@@ -53876,6 +55462,11 @@ PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&& other) :
    m_op(std::move(other.m_op))
    {}
 
+size_t PK_Key_Agreement::agreed_value_size() const
+   {
+   return m_op->agreed_value_size();
+   }
+
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
                                           const uint8_t in[], size_t in_len,
                                           const uint8_t salt[],
@@ -53927,6 +55518,22 @@ std::vector<uint8_t> der_encode_signature(const std::vector<uint8_t>& sig,
    }
 
 }
+
+size_t PK_Signer::signature_length() const
+   {
+   if(m_sig_format == IEEE_1363)
+      {
+      return m_op->signature_length();
+      }
+   else if(m_sig_format == DER_SEQUENCE)
+      {
+      // This is a large over-estimate but its easier than computing
+      // the exact value
+      return m_op->signature_length() + (8 + 4*m_parts);
+      }
+   else
+      throw Internal_Error("PK_Signer: Invalid signature format enum");
+   }
 
 std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng)
    {
@@ -54143,13 +55750,13 @@ Public_Key* load_key(DataSource& source)
          }
 
       if(key_bits.empty())
-         throw Decoding_Error("X.509 public key decoding failed");
+         throw Decoding_Error("X.509 public key decoding");
 
       return load_public_key(alg_id, key_bits).release();
       }
    catch(Decoding_Error& e)
       {
-      throw Decoding_Error("X.509 public key decoding failed: " + std::string(e.what()));
+      throw Decoding_Error("X.509 public key decoding", e);
       }
    }
 
@@ -54214,10 +55821,20 @@ void RC4::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_position += length;
    }
 
+StreamCipher* RC4::clone() const
+   {
+   return new RC4(m_SKIP);
+   }
+
+Key_Length_Specification RC4::key_spec() const
+   {
+   return Key_Length_Specification(1, 256);
+   }
+
 void RC4::set_iv(const uint8_t*, size_t length)
    {
    if(length > 0)
-      throw Exception("RC4 does not support an IV");
+      throw Invalid_IV_Length("RC4", length);
    }
 
 /*
@@ -54317,8 +55934,9 @@ void RC4::seek(uint64_t)
 
 namespace Botan {
 
-size_t Intel_Rdrand::poll(RandomNumberGenerator& rng) {
-   if(CPUID::has_rdrand() && BOTAN_ENTROPY_INTEL_RNG_POLLS > 0)
+size_t Intel_Rdrand::poll(RandomNumberGenerator& rng)
+   {
+   if(BOTAN_ENTROPY_INTEL_RNG_POLLS > 0 && RDRAND_RNG::available())
       {
       RDRAND_RNG rdrand_rng;
       secure_vector<uint8_t> buf(4 * BOTAN_ENTROPY_INTEL_RNG_POLLS);
@@ -54661,15 +56279,22 @@ namespace Botan {
 
 void RandomNumberGenerator::randomize_with_ts_input(uint8_t output[], size_t output_len)
    {
-   /*
-   Form additional input which is provided to the PRNG implementation
-   to paramaterize the KDF output.
-   */
-   uint8_t additional_input[16] = { 0 };
-   store_le(OS::get_system_timestamp_ns(), additional_input);
-   store_le(OS::get_high_resolution_clock(), additional_input + 8);
+   if(this->accepts_input())
+      {
+      /*
+      Form additional input which is provided to the PRNG implementation
+      to paramaterize the KDF output.
+      */
+      uint8_t additional_input[16] = { 0 };
+      store_le(OS::get_system_timestamp_ns(), additional_input);
+      store_le(OS::get_high_resolution_clock(), additional_input + 8);
 
-   randomize_with_input(output, output_len, additional_input, sizeof(additional_input));
+      this->randomize_with_input(output, output_len, additional_input, sizeof(additional_input));
+      }
+   else
+      {
+      this->randomize(output, output_len);
+      }
    }
 
 void RandomNumberGenerator::randomize_with_input(uint8_t output[], size_t output_len,
@@ -54683,14 +56308,24 @@ size_t RandomNumberGenerator::reseed(Entropy_Sources& srcs,
                                      size_t poll_bits,
                                      std::chrono::milliseconds poll_timeout)
    {
-   return srcs.poll(*this, poll_bits, poll_timeout);
+   if(this->accepts_input())
+      {
+      return srcs.poll(*this, poll_bits, poll_timeout);
+      }
+   else
+      {
+      return 0;
+      }
    }
 
 void RandomNumberGenerator::reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits)
    {
-   secure_vector<uint8_t> buf(poll_bits / 8);
-   rng.randomize(buf.data(), buf.size());
-   this->add_entropy(buf.data(), buf.size());
+   if(this->accepts_input())
+      {
+      secure_vector<uint8_t> buf(poll_bits / 8);
+      rng.randomize(buf.data(), buf.size());
+      this->add_entropy(buf.data(), buf.size());
+      }
    }
 
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
@@ -54698,7 +56333,7 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    return new AutoSeeded_RNG;
 #else
-   throw Exception("make_rng failed, no AutoSeeded_RNG in this build");
+   throw Not_Implemented("make_rng failed, no AutoSeeded_RNG in this build");
 #endif
    }
 
@@ -54709,7 +56344,7 @@ Serialized_RNG::Serialized_RNG() : m_rng(new AutoSeeded_RNG) {}
 #else
 Serialized_RNG::Serialized_RNG()
    {
-   throw Exception("Serialized_RNG default constructor failed: AutoSeeded_RNG disabled in build");
+   throw Not_Implemented("Serialized_RNG default constructor failed: AutoSeeded_RNG disabled in build");
    }
 #endif
 
@@ -54831,8 +56466,8 @@ RSA_PrivateKey::RSA_PrivateKey(const BigInt& prime1,
       m_d = inverse_mod(m_e, phi_n);
       }
 
-   m_d1 = m_d % (m_p - 1);
-   m_d2 = m_d % (m_q - 1);
+   m_d1 = ct_modulo(m_d, m_p - 1);
+   m_d2 = ct_modulo(m_d, m_q - 1);
    }
 
 /*
@@ -54863,8 +56498,8 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    const BigInt phi_n = lcm(m_p - 1, m_q - 1);
    // FIXME: this uses binary ext gcd because phi_n is even
    m_d = inverse_mod(m_e, phi_n);
-   m_d1 = m_d % (m_p - 1);
-   m_d2 = m_d % (m_q - 1);
+   m_d1 = ct_modulo(m_d, m_p - 1);
+   m_d2 = ct_modulo(m_d, m_q - 1);
    m_c = inverse_mod(m_q, m_p);
    }
 
@@ -54879,7 +56514,7 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if(m_d < 2 || m_p < 3 || m_q < 3 || m_p*m_q != m_n)
       return false;
 
-   if(m_d1 != m_d % (m_p - 1) || m_d2 != m_d % (m_q - 1) || m_c != inverse_mod(m_q, m_p))
+   if(m_d1 != ct_modulo(m_d, m_p - 1) || m_d2 != ct_modulo(m_d, m_q - 1) || m_c != inverse_mod(m_q, m_p))
       return false;
 
    const size_t prob = (strong) ? 128 : 12;
@@ -54889,7 +56524,7 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
 
    if(strong)
       {
-      if((m_e * m_d) % lcm(m_p - 1, m_q - 1) != 1)
+      if(ct_modulo(m_e * m_d, lcm(m_p - 1, m_q - 1)) != 1)
          return false;
 
       return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-256)");
@@ -54939,26 +56574,40 @@ class RSA_Private_Operation
 
       BigInt private_op(const BigInt& m) const
          {
+         /*
+         TODO
+           Consider using Montgomery reduction instead of Barrett, using
+           the "Smooth RSA-CRT" method. https://eprint.iacr.org/2007/039.pdf
+         */
+
          const size_t powm_window = 4;
 
          const BigInt d1_mask(m_blinder.rng(), m_blinding_bits);
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+#if defined(BOTAN_TARGET_OS_HAS_THREADS) && !defined(BOTAN_HAS_VALGRIND)
+   #define BOTAN_RSA_USE_ASYNC
+#endif
+
+#if defined(BOTAN_RSA_USE_ASYNC)
          auto future_j1 = std::async(std::launch::async, [this, &m, &d1_mask, powm_window]() {
-               const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
-               auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
-               return monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
-            });
-#else
+#endif
          const BigInt masked_d1 = m_key.get_d1() + (d1_mask * (m_key.get_p() - 1));
-         auto powm_d1_p = monty_precompute(m_monty_p, m, powm_window);
+         auto powm_d1_p = monty_precompute(m_monty_p, m_mod_p.reduce(m), powm_window);
          BigInt j1 = monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
+
+#if defined(BOTAN_RSA_USE_ASYNC)
+         return j1;
+         });
 #endif
 
          const BigInt d2_mask(m_blinder.rng(), m_blinding_bits);
          const BigInt masked_d2 = m_key.get_d2() + (d2_mask * (m_key.get_q() - 1));
-         auto powm_d2_q = monty_precompute(m_monty_q, m, powm_window);
+         auto powm_d2_q = monty_precompute(m_monty_q, m_mod_q.reduce(m), powm_window);
          const BigInt j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits);
+
+#if defined(BOTAN_RSA_USE_ASYNC)
+         BigInt j1 = future_j1.get();
+#endif
 
          /*
          * To recover the final value from the CRT representation (j1,j2)
@@ -54966,17 +56615,14 @@ class RSA_Private_Operation
          * c = q^-1 mod p (this is precomputed)
          * h = c*(j1-j2) mod p
          * m = j2 + h*q
+         *
+         * We must avoid leaking if j1 >= j2 or not, as doing so allows deriving
+         * information about the secret prime. Do this by first adding p to j1,
+         * which should ensure the subtraction of j2 does not underflow. But
+         * this may still underflow if p and q are imbalanced in size.
          */
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-         BigInt j1 = future_j1.get();
-#endif
-
-         /*
-         To prevent a side channel that allows detecting case where j1 < j2,
-         add p to j1 before reducing [computing c*(p+j1-j2) mod p]
-         */
-         j1 = m_mod_p.reduce(sub_mul(m_key.get_p() + j1, j2, m_key.get_c()));
+         j1 = m_mod_p.multiply(m_mod_p.reduce((m_key.get_p() + j1) - j2), m_key.get_c());
          return mul_add(j1, m_key.get_q(), j2);
          }
 
@@ -55003,6 +56649,8 @@ class RSA_Signature_Operation final : public PK_Ops::Signature_with_EMSA,
    public:
 
       size_t max_input_bits() const override { return get_max_input_bits(); }
+
+      size_t signature_length() const override { return m_key.get_n().bytes(); }
 
       RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string& emsa, RandomNumberGenerator& rng) :
          PK_Ops::Signature_with_EMSA(emsa),
@@ -55031,6 +56679,8 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
          RSA_Private_Operation(rsa, rng)
          {
          }
+
+      size_t plaintext_length(size_t) const override { return m_mod_bytes; }
 
       secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t msg_len) override
          {
@@ -55077,7 +56727,12 @@ class RSA_Public_Operation
          m_monty_n(std::make_shared<Montgomery_Params>(m_n))
          {}
 
-      size_t get_max_input_bits() const { return (m_n.bits() - 1); }
+      size_t get_max_input_bits() const
+         {
+         const size_t n_bits = m_n.bits();
+         BOTAN_ASSERT_NOMSG(n_bits >= 384);
+         return n_bits - 1;
+         }
 
    protected:
       BigInt public_op(const BigInt& m) const
@@ -55108,6 +56763,8 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
          RSA_Public_Operation(rsa)
          {
          }
+
+      size_t ciphertext_length(size_t) const override { return m_n.bytes(); }
 
       size_t max_raw_input_bits() const override { return get_max_input_bits(); }
 
@@ -55393,14 +57050,17 @@ void Salsa20::cipher(const uint8_t in[], uint8_t out[], size_t length)
 
    while(length >= m_buffer.size() - m_position)
       {
-      xor_buf(out, in, &m_buffer[m_position], m_buffer.size() - m_position);
-      length -= (m_buffer.size() - m_position);
-      in += (m_buffer.size() - m_position);
-      out += (m_buffer.size() - m_position);
+      const size_t available = m_buffer.size() - m_position;
+
+      xor_buf(out, in, &m_buffer[m_position], available);
       salsa_core(m_buffer.data(), m_state.data(), 20);
 
       ++m_state[8];
       m_state[9] += (m_state[8] == 0);
+
+      length -= available;
+      in += available;
+      out += available;
 
       m_position = 0;
       }
@@ -55410,10 +57070,7 @@ void Salsa20::cipher(const uint8_t in[], uint8_t out[], size_t length)
    m_position += length;
    }
 
-/*
-* Salsa20 Key Schedule
-*/
-void Salsa20::key_schedule(const uint8_t key[], size_t length)
+void Salsa20::initialize_state()
    {
    static const uint32_t TAU[] =
       { 0x61707865, 0x3120646e, 0x79622d36, 0x6b206574 };
@@ -55421,32 +57078,54 @@ void Salsa20::key_schedule(const uint8_t key[], size_t length)
    static const uint32_t SIGMA[] =
       { 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574 };
 
-   const uint32_t* CONSTANTS = (length == 16) ? TAU : SIGMA;
+   m_state[1] = m_key[0];
+   m_state[2] = m_key[1];
+   m_state[3] = m_key[2];
+   m_state[4] = m_key[3];
+
+   if(m_key.size() == 4)
+      {
+      m_state[0] = TAU[0];
+      m_state[5] = TAU[1];
+      m_state[10] = TAU[2];
+      m_state[15] = TAU[3];
+      m_state[11] = m_key[0];
+      m_state[12] = m_key[1];
+      m_state[13] = m_key[2];
+      m_state[14] = m_key[3];
+      }
+   else
+      {
+      m_state[0] = SIGMA[0];
+      m_state[5] = SIGMA[1];
+      m_state[10] = SIGMA[2];
+      m_state[15] = SIGMA[3];
+      m_state[11] = m_key[4];
+      m_state[12] = m_key[5];
+      m_state[13] = m_key[6];
+      m_state[14] = m_key[7];
+      }
+
+   m_state[6] = 0;
+   m_state[7] = 0;
+   m_state[8] = 0;
+   m_state[9] = 0;
+
+   m_position = 0;
+   }
+
+/*
+* Salsa20 Key Schedule
+*/
+void Salsa20::key_schedule(const uint8_t key[], size_t length)
+   {
+   m_key.resize(length / 4);
+   load_le<uint32_t>(m_key.data(), key, m_key.size());
 
    m_state.resize(16);
    m_buffer.resize(64);
 
-   m_state[0] = CONSTANTS[0];
-   m_state[5] = CONSTANTS[1];
-   m_state[10] = CONSTANTS[2];
-   m_state[15] = CONSTANTS[3];
-
-   m_state[1] = load_le<uint32_t>(key, 0);
-   m_state[2] = load_le<uint32_t>(key, 1);
-   m_state[3] = load_le<uint32_t>(key, 2);
-   m_state[4] = load_le<uint32_t>(key, 3);
-
-   if(length == 32)
-      key += 16;
-
-   m_state[11] = load_le<uint32_t>(key, 0);
-   m_state[12] = load_le<uint32_t>(key, 1);
-   m_state[13] = load_le<uint32_t>(key, 2);
-   m_state[14] = load_le<uint32_t>(key, 3);
-
-   m_position = 0;
-
-   set_iv(nullptr, 0); // all-zero IV
+   set_iv(nullptr, 0);
    }
 
 /*
@@ -55454,8 +57133,12 @@ void Salsa20::key_schedule(const uint8_t key[], size_t length)
 */
 void Salsa20::set_iv(const uint8_t iv[], size_t length)
    {
+   verify_key_set(m_state.empty() == false);
+
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
+
+   initialize_state();
 
    if(length == 0)
       {
@@ -55502,9 +57185,26 @@ void Salsa20::set_iv(const uint8_t iv[], size_t length)
    m_position = 0;
    }
 
-/*
-* Return the name of this type
-*/
+bool Salsa20::valid_iv_length(size_t iv_len) const
+   {
+   return (iv_len == 0 || iv_len == 8 || iv_len == 24);
+   }
+
+size_t Salsa20::default_iv_length() const
+   {
+   return 24;
+   }
+
+Key_Length_Specification Salsa20::key_spec() const
+   {
+   return Key_Length_Specification(16, 32, 16);
+   }
+
+StreamCipher* Salsa20::clone() const
+   {
+   return new Salsa20;
+   }
+
 std::string Salsa20::name() const
    {
    return "Salsa20";
@@ -55515,6 +57215,7 @@ std::string Salsa20::name() const
 */
 void Salsa20::clear()
    {
+   zap(m_key);
    zap(m_state);
    zap(m_buffer);
    m_position = 0;
@@ -55542,12 +57243,157 @@ void Salsa20::seek(uint64_t offset)
 }
 /**
 * (C) 2018 Jack Lloyd
+* (C) 2018 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 
 namespace Botan {
+
+std::string Scrypt_Family::name() const
+   {
+   return "Scrypt";
+   }
+
+std::unique_ptr<PasswordHash> Scrypt_Family::default_params() const
+   {
+   return std::unique_ptr<PasswordHash>(new Scrypt(32768, 8, 1));
+   }
+
+std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
+                                                  std::chrono::milliseconds msec,
+                                                  size_t max_memory_usage_mb) const
+   {
+   BOTAN_UNUSED(output_length);
+
+   /*
+   * Some rough relations between scrypt parameters and runtime.
+   * Denote here by stime(N,r,p) the msec it takes to run scrypt.
+   *
+   * Emperically for smaller sizes:
+   * stime(N,8*r,p) / stime(N,r,p) is ~ 6-7
+   * stime(N,r,8*p) / stime(N,r,8*p) is ~ 7
+   * stime(2*N,r,p) / stime(N,r,p) is ~ 2
+   *
+   * Compute stime(8192,1,1) as baseline and extrapolate
+   */
+
+   const size_t max_memory_usage = max_memory_usage_mb * 1024 * 1024;
+   // Starting parameters
+   size_t N = 8192;
+   size_t r = 1;
+   size_t p = 1;
+
+   Timer timer("Scrypt");
+   const auto tune_time = BOTAN_PBKDF_TUNING_TIME;
+
+   timer.run_until_elapsed(tune_time, [&]() {
+      uint8_t output[32] = { 0 };
+      scrypt(output, sizeof(output), "test", 4, nullptr, 0, N, r, p);
+      });
+
+   // No timer events seems strange, perhaps something is wrong - give
+   // up on this and just return default params
+   if(timer.events() == 0)
+      return default_params();
+
+   // nsec per eval of scrypt with initial params
+   const uint64_t measured_time = timer.value() / timer.events();
+
+   const uint64_t target_nsec = msec.count() * static_cast<uint64_t>(1000000);
+
+   uint64_t est_nsec = measured_time;
+
+   // First move increase r by 8x if possible
+
+   if(max_memory_usage == 0 || scrypt_memory_usage(N, r, p)*8 < max_memory_usage)
+      {
+      if(target_nsec / est_nsec >= 5)
+         {
+         r *= 8;
+         est_nsec *= 5;
+         }
+      }
+
+   // Now double N as many times as we can
+
+   while(max_memory_usage == 0 || scrypt_memory_usage(N, r, p)*2 < max_memory_usage)
+      {
+      if(target_nsec / est_nsec >= 2)
+         {
+         N *= 2;
+         est_nsec *= 2;
+         }
+      else
+         break;
+      }
+
+   // If we have extra runtime budget, increment p
+
+   if(target_nsec / est_nsec > 2)
+      p *= std::min<size_t>(1024, (target_nsec / est_nsec));
+
+   return std::unique_ptr<PasswordHash>(new Scrypt(N, r, p));
+   }
+
+std::unique_ptr<PasswordHash> Scrypt_Family::from_params(size_t N, size_t r, size_t p) const
+   {
+   return std::unique_ptr<PasswordHash>(new Scrypt(N, r, p));
+   }
+
+std::unique_ptr<PasswordHash> Scrypt_Family::from_iterations(size_t iter) const
+   {
+   const size_t r = 8;
+   const size_t p = 1;
+
+   size_t N = 8192;
+
+   if(iter > 50000)
+      N = 16384;
+   if(iter > 100000)
+      N = 32768;
+   if(iter > 150000)
+      N = 65536;
+
+   return std::unique_ptr<PasswordHash>(new Scrypt(N, r, p));
+   }
+
+Scrypt::Scrypt(size_t N, size_t r, size_t p) :
+   m_N(N), m_r(r), m_p(p)
+   {
+   if(!is_power_of_2(N))
+      throw Invalid_Argument("Scrypt N parameter must be a power of 2");
+
+   if(p == 0 || p > 1024)
+      throw Invalid_Argument("Invalid or unsupported scrypt p");
+   if(r == 0 || r > 256)
+      throw Invalid_Argument("Invalid or unsupported scrypt r");
+   if(N < 1 || N > 4194304)
+      throw Invalid_Argument("Invalid or unsupported scrypt N");
+   }
+
+std::string Scrypt::to_string() const
+   {
+   std::ostringstream oss;
+   oss << "Scrypt(" << m_N << "," << m_r << "," << m_p << ")";
+   return oss.str();
+   }
+
+size_t Scrypt::total_memory_usage() const
+   {
+   return scrypt_memory_usage(m_N, m_r, m_p);
+   }
+
+void Scrypt::derive_key(uint8_t output[], size_t output_len,
+                        const char* password, size_t password_len,
+                        const uint8_t salt[], size_t salt_len) const
+   {
+   scrypt(output, output_len,
+          password, password_len,
+          salt, salt_len,
+          N(), r(), p());
+   }
 
 namespace {
 
@@ -55597,101 +57443,31 @@ void scryptROMmix(size_t r, size_t N, uint8_t* B, secure_vector<uint8_t>& V)
 
 }
 
-Scrypt_Params::Scrypt_Params(size_t N, size_t r, size_t p) :
-   m_N(N), m_r(r), m_p(p)
-   {
-   BOTAN_ARG_CHECK(p <= 128, "Invalid scrypt p");
-   BOTAN_ARG_CHECK(N <= 4194304 && is_power_of_2(N), "Invalid scrypt N");
-   BOTAN_ARG_CHECK(r <= 64, "Invalid scrypt r");
-   }
-
-Scrypt_Params::Scrypt_Params(std::chrono::milliseconds msec)
-   {
-   /*
-   This mapping is highly subjective and machine specific
-   For simplicity we fix r=8 and p=4
-   */
-   m_r = 8;
-   m_p = 4;
-
-   if(msec.count() <= 10)
-      {
-      m_N = 4096;
-      m_p = 1;
-      }
-   else if(msec.count() <= 50)
-      {
-      m_N = 8192;
-      }
-   else if(msec.count() <= 100)
-      {
-      m_N = 16384;
-      }
-   else if(msec.count() <= 500)
-      {
-      m_N = 32768;
-      }
-   else
-      {
-      m_N = 65536;
-      }
-   }
-
-Scrypt_Params::Scrypt_Params(size_t iterations)
-   {
-   // This mapping is highly subjective and machine specific
-   m_r = 8;
-   m_p = 4;
-
-   if(iterations < 1000)
-      {
-      m_N = 8192;
-      }
-   else if(iterations < 5000)
-      {
-      m_N = 16384;
-      }
-   else if(iterations < 10000)
-      {
-      m_N = 32768;
-      }
-   else
-      {
-      m_N = 65536;
-      }
-   }
-
 void scrypt(uint8_t output[], size_t output_len,
-            const std::string& password,
-            const uint8_t salt[], size_t salt_len,
-            const Scrypt_Params& params)
-   {
-   scrypt(output, output_len, password, salt, salt_len,
-          params.N(), params.r(), params.p());
-   }
-
-void scrypt(uint8_t output[], size_t output_len,
-            const std::string& password,
+            const char* password, size_t password_len,
             const uint8_t salt[], size_t salt_len,
             size_t N, size_t r, size_t p)
    {
-   // Upper bounds here are much lower than scrypt maximums yet seem sufficient
-   BOTAN_ARG_CHECK(p <= 128, "Invalid scrypt p");
-   BOTAN_ARG_CHECK(N <= 4194304 && is_power_of_2(N), "Invalid scrypt N");
-   BOTAN_ARG_CHECK(r <= 64, "Invalid scrypt r");
-
    const size_t S = 128 * r;
    secure_vector<uint8_t> B(p * S);
-
-   PKCS5_PBKDF2 pbkdf2(MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)").release());
-
-   pbkdf2.pbkdf(B.data(), B.size(),
-                password,
-                salt, salt_len,
-                1, std::chrono::milliseconds(0));
-
    // temp space
    secure_vector<uint8_t> V((N+1) * S);
+
+   auto hmac_sha256 = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
+
+   try
+      {
+      hmac_sha256->set_key(cast_char_ptr_to_uint8(password), password_len);
+      }
+   catch(Invalid_Key_Length&)
+      {
+      throw Invalid_Argument("Scrypt cannot accept passphrases of the provided length");
+      }
+
+   pbkdf2(*hmac_sha256.get(),
+          B.data(), B.size(),
+          salt, salt_len,
+          1);
 
    // these can be parallel
    for(size_t i = 0; i != p; ++i)
@@ -55699,10 +57475,10 @@ void scrypt(uint8_t output[], size_t output_len,
       scryptROMmix(r, N, &B[128*r*i], V);
       }
 
-   pbkdf2.pbkdf(output, output_len,
-                password,
-                B.data(), B.size(),
-                1, std::chrono::milliseconds(0));
+   pbkdf2(*hmac_sha256.get(),
+          output, output_len,
+          B.data(), B.size(),
+          1);
    }
 
 }
@@ -56089,6 +57865,19 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_round_key.empty() == false);
 
+#if defined(BOTAN_HAS_SERPENT_AVX2)
+   if(CPUID::has_avx2())
+      {
+      while(blocks >= 8)
+         {
+         avx2_encrypt_8(in, out);
+         in += 8 * BLOCK_SIZE;
+         out += 8 * BLOCK_SIZE;
+         blocks -= 8;
+         }
+      }
+#endif
+
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(CPUID::has_simd_32())
       {
@@ -56150,6 +57939,19 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_round_key.empty() == false);
+
+#if defined(BOTAN_HAS_SERPENT_AVX2)
+   if(CPUID::has_avx2())
+      {
+      while(blocks >= 8)
+         {
+         avx2_decrypt_8(in, out);
+         in += 8 * BLOCK_SIZE;
+         out += 8 * BLOCK_SIZE;
+         blocks -= 8;
+         }
+      }
+#endif
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(CPUID::has_simd_32())
@@ -56280,6 +58082,13 @@ void Serpent::clear()
 
 std::string Serpent::provider() const
    {
+#if defined(BOTAN_HAS_SERPENT_AVX2)
+   if(CPUID::has_avx2())
+      {
+      return "avx2";
+      }
+#endif
+
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(CPUID::has_simd_32())
       {
@@ -56289,6 +58098,8 @@ std::string Serpent::provider() const
 
    return "base";
    }
+
+#undef key_xor
 
 }
 /*
@@ -56303,10 +58114,10 @@ namespace Botan {
 
 #define key_xor(round, B0, B1, B2, B3)                             \
    do {                                                            \
-      B0 ^= SIMD_32::splat(m_round_key[4*round  ]);                \
-      B1 ^= SIMD_32::splat(m_round_key[4*round+1]);                \
-      B2 ^= SIMD_32::splat(m_round_key[4*round+2]);                \
-      B3 ^= SIMD_32::splat(m_round_key[4*round+3]);                \
+      B0 ^= SIMD_4x32::splat(m_round_key[4*round  ]);              \
+      B1 ^= SIMD_4x32::splat(m_round_key[4*round+1]);              \
+      B2 ^= SIMD_4x32::splat(m_round_key[4*round+2]);              \
+      B3 ^= SIMD_4x32::splat(m_round_key[4*round+3]);              \
    } while(0)
 
 /*
@@ -56345,12 +58156,12 @@ namespace Botan {
 */
 void Serpent::simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const
    {
-   SIMD_32 B0 = SIMD_32::load_le(in);
-   SIMD_32 B1 = SIMD_32::load_le(in + 16);
-   SIMD_32 B2 = SIMD_32::load_le(in + 32);
-   SIMD_32 B3 = SIMD_32::load_le(in + 48);
+   SIMD_4x32 B0 = SIMD_4x32::load_le(in);
+   SIMD_4x32 B1 = SIMD_4x32::load_le(in + 16);
+   SIMD_4x32 B2 = SIMD_4x32::load_le(in + 32);
+   SIMD_4x32 B3 = SIMD_4x32::load_le(in + 48);
 
-   SIMD_32::transpose(B0, B1, B2, B3);
+   SIMD_4x32::transpose(B0, B1, B2, B3);
 
    key_xor( 0,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor( 1,B0,B1,B2,B3); SBoxE2(B0,B1,B2,B3); transform(B0,B1,B2,B3);
@@ -56388,7 +58199,7 @@ void Serpent::simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const
    key_xor(30,B0,B1,B2,B3); SBoxE7(B0,B1,B2,B3); transform(B0,B1,B2,B3);
    key_xor(31,B0,B1,B2,B3); SBoxE8(B0,B1,B2,B3); key_xor(32,B0,B1,B2,B3);
 
-   SIMD_32::transpose(B0, B1, B2, B3);
+   SIMD_4x32::transpose(B0, B1, B2, B3);
 
    B0.store_le(out);
    B1.store_le(out + 16);
@@ -56401,12 +58212,12 @@ void Serpent::simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const
 */
 void Serpent::simd_decrypt_4(const uint8_t in[64], uint8_t out[64]) const
    {
-   SIMD_32 B0 = SIMD_32::load_le(in);
-   SIMD_32 B1 = SIMD_32::load_le(in + 16);
-   SIMD_32 B2 = SIMD_32::load_le(in + 32);
-   SIMD_32 B3 = SIMD_32::load_le(in + 48);
+   SIMD_4x32 B0 = SIMD_4x32::load_le(in);
+   SIMD_4x32 B1 = SIMD_4x32::load_le(in + 16);
+   SIMD_4x32 B2 = SIMD_4x32::load_le(in + 32);
+   SIMD_4x32 B3 = SIMD_4x32::load_le(in + 48);
 
-   SIMD_32::transpose(B0, B1, B2, B3);
+   SIMD_4x32::transpose(B0, B1, B2, B3);
 
    key_xor(32,B0,B1,B2,B3);  SBoxD8(B0,B1,B2,B3); key_xor(31,B0,B1,B2,B3);
    i_transform(B0,B1,B2,B3); SBoxD7(B0,B1,B2,B3); key_xor(30,B0,B1,B2,B3);
@@ -56444,7 +58255,7 @@ void Serpent::simd_decrypt_4(const uint8_t in[64], uint8_t out[64]) const
    i_transform(B0,B1,B2,B3); SBoxD2(B0,B1,B2,B3); key_xor( 1,B0,B1,B2,B3);
    i_transform(B0,B1,B2,B3); SBoxD1(B0,B1,B2,B3); key_xor( 0,B0,B1,B2,B3);
 
-   SIMD_32::transpose(B0, B1, B2, B3);
+   SIMD_4x32::transpose(B0, B1, B2, B3);
 
    B0.store_le(out);
    B1.store_le(out + 16);
@@ -56521,14 +58332,14 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
          m_session_key.assign(x.begin() + 2, x.end());
 
          if(check_val_created != check_val_db)
-            throw Exception("Session database password not valid");
+            throw Invalid_Argument("Session database password not valid");
          }
       }
    else
       {
       // maybe just zap the salts + sessions tables in this case?
       if(salts != 0)
-         throw Exception("Seemingly corrupted database, multiple salts found");
+         throw Internal_Error("Seemingly corrupted TLS session db, multiple salts found");
 
       // new database case
 
@@ -58136,23 +59947,23 @@ namespace Botan {
 namespace {
 
 inline
-void SHACAL2_Fwd(const SIMD_32& A, const SIMD_32& B, const SIMD_32& C, SIMD_32& D,
-                 const SIMD_32& E, const SIMD_32& F, const SIMD_32& G, SIMD_32& H,
+void SHACAL2_Fwd(const SIMD_4x32& A, const SIMD_4x32& B, const SIMD_4x32& C, SIMD_4x32& D,
+                 const SIMD_4x32& E, const SIMD_4x32& F, const SIMD_4x32& G, SIMD_4x32& H,
                  uint32_t RK)
    {
-   H += E.rho<6,11,25>() + ((E & F) ^ (~E & G)) + SIMD_32::splat(RK);
+   H += E.rho<6,11,25>() + ((E & F) ^ (~E & G)) + SIMD_4x32::splat(RK);
    D += H;
    H += A.rho<2,13,22>() + ((A & B) | ((A | B) & C));
    }
 
 inline
-void SHACAL2_Rev(const SIMD_32& A, const SIMD_32& B, const SIMD_32& C, SIMD_32& D,
-                 const SIMD_32& E, const SIMD_32& F, const SIMD_32& G, SIMD_32& H,
+void SHACAL2_Rev(const SIMD_4x32& A, const SIMD_4x32& B, const SIMD_4x32& C, SIMD_4x32& D,
+                 const SIMD_4x32& E, const SIMD_4x32& F, const SIMD_4x32& G, SIMD_4x32& H,
                  uint32_t RK)
    {
    H -= A.rho<2,13,22>() + ((A & B) | ((A | B) & C));
    D -= H;
-   H -= E.rho<6,11,25>() + ((E & F) ^ (~E & G)) + SIMD_32::splat(RK);
+   H -= E.rho<6,11,25>() + ((E & F) ^ (~E & G)) + SIMD_4x32::splat(RK);
    }
 
 }
@@ -58407,6 +60218,26 @@ void SHAKE_128_Cipher::seek(uint64_t)
    {
    throw Not_Implemented("SHAKE_128_Cipher::seek");
    }
+
+Key_Length_Specification SHAKE_128_Cipher::key_spec() const
+   {
+   /*
+   In principle SHAKE can accept arbitrary length inputs, but this
+   does not seem required for a stream cipher.
+   */
+   return Key_Length_Specification(16, 160, 8);
+   }
+
+std::string SHAKE_128_Cipher::name() const
+   {
+   return "SHAKE-128";
+   }
+
+StreamCipher* SHAKE_128_Cipher::clone() const
+   {
+   return new SHAKE_128_Cipher;
+   }
+
 }
 /*
 * SipHash
@@ -58917,7 +60748,7 @@ void Skein_512::final_result(uint8_t out[])
 }
 /*
 * SM2 Signatures
-* (C) 2017 Ribose Inc
+* (C) 2017,2018 Ribose Inc
 * (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -58926,8 +60757,13 @@ void Skein_512::final_result(uint8_t out[])
 
 namespace Botan {
 
-bool SM2_Signature_PrivateKey::check_key(RandomNumberGenerator& rng,
-                                         bool strong) const
+std::string SM2_PublicKey::algo_name() const
+   {
+   return "SM2";
+   }
+
+bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng,
+                               bool strong) const
    {
    if(!public_point().on_the_curve())
       return false;
@@ -58935,19 +60771,19 @@ bool SM2_Signature_PrivateKey::check_key(RandomNumberGenerator& rng,
    if(!strong)
       return true;
 
-   return KeyPair::signature_consistency_check(rng, *this, "SM3");
+   return KeyPair::signature_consistency_check(rng, *this, "user@example.com,SM3");
    }
 
-SM2_Signature_PrivateKey::SM2_Signature_PrivateKey(const AlgorithmIdentifier& alg_id,
-                                                   const secure_vector<uint8_t>& key_bits) :
+SM2_PrivateKey::SM2_PrivateKey(const AlgorithmIdentifier& alg_id,
+                               const secure_vector<uint8_t>& key_bits) :
    EC_PrivateKey(alg_id, key_bits)
    {
    m_da_inv = domain().inverse_mod_order(m_private_key + 1);
    }
 
-SM2_Signature_PrivateKey::SM2_Signature_PrivateKey(RandomNumberGenerator& rng,
-                                                   const EC_Group& domain,
-                                                   const BigInt& x) :
+SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng,
+                               const EC_Group& domain,
+                               const BigInt& x) :
    EC_PrivateKey(rng, domain, x)
    {
    m_da_inv = domain.inverse_mod_order(m_private_key + 1);
@@ -58991,22 +60827,38 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
    {
    public:
 
-      SM2_Signature_Operation(const SM2_Signature_PrivateKey& sm2,
+      SM2_Signature_Operation(const SM2_PrivateKey& sm2,
                               const std::string& ident,
                               const std::string& hash) :
          m_group(sm2.domain()),
          m_x(sm2.private_value()),
-         m_da_inv(sm2.get_da_inv()),
-         m_hash(HashFunction::create_or_throw(hash))
+         m_da_inv(sm2.get_da_inv())
          {
-         // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
-         m_za = sm2_compute_za(*m_hash, ident, m_group, sm2.public_point());
-         m_hash->update(m_za);
+         if(hash == "Raw")
+            {
+            // m_hash is null, m_za is empty
+            }
+         else
+            {
+            m_hash = HashFunction::create_or_throw(hash);
+            // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
+            m_za = sm2_compute_za(*m_hash, ident, m_group, sm2.public_point());
+            m_hash->update(m_za);
+            }
          }
+
+      size_t signature_length() const override { return 2*m_group.get_order_bytes(); }
 
       void update(const uint8_t msg[], size_t msg_len) override
          {
-         m_hash->update(msg, msg_len);
+         if(m_hash)
+            {
+            m_hash->update(msg, msg_len);
+            }
+         else
+            {
+            m_digest.insert(m_digest.end(), msg, msg + msg_len);
+            }
          }
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override;
@@ -59017,6 +60869,7 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
       const BigInt& m_da_inv;
 
       std::vector<uint8_t> m_za;
+      secure_vector<uint8_t> m_digest;
       std::unique_ptr<HashFunction> m_hash;
       std::vector<BigInt> m_ws;
    };
@@ -59024,16 +60877,24 @@ class SM2_Signature_Operation final : public PK_Ops::Signature
 secure_vector<uint8_t>
 SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
    {
-   const BigInt e = BigInt::decode(m_hash->final());
+   BigInt e;
+   if(m_hash)
+      {
+      e = BigInt::decode(m_hash->final());
+      // prepend ZA for next signature if any
+      m_hash->update(m_za);
+      }
+   else
+      {
+      e = BigInt::decode(m_digest);
+      m_digest.clear();
+      }
 
    const BigInt k = m_group.random_scalar(rng);
 
    const BigInt r = m_group.mod_order(
       m_group.blinded_base_point_multiply_x(k, rng, m_ws) + e);
-   const BigInt s = m_group.multiply_mod_order(m_da_inv, (k - r*m_x));
-
-   // prepend ZA for next signature if any
-   m_hash->update(m_za);
+   const BigInt s = m_group.multiply_mod_order(m_da_inv, m_group.mod_order(k - r*m_x));
 
    return BigInt::encode_fixed_length_int_pair(r, s, m_group.get_order().bytes());
    }
@@ -59044,37 +60905,60 @@ SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
 class SM2_Verification_Operation final : public PK_Ops::Verification
    {
    public:
-      SM2_Verification_Operation(const SM2_Signature_PublicKey& sm2,
+      SM2_Verification_Operation(const SM2_PublicKey& sm2,
                                  const std::string& ident,
                                  const std::string& hash) :
          m_group(sm2.domain()),
-         m_gy_mul(m_group.get_base_point(), sm2.public_point()),
-         m_hash(HashFunction::create_or_throw(hash))
+         m_gy_mul(m_group.get_base_point(), sm2.public_point())
          {
-         // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
-         m_za = sm2_compute_za(*m_hash, ident, m_group, sm2.public_point());
-         m_hash->update(m_za);
+         if(hash == "Raw")
+            {
+            // m_hash is null, m_za is empty
+            }
+         else
+            {
+            m_hash = HashFunction::create_or_throw(hash);
+            // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
+            m_za = sm2_compute_za(*m_hash, ident, m_group, sm2.public_point());
+            m_hash->update(m_za);
+            }
          }
 
       void update(const uint8_t msg[], size_t msg_len) override
          {
-         m_hash->update(msg, msg_len);
+         if(m_hash)
+            {
+            m_hash->update(msg, msg_len);
+            }
+         else
+            {
+            m_digest.insert(m_digest.end(), msg, msg + msg_len);
+            }
          }
 
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
    private:
       const EC_Group m_group;
       const PointGFp_Multi_Point_Precompute m_gy_mul;
+      secure_vector<uint8_t> m_digest;
       std::vector<uint8_t> m_za;
       std::unique_ptr<HashFunction> m_hash;
    };
 
 bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t sig_len)
    {
-   const BigInt e = BigInt::decode(m_hash->final());
-
-   // Update for next verification
-   m_hash->update(m_za);
+   BigInt e;
+   if(m_hash)
+      {
+      e = BigInt::decode(m_hash->final());
+      // prepend ZA for next signature if any
+      m_hash->update(m_za);
+      }
+   else
+      {
+      e = BigInt::decode(m_digest);
+      m_digest.clear();
+      }
 
    if(sig_len != m_group.get_order().bytes()*2)
       return false;
@@ -59099,32 +60983,45 @@ bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t 
    return (m_group.mod_order(R.get_affine_x() + e) == r);
    }
 
+void parse_sm2_param_string(const std::string& params,
+                            std::string& userid,
+                            std::string& hash)
+   {
+   // GM/T 0009-2012 specifies this as the default userid
+   const std::string default_userid = "1234567812345678";
+
+   // defaults:
+   userid = default_userid;
+   hash = "SM3";
+
+   /*
+   * SM2 parameters have the following possible formats:
+   * Ident [since 2.2.0]
+   * Ident,Hash [since 2.3.0]
+   */
+
+   auto comma = params.find(',');
+   if(comma == std::string::npos)
+      {
+      userid = params;
+      }
+   else
+      {
+      userid = params.substr(0, comma);
+      hash = params.substr(comma+1, std::string::npos);
+      }
+   }
+
 }
 
 std::unique_ptr<PK_Ops::Verification>
-SM2_Signature_PublicKey::create_verification_op(const std::string& params,
-                                                const std::string& provider) const
+SM2_PublicKey::create_verification_op(const std::string& params,
+                                      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
-      std::string userid = "";
-      std::string hash = "SM3";
-
-      auto comma = params.find(',');
-      if(comma == std::string::npos)
-         userid = params;
-      else
-         {
-         userid = params.substr(0, comma);
-         hash = params.substr(comma+1, std::string::npos);
-         }
-
-      if (userid.empty())
-         {
-         // GM/T 0009-2012 specifies this as the default userid
-         userid = "1234567812345678";
-         }
-
+      std::string userid, hash;
+      parse_sm2_param_string(params, userid, hash);
       return std::unique_ptr<PK_Ops::Verification>(new SM2_Verification_Operation(*this, userid, hash));
       }
 
@@ -59132,30 +61029,14 @@ SM2_Signature_PublicKey::create_verification_op(const std::string& params,
    }
 
 std::unique_ptr<PK_Ops::Signature>
-SM2_Signature_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                              const std::string& params,
-                                              const std::string& provider) const
+SM2_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                    const std::string& params,
+                                    const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
-      std::string userid = "";
-      std::string hash = "SM3";
-
-      auto comma = params.find(',');
-      if(comma == std::string::npos)
-         userid = params;
-      else
-         {
-         userid = params.substr(0, comma);
-         hash = params.substr(comma+1, std::string::npos);
-         }
-
-      if (userid.empty())
-         {
-         // GM/T 0009-2012 specifies this as the default userid
-         userid = "1234567812345678";
-         }
-
+      std::string userid, hash;
+      parse_sm2_param_string(params, userid, hash);
       return std::unique_ptr<PK_Ops::Signature>(new SM2_Signature_Operation(*this, userid, hash));
       }
 
@@ -59173,31 +61054,6 @@ SM2_Signature_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
 
 namespace Botan {
 
-bool SM2_Encryption_PrivateKey::check_key(RandomNumberGenerator& rng,
-                                          bool strong) const
-   {
-   if(!public_point().on_the_curve())
-      return false;
-
-   if(!strong)
-      return true;
-
-   return KeyPair::encryption_consistency_check(rng, *this, "SM3");
-   }
-
-SM2_Encryption_PrivateKey::SM2_Encryption_PrivateKey(const AlgorithmIdentifier& alg_id,
-                                                     const secure_vector<uint8_t>& key_bits) :
-   EC_PrivateKey(alg_id, key_bits)
-   {
-   }
-
-SM2_Encryption_PrivateKey::SM2_Encryption_PrivateKey(RandomNumberGenerator& rng,
-                                                     const EC_Group& domain,
-                                                     const BigInt& x) :
-   EC_PrivateKey(rng, domain, x)
-   {
-   }
-
 namespace {
 
 class SM2_Encryption_Operation final : public PK_Ops::Encryption
@@ -59210,12 +61066,23 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
          m_kdf_hash(kdf_hash),
          m_ws(PointGFp::WORKSPACE_SIZE),
          m_mul_public_point(key.public_point(), rng, m_ws)
-         {}
+         {
+         std::unique_ptr<HashFunction> hash = HashFunction::create_or_throw(m_kdf_hash);
+         m_hash_size = hash->output_length();
+         }
 
       size_t max_input_bits() const override
          {
          // This is arbitrary, but assumes SM2 is used for key encapsulation
          return 512;
+         }
+
+      size_t ciphertext_length(size_t ptext_len) const override
+         {
+         const size_t elem_size = m_group.get_order_bytes();
+         const size_t der_overhead = 16;
+
+         return der_overhead + 2*elem_size + m_hash_size + ptext_len;
          }
 
       secure_vector<uint8_t> encrypt(const uint8_t msg[],
@@ -59278,6 +61145,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption
 
       std::vector<BigInt> m_ws;
       PointGFp_Var_Point_Precompute m_mul_public_point;
+      size_t m_hash_size;
    };
 
 class SM2_Decryption_Operation final : public PK_Ops::Decryption
@@ -59289,7 +61157,24 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
          m_key(key),
          m_rng(rng),
          m_kdf_hash(kdf_hash)
-         {}
+         {
+         std::unique_ptr<HashFunction> hash = HashFunction::create_or_throw(m_kdf_hash);
+         m_hash_size = hash->output_length();
+         }
+
+      size_t plaintext_length(size_t ptext_len) const override
+         {
+         /*
+         * This ignores the DER encoding and so overestimates the
+         * plaintext length by 12 bytes or so
+         */
+         const size_t elem_size = m_key.domain().get_order_bytes();
+
+         if(ptext_len < 2*elem_size + m_hash_size)
+            return 0;
+
+         return ptext_len - (2*elem_size + m_hash_size);
+         }
 
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
                                      const uint8_t ciphertext[],
@@ -59322,9 +61207,25 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
             .end_cons()
             .verify_end();
 
+         std::vector<uint8_t> recode_ctext;
+         DER_Encoder(recode_ctext)
+            .start_cons(SEQUENCE)
+            .encode(x1)
+            .encode(y1)
+            .encode(C3, OCTET_STRING)
+            .encode(masked_msg, OCTET_STRING)
+            .end_cons();
+
+         if(recode_ctext.size() != ciphertext_len)
+            return secure_vector<uint8_t>();
+
+         if(same_mem(recode_ctext.data(), ciphertext, ciphertext_len) == false)
+            return secure_vector<uint8_t>();
+
          PointGFp C1 = group.point(x1, y1);
          C1.randomize_repr(m_rng);
 
+         // Here C1 is publically invalid, so no problem with early return:
          if(!C1.on_the_curve())
             return secure_vector<uint8_t>();
 
@@ -59339,8 +61240,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
          const BigInt x2 = dbC1.get_affine_x();
          const BigInt y2 = dbC1.get_affine_y();
 
-         std::vector<uint8_t> x2_bytes(p_bytes);
-         std::vector<uint8_t> y2_bytes(p_bytes);
+         secure_vector<uint8_t> x2_bytes(p_bytes);
+         secure_vector<uint8_t> y2_bytes(p_bytes);
          BigInt::encode_1363(x2_bytes.data(), x2_bytes.size(), x2);
          BigInt::encode_1363(y2_bytes.data(), y2_bytes.size(), y2);
 
@@ -59369,14 +61270,15 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption
       RandomNumberGenerator& m_rng;
       const std::string m_kdf_hash;
       std::vector<BigInt> m_ws;
+      size_t m_hash_size;
    };
 
 }
 
 std::unique_ptr<PK_Ops::Encryption>
-SM2_Encryption_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
-                                               const std::string& params,
-                                               const std::string& provider) const
+SM2_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
+                                    const std::string& params,
+                                    const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
@@ -59388,9 +61290,9 @@ SM2_Encryption_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
    }
 
 std::unique_ptr<PK_Ops::Decryption>
-SM2_Encryption_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
-                                                const std::string& params,
-                                                const std::string& provider) const
+SM2_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
+                                     const std::string& params,
+                                     const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
@@ -59661,6 +61563,7 @@ void SM3::clear()
 /*
 * SM4
 * (C) 2017 Ribose Inc
+* (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -59670,6 +61573,7 @@ namespace Botan {
 
 namespace {
 
+alignas(64)
 const uint8_t SM4_SBOX[256] = {
 0xD6, 0x90, 0xE9, 0xFE, 0xCC, 0xE1, 0x3D, 0xB7, 0x16, 0xB6, 0x14, 0xC2, 0x28, 0xFB, 0x2C, 0x05,
 0x2B, 0x67, 0x9A, 0x76, 0x2A, 0xBE, 0x04, 0xC3, 0xAA, 0x44, 0x13, 0x26, 0x49, 0x86, 0x06, 0x99,
@@ -59692,6 +61596,7 @@ const uint8_t SM4_SBOX[256] = {
 /*
 * SM4_SBOX_T[j] == L(SM4_SBOX[j]).
 */
+alignas(64)
 const uint32_t SM4_SBOX_T[256] = {
    0x8ED55B5B, 0xD0924242, 0x4DEAA7A7, 0x06FDFBFB, 0xFCCF3333, 0x65E28787,
    0xC93DF4F4, 0x6BB5DEDE, 0x4E165858, 0x6EB4DADA, 0x44145050, 0xCAC10B0B,
@@ -59768,12 +61673,19 @@ inline uint32_t SM4_Tp(uint32_t b)
    return t ^ rotl<13>(t) ^ rotl<23>(t);
    }
 
-#define SM4_RNDS(k0,k1,k2,k3,F) do {        \
-         B0 ^= F(B1 ^ B2 ^ B3 ^ m_RK[k0]); \
-         B1 ^= F(B0 ^ B2 ^ B3 ^ m_RK[k1]); \
-         B2 ^= F(B0 ^ B1 ^ B3 ^ m_RK[k2]); \
-         B3 ^= F(B0 ^ B1 ^ B2 ^ m_RK[k3]); \
-      } while(0)
+#define SM4_E_RNDS(B, R, F) do {                           \
+   B##0 ^= F(B##1 ^ B##2 ^ B##3 ^ m_RK[4*R+0]);            \
+   B##1 ^= F(B##0 ^ B##2 ^ B##3 ^ m_RK[4*R+1]);            \
+   B##2 ^= F(B##0 ^ B##1 ^ B##3 ^ m_RK[4*R+2]);            \
+   B##3 ^= F(B##0 ^ B##1 ^ B##2 ^ m_RK[4*R+3]);            \
+   } while(0)
+
+#define SM4_D_RNDS(B, R, F) do {                           \
+   B##0 ^= F(B##1 ^ B##2 ^ B##3 ^ m_RK[4*R+3]);            \
+   B##1 ^= F(B##0 ^ B##2 ^ B##3 ^ m_RK[4*R+2]);            \
+   B##2 ^= F(B##0 ^ B##1 ^ B##3 ^ m_RK[4*R+1]);            \
+   B##3 ^= F(B##0 ^ B##1 ^ B##2 ^ m_RK[4*R+0]);            \
+   } while(0)
 
 }
 
@@ -59784,6 +61696,47 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_RK.empty() == false);
 
+#if defined(BOTAN_HAS_SM4_ARMV8)
+   if(CPUID::has_arm_sm4())
+      return sm4_armv8_encrypt(in, out, blocks);
+#endif
+
+   while(blocks >= 2)
+      {
+      uint32_t B0 = load_be<uint32_t>(in, 0);
+      uint32_t B1 = load_be<uint32_t>(in, 1);
+      uint32_t B2 = load_be<uint32_t>(in, 2);
+      uint32_t B3 = load_be<uint32_t>(in, 3);
+
+      uint32_t C0 = load_be<uint32_t>(in, 4);
+      uint32_t C1 = load_be<uint32_t>(in, 5);
+      uint32_t C2 = load_be<uint32_t>(in, 6);
+      uint32_t C3 = load_be<uint32_t>(in, 7);
+
+      SM4_E_RNDS(B, 0, SM4_T_slow);
+      SM4_E_RNDS(C, 0, SM4_T_slow);
+      SM4_E_RNDS(B, 1, SM4_T);
+      SM4_E_RNDS(C, 1, SM4_T);
+      SM4_E_RNDS(B, 2, SM4_T);
+      SM4_E_RNDS(C, 2, SM4_T);
+      SM4_E_RNDS(B, 3, SM4_T);
+      SM4_E_RNDS(C, 3, SM4_T);
+      SM4_E_RNDS(B, 4, SM4_T);
+      SM4_E_RNDS(C, 4, SM4_T);
+      SM4_E_RNDS(B, 5, SM4_T);
+      SM4_E_RNDS(C, 5, SM4_T);
+      SM4_E_RNDS(B, 6, SM4_T);
+      SM4_E_RNDS(C, 6, SM4_T);
+      SM4_E_RNDS(B, 7, SM4_T_slow);
+      SM4_E_RNDS(C, 7, SM4_T_slow);
+
+      store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
+
+      in += 2*BLOCK_SIZE;
+      out += 2*BLOCK_SIZE;
+      blocks -= 2;
+      }
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t B0 = load_be<uint32_t>(in, 0);
@@ -59791,14 +61744,14 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t B2 = load_be<uint32_t>(in, 2);
       uint32_t B3 = load_be<uint32_t>(in, 3);
 
-      SM4_RNDS( 0,  1,  2,  3, SM4_T_slow);
-      SM4_RNDS( 4,  5,  6,  7, SM4_T);
-      SM4_RNDS( 8,  9, 10, 11, SM4_T);
-      SM4_RNDS(12, 13, 14, 15, SM4_T);
-      SM4_RNDS(16, 17, 18, 19, SM4_T);
-      SM4_RNDS(20, 21, 22, 23, SM4_T);
-      SM4_RNDS(24, 25, 26, 27, SM4_T);
-      SM4_RNDS(28, 29, 30, 31, SM4_T_slow);
+      SM4_E_RNDS(B, 0, SM4_T_slow);
+      SM4_E_RNDS(B, 1, SM4_T);
+      SM4_E_RNDS(B, 2, SM4_T);
+      SM4_E_RNDS(B, 3, SM4_T);
+      SM4_E_RNDS(B, 4, SM4_T);
+      SM4_E_RNDS(B, 5, SM4_T);
+      SM4_E_RNDS(B, 6, SM4_T);
+      SM4_E_RNDS(B, 7, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0);
 
@@ -59814,6 +61767,47 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    verify_key_set(m_RK.empty() == false);
 
+#if defined(BOTAN_HAS_SM4_ARMV8)
+   if(CPUID::has_arm_sm4())
+      return sm4_armv8_decrypt(in, out, blocks);
+#endif
+
+   while(blocks >= 2)
+      {
+      uint32_t B0 = load_be<uint32_t>(in, 0);
+      uint32_t B1 = load_be<uint32_t>(in, 1);
+      uint32_t B2 = load_be<uint32_t>(in, 2);
+      uint32_t B3 = load_be<uint32_t>(in, 3);
+
+      uint32_t C0 = load_be<uint32_t>(in, 4);
+      uint32_t C1 = load_be<uint32_t>(in, 5);
+      uint32_t C2 = load_be<uint32_t>(in, 6);
+      uint32_t C3 = load_be<uint32_t>(in, 7);
+
+      SM4_D_RNDS(B, 7, SM4_T_slow);
+      SM4_D_RNDS(C, 7, SM4_T_slow);
+      SM4_D_RNDS(B, 6, SM4_T);
+      SM4_D_RNDS(C, 6, SM4_T);
+      SM4_D_RNDS(B, 5, SM4_T);
+      SM4_D_RNDS(C, 5, SM4_T);
+      SM4_D_RNDS(B, 4, SM4_T);
+      SM4_D_RNDS(C, 4, SM4_T);
+      SM4_D_RNDS(B, 3, SM4_T);
+      SM4_D_RNDS(C, 3, SM4_T);
+      SM4_D_RNDS(B, 2, SM4_T);
+      SM4_D_RNDS(C, 2, SM4_T);
+      SM4_D_RNDS(B, 1, SM4_T);
+      SM4_D_RNDS(C, 1, SM4_T);
+      SM4_D_RNDS(B, 0, SM4_T_slow);
+      SM4_D_RNDS(C, 0, SM4_T_slow);
+
+      store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
+
+      in += 2*BLOCK_SIZE;
+      out += 2*BLOCK_SIZE;
+      blocks -= 2;
+      }
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t B0 = load_be<uint32_t>(in, 0);
@@ -59821,14 +61815,14 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       uint32_t B2 = load_be<uint32_t>(in, 2);
       uint32_t B3 = load_be<uint32_t>(in, 3);
 
-      SM4_RNDS(31, 30, 29, 28, SM4_T_slow);
-      SM4_RNDS(27, 26, 25, 24, SM4_T);
-      SM4_RNDS(23, 22, 21, 20, SM4_T);
-      SM4_RNDS(19, 18, 17, 16, SM4_T);
-      SM4_RNDS(15, 14, 13, 12, SM4_T);
-      SM4_RNDS(11, 10,  9,  8, SM4_T);
-      SM4_RNDS( 7,  6,  5,  4, SM4_T);
-      SM4_RNDS( 3,  2,  1,  0, SM4_T_slow);
+      SM4_D_RNDS(B, 7, SM4_T_slow);
+      SM4_D_RNDS(B, 6, SM4_T);
+      SM4_D_RNDS(B, 5, SM4_T);
+      SM4_D_RNDS(B, 4, SM4_T);
+      SM4_D_RNDS(B, 3, SM4_T);
+      SM4_D_RNDS(B, 2, SM4_T);
+      SM4_D_RNDS(B, 1, SM4_T);
+      SM4_D_RNDS(B, 0, SM4_T_slow);
 
       store_be(out, B3, B2, B1, B0);
 
@@ -59837,7 +61831,8 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
    }
 
-#undef SM4_RNDS
+#undef SM4_E_RNDS
+#undef SM4_D_RNDS
 
 /*
 * SM4 Key Schedule
@@ -59875,6 +61870,30 @@ void SM4::key_schedule(const uint8_t key[], size_t)
 void SM4::clear()
    {
    zap(m_RK);
+   }
+
+size_t SM4::parallelism() const
+   {
+#if defined(BOTAN_HAS_SM4_ARMV8)
+   if(CPUID::has_arm_sm4())
+      {
+      return 4;
+      }
+#endif
+
+   return 1;
+   }
+
+std::string SM4::provider() const
+   {
+#if defined(BOTAN_HAS_SM4_ARMV8)
+   if(CPUID::has_arm_sm4())
+      {
+      return "armv8";
+      }
+#endif
+
+   return "base";
    }
 
 }
@@ -59946,7 +61965,7 @@ class Asio_Socket final : public OS::Socket
          if(ec)
             throw boost::system::system_error(ec);
          if(ec || m_tcp.is_open() == false)
-            throw Exception("Connection to host " + hostname + " failed");
+            throw System_Error("Connection to host " + hostname + " failed");
          }
 
       void write(const uint8_t buf[], size_t len) override
@@ -60039,13 +62058,13 @@ class BSD_Socket final : public OS::Socket
 
          if (::WSAStartup(wsa_version, &wsa_data) != 0)
             {
-            throw Exception("WSAStartup() failed: " + std::to_string(WSAGetLastError()));
+            throw System_Error("WSAStartup() failed", WSAGetLastError());
             }
 
          if (LOBYTE(wsa_data.wVersion) != 2 || HIBYTE(wsa_data.wVersion) != 2)
             {
             ::WSACleanup();
-            throw Exception("Could not find a usable version of Winsock.dll");
+            throw System_Error("Could not find a usable version of Winsock.dll");
             }
          }
 
@@ -60063,7 +62082,7 @@ class BSD_Socket final : public OS::Socket
       static void set_nonblocking(socket_type s)
          {
          if(::fcntl(s, F_SETFL, O_NONBLOCK) < 0)
-            throw Exception("Setting socket to non-blocking state failed");
+            throw System_Error("Setting socket to non-blocking state failed", errno);
          }
 
       static void socket_init() {}
@@ -60080,14 +62099,16 @@ class BSD_Socket final : public OS::Socket
          m_socket = invalid_socket();
 
          addrinfo hints;
-         ::memset(&hints, 0, sizeof(addrinfo));
+         clear_mem(&hints, 1);
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = SOCK_STREAM;
          addrinfo* res;
 
-         if(::getaddrinfo(hostname.c_str(), service.c_str(), &hints, &res) != 0)
+         int rc = ::getaddrinfo(hostname.c_str(), service.c_str(), &hints, &res);
+
+         if(rc != 0)
             {
-            throw Exception("Name resolution failed for " + hostname);
+            throw System_Error("Name resolution failed for " + hostname, rc);
             }
 
          for(addrinfo* rp = res; (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next)
@@ -60125,7 +62146,7 @@ class BSD_Socket final : public OS::Socket
                      socklen_t len = sizeof(socket_error);
 
                      if(::getsockopt(m_socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&socket_error), &len) < 0)
-                        throw Exception("Error calling getsockopt");
+                        throw System_Error("Error calling getsockopt", errno);
 
                      if(socket_error != 0)
                         {
@@ -60147,8 +62168,8 @@ class BSD_Socket final : public OS::Socket
 
          if(m_socket == invalid_socket())
             {
-            throw Exception("Connecting to " + hostname +
-                            " for service " + service + " failed");
+            throw System_Error("Connecting to " + hostname +
+                                " for service " + service + " failed", errno);
             }
          }
 
@@ -60172,13 +62193,12 @@ class BSD_Socket final : public OS::Socket
             int active = ::select(m_socket + 1, nullptr, &write_set, nullptr, &timeout);
 
             if(active == 0)
-               throw Exception("Timeout during socket write");
+               throw System_Error("Timeout during socket write");
 
             const size_t left = len - sent_so_far;
             socket_op_ret_type sent = ::send(m_socket, cast_uint8_ptr_to_char(&buf[sent_so_far]), left, 0);
             if(sent < 0)
-               throw Exception("Socket write failed with error '" +
-                               std::string(::strerror(errno)) + "'");
+               throw System_Error("Socket write failed", errno);
             else
                sent_so_far += static_cast<size_t>(sent);
             }
@@ -60194,13 +62214,13 @@ class BSD_Socket final : public OS::Socket
          int active = ::select(m_socket + 1, &read_set, nullptr, nullptr, &timeout);
 
          if(active == 0)
-            throw Exception("Timeout during socket read");
+            throw System_Error("Timeout during socket read");
 
          socket_op_ret_type got = ::recv(m_socket, cast_uint8_ptr_to_char(buf), len, 0);
 
          if(got < 0)
-            throw Exception("Socket read failed with error '" +
-                            std::string(::strerror(errno)) + "'");
+            throw System_Error("Socket read failed", errno);
+
          return static_cast<size_t>(got);
          }
 
@@ -60578,13 +62598,13 @@ std::string srp6_group_identifier(const BigInt& N, const BigInt& g)
 
       if(group.get_p() == N && group.get_g() == g)
          return group_name;
-
-      throw Exception("Unknown SRP params");
       }
    catch(...)
       {
-      throw Invalid_Argument("Bad SRP group parameters");
       }
+
+   // If we didn't return, the group was unknown or did not match
+   throw Invalid_Argument("Invalid or unknown SRP group parameters");
    }
 
 std::pair<BigInt, SymmetricKey>
@@ -60605,7 +62625,7 @@ srp6_client_agree(const std::string& identifier,
    const size_t p_bytes = group.p_bytes();
 
    if(B <= 0 || B >= p)
-      throw Exception("Invalid SRP parameter from server");
+      throw Decoding_Error("Invalid SRP parameter from server");
 
    const BigInt k = hash_seq(hash_id, p_bytes, p, g);
 
@@ -60617,7 +62637,8 @@ srp6_client_agree(const std::string& identifier,
 
    const BigInt x = compute_x(hash_id, identifier, password, salt);
 
-   const BigInt S = power_mod((B - (k * power_mod(g, x, p))) % p, (a + (u * x)), p);
+   const BigInt S = power_mod(group.mod_p(B - (k * power_mod(g, x, p))),
+                              group.mod_p(a + (u * x)), p);
 
    const SymmetricKey Sk(BigInt::encode_1363(S, p_bytes));
 
@@ -60664,7 +62685,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
    {
    if(A <= 0 || A >= m_p)
-      throw Exception("Invalid SRP parameter from client");
+      throw Decoding_Error("Invalid SRP parameter from client");
 
    const BigInt u = hash_seq(m_hash_id, m_p_bytes, A, m_B);
 
@@ -60680,6 +62701,9 @@ SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+
+#if defined(BOTAN_HAS_RDRAND_RNG)
+#endif
 
 namespace Botan {
 
@@ -60712,10 +62736,21 @@ void Stateful_RNG::initialize_with(const uint8_t input[], size_t len)
 void Stateful_RNG::randomize_with_ts_input(uint8_t output[], size_t output_len)
    {
    uint8_t additional_input[24] = { 0 };
-   store_le(OS::get_system_timestamp_ns(), additional_input);
-   store_le(OS::get_high_resolution_clock(), additional_input + 8);
-   store_le(m_last_pid, additional_input + 16);
-   store_le(static_cast<uint32_t>(m_reseed_counter), additional_input + 20);
+
+#if defined(BOTAN_HAS_RDRAND_RNG)
+   if(RDRAND_RNG::available())
+      {
+      RDRAND_RNG rdrand;
+      rdrand.randomize(additional_input, sizeof(additional_input));
+      }
+   else
+#endif
+      {
+      store_le(OS::get_system_timestamp_ns(), additional_input);
+      store_le(OS::get_high_resolution_clock(), additional_input + 8);
+      store_le(m_last_pid, additional_input + 16);
+      store_le(static_cast<uint32_t>(m_reseed_counter), additional_input + 20);
+      }
 
    randomize_with_input(output, output_len, additional_input, sizeof(additional_input));
    }
@@ -60770,7 +62805,7 @@ void Stateful_RNG::reseed_check()
       if(!is_seeded())
          {
          if(fork_detected)
-            throw Exception("Detected use of fork but cannot reseed DRBG");
+            throw Invalid_State("Detected use of fork but cannot reseed DRBG");
          else
             throw PRNG_Unseeded(name());
          }
@@ -60925,6 +62960,7 @@ std::vector<std::string> StreamCipher::providers(const std::string& algo_spec)
 /*
 * Streebog
 * (C) 2017 Ribose Inc.
+* (C) 2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -60939,88 +62975,6 @@ std::unique_ptr<HashFunction> Streebog::copy_state() const
    {
    return std::unique_ptr<HashFunction>(new Streebog(*this));
    }
-
-namespace {
-
-static inline void addm(const uint8_t* m, uint64_t* h)
-   {
-   uint64_t carry = false;
-   for(int i = 0; i < 8; i++)
-      {
-      const uint64_t m64 = load_le<uint64_t>(m, i);
-      const uint64_t hi = load_le<uint64_t>(reinterpret_cast<uint8_t*>(h), i);
-      const uint64_t t = hi + m64;
-
-      const uint64_t overflow = (t < hi ? 1 : 0) | (t < m64 ? 1 : 0);
-      store_le(t + carry, reinterpret_cast<uint8_t*>(&h[i]));
-      carry = overflow;
-      }
-   }
-
-inline void lps(uint64_t* block)
-   {
-   uint8_t r[64];
-   std::memcpy(r, block, 64);
-
-   for(int i = 0; i < 8; ++i)
-      {
-      block[i] =  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[0][r[i]]), 0) ^
-                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[1][r[i + 8]]), 0) ^
-                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[2][r[i + 16]]), 0) ^
-                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[3][r[i + 24]]), 0) ^
-                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[4][r[i + 32]]), 0) ^
-                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[5][r[i + 40]]), 0) ^
-                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[6][r[i + 48]]), 0) ^
-                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[7][r[i + 56]]), 0);
-      }
-   }
-
-inline void e(uint64_t* K, const uint64_t* m)
-   {
-   uint64_t A[8];
-   uint64_t C[8];
-
-   copy_mem(A, K, 8);
-
-   for(size_t i = 0; i != 8; ++i)
-      {
-      K[i] ^= m[i];
-      }
-
-   for(size_t i = 0; i < 12; ++i)
-      {
-      lps(K);
-      load_le(C, reinterpret_cast<const uint8_t*>(&STREEBOG_C[i][0]), 8);
-
-      for(size_t j = 0; j != 8; ++j)
-         A[j] ^= C[j];
-      lps(A);
-      for(size_t j = 0; j != 8; ++j)
-         K[j] ^= A[j];
-      }
-   }
-
-inline void g(uint64_t* h, const uint8_t* m, uint64_t N)
-   {
-   uint64_t hN[8];
-
-   // force N to little-endian
-   store_le(N, reinterpret_cast<uint8_t*>(&N));
-
-   copy_mem(hN, h, 8);
-   hN[0] ^= N;
-   lps(hN);
-   const uint64_t* m64 = reinterpret_cast<const uint64_t*>(m);
-
-   e(hN, m64);
-
-   for(size_t i = 0; i != 8; ++i)
-      {
-      h[i] ^= hN[i] ^ m64[i];
-      }
-   }
-
-} //namespace
 
 Streebog::Streebog(size_t output_bits) :
    m_output_bits(output_bits),
@@ -61061,18 +63015,33 @@ void Streebog::clear()
 */
 void Streebog::add_data(const uint8_t input[], size_t length)
    {
-   while(m_position + length >= 64)
+   const size_t block_size = m_buffer.size();
+
+   if(m_position)
       {
-      buffer_insert(m_buffer, m_position, input, 64 - m_position);
-      compress(m_buffer.data());
-      m_count += 512;
-      input += (64 - m_position);
-      length -= (64 - m_position);
-      m_position = 0;
+      buffer_insert(m_buffer, m_position, input, length);
+
+      if(m_position + length >= block_size)
+         {
+         compress(m_buffer.data());
+         m_count += 512;
+         input += (block_size - m_position);
+         length -= (block_size - m_position);
+         m_position = 0;
+         }
       }
 
-   buffer_insert(m_buffer, m_position, input, length);
-   m_position += length;
+   const size_t full_blocks = length / block_size;
+   const size_t remaining   = length % block_size;
+
+   for(size_t i = 0; i != full_blocks; ++i)
+      {
+      compress(input + block_size * i);
+      m_count += 512;
+      }
+
+   buffer_insert(m_buffer, m_position, input + full_blocks * block_size, remaining);
+   m_position += remaining;
    }
 
 /*
@@ -61092,16 +63061,102 @@ void Streebog::final_result(uint8_t output[])
    store_le(m_count, m_buffer.data());
    compress(m_buffer.data(), true);
 
-   compress(reinterpret_cast<const uint8_t*>(m_S.data()), true);
+   compress_64(m_S.data(), true);
+   // FIXME
    std::memcpy(output, &m_h[8 - output_length() / 8], output_length());
    clear();
    }
 
+namespace {
+
+inline uint64_t force_le(uint64_t x)
+   {
+#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+   return x;
+#elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+   return reverse_bytes(x);
+#else
+   store_le(x, reinterpret_cast<uint8_t*>(&x));
+   return x;
+#endif
+   }
+
+inline void lps(uint64_t block[8])
+   {
+   uint8_t r[64];
+   // FIXME
+   std::memcpy(r, block, 64);
+
+   for(int i = 0; i < 8; ++i)
+      {
+      block[i] = force_le(STREEBOG_Ax[0][r[i + 0*8]]) ^
+                 force_le(STREEBOG_Ax[1][r[i + 1*8]]) ^
+                 force_le(STREEBOG_Ax[2][r[i + 2*8]]) ^
+                 force_le(STREEBOG_Ax[3][r[i + 3*8]]) ^
+                 force_le(STREEBOG_Ax[4][r[i + 4*8]]) ^
+                 force_le(STREEBOG_Ax[5][r[i + 5*8]]) ^
+                 force_le(STREEBOG_Ax[6][r[i + 6*8]]) ^
+                 force_le(STREEBOG_Ax[7][r[i + 7*8]]);
+      }
+   }
+
+} //namespace
+
 void Streebog::compress(const uint8_t input[], bool last_block)
    {
-   g(m_h.data(), input, last_block ? 0ULL : m_count);
+   uint64_t M[8];
+   std::memcpy(M, input, 64);
+
+   compress_64(M, last_block);
+   }
+
+void Streebog::compress_64(const uint64_t M[], bool last_block)
+   {
+   uint64_t N = force_le(last_block ? 0ULL : m_count);
+
+   uint64_t hN[8];
+   uint64_t A[8];
+
+   copy_mem(hN, m_h.data(), 8);
+   hN[0] ^= N;
+   lps(hN);
+
+   copy_mem(A, hN, 8);
+
+   for(size_t i = 0; i != 8; ++i)
+      {
+      hN[i] ^= M[i];
+      }
+
+   for(size_t i = 0; i < 12; ++i)
+      {
+      for(size_t j = 0; j != 8; ++j)
+         A[j] ^= force_le(STREEBOG_C[i][j]);
+      lps(A);
+
+      lps(hN);
+      for(size_t j = 0; j != 8; ++j)
+         hN[j] ^= A[j];
+      }
+
+   for(size_t i = 0; i != 8; ++i)
+      {
+      m_h[i] ^= hN[i] ^ M[i];
+      }
+
    if(!last_block)
-      { addm(input, m_S.data()); }
+      {
+      uint64_t carry = 0;
+      for(int i = 0; i < 8; i++)
+         {
+         const uint64_t m = force_le(M[i]);
+         const uint64_t hi = force_le(m_S[i]);
+         const uint64_t t = hi + m;
+
+         m_S[i] = force_le(t + carry);
+         carry = (t < hi ? 1 : 0) | (t < m ? 1 : 0);
+         }
+      }
    }
 
 }
@@ -61989,6 +64044,9 @@ extern const uint64_t STREEBOG_C[12][8] =
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
    #include <stdlib.h>
 
+#elif defined(BOTAN_TARGET_OS_HAS_GETRANDOM)
+   #include <sys/random.h>
+
 #elif defined(BOTAN_TARGET_OS_HAS_DEV_RANDOM)
 #endif
 
@@ -62009,13 +64067,14 @@ class System_RNG_Impl final : public RandomNumberGenerator
 
       void randomize(uint8_t buf[], size_t len) override
          {
-         bool success = m_rtlgenrandom(buf, len) == TRUE;
+         bool success = m_rtlgenrandom(buf, ULONG(len)) == TRUE;
          if(!success)
-            throw Exception("RtlGenRandom failed");
+            throw System_Error("RtlGenRandom failed");
          }
 
       void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
       bool is_seeded() const override { return true; }
+      bool accepts_input() const override { return false; }
       void clear() override { /* not possible */ }
       std::string name() const override { return "RtlGenRandom"; }
    private:
@@ -62039,7 +64098,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
                                                       BCRYPT_RNG_ALGORITHM,
                                                       MS_PRIMITIVE_PROVIDER, 0);
          if(ret != STATUS_SUCCESS)
-            throw Exception("System_RNG failed to acquire crypto provider");
+            throw System_Error("System_RNG failed to acquire crypto provider", ret);
          }
 
       ~System_RNG_Impl()
@@ -62051,7 +64110,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
          {
          NTSTATUS ret = ::BCryptGenRandom(m_prov, static_cast<PUCHAR>(buf), static_cast<ULONG>(len), 0);
          if(ret != STATUS_SUCCESS)
-            throw Exception("System_RNG call to BCryptGenRandom failed");
+            throw System_Error("System_RNG call to BCryptGenRandom failed", ret);
          }
 
       void add_entropy(const uint8_t in[], size_t length) override
@@ -62063,6 +64122,7 @@ class System_RNG_Impl final : public RandomNumberGenerator
          }
 
       bool is_seeded() const override { return true; }
+      bool accepts_input() const override { return false; }
       void clear() override { /* not possible */ }
       std::string name() const override { return "crypto_ng"; }
    private:
@@ -62081,11 +64141,47 @@ class System_RNG_Impl final : public RandomNumberGenerator
          ::arc4random_buf(buf, len);
          }
 
+      bool accepts_input() const override { return false; }
       void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
       bool is_seeded() const override { return true; }
       void clear() override { /* not possible */ }
       std::string name() const override { return "arc4random"; }
    };
+
+#elif defined(BOTAN_TARGET_OS_HAS_GETRANDOM)
+
+class System_RNG_Impl final : public RandomNumberGenerator
+   {
+   public:
+      // No constructor or destructor needed as no userland state maintained
+
+      void randomize(uint8_t buf[], size_t len) override
+         {
+         const unsigned int flags = 0;
+
+         while(len > 0)
+            {
+            const ssize_t got = ::getrandom(buf, len, flags);
+
+            if(got < 0)
+               {
+               if(errno == EINTR)
+                  continue;
+               throw System_Error("System_RNG getrandom failed", errno);
+               }
+
+            buf += got;
+            len -= got;
+            }
+         }
+
+      bool accepts_input() const override { return false; }
+      void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
+      bool is_seeded() const override { return true; }
+      void clear() override { /* not possible */ }
+      std::string name() const override { return "getrandom"; }
+   };
+
 
 #elif defined(BOTAN_TARGET_OS_HAS_DEV_RANDOM)
 
@@ -62102,15 +64198,22 @@ class System_RNG_Impl final : public RandomNumberGenerator
 
          m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDWR | O_NOCTTY);
 
-         /*
-         Cannot open in read-write mode. Fall back to read-only,
-         calls to add_entropy will fail, but randomize will work
-         */
-         if(m_fd < 0)
+         if(m_fd >= 0)
+            {
+            m_writable = true;
+            }
+         else
+            {
+            /*
+            Cannot open in read-write mode. Fall back to read-only,
+            calls to add_entropy will fail, but randomize will work
+            */
             m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDONLY | O_NOCTTY);
+            m_writable = false;
+            }
 
          if(m_fd < 0)
-            throw Exception("System_RNG failed to open RNG device");
+            throw System_Error("System_RNG failed to open RNG device", errno);
          }
 
       ~System_RNG_Impl()
@@ -62122,10 +64225,12 @@ class System_RNG_Impl final : public RandomNumberGenerator
       void randomize(uint8_t buf[], size_t len) override;
       void add_entropy(const uint8_t in[], size_t length) override;
       bool is_seeded() const override { return true; }
+      bool accepts_input() const override { return m_writable; }
       void clear() override { /* not possible */ }
       std::string name() const override { return BOTAN_SYSTEM_RNG_DEVICE; }
    private:
       int m_fd;
+      bool m_writable;
    };
 
 void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
@@ -62138,10 +64243,10 @@ void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
          {
          if(errno == EINTR)
             continue;
-         throw Exception("System_RNG read failed error " + std::to_string(errno));
+         throw System_Error("System_RNG read failed", errno);
          }
       if(got == 0)
-         throw Exception("System_RNG EOF on device"); // ?!?
+         throw System_Error("System_RNG EOF on device"); // ?!?
 
       buf += got;
       len -= got;
@@ -62150,6 +64255,9 @@ void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
 
 void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
    {
+   if(!m_writable)
+      return;
+
    while(len)
       {
       ssize_t got = ::write(m_fd, input, len);
@@ -62175,7 +64283,7 @@ void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
             return;
 
          // maybe just ignore any failure here and return?
-         throw Exception("System_RNG write failed error " + std::to_string(errno));
+         throw System_Error("System_RNG write failed", errno);
          }
 
       input += got;
@@ -63270,7 +65378,7 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf,
       if(cert_type_name.empty()) // something we don't know
          continue;
 
-      m_cert_key_types.push_back(cert_type_name);
+      m_cert_key_types.emplace_back(cert_type_name);
       }
 
    if(version.supports_negotiable_signature_algorithms())
@@ -63298,7 +65406,7 @@ Certificate_Req::Certificate_Req(const std::vector<uint8_t>& buf,
       BER_Decoder decoder(name_bits.data(), name_bits.size());
       X509_DN name;
       decoder.decode(name);
-      m_names.push_back(name);
+      m_names.emplace_back(name);
       }
    }
 
@@ -63781,7 +65889,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 void Client_Hello::update_hello_cookie(const Hello_Verify_Request& hello_verify)
    {
    if(!m_version.is_datagram_protocol())
-      throw Exception("Cannot use hello cookie with stream protocol");
+      throw Invalid_State("Cannot use hello cookie with stream protocol");
 
    m_hello_cookie = hello_verify.cookie();
    }
@@ -65468,7 +67576,7 @@ std::string hash_function_of_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("Unknown signature algorithm enum");
+   throw Invalid_State("hash_function_of_scheme: Unknown signature algorithm enum");
    }
 
 const std::vector<Signature_Scheme>& all_signature_schemes()
@@ -65568,7 +67676,7 @@ std::string signature_algorithm_of_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("Unknown signature algorithm enum");
+   throw Invalid_State("signature_algorithm_of_scheme: Unknown signature algorithm enum");
    }
 
 std::string sig_scheme_to_string(Signature_Scheme scheme)
@@ -65618,7 +67726,7 @@ std::string sig_scheme_to_string(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("Unknown signature algorithm enum");
+   throw Invalid_State("sig_scheme_to_string: Unknown signature algorithm enum");
    }
 
 std::string padding_string_for_scheme(Signature_Scheme scheme)
@@ -65663,7 +67771,7 @@ std::string padding_string_for_scheme(Signature_Scheme scheme)
          return "";
       }
 
-   throw Invalid_State("Unknown signature algorithm enum");
+   throw Invalid_State("padding_string_for_scheme: Unknown signature algorithm enum");
    }
 
 }
@@ -65829,7 +67937,10 @@ void TLS::Callbacks::tls_verify_cert_chain(
                          ocsp_responses);
 
    if(!result.successful_validation())
-      throw Exception("Certificate validation failure: " + result.result_string());
+      {
+      throw TLS_Exception(Alert::BAD_CERTIFICATE,
+                          "Certificate validation failure: " + result.result_string());
+      }
    }
 
 std::vector<uint8_t> TLS::Callbacks::tls_sign_message(
@@ -66064,11 +68175,11 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
       Protocol_Version active_version = active->version();
 
       if(active_version.is_datagram_protocol() != version.is_datagram_protocol())
-         throw Exception("Active state using version " +
-                                  active_version.to_string() +
-                                  " cannot change to " +
-                                  version.to_string() +
-                                  " in pending");
+         {
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                             "Active state using version " + active_version.to_string() +
+                             " cannot change to " + version.to_string() + " in pending");
+         }
       }
 
    if(!m_sequence_numbers)
@@ -66122,7 +68233,7 @@ void Channel::renegotiate(bool force_full_renegotiation)
       initiate_handshake(create_handshake_state(active->version()),
                          force_full_renegotiation);
    else
-      throw Exception("Cannot renegotiate on inactive connection");
+      throw Invalid_State("Cannot renegotiate on inactive connection");
    }
 
 void Channel::change_cipher_spec_reader(Connection_Side side)
@@ -66482,7 +68593,7 @@ void Channel::send_record_under_epoch(uint16_t epoch, uint8_t record_type,
 void Channel::send(const uint8_t buf[], size_t buf_size)
    {
    if(!is_active())
-      throw Exception("Data cannot be sent on inactive TLS connection");
+      throw Invalid_State("Data cannot be sent on inactive TLS connection");
 
    send_record_array(sequence_numbers().current_write_epoch(),
                      APPLICATION_DATA, buf, buf_size);
@@ -66611,7 +68722,7 @@ SymmetricKey Channel::key_material_export(const std::string& label,
          {
          size_t context_size = context.length();
          if(context_size > 0xFFFF)
-            throw Exception("key_material_export context is too long");
+            throw Invalid_Argument("key_material_export context is too long");
          salt.push_back(get_byte(0, static_cast<uint16_t>(context_size)));
          salt.push_back(get_byte(1, static_cast<uint16_t>(context_size)));
          salt += to_byte_vector(context);
@@ -66620,7 +68731,9 @@ SymmetricKey Channel::key_material_export(const std::string& label,
       return prf->derive_key(length, master_secret, salt, to_byte_vector(label));
       }
    else
-      throw Exception("Channel::key_material_export connection not active");
+      {
+      throw Invalid_State("Channel::key_material_export connection not active");
+      }
    }
 
 }
@@ -67560,7 +69673,7 @@ std::vector<uint8_t> Extensions::serialize() const
       if(extn.second->empty())
          continue;
 
-      const uint16_t extn_code = extn.second->type();
+      const uint16_t extn_code = static_cast<uint16_t>(extn.second->type());
 
       std::vector<uint8_t> extn_val = extn.second->serialize();
 
@@ -67867,9 +69980,11 @@ Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,
 
 std::vector<uint8_t> Signature_Algorithms::serialize() const
    {
+   BOTAN_ASSERT(m_schemes.size() < 256, "Too many signature schemes");
+
    std::vector<uint8_t> buf;
 
-   const uint16_t len = m_schemes.size() * 2;
+   const uint16_t len = static_cast<uint16_t>(m_schemes.size() * 2);
 
    buf.push_back(get_byte(0, len));
    buf.push_back(get_byte(1, len));
@@ -68160,7 +70275,7 @@ Stream_Handshake_IO::format(const std::vector<uint8_t>& msg,
 
    const size_t buf_size = msg.size();
 
-   send_buf[0] = type;
+   send_buf[0] = static_cast<uint8_t>(type);
 
    store_be24(&send_buf[1], buf_size);
 
@@ -68405,7 +70520,7 @@ Datagram_Handshake_IO::format_fragment(const uint8_t fragment[],
    {
    std::vector<uint8_t> send_buf(12 + frag_len);
 
-   send_buf[0] = type;
+   send_buf[0] = static_cast<uint8_t>(type);
 
    store_be24(&send_buf[1], msg_len);
 
@@ -68901,6 +71016,11 @@ Handshake_State::choose_sig_format(const Private_Key& key,
 
       for(Signature_Scheme scheme : schemes)
          {
+         if(signature_scheme_is_known(scheme) == false)
+            {
+            continue;
+            }
+
          if(signature_algorithm_of_scheme(scheme) == sig_algo)
             {
             if(std::find(allowed.begin(), allowed.end(), scheme) != allowed.end())
@@ -68932,7 +71052,7 @@ Handshake_State::choose_sig_format(const Private_Key& key,
       {
       if(sig_algo == "RSA")
          {
-         const std::string padding = "EMSA3(Parallel(MD5,SHA-160))";
+         const std::string padding = "PKCS1v15(Parallel(MD5,SHA-160))";
          return std::make_pair(padding, IEEE_1363);
          }
       else if(sig_algo == "DSA" || sig_algo == "ECDSA")
@@ -68954,7 +71074,8 @@ bool supported_algos_include(
    {
    for(Signature_Scheme scheme : schemes)
       {
-      if(hash_function_of_scheme(scheme) == hash_type &&
+      if(signature_scheme_is_known(scheme) &&
+         hash_function_of_scheme(scheme) == hash_type &&
          signature_algorithm_of_scheme(scheme) == key_type)
          {
          return true;
@@ -68992,7 +71113,7 @@ Handshake_State::parse_sig_format(const Public_Key& key,
 
       if(key_type == "RSA")
          {
-         const std::string padding = "EMSA3(Parallel(MD5,SHA-160))";
+         const std::string padding = "PKCS1v15(Parallel(MD5,SHA-160))";
          return std::make_pair(padding, IEEE_1363);
          }
       else if(key_type == "DSA" || key_type == "ECDSA")
@@ -69089,16 +71210,16 @@ std::vector<std::string> Policy::allowed_ciphers() const
       "ChaCha20Poly1305",
       "AES-256/GCM",
       "AES-128/GCM",
-      "AES-256/CCM",
-      "AES-128/CCM",
+      //"AES-256/CCM",
+      //"AES-128/CCM",
       //"AES-256/CCM(8)",
       //"AES-128/CCM(8)",
       //"Camellia-256/GCM",
       //"Camellia-128/GCM",
       //"ARIA-256/GCM",
       //"ARIA-128/GCM",
-      "AES-256",
-      "AES-128",
+      //"AES-256",
+      //"AES-128",
       //"Camellia-256",
       //"Camellia-128",
       //"SEED"
@@ -69363,8 +71484,8 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite& ciphersuite) const
 bool Policy::allow_client_initiated_renegotiation() const { return false; }
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
-bool Policy::allow_tls10()  const { return true; }
-bool Policy::allow_tls11()  const { return true; }
+bool Policy::allow_tls10()  const { return false; }
+bool Policy::allow_tls11()  const { return false; }
 bool Policy::allow_tls12()  const { return true; }
 bool Policy::allow_dtls10() const { return false; }
 bool Policy::allow_dtls12() const { return true; }
@@ -69530,7 +71651,7 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
 
    if(ciphersuites.empty())
       {
-      throw Exception("Policy does not allow any available cipher suite");
+      throw Invalid_State("Policy does not allow any available cipher suite");
       }
 
    Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
@@ -69726,7 +71847,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       else if(our_side == false)
          m_aead->start(iv.bits_of());
 #else
-      throw Exception("Negotiated disabled TLS CBC+HMAC ciphersuite");
+      throw Internal_Error("Negotiated disabled TLS CBC+HMAC ciphersuite");
 #endif
       }
    else
@@ -71973,7 +74094,7 @@ bool Text_Policy::get_bool(const std::string& key, bool def) const
       }
    else
       {
-      throw Exception("Invalid boolean '" + v + "'");
+      throw Decoding_Error("Invalid boolean '" + v + "'");
       }
    }
 
@@ -72061,28 +74182,28 @@ bool Protocol_Version::known_version() const
 
 bool Protocol_Version::supports_negotiable_signature_algorithms() const
    {
-   return (m_version == Protocol_Version::TLS_V12 ||
-           m_version == Protocol_Version::DTLS_V12);
+   return (m_version != Protocol_Version::TLS_V10 &&
+           m_version != Protocol_Version::TLS_V11 &&
+           m_version != Protocol_Version::DTLS_V10);
    }
 
 bool Protocol_Version::supports_explicit_cbc_ivs() const
    {
-   return (m_version == Protocol_Version::TLS_V11 ||
-           m_version == Protocol_Version::TLS_V12 ||
-           m_version == Protocol_Version::DTLS_V10 ||
-           m_version == Protocol_Version::DTLS_V12);
+   return (m_version != Protocol_Version::TLS_V10);
    }
 
 bool Protocol_Version::supports_ciphersuite_specific_prf() const
    {
-   return (m_version == Protocol_Version::TLS_V12 ||
-           m_version == Protocol_Version::DTLS_V12);
+   return (m_version != Protocol_Version::TLS_V10 &&
+           m_version != Protocol_Version::TLS_V11 &&
+           m_version != Protocol_Version::DTLS_V10);
    }
 
 bool Protocol_Version::supports_aead_modes() const
    {
-   return (m_version == Protocol_Version::TLS_V12 ||
-           m_version == Protocol_Version::DTLS_V12);
+   return (m_version != Protocol_Version::TLS_V10 &&
+           m_version != Protocol_Version::TLS_V11 &&
+           m_version != Protocol_Version::DTLS_V10);
    }
 
 }
@@ -72213,7 +74334,7 @@ std::vector<uint8_t> TLS_CBC_HMAC_AEAD_Mode::assoc_data_with_len(uint16_t len)
 void TLS_CBC_HMAC_AEAD_Mode::set_associated_data(const uint8_t ad[], size_t ad_len)
    {
    if(ad_len != 13)
-      throw Exception("Invalid TLS AEAD associated data length");
+      throw Invalid_Argument("Invalid TLS AEAD associated data length");
    m_ad.assign(ad, ad + ad_len);
    }
 
@@ -72225,7 +74346,7 @@ void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data(const uint8_t ad[], size_
       {
       // AAD hack for EtM
       const uint16_t pt_size = make_uint16(assoc_data()[11], assoc_data()[12]);
-      const uint16_t enc_size = round_up(iv_size() + pt_size + 1, block_size());
+      const uint16_t enc_size = static_cast<uint16_t>(round_up(iv_size() + pt_size + 1, block_size()));
       assoc_data()[11] = get_byte<uint16_t>(0, enc_size);
       assoc_data()[12] = get_byte<uint16_t>(1, enc_size);
       }
@@ -72315,21 +74436,21 @@ uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len)
    * and allows up to 255 bytes.
    */
 
-   const uint16_t to_check = std::min<uint16_t>(256, record_len);
+   const uint16_t to_check = std::min<uint16_t>(256, static_cast<uint16_t>(record_len));
    const uint8_t pad_byte = record[record_len-1];
    const uint16_t pad_bytes = 1 + pad_byte;
 
-   uint16_t pad_invalid = CT::is_less<uint16_t>(rec16, pad_bytes);
+   auto pad_invalid = CT::Mask<uint16_t>::is_lt(rec16, pad_bytes);
 
    for(uint16_t i = rec16 - to_check; i != rec16; ++i)
       {
       const uint16_t offset = rec16 - i;
-      const uint16_t in_pad_range = CT::is_lte<uint16_t>(offset, pad_bytes);
-      pad_invalid |= (in_pad_range & (record[i] ^ pad_byte));
+      const auto in_pad_range = CT::Mask<uint16_t>::is_lte(offset, pad_bytes);
+      const auto pad_correct = CT::Mask<uint16_t>::is_equal(record[i], pad_byte);
+      pad_invalid |= in_pad_range & ~pad_correct;
       }
 
-   const uint16_t pad_invalid_mask = CT::expand_mask<uint16_t>(pad_invalid);
-   return CT::select<uint16_t>(pad_invalid_mask, 0, pad_byte + 1);
+   return pad_invalid.if_not_set_return(pad_bytes);
    }
 
 void TLS_CBC_HMAC_AEAD_Decryption::cbc_decrypt_record(uint8_t record_contents[], size_t record_len)
@@ -72421,7 +74542,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, 
    const uint16_t current_compressions = ((L2 + block_size - 1 - max_bytes_in_first_block) / block_size);
    // number of additional compressions we have to perform
    const uint16_t add_compressions = max_compresssions - current_compressions;
-   const uint8_t equal = CT::is_equal(max_compresssions, current_compressions) & 0x01;
+   const uint16_t equal = CT::Mask<uint16_t>::is_equal(max_compresssions, current_compressions).if_set_return(1);
    // We compute the data length we need to achieve the number of compressions.
    // If there are no compressions, we just add 55/111 dummy bytes so that no
    // compression is performed.
@@ -72449,8 +74570,11 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
    if(use_encrypt_then_mac())
       {
       const size_t enc_size = record_len - tag_size();
+      const size_t enc_iv_size = enc_size + iv_size();
 
-      mac().update(assoc_data_with_len(iv_size() + enc_size));
+      BOTAN_ASSERT_NOMSG(enc_iv_size <= 0xFFFF);
+
+      mac().update(assoc_data_with_len(static_cast<uint16_t>(enc_iv_size)));
       if(iv_size() > 0)
          {
          mac().update(cbc_state());
@@ -72472,7 +74596,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
       cbc_decrypt_record(record_contents, enc_size);
 
       // 0 if padding was invalid, otherwise 1 + padding_bytes
-      uint16_t pad_size = check_tls_cbc_padding(record_contents, enc_size);
+      const uint16_t pad_size = check_tls_cbc_padding(record_contents, enc_size);
 
       // No oracle here, whoever sent us this had the key since MAC check passed
       if(pad_size == 0)
@@ -72502,8 +74626,12 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
       (sending empty records, instead of 1/(n-1) splitting)
       */
 
-      const uint16_t size_ok_mask = CT::is_lte<uint16_t>(static_cast<uint16_t>(tag_size() + pad_size), static_cast<uint16_t>(record_len));
-      pad_size &= size_ok_mask;
+      // We know the cast cannot overflow as pad_size <= 256 && tag_size <= 32
+      const auto size_ok_mask = CT::Mask<uint16_t>::is_lte(
+         static_cast<uint16_t>(tag_size() + pad_size),
+         static_cast<uint16_t>(record_len));
+
+      pad_size = size_ok_mask.if_set_return(pad_size);
 
       CT::unpoison(record_contents, record_len);
 
@@ -72526,11 +74654,11 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
 
       const bool mac_ok = constant_time_compare(&record_contents[mac_offset], mac_buf.data(), tag_size());
 
-      const uint16_t ok_mask = size_ok_mask & CT::expand_mask<uint16_t>(mac_ok) & CT::expand_mask<uint16_t>(pad_size);
+      const auto ok_mask = size_ok_mask & CT::Mask<uint16_t>::expand(mac_ok) & CT::Mask<uint16_t>::expand(pad_size);
 
       CT::unpoison(ok_mask);
 
-      if(ok_mask)
+      if(ok_mask.is_set())
          {
          buffer.insert(buffer.end(), plaintext_block, plaintext_block + plaintext_length);
          }
@@ -72547,7 +74675,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
 }
 /*
 * RTSS (threshold secret sharing)
-* (C) 2009 Jack Lloyd
+* (C) 2009,2018 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -72556,6 +74684,8 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
 namespace Botan {
 
 namespace {
+
+const size_t RTSS_HEADER_SIZE = 20;
 
 /**
 Table for GF(2^8) arithmetic (exponentials)
@@ -72624,7 +74754,9 @@ uint8_t gfp_mul(uint8_t x, uint8_t y)
 
 uint8_t rtss_hash_id(const std::string& hash_name)
    {
-   if(hash_name == "SHA-160" || hash_name == "SHA-1" || hash_name == "SHA1")
+   if(hash_name == "None")
+      return 0;
+   else if(hash_name == "SHA-160" || hash_name == "SHA-1" || hash_name == "SHA1")
       return 1;
    else if(hash_name == "SHA-256")
       return 2;
@@ -72634,12 +74766,14 @@ uint8_t rtss_hash_id(const std::string& hash_name)
 
 std::unique_ptr<HashFunction> get_rtss_hash_by_id(uint8_t id)
    {
+   if(id == 0)
+      return std::unique_ptr<HashFunction>();
    if(id == 1)
       return HashFunction::create_or_throw("SHA-1");
    else if(id == 2)
       return HashFunction::create_or_throw("SHA-256");
    else
-      throw Decoding_Error("Bad RTSS hash identifier");
+      throw Decoding_Error("Unknown RTSS hash identifier");
    }
 
 }
@@ -72649,10 +74783,18 @@ RTSS_Share::RTSS_Share(const std::string& hex_input)
    m_contents = hex_decode_locked(hex_input);
    }
 
+RTSS_Share::RTSS_Share(const uint8_t bin[], size_t len)
+   {
+   m_contents.assign(bin, bin + len);
+   }
+
 uint8_t RTSS_Share::share_id() const
    {
    if(!initialized())
       throw Invalid_State("RTSS_Share::share_id not initialized");
+
+   if(m_contents.size() < RTSS_HEADER_SIZE + 1)
+      throw Decoding_Error("RTSS_Share::share_id invalid share data");
 
    return m_contents[20];
    }
@@ -72668,31 +74810,61 @@ RTSS_Share::split(uint8_t M, uint8_t N,
                   const uint8_t identifier[16],
                   RandomNumberGenerator& rng)
    {
-   if(M == 0 || N == 0 || M > N)
-      throw Encoding_Error("RTSS_Share::split: M == 0 or N == 0 or M > N");
+   return RTSS_Share::split(M, N, S, S_len,
+                            std::vector<uint8_t>(identifier, identifier + 16),
+                            "SHA-256",
+                            rng);
+   }
 
-   // always use SHA-256 when generating shares
-   std::unique_ptr<HashFunction> hash = HashFunction::create_or_throw("SHA-256");
+std::vector<RTSS_Share>
+RTSS_Share::split(uint8_t M, uint8_t N,
+                  const uint8_t S[], uint16_t S_len,
+                  const std::vector<uint8_t>& identifier,
+                  const std::string& hash_fn,
+                  RandomNumberGenerator& rng)
+   {
+   if(M <= 1 || N <= 1 || M > N || N >= 255)
+      throw Invalid_Argument("RTSS_Share::split: Invalid N or M");
 
-   std::vector<RTSS_Share> shares(N);
+   if(identifier.size() > 16)
+      throw Invalid_Argument("RTSS_Share::split Invalid identifier size");
+
+   const uint8_t hash_id = rtss_hash_id(hash_fn);
+
+   std::unique_ptr<HashFunction> hash;
+   if(hash_id > 0)
+      hash = HashFunction::create_or_throw(hash_fn);
+
+   // secret = S || H(S)
+   secure_vector<uint8_t> secret(S, S + S_len);
+   if(hash)
+      secret += hash->process(S, S_len);
+
+   if(secret.size() >= 0xFFFE)
+      throw Encoding_Error("RTSS_Share::split secret too large for TSS format");
+
+   // +1 byte for the share ID
+   const uint16_t share_len = static_cast<uint16_t>(secret.size() + 1);
+
+   secure_vector<uint8_t> share_header(RTSS_HEADER_SIZE);
+   copy_mem(&share_header[0], identifier.data(), identifier.size());
+   share_header[16] = hash_id;
+   share_header[17] = M;
+   share_header[18] = get_byte(0, share_len);
+   share_header[19] = get_byte(1, share_len);
 
    // Create RTSS header in each share
+   std::vector<RTSS_Share> shares(N);
+
    for(uint8_t i = 0; i != N; ++i)
       {
-      shares[i].m_contents += std::make_pair(identifier, 16);
-      shares[i].m_contents += rtss_hash_id(hash->name());
-      shares[i].m_contents += M;
-      shares[i].m_contents += get_byte(0, S_len);
-      shares[i].m_contents += get_byte(1, S_len);
+      shares[i].m_contents.reserve(share_header.size() + share_len);
+      shares[i].m_contents = share_header;
       }
 
    // Choose sequential values for X starting from 1
    for(uint8_t i = 0; i != N; ++i)
       shares[i].m_contents.push_back(i+1);
-
-   // secret = S || H(S)
-   secure_vector<uint8_t> secret(S, S + S_len);
-   secret += hash->process(S, S_len);
 
    for(size_t i = 0; i != secret.size(); ++i)
       {
@@ -72722,37 +74894,54 @@ RTSS_Share::split(uint8_t M, uint8_t N,
 secure_vector<uint8_t>
 RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
    {
-   const size_t RTSS_HEADER_SIZE = 20;
+   if(shares.size() <= 1)
+      throw Decoding_Error("Insufficient shares to do TSS reconstruction");
 
    for(size_t i = 0; i != shares.size(); ++i)
       {
-      if(shares[i].size() != shares[0].size())
-         throw Decoding_Error("Different sized RTSS shares detected");
-      if(shares[i].share_id() == 0)
-         throw Decoding_Error("Invalid (id = 0) RTSS share detected");
-      if(shares[i].size() < RTSS_HEADER_SIZE)
+      if(shares[i].size() < RTSS_HEADER_SIZE + 1)
          throw Decoding_Error("Missing or malformed RTSS header");
 
-      if(!same_mem(&shares[0].m_contents[0],
-                   &shares[i].m_contents[0], RTSS_HEADER_SIZE))
-         throw Decoding_Error("Different RTSS headers detected");
+      if(shares[i].share_id() == 0)
+         throw Decoding_Error("Invalid (id = 0) RTSS share detected");
+
+      if(i > 0)
+         {
+         if(shares[i].size() != shares[0].size())
+            throw Decoding_Error("Different sized RTSS shares detected");
+
+         if(!same_mem(&shares[0].m_contents[0],
+                      &shares[i].m_contents[0], RTSS_HEADER_SIZE))
+            throw Decoding_Error("Different RTSS headers detected");
+         }
       }
 
-   if(shares.size() < shares[0].m_contents[17])
+   const uint8_t N = shares[0].m_contents[17];
+
+   if(shares.size() < N)
       throw Decoding_Error("Insufficient shares to do TSS reconstruction");
 
-   uint16_t secret_len = make_uint16(shares[0].m_contents[18],
-                                   shares[0].m_contents[19]);
+   const uint16_t share_len = make_uint16(shares[0].m_contents[18],
+                                          shares[0].m_contents[19]);
 
-   uint8_t hash_id = shares[0].m_contents[16];
-
+   const uint8_t hash_id = shares[0].m_contents[16];
    std::unique_ptr<HashFunction> hash(get_rtss_hash_by_id(hash_id));
+   const size_t hash_len = (hash ? hash->output_length() : 0);
 
-   if(shares[0].size() != secret_len + hash->output_length() + RTSS_HEADER_SIZE + 1)
-      throw Decoding_Error("Bad RTSS length field in header");
+   if(shares[0].size() != RTSS_HEADER_SIZE + share_len)
+      {
+      /*
+      * This second (laxer) check accomodates a bug in TSS that was
+      * fixed in 2.9.0 - previous versions used the length of the
+      * *secret* here, instead of the length of the *share*, which is
+      * precisely 1 + hash_len longer.
+      */
+      if(shares[0].size() <= RTSS_HEADER_SIZE + 1 + hash_len)
+         throw Decoding_Error("Bad RTSS length field in header");
+      }
 
    std::vector<uint8_t> V(shares.size());
-   secure_vector<uint8_t> secret;
+   secure_vector<uint8_t> recovered;
 
    for(size_t i = RTSS_HEADER_SIZE + 1; i != shares[0].size(); ++i)
       {
@@ -72784,23 +74973,31 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
 
          r ^= gfp_mul(V[k], r2);
          }
-      secret.push_back(r);
+      recovered.push_back(r);
       }
 
-   if(secret.size() != secret_len + hash->output_length())
-      throw Decoding_Error("Bad length in RTSS output");
-
-   hash->update(secret.data(), secret_len);
-   secure_vector<uint8_t> hash_check = hash->final();
-
-   if(!constant_time_compare(hash_check.data(),
-                             &secret[secret_len],
-                             hash->output_length()))
+   if(hash)
       {
-      throw Decoding_Error("RTSS hash check failed");
+      if(recovered.size() < hash->output_length())
+         throw Decoding_Error("RTSS recovered value too short to be valid");
+
+      const size_t secret_len = recovered.size() - hash->output_length();
+
+      hash->update(recovered.data(), secret_len);
+      secure_vector<uint8_t> hash_check = hash->final();
+
+      if(!constant_time_compare(hash_check.data(),
+                                &recovered[secret_len],
+                                hash->output_length()))
+         {
+         throw Decoding_Error("RTSS hash check failed");
+         }
+
+      // remove the trailing hash value
+      recovered.resize(secret_len);
       }
 
-   return secure_vector<uint8_t>(secret.cbegin(), secret.cbegin() + secret_len);
+   return recovered;
    }
 
 }
@@ -73434,10 +75631,17 @@ void throw_invalid_argument(const char* message,
                             const char* file)
    {
    std::ostringstream format;
-
    format << message << " in " << func << ":" << file;
-
    throw Invalid_Argument(format.str());
+   }
+
+void throw_invalid_state(const char* expr,
+                         const char* func,
+                         const char* file)
+   {
+   std::ostringstream format;
+   format << "Invalid state: " << expr << " was false in " << func << ":" << file;
+   throw Invalid_State(format.str());
    }
 
 void assertion_failure(const char* expr_str,
@@ -73460,7 +75664,7 @@ void assertion_failure(const char* expr_str,
 
    format << "@" << file << ":" << line;
 
-   throw Exception(format.str());
+   throw Internal_Error(format.str());
    }
 
 }
@@ -73859,6 +76063,87 @@ bool caseless_cmp(char a, char b)
 
 }
 /*
+* (C) 2018 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+namespace CT {
+
+secure_vector<uint8_t> copy_output(CT::Mask<uint8_t> bad_input,
+                                   const uint8_t input[],
+                                   size_t input_length,
+                                   size_t offset)
+   {
+   if(input_length == 0)
+      return secure_vector<uint8_t>();
+
+   /*
+   * Ensure at runtime that offset <= input_length. This is an invalid input,
+   * but we can't throw without using the poisoned value. Instead, if it happens,
+   * set offset to be equal to the input length (so output_bytes becomes 0 and
+   * the returned vector is empty)
+   */
+   const auto valid_offset = CT::Mask<size_t>::is_lte(offset, input_length);
+   offset = valid_offset.select(offset, input_length);
+
+   const size_t output_bytes = input_length - offset;
+
+   secure_vector<uint8_t> output(input_length);
+
+   /*
+   Move the desired output bytes to the front using a slow (O^n)
+   but constant time loop that does not leak the value of the offset
+   */
+   for(size_t i = 0; i != input_length; ++i)
+      {
+      /*
+      start index from i rather than 0 since we know j must be >= i + offset
+      to have any effect, and starting from i does not reveal information
+      */
+      for(size_t j = i; j != input_length; ++j)
+         {
+         const uint8_t b = input[j];
+         const auto is_eq = CT::Mask<size_t>::is_equal(j, offset + i);
+         output[i] |= is_eq.if_set_return(b);
+         }
+      }
+
+   bad_input.if_set_zero_out(output.data(), output.size());
+
+   /*
+   This is potentially not const time, depending on how std::vector is
+   implemented. But since we are always reducing length, it should
+   just amount to setting the member var holding the length.
+   */
+   CT::unpoison(output.data(), output.size());
+   CT::unpoison(output_bytes);
+   output.resize(output_bytes);
+   return output;
+   }
+
+secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t length)
+   {
+   size_t leading_zeros = 0;
+
+   auto only_zeros = Mask<uint8_t>::set();
+
+   for(size_t i = 0; i != length; ++i)
+      {
+      only_zeros &= CT::Mask<uint8_t>::is_zero(in[i]);
+      leading_zeros += only_zeros.if_set_return(1);
+      }
+
+   return copy_output(CT::Mask<uint8_t>::cleared(), in, length, leading_zeros);
+   }
+
+}
+
+}
+/*
 * DataSource
 * (C) 1999-2007 Jack Lloyd
 *     2005 Matthew Gregan
@@ -74080,17 +76365,24 @@ namespace Botan {
 Exception::Exception(const std::string& msg) : m_msg(msg)
    {}
 
+Exception::Exception(const std::string& msg, const std::exception& e) :
+   m_msg(msg + " failed with " + std::string(e.what()))
+   {}
+
 Exception::Exception(const char* prefix, const std::string& msg) :
    m_msg(std::string(prefix) + " " + msg)
    {}
 
 Invalid_Argument::Invalid_Argument(const std::string& msg) :
-   Exception("Invalid argument", msg)
+   Exception(msg)
    {}
 
 Invalid_Argument::Invalid_Argument(const std::string& msg, const std::string& where) :
-   Exception("Invalid argument", msg + " in " + where)
+   Exception(msg + " in " + where)
    {}
+
+Invalid_Argument::Invalid_Argument(const std::string& msg, const std::exception& e) :
+   Exception(msg, e) {}
 
 Lookup_Error::Lookup_Error(const std::string& type,
                            const std::string& algo,
@@ -74145,11 +76437,15 @@ Encoding_Error::Encoding_Error(const std::string& name) :
    {}
 
 Decoding_Error::Decoding_Error(const std::string& name) :
-   Invalid_Argument("Decoding error: " + name)
+   Invalid_Argument(name)
+   {}
+
+Decoding_Error::Decoding_Error(const std::string& msg, const std::exception& e) :
+   Invalid_Argument(msg, e)
    {}
 
 Decoding_Error::Decoding_Error(const std::string& name, const char* exception_message) :
-   Invalid_Argument("Decoding error: " + name + " failed with exception " + exception_message) {}
+   Invalid_Argument(name + " failed with exception " + exception_message) {}
 
 Integrity_Failure::Integrity_Failure(const std::string& msg) :
    Exception("Integrity failure: " + msg)
@@ -74161,6 +76457,11 @@ Invalid_OID::Invalid_OID(const std::string& oid) :
 
 Stream_IO_Error::Stream_IO_Error(const std::string& err) :
    Exception("I/O error: " + err)
+   {}
+
+System_Error::System_Error(const std::string& msg, int err_code) :
+   Exception(msg + " error code " + std::to_string(err_code)),
+   m_error_code(err_code)
    {}
 
 Self_Test_Failure::Self_Test_Failure(const std::string& err) :
@@ -74372,6 +76673,7 @@ std::vector<std::string> get_files_recursive(const std::string& dir)
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <new>
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
 #endif
@@ -74413,22 +76715,22 @@ void initialize_allocator()
 #endif
    }
 
-bool constant_time_compare(const uint8_t x[],
-                           const uint8_t y[],
-                           size_t len)
+uint8_t ct_compare_u8(const uint8_t x[],
+                      const uint8_t y[],
+                      size_t len)
    {
    volatile uint8_t difference = 0;
 
    for(size_t i = 0; i != len; ++i)
       difference |= (x[i] ^ y[i]);
 
-   return difference == 0;
+   return CT::Mask<uint8_t>::is_zero(difference).value();
    }
 
 }
 /*
 * OS and machine specific utility functions
-* (C) 2015,2016,2017 Jack Lloyd
+* (C) 2015,2016,2017,2018 Jack Lloyd
 * (C) 2016 Daniel Neus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -74445,7 +76747,19 @@ bool constant_time_compare(const uint8_t x[],
   #include <sys/mman.h>
   #include <signal.h>
   #include <setjmp.h>
-#elif defined(BOTAN_TARGET_OS_HAS_WIN32)
+  #include <termios.h>
+  #undef B0
+#endif
+
+#if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+  #include <emscripten/emscripten.h>
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
+  #include <sys/auxv.h>
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_WIN32)
   #define NOMINMAX 1
   #include <windows.h>
 #endif
@@ -74461,13 +76775,16 @@ void secure_scrub_memory(void* ptr, size_t n)
 #elif defined(BOTAN_TARGET_OS_HAS_EXPLICIT_BZERO)
    ::explicit_bzero(ptr, n);
 
+#elif defined(BOTAN_TARGET_OS_HAS_EXPLICIT_MEMSET)
+   (void)::explicit_memset(ptr, 0, n);
+
 #elif defined(BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO) && (BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO == 1)
    /*
    Call memset through a static volatile pointer, which the compiler
    should not elide. This construct should be safe in conforming
    compilers, but who knows. I did confirm that on x86-64 GCC 6.1 and
    Clang 3.8 both create code that saves the memset address in the
-   data segment and uncondtionally loads and jumps to that address.
+   data segment and unconditionally loads and jumps to that address.
    */
    static void* (*const volatile memset_ptr)(void*, int, size_t) = std::memset;
    (memset_ptr)(ptr, 0, n);
@@ -74493,7 +76810,18 @@ uint32_t OS::get_process_id()
 #endif
    }
 
-uint64_t OS::get_processor_timestamp()
+bool OS::running_in_privileged_state()
+   {
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) && defined(AT_SECURE)
+   return ::getauxval(AT_SECURE) != 0;
+#elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   return (::getuid() != ::geteuid()) || (::getgid() != ::getegid());
+#else
+   return false;
+#endif
+   }
+
+uint64_t OS::get_cpu_cycle_counter()
    {
    uint64_t rtc = 0;
 
@@ -74546,7 +76874,7 @@ uint64_t OS::get_processor_timestamp()
    asm volatile("mfctl 16,%0" : "=r" (rtc)); // 64-bit only?
 
 #else
-   //#warning "OS::get_processor_timestamp not implemented"
+   //#warning "OS::get_cpu_cycle_counter not implemented"
 #endif
 
 #endif
@@ -74556,8 +76884,12 @@ uint64_t OS::get_processor_timestamp()
 
 uint64_t OS::get_high_resolution_clock()
    {
-   if(uint64_t cpu_clock = OS::get_processor_timestamp())
+   if(uint64_t cpu_clock = OS::get_cpu_cycle_counter())
       return cpu_clock;
+
+#if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+   return emscripten_get_now();
+#endif
 
    /*
    If we got here either we either don't have an asm instruction
@@ -74618,26 +76950,30 @@ uint64_t OS::get_system_timestamp_ns()
 
 size_t OS::system_page_size()
    {
+   const size_t default_page_size = 4096;
+
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    long p = ::sysconf(_SC_PAGESIZE);
    if(p > 1)
       return static_cast<size_t>(p);
    else
-      return 4096;
+      return default_page_size;
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    SYSTEM_INFO sys_info;
    ::GetSystemInfo(&sys_info);
    return sys_info.dwPageSize;
+#else
+   return default_page_size;
 #endif
-
-   // default value
-   return 4096;
    }
 
 size_t OS::get_memory_locking_limit()
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK) && defined(RLIMIT_MEMLOCK)
    /*
+   * If RLIMIT_MEMLOCK is not defined, likely the OS does not support
+   * unprivileged mlock calls.
+   *
    * Linux defaults to only 64 KiB of mlockable memory per process
    * (too small) but BSDs offer a small fraction of total RAM (more
    * than we need). Bound the total mlock size to 512 KiB which is
@@ -74651,7 +76987,7 @@ size_t OS::get_memory_locking_limit()
    /*
    * Allow override via env variable
    */
-   if(const char* env = std::getenv("BOTAN_MLOCK_POOL_SIZE"))
+   if(const char* env = read_env_variable("BOTAN_MLOCK_POOL_SIZE"))
       {
       try
          {
@@ -74661,7 +76997,6 @@ size_t OS::get_memory_locking_limit()
       catch(std::exception&) { /* ignore it */ }
       }
 
-#if defined(RLIMIT_MEMLOCK)
    if(mlock_requested > 0)
       {
       struct ::rlimit limits;
@@ -74677,13 +77012,6 @@ size_t OS::get_memory_locking_limit()
 
       return std::min<size_t>(limits.rlim_cur, mlock_requested * 1024);
       }
-#else
-   /*
-   * If RLIMIT_MEMLOCK is not defined, likely the OS does not support
-   * unprivileged mlock calls.
-   */
-   return 0;
-#endif
 
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    SIZE_T working_min = 0, working_max = 0;
@@ -74713,44 +77041,42 @@ size_t OS::get_memory_locking_limit()
       }
 #endif
 
+   // Not supported on this platform
    return 0;
+   }
+
+const char* OS::read_env_variable(const std::string& name)
+   {
+   if(running_in_privileged_state())
+      return nullptr;
+
+   return std::getenv(name.c_str());
    }
 
 void* OS::allocate_locked_pages(size_t length)
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
 
-#if !defined(MAP_NOCORE)
-   #define MAP_NOCORE 0
-#endif
+   const size_t page_size = OS::system_page_size();
 
-#if !defined(MAP_ANONYMOUS)
-   #define MAP_ANONYMOUS MAP_ANON
-#endif
-
-   void* ptr = ::mmap(nullptr,
-                      length,
-                      PROT_READ | PROT_WRITE,
-                      MAP_ANONYMOUS | MAP_SHARED | MAP_NOCORE,
-                      /*fd*/-1,
-                      /*offset*/0);
-
-   if(ptr == MAP_FAILED)
-      {
+   if(length % page_size != 0)
       return nullptr;
-      }
+
+   void* ptr = nullptr;
+   int rc = ::posix_memalign(&ptr, page_size, length);
+
+   if(rc != 0 || ptr == nullptr)
+      return nullptr;
 
 #if defined(MADV_DONTDUMP)
    ::madvise(ptr, length, MADV_DONTDUMP);
 #endif
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    if(::mlock(ptr, length) != 0)
       {
-      ::munmap(ptr, length);
+      std::free(ptr);
       return nullptr; // failed to lock
       }
-#endif
 
    ::memset(ptr, 0, length);
 
@@ -74780,25 +77106,24 @@ void OS::free_locked_pages(void* ptr, size_t length)
    if(ptr == nullptr || length == 0)
       return;
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    secure_scrub_memory(ptr, length);
-
-#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    ::munlock(ptr, length);
-#endif
+   std::free(ptr);
 
-   ::munmap(ptr, length);
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    secure_scrub_memory(ptr, length);
    ::VirtualUnlock(ptr, length);
    ::VirtualFree(ptr, 0, MEM_RELEASE);
+
 #else
    // Invalid argument because no way this pointer was allocated by us
    throw Invalid_Argument("Invalid ptr to free_locked_pages");
 #endif
    }
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+
 namespace {
 
 static ::sigjmp_buf g_sigill_jmp_buf;
@@ -74809,13 +77134,14 @@ void botan_sigill_handler(int)
    }
 
 }
+
 #endif
 
 int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    {
    volatile int probe_result = -3;
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
    struct sigaction old_sigaction;
    struct sigaction sigaction;
 
@@ -74826,7 +77152,7 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    int rc = ::sigaction(SIGILL, &sigaction, &old_sigaction);
 
    if(rc != 0)
-      throw Exception("run_cpu_instruction_probe sigaction failed");
+      throw System_Error("run_cpu_instruction_probe sigaction failed", errno);
 
    rc = sigsetjmp(g_sigill_jmp_buf, /*save sigs*/1);
 
@@ -74844,7 +77170,7 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    // Restore old SIGILL handler, if any
    rc = ::sigaction(SIGILL, &old_sigaction, nullptr);
    if(rc != 0)
-      throw Exception("run_cpu_instruction_probe sigaction restore failed");
+      throw System_Error("run_cpu_instruction_probe sigaction restore failed", errno);
 
 #elif defined(BOTAN_TARGET_OS_IS_WINDOWS) && defined(BOTAN_TARGET_COMPILER_IS_MSVC)
 
@@ -74859,9 +77185,110 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
       probe_result = -1;
       }
 
+#else
+   BOTAN_UNUSED(probe_fn);
 #endif
 
    return probe_result;
+   }
+
+std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal()
+   {
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   class POSIX_Echo_Suppression : public Echo_Suppression
+      {
+      public:
+         POSIX_Echo_Suppression()
+            {
+            m_stdin_fd = fileno(stdin);
+            if(::tcgetattr(m_stdin_fd, &m_old_termios) != 0)
+               throw System_Error("Getting terminal status failed", errno);
+
+            struct termios noecho_flags = m_old_termios;
+            noecho_flags.c_lflag &= ~ECHO;
+            noecho_flags.c_lflag |= ECHONL;
+
+            if(::tcsetattr(m_stdin_fd, TCSANOW, &noecho_flags) != 0)
+               throw System_Error("Clearing terminal echo bit failed", errno);
+            }
+
+         void reenable_echo() override
+            {
+            if(m_stdin_fd > 0)
+               {
+               if(::tcsetattr(m_stdin_fd, TCSANOW, &m_old_termios) != 0)
+                  throw System_Error("Restoring terminal echo bit failed", errno);
+               m_stdin_fd = -1;
+               }
+            }
+
+         ~POSIX_Echo_Suppression()
+            {
+            try
+               {
+               reenable_echo();
+               }
+            catch(...)
+               {
+               }
+            }
+
+      private:
+         int m_stdin_fd;
+         struct termios m_old_termios;
+      };
+
+   return std::unique_ptr<Echo_Suppression>(new POSIX_Echo_Suppression);
+
+#elif defined(BOTAN_TARGET_OS_HAS_WIN32)
+
+   class Win32_Echo_Suppression : public Echo_Suppression
+      {
+      public:
+         Win32_Echo_Suppression()
+            {
+            m_input_handle = ::GetStdHandle(STD_INPUT_HANDLE);
+            if(::GetConsoleMode(m_input_handle, &m_console_state) == 0)
+               throw System_Error("Getting console mode failed", ::GetLastError());
+
+            DWORD new_mode = ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT;
+            if(::SetConsoleMode(m_input_handle, new_mode) == 0)
+               throw System_Error("Setting console mode failed", ::GetLastError());
+            }
+
+         void reenable_echo() override
+            {
+            if(m_input_handle != INVALID_HANDLE_VALUE)
+               {
+               if(::SetConsoleMode(m_input_handle, m_console_state) == 0)
+                  throw System_Error("Setting console mode failed", ::GetLastError());
+               m_input_handle = INVALID_HANDLE_VALUE;
+               }
+            }
+
+         ~Win32_Echo_Suppression()
+            {
+            try
+               {
+               reenable_echo();
+               }
+            catch(...)
+               {
+               }
+            }
+
+      private:
+         HANDLE m_input_handle;
+         DWORD m_console_state;
+      };
+
+   return std::unique_ptr<Echo_Suppression>(new Win32_Echo_Suppression);
+
+#else
+
+   // Not supported on this platform, return null
+   return std::unique_ptr<Echo_Suppression>();
+#endif
    }
 
 }
@@ -75206,8 +77633,9 @@ std::string tolower_string(const std::string& in)
    std::string s = in;
    for(size_t i = 0; i != s.size(); ++i)
       {
-      if(std::isalpha(static_cast<unsigned char>(s[i])))
-         s[i] = std::tolower(static_cast<unsigned char>(s[i]));
+      const int cu = static_cast<unsigned char>(s[i]);
+      if(std::isalpha(cu))
+         s[i] = static_cast<char>(std::tolower(cu));
       }
    return s;
    }
@@ -75274,7 +77702,7 @@ bool host_wildcard_match(const std::string& issued_, const std::string& host_)
    /*
    Now walk through the issued string, making sure every character
    matches. When we come to the (singular) '*', jump forward in the
-   hostname by the cooresponding amount. We know exactly how much
+   hostname by the corresponding amount. We know exactly how much
    space the wildcard takes because it must be exactly `len(host) -
    len(issued) + 1 chars`.
 
@@ -75383,7 +77811,7 @@ std::map<std::string, std::string> read_cfg(std::istream& is)
       auto eq = s.find("=");
 
       if(eq == std::string::npos || eq == 0 || eq == s.size() - 1)
-         throw Exception("Bad read_cfg input '" + s + "' on line " + std::to_string(line));
+         throw Decoding_Error("Bad read_cfg input '" + s + "' on line " + std::to_string(line));
 
       const std::string key = clean_ws(s.substr(0, eq));
       const std::string val = clean_ws(s.substr(eq + 1, std::string::npos));
@@ -75392,6 +77820,234 @@ std::map<std::string, std::string> read_cfg(std::istream& is)
       }
 
    return kv;
+   }
+
+}
+/*
+* (C) 2018 Ribose Inc
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+std::map<std::string, std::string> read_kv(const std::string& kv)
+   {
+   std::map<std::string, std::string> m;
+   if(kv == "")
+      return m;
+
+   std::vector<std::string> parts;
+
+   try
+      {
+      parts = split_on(kv, ',');
+      }
+   catch(std::exception&)
+      {
+      throw Invalid_Argument("Bad KV spec");
+      }
+
+   bool escaped = false;
+   bool reading_key = true;
+   std::string cur_key;
+   std::string cur_val;
+
+   for(char c : kv)
+      {
+      if(c == '\\' && !escaped)
+         {
+         escaped = true;
+         }
+      else if(c == ',' && !escaped)
+         {
+         if(cur_key.empty())
+            throw Invalid_Argument("Bad KV spec empty key");
+
+         if(m.find(cur_key) != m.end())
+            throw Invalid_Argument("Bad KV spec duplicated key");
+         m[cur_key] = cur_val;
+         cur_key = "";
+         cur_val = "";
+         reading_key = true;
+         }
+      else if(c == '=' && !escaped)
+         {
+         if(reading_key == false)
+            throw Invalid_Argument("Bad KV spec unexpected equals sign");
+         reading_key = false;
+         }
+      else
+         {
+         if(reading_key)
+            cur_key += c;
+         else
+            cur_val += c;
+
+         if(escaped)
+            escaped = false;
+         }
+      }
+
+   if(!cur_key.empty())
+      {
+      if(reading_key == false)
+         {
+         if(m.find(cur_key) != m.end())
+            throw Invalid_Argument("Bad KV spec duplicated key");
+         m[cur_key] = cur_val;
+         }
+      else
+         throw Invalid_Argument("Bad KV spec incomplete string");
+      }
+
+   return m;
+   }
+
+}
+/*
+* (C) 2018 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+void Timer::start()
+   {
+   stop();
+   m_timer_start = OS::get_system_timestamp_ns();
+   m_cpu_cycles_start = OS::get_cpu_cycle_counter();
+   }
+
+void Timer::stop()
+   {
+   if(m_timer_start)
+      {
+      if(m_cpu_cycles_start != 0)
+         {
+         const uint64_t cycles_taken = OS::get_cpu_cycle_counter() - m_cpu_cycles_start;
+         if(cycles_taken > 0)
+            {
+            m_cpu_cycles_used += static_cast<size_t>(cycles_taken * m_clock_cycle_ratio);
+            }
+         }
+
+      const uint64_t now = OS::get_system_timestamp_ns();
+
+      if(now > m_timer_start)
+         {
+         const uint64_t dur = now - m_timer_start;
+
+         m_time_used += dur;
+
+         if(m_event_count == 0)
+            {
+            m_min_time = m_max_time = dur;
+            }
+         else
+            {
+            m_max_time = std::max(m_max_time, dur);
+            m_min_time = std::min(m_min_time, dur);
+            }
+         }
+
+      m_timer_start = 0;
+      ++m_event_count;
+      }
+   }
+
+bool Timer::operator<(const Timer& other) const
+   {
+   if(this->doing() != other.doing())
+      return (this->doing() < other.doing());
+
+   return (this->get_name() < other.get_name());
+   }
+
+std::string Timer::to_string() const
+   {
+   if(m_custom_msg.size() > 0)
+      {
+      return m_custom_msg;
+      }
+   else if(this->buf_size() == 0)
+      {
+      return result_string_ops();
+      }
+   else
+      {
+      return result_string_bps();
+      }
+   }
+
+std::string Timer::result_string_bps() const
+   {
+   const size_t MiB = 1024 * 1024;
+
+   const double MiB_total = static_cast<double>(events()) / MiB;
+   const double MiB_per_sec = MiB_total / seconds();
+
+   std::ostringstream oss;
+   oss << get_name();
+
+   if(!doing().empty())
+      {
+      oss << " " << doing();
+      }
+
+   if(buf_size() > 0)
+      {
+      oss << " buffer size " << buf_size() << " bytes:";
+      }
+
+   if(events() == 0)
+      oss << " " << "N/A";
+   else
+      oss << " " << std::fixed << std::setprecision(3) << MiB_per_sec << " MiB/sec";
+
+   if(cycles_consumed() != 0)
+      {
+      const double cycles_per_byte = static_cast<double>(cycles_consumed()) / events();
+      oss << " " << std::fixed << std::setprecision(2) << cycles_per_byte << " cycles/byte";
+      }
+
+   oss << " (" << MiB_total << " MiB in " << milliseconds() << " ms)\n";
+
+   return oss.str();
+   }
+
+std::string Timer::result_string_ops() const
+   {
+   std::ostringstream oss;
+
+   oss << get_name() << " ";
+
+   if(events() == 0)
+      {
+      oss << "no events\n";
+      }
+   else
+      {
+      oss << static_cast<uint64_t>(events_per_second())
+          << ' ' << doing() << "/sec; "
+          << std::setprecision(2) << std::fixed
+          << ms_per_event() << " ms/op";
+
+      if(cycles_consumed() != 0)
+         {
+         const double cycles_per_op = static_cast<double>(cycles_consumed()) / events();
+         const size_t precision = (cycles_per_op < 10000) ? 2 : 0;
+         oss << " " << std::fixed << std::setprecision(precision) << cycles_per_op << " cycles/op";
+         }
+
+      oss << " (" << events() << " " << (events() == 1 ? "op" : "ops")
+          << " in " << milliseconds() << " ms)\n";
+      }
+
+   return oss.str();
    }
 
 }
@@ -75482,6 +78138,84 @@ std::string runtime_version_check(uint32_t major,
       }
 
    return "";
+   }
+
+}
+/*
+* UUID type
+* (C) 2015,2018 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+
+namespace Botan {
+
+UUID::UUID(RandomNumberGenerator& rng)
+   {
+   m_uuid.resize(16);
+   rng.randomize(m_uuid.data(), m_uuid.size());
+
+   // Mark as a random v4 UUID (RFC 4122 sec 4.4)
+   m_uuid[6] = 0x40 | (m_uuid[6] & 0x0F);
+
+   // Set reserved bits
+   m_uuid[8] = 0x80 | (m_uuid[8] & 0x3F);
+   }
+
+UUID::UUID(const std::vector<uint8_t>& blob)
+   {
+   if(blob.size() != 16)
+      {
+      throw Invalid_Argument("Bad UUID blob " + hex_encode(blob));
+      }
+
+   m_uuid = blob;
+   }
+
+UUID::UUID(const std::string& uuid_str)
+   {
+   if(uuid_str.size() != 36 ||
+      uuid_str[8] != '-' ||
+      uuid_str[13] != '-' ||
+      uuid_str[18] != '-' ||
+      uuid_str[23] != '-')
+      {
+      throw Invalid_Argument("Bad UUID '" + uuid_str + "'");
+      }
+
+   std::string just_hex;
+   for(size_t i = 0; i != uuid_str.size(); ++i)
+      {
+      char c = uuid_str[i];
+
+      if(c == '-')
+         continue;
+
+      just_hex += c;
+      }
+
+   m_uuid = hex_decode(just_hex);
+
+   if(m_uuid.size() != 16)
+      {
+      throw Invalid_Argument("Bad UUID '" + uuid_str + "'");
+      }
+   }
+
+std::string UUID::to_string() const
+   {
+   if(is_valid() == false)
+      throw Invalid_State("UUID object is empty cannot convert to string");
+
+   std::string h = hex_encode(m_uuid);
+
+   h.insert(8, "-");
+   h.insert(13, "-");
+   h.insert(18, "-");
+   h.insert(23, "-");
+
+   return h;
    }
 
 }
@@ -77170,7 +79904,7 @@ void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
 
    if((constraints & permitted) != constraints)
       {
-      throw Exception("Invalid " + name + " constraints " + key_constraints_to_string(constraints));
+      throw Invalid_Argument("Invalid " + name + " constraints " + key_constraints_to_string(constraints));
       }
    }
 
@@ -77534,8 +80268,11 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
    response_outer.decode(resp_status, ENUMERATED, UNIVERSAL);
 
+   /*
+   * FIXME: properly decode error responses
+   */
    if(resp_status != 0)
-      throw Exception("OCSP response status " + std::to_string(resp_status));
+      throw Decoding_Error("OCSP response status " + std::to_string(resp_status));
 
    if(response_outer.more_items())
       {
@@ -78744,7 +81481,7 @@ const std::vector<uint8_t>& X509_CRL::authority_key_id() const
 */
 uint32_t X509_CRL::crl_number() const
    {
-   return data().m_crl_number;
+   return static_cast<uint32_t>(data().m_crl_number);
    }
 
 /*
@@ -79290,9 +82027,10 @@ Extensions::create_extn_obj(const OID& oid,
       {
       extn->decode_inner(body);
       }
-   catch(Decoding_Error& e)
+   catch(Decoding_Error&)
       {
-      throw Decoding_Error("Decoding X.509 extension " + oid.as_string() + " failed", e.what());
+      extn.reset(new Cert_Extension::Unknown_Extension(oid, critical));
+      extn->decode_inner(body);
       }
    return extn;
    }
@@ -79535,7 +82273,7 @@ std::vector<uint8_t> Key_Usage::encode_inner() const
    if(m_constraints == NO_CONSTRAINTS)
       throw Encoding_Error("Cannot encode zero usage constraints");
 
-   const size_t unused_bits = low_bit(m_constraints) - 1;
+   const size_t unused_bits = ctz(static_cast<uint32_t>(m_constraints));
 
    std::vector<uint8_t> der;
    der.push_back(BIT_STRING);
@@ -80267,7 +83005,7 @@ void X509_Object::load_data(DataSource& in)
       }
    catch(Decoding_Error& e)
       {
-      throw Decoding_Error(PEM_label() + " decoding failed: " + e.what());
+      throw Decoding_Error(PEM_label() + " decoding", e);
       }
    }
 
@@ -80352,7 +83090,7 @@ std::string X509_Object::hash_used_for_signature() const
 bool X509_Object::check_signature(const Public_Key* pub_key) const
    {
    if(!pub_key)
-      throw Exception("No key provided for " + PEM_label() + " signature check");
+      throw Invalid_Argument("No key provided for " + PEM_label() + " signature check");
    std::unique_ptr<const Public_Key> key(pub_key);
    return check_signature(*key);
    }
@@ -80892,7 +83630,7 @@ const X509_Certificate_Data& X509_Certificate::data() const
 
 uint32_t X509_Certificate::x509_version() const
    {
-   return data().m_version;
+   return static_cast<uint32_t>(data().m_version);
    }
 
 bool X509_Certificate::is_self_signed() const
@@ -80996,7 +83734,7 @@ bool X509_Certificate::is_CA_cert() const
 
 uint32_t X509_Certificate::path_limit() const
    {
-   return data().m_path_len_constraint;
+   return static_cast<uint32_t>(data().m_path_len_constraint);
    }
 
 Key_Constraints X509_Certificate::constraints() const
@@ -81199,7 +83937,7 @@ std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const
       }
    catch(std::exception& e)
       {
-      throw Decoding_Error("X509_Certificate::load_subject_public_key", e.what());
+      throw Decoding_Error("X509_Certificate::load_subject_public_key", e);
       }
    }
 
@@ -81902,7 +84640,7 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
                                                 /*redirects*/1,
                                                 timeout);
                   }
-               catch(std::exception& e)
+               catch(std::exception&)
                   {
                   // log e.what() ?
                   }
@@ -81965,7 +84703,7 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
          {
          // Avoid creating a thread for this case
          future_crls.emplace_back(std::async(std::launch::deferred, [&]() -> std::shared_ptr<const X509_CRL> {
-               throw Exception("No CRL distribution point for this certificate");
+               throw Not_Implemented("No CRL distribution point for this certificate");
                }));
          }
       else
@@ -81989,7 +84727,7 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
             {
             crls[i] = future_crls[i].get();
             }
-         catch(std::exception& e)
+         catch(std::exception&)
             {
             // crls[i] left null
             // todo: log exception e.what() ?
@@ -82254,7 +84992,7 @@ PKIX::build_all_certificate_paths(std::vector<std::vector<std::shared_ptr<const 
    if(cert_paths_out.empty())
       {
       if(stats.empty())
-         throw Exception("X509 path building failed for unknown reasons");
+         throw Internal_Error("X509 path building failed for unknown reasons");
       else
          // arbitrarily return the first error
          return stats[0];
@@ -82518,9 +85256,9 @@ Path_Validation_Result::Path_Validation_Result(CertificatePathStatusCodes status
 const X509_Certificate& Path_Validation_Result::trust_root() const
    {
    if(m_cert_path.empty())
-      throw Exception("Path_Validation_Result::trust_root no path set");
+      throw Invalid_State("Path_Validation_Result::trust_root no path set");
    if(result() != Certificate_Status_Code::VERIFIED)
-      throw Exception("Path_Validation_Result::trust_root meaningless with invalid status");
+      throw Invalid_State("Path_Validation_Result::trust_root meaningless with invalid status");
 
    return *m_cert_path[m_cert_path.size()-1];
    }
@@ -82876,7 +85614,7 @@ XMSS_Common_Ops::create_l_tree(secure_vector<uint8_t>& result,
       {
       for(size_t i = 0; i < l >> 1; i++)
          {
-         adrs.set_tree_index(i);
+         adrs.set_tree_index(static_cast<uint32_t>(i));
          randomize_tree_hash(pk[i], pk[2 * i], pk[2 * i + 1], adrs, seed, hash);
          }
       if(l & 0x01)
@@ -83226,8 +85964,7 @@ XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
          m_wots_oid = XMSS_WOTS_Parameters::ots_algorithm_t::WOTSP_SHAKE256_W16;
          break;
       default:
-         throw Unsupported_Argument(
-            "Algorithm id does not match any XMSS algorithm id.");
+         throw Not_Implemented("Algorithm id does not match any known XMSS algorithm id.");
          break;
       }
    }
@@ -83787,6 +86524,14 @@ XMSS_Signature_Operation::sign(const secure_vector<uint8_t>& msg_hash,
    return sig;
    }
 
+size_t XMSS_Signature_Operation::signature_length() const
+   {
+   return sizeof(uint64_t) + // size of leaf index
+          m_xmss_params.element_size() +
+          m_xmss_params.len() * m_xmss_params.element_size() +
+          m_xmss_params.tree_height() * m_xmss_params.element_size();
+   }
+
 wots_keysig_t
 XMSS_Signature_Operation::build_auth_path(XMSS_PrivateKey& priv_key,
       XMSS_Address& adrs)
@@ -83796,8 +86541,8 @@ XMSS_Signature_Operation::build_auth_path(XMSS_PrivateKey& priv_key,
 
    for(size_t j = 0; j < m_xmss_params.tree_height(); j++)
       {
-      size_t k = (m_leaf_idx / (1 << j)) ^ 0x01;
-      auth_path[j] = priv_key.tree_hash(k * (1 << j), j, adrs);
+      size_t k = (m_leaf_idx / (1ULL << j)) ^ 0x01;
+      auth_path[j] = priv_key.tree_hash(k * (1ULL << j), j, adrs);
       }
 
    return auth_path;
@@ -84134,8 +86879,7 @@ XMSS_WOTS_Parameters::XMSS_WOTS_Parameters(ots_algorithm_t oid)
          m_strength = 512;
          break;
       default:
-         throw Unsupported_Argument(
-            "Algorithm id does not match any XMSS WOTS algorithm id.");
+         throw Not_Implemented("Algorithm id does not match any known XMSS WOTS algorithm id.");
          break;
       }
 
@@ -84497,7 +87241,6 @@ XTS_Mode::XTS_Mode(BlockCipher* cipher) : m_cipher(cipher)
       }
 
    m_tweak_cipher.reset(m_cipher->clone());
-   m_tweak.resize(update_granularity());
    }
 
 void XTS_Mode::clear()
@@ -84509,7 +87252,7 @@ void XTS_Mode::clear()
 
 void XTS_Mode::reset()
    {
-   zeroise(m_tweak);
+   m_tweak.clear();
    }
 
 std::string XTS_Mode::name() const
@@ -84524,7 +87267,7 @@ size_t XTS_Mode::update_granularity() const
 
 size_t XTS_Mode::minimum_final_size() const
    {
-   return cipher().block_size() + 1;
+   return cipher().block_size();
    }
 
 Key_Length_Specification XTS_Mode::key_spec() const
@@ -84558,6 +87301,7 @@ void XTS_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
+   m_tweak.resize(update_granularity());
    copy_mem(m_tweak.data(), nonce, nonce_len);
    m_tweak_cipher->encrypt(m_tweak.data());
 
@@ -84584,6 +87328,7 @@ size_t XTS_Encryption::output_length(size_t input_length) const
 
 size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher().block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
@@ -84657,6 +87402,7 @@ size_t XTS_Decryption::output_length(size_t input_length) const
 
 size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
    {
+   BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher().block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
@@ -84721,182 +87467,6 @@ void XTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
       buffer += last;
       }
-   }
-
-}
-/*
-* Zlib Compressor
-* (C) 2001 Peter J Jones
-*     2001-2007,2014 Jack Lloyd
-*     2006 Matt Johnston
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-
-#include <zlib.h>
-
-namespace Botan {
-
-namespace {
-
-class Zlib_Stream : public Zlib_Style_Stream<z_stream, Bytef>
-   {
-   public:
-      Zlib_Stream()
-         {
-         streamp()->opaque = alloc();
-         streamp()->zalloc = Compression_Alloc_Info::malloc<unsigned int>;
-         streamp()->zfree = Compression_Alloc_Info::free;
-         }
-
-      uint32_t run_flag() const override { return Z_NO_FLUSH; }
-      uint32_t flush_flag() const override { return Z_SYNC_FLUSH; }
-      uint32_t finish_flag() const override { return Z_FINISH; }
-
-      int compute_window_bits(int wbits, int wbits_offset) const
-         {
-         if(wbits_offset == -1)
-            return -wbits;
-         else
-            return wbits + wbits_offset;
-         }
-   };
-
-class Zlib_Compression_Stream : public Zlib_Stream
-   {
-   public:
-      Zlib_Compression_Stream(size_t level, int wbits, int wbits_offset = 0)
-         {
-         wbits = compute_window_bits(wbits, wbits_offset);
-
-         if(level >= 9)
-            level = 9;
-         else if(level == 0)
-            level = 6;
-
-         int rc = ::deflateInit2(streamp(), level, Z_DEFLATED, wbits, 8, Z_DEFAULT_STRATEGY);
-
-         if(rc != Z_OK)
-            throw Exception("zlib deflate initialization failed");
-         }
-
-      ~Zlib_Compression_Stream()
-         {
-         ::deflateEnd(streamp());
-         }
-
-      bool run(uint32_t flags) override
-         {
-         int rc = ::deflate(streamp(), flags);
-
-         if(rc == Z_MEM_ERROR)
-            throw Exception("zlib memory allocation failure");
-         else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
-            throw Exception("zlib deflate error " + std::to_string(rc));
-
-         return (rc == Z_STREAM_END);
-         }
-   };
-
-class Zlib_Decompression_Stream : public Zlib_Stream
-   {
-   public:
-      Zlib_Decompression_Stream(int wbits, int wbits_offset = 0)
-         {
-         int rc = ::inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
-
-         if(rc == Z_MEM_ERROR)
-            throw Exception("zlib memory allocation failure");
-         else if(rc != Z_OK)
-            throw Exception("zlib inflate initialization failed");
-         }
-
-      ~Zlib_Decompression_Stream()
-         {
-         ::inflateEnd(streamp());
-         }
-
-      bool run(uint32_t flags) override
-         {
-         int rc = ::inflate(streamp(), flags);
-
-         if(rc == Z_MEM_ERROR)
-            throw Exception("zlib memory allocation failure");
-         else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
-            throw Exception("zlib inflate error " + std::to_string(rc));
-
-         return (rc == Z_STREAM_END);
-         }
-   };
-
-class Deflate_Compression_Stream final : public Zlib_Compression_Stream
-   {
-   public:
-      Deflate_Compression_Stream(size_t level, int wbits) :
-         Zlib_Compression_Stream(level, wbits, -1) {}
-   };
-
-class Deflate_Decompression_Stream final : public Zlib_Decompression_Stream
-   {
-   public:
-      explicit Deflate_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, -1) {}
-   };
-
-class Gzip_Compression_Stream final : public Zlib_Compression_Stream
-   {
-   public:
-      Gzip_Compression_Stream(size_t level, int wbits, uint8_t os_code, uint64_t hdr_time) :
-         Zlib_Compression_Stream(level, wbits, 16)
-         {
-         clear_mem(&m_header, 1);
-         m_header.os = os_code;
-         m_header.time = static_cast<uLong>(hdr_time);
-
-         int rc = deflateSetHeader(streamp(), &m_header);
-         if(rc != Z_OK)
-            throw Exception("setting gzip header failed");
-         }
-
-   private:
-      ::gz_header m_header;
-   };
-
-class Gzip_Decompression_Stream final : public Zlib_Decompression_Stream
-   {
-   public:
-      explicit Gzip_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, 16) {}
-   };
-
-}
-
-Compression_Stream* Zlib_Compression::make_stream(size_t level) const
-   {
-   return new Zlib_Compression_Stream(level, 15);
-   }
-
-Compression_Stream* Zlib_Decompression::make_stream() const
-   {
-   return new Zlib_Decompression_Stream(15);
-   }
-
-Compression_Stream* Deflate_Compression::make_stream(size_t level) const
-   {
-   return new Deflate_Compression_Stream(level, 15);
-   }
-
-Compression_Stream* Deflate_Decompression::make_stream() const
-   {
-   return new Deflate_Decompression_Stream(15);
-   }
-
-Compression_Stream* Gzip_Compression::make_stream(size_t level) const
-   {
-   return new Gzip_Compression_Stream(level, 15, m_os_code, m_hdr_time);
-   }
-
-Compression_Stream* Gzip_Decompression::make_stream() const
-   {
-   return new Gzip_Decompression_Stream(15);
    }
 
 }

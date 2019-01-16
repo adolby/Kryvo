@@ -5,9 +5,17 @@
 #include <QObject>
 #include <QStringList>
 #include <QString>
+#include <functional>
+#include <vector>
 #include <memory>
 
 namespace Kryvo {
+
+struct Pipeline {
+  std::vector<std::function<void(int)>> stages;
+  int stage = 0;
+  QString inputFilePath;
+};
 
 class DispatcherPrivate;
 
@@ -52,20 +60,32 @@ class Dispatcher : public QObject {
    */
   void busyStatus(bool busyStatus);
 
-  void compressFile(const QString& inputFilePath,
-                    const QString& outputPath = QString());
-
-  void encryptFile(const QString& passphrase,
+  void compressFile(int id,
                     const QString& inputFilePath,
-                    const QString& outputPath = QString(),
-                    const QString& cipher = QStringLiteral("AES"),
-                    std::size_t inputKeySize = 128,
-                    const QString& modeOfOperation = QStringLiteral("GCM"),
-                    bool compress = true);
+                    const QString& outputPath);
 
-  void decryptFile(const QString& passphrase,
+  void decompressFile(int id,
+                      const QString& inputFilePath,
+                      const QString& outputFilePath);
+
+  void encryptFile(int id,
+                   const QString& passphrase,
                    const QString& inputFilePath,
-                   const QString& outputPath = QString());
+                   const QString& outputPath,
+                   const QString& cipher,
+                   std::size_t inputKeySize,
+                   const QString& modeOfOperation,
+                   bool compress);
+
+  void decryptFile(int id,
+                   const QString& passphrase,
+                   const QString& inputFilePath,
+                   const QString& outputPath,
+                   const QString& algorithmNameString,
+                   const QString& keySizeString,
+                   const QString& pbkdfSaltString,
+                   const QString& keySaltString,
+                   const QString& ivSaltString);
 
  public slots:
   /*!
@@ -82,11 +102,11 @@ class Dispatcher : public QObject {
    */
   void encrypt(const QString& passphrase,
                const QStringList& inputFilePaths,
-               const QString& outputPath = QString(),
-               const QString& cipher = QStringLiteral("AES"),
-               std::size_t inputKeySize = 128,
-               const QString& modeOfOperation = QStringLiteral("GCM"),
-               bool compress = true);
+               const QString& outputPath,
+               const QString& cipher,
+               std::size_t inputKeySize,
+               const QString& modeOfOperation,
+               bool compress);
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
@@ -98,7 +118,7 @@ class Dispatcher : public QObject {
    */
   void decrypt(const QString& passphrase,
                const QStringList& inputFilePaths,
-               const QString& outputPath = QString());
+               const QString& outputPath);
 
   /*!
    * \brief abort Executed when a signal is received to set the abort status.
@@ -127,6 +147,10 @@ class Dispatcher : public QObject {
    * \param filePath String containing a file path
    */
   void stop(const QString& filePath);
+
+  void processPipeline(int id);
+
+  void updateFileProgress(int id, const QString& task, qint64 percentProgress);
 };
 
 } // namespace Kryvo
