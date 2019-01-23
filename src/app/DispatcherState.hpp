@@ -2,7 +2,9 @@
 #define KRYVO_DISPATCHERSTATE_HPP_
 
 #include <QString>
+#include <QMutex>
 #include <atomic>
+#include <deque>
 #include <vector>
 
 namespace Kryvo {
@@ -12,9 +14,9 @@ class DispatcherState {
   explicit DispatcherState();
 
   /*!
-   * \brief reset Resets the status, except pause and busy, to default values
+   * \brief init Reset the abort flag and initialize the stop flags
    */
-  void reset();
+  void init(std::size_t maxId);
 
   /*!
    * \brief abort Updates the abort status
@@ -48,7 +50,7 @@ class DispatcherState {
    * \param stop Boolean representing the stop status for the file represented
    * by filePath
    */
-  void stop(int id, bool stop);
+  void stop(std::size_t id, bool stop);
 
   /*!
    * \brief isStopped Returns a stop status in the stop status container. A stop
@@ -59,7 +61,7 @@ class DispatcherState {
    * \return Boolean Boolean representing the stop status for the file
    * represented by filePath
    */
-  bool isStopped(int id) const;
+  bool isStopped(std::size_t id);
 
   /*!
    * \brief busy Updates the busy status
@@ -86,7 +88,9 @@ class DispatcherState {
 
   // The container of stopped flags, which are used to stop
   // encrypting/decrypting a file.
-  std::vector<std::atomic<bool>> stopped;
+  std::deque<bool> stopped;
+
+  QMutex stoppedMutex;
 
   // The busy status, when set to true, indicates that this class is currently
   // executing a cipher operation.

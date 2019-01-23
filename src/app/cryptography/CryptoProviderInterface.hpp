@@ -18,7 +18,7 @@ class CryptoProviderInterface {
   * \param task String containing task name
   * \param percent Integer representing the current progress as a percent
   */
-  virtual void fileProgress(int id, const QString& task,
+  virtual void fileProgress(std::size_t id, const QString& task,
                             qint64 percentProgress) = 0;
 
  /*!
@@ -39,6 +39,7 @@ class CryptoProviderInterface {
 
  /*!
   * \brief encrypt Encrypt a file
+  * \param id ID representing file to encrypt
   * \param passphrase String representing the user-entered passphrase
   * \param inFilePaths String containing the file path of the file to encrypt
   * \param outputPath String containing output file path
@@ -47,7 +48,7 @@ class CryptoProviderInterface {
   * \param modeOfOperation String representing mode of operation
   * \param compress Boolean representing compression mode
   */
-  virtual bool encrypt(int id,
+  virtual bool encrypt(std::size_t id,
                        const QString& passphrase,
                        const QString& inFilePath,
                        const QString& outputPath,
@@ -59,11 +60,12 @@ class CryptoProviderInterface {
   /*!
    * \brief decrypt Decrypt a file. The algorithm is determined from
    * the file header.
+   * \param id ID representing file to decrypt
    * \param passphrase String representing the user-entered passphrase
    * \param inFilePath String containing the file path of the file to decrypt
    * \param outFilePath String containing output file path
    */
-  virtual bool decrypt(int id,
+  virtual bool decrypt(std::size_t id,
                        const QString& passphrase,
                        const QString& inFilePath,
                        const QString& outFilePath,

@@ -27,6 +27,9 @@ class Crypto : public QObject {
   ~Crypto() override;
 
  signals:
+  void fileCompleted(int id);
+  void fileFailed(int id);
+
   /*!
    * \brief fileProgress Emitted when the cipher operation file progress changes
    * \param id ID representing the file to update progress on
@@ -35,10 +38,6 @@ class Crypto : public QObject {
    * percent
    */
   void fileProgress(int id, const QString& task, qint64 percentProgress);
-
-  void fileEncrypted(int id);
-
-  void fileDecrypted(int id);
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher

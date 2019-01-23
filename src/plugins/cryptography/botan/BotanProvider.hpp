@@ -57,13 +57,17 @@ class BotanProvider : public QObject,
   ~BotanProvider() override;
 
  signals:
+  void fileCompleted(std::size_t id);
+
+  void fileFailed(std::size_t id);
+
   /*!
    * \brief fileProgress Emitted when the cipher operation file progress changes
    * \param id ID representing file to update progress on
    * \param task String containing task name
    * \param percent Integer representing the current progress as a percent
    */
-  void fileProgress(int id, const QString& task,
+  void fileProgress(std::size_t id, const QString& task,
                     qint64 percentProgress) override;
 
   /*!
@@ -93,7 +97,7 @@ class BotanProvider : public QObject,
   * \param modeOfOperation String representing mode of operation
   * \param compress Boolean representing compression mode
   */
-  bool encrypt(int id,
+  bool encrypt(std::size_t id,
                const QString& passphrase,
                const QString& inFilePath,
                const QString& outputPath,
@@ -109,7 +113,7 @@ class BotanProvider : public QObject,
    * \param inFilePath Strings containing the file path of the file to decrypt
    * \param outFilePath String containing output file path
    */
-  bool decrypt(int id,
+  bool decrypt(std::size_t id,
                const QString& passphrase,
                const QString& inFilePath,
                const QString& outFilePath,

@@ -68,7 +68,6 @@ Kryvo::Application::Application(QObject* parent)
   Q_D(Application);
 
   qRegisterMetaType<std::size_t>("std::size_t");
-  qRegisterMetaType<Pipeline>("Pipeline");
 }
 
 Kryvo::Application::~Application() {

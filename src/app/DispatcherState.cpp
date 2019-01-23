@@ -1,4 +1,6 @@
 #include "DispatcherState.hpp"
+#include <QMutexLocker>
+#include <QDebug>
 
 Kryvo::DispatcherState::DispatcherState()
   : aborted(false), paused(false), busyStatus(false) {
@@ -20,12 +22,22 @@ bool Kryvo::DispatcherState::isPaused() const {
   return paused;
 }
 
-void Kryvo::DispatcherState::stop(const int id, const bool stop) {
-  stopped[id] = stop;
+void Kryvo::DispatcherState::stop(std::size_t id, const bool stop) {
+  QMutexLocker locker(&stoppedMutex);
+
+  qDebug() << Q_FUNC_INFO << id << stop;
+
+  if (id < stopped.size()) {
+    stopped[id] = stop;
+  }
 }
 
-bool Kryvo::DispatcherState::isStopped(const int id) const {
+bool Kryvo::DispatcherState::isStopped(std::size_t id) {
+  QMutexLocker locker(&stoppedMutex);
+
   bool hasBeenStopped = false;
+
+  qDebug() << Q_FUNC_INFO << "Stopped size: " << stopped.size();
 
   if (id < stopped.size()) {
     hasBeenStopped = stopped.at(id);
@@ -34,9 +46,14 @@ bool Kryvo::DispatcherState::isStopped(const int id) const {
   return hasBeenStopped;
 }
 
-void Kryvo::DispatcherState::reset() {
+void Kryvo::DispatcherState::init(std::size_t maxId) {
+  QMutexLocker locker(&stoppedMutex);
+
+  qDebug() << Q_FUNC_INFO << "Max ID: " << maxId;
+
   aborted = false;
   stopped.clear();
+  stopped.resize(maxId);
 }
 
 void Kryvo::DispatcherState::busy(const bool busy) {

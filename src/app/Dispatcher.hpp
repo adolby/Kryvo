@@ -12,8 +12,8 @@
 namespace Kryvo {
 
 struct Pipeline {
-  std::vector<std::function<void(int)>> stages;
-  int stage = 0;
+  std::vector<std::function<void(std::size_t)>> stages;
+  std::size_t stage = 0;
   QString inputFilePath;
 };
 
@@ -60,15 +60,15 @@ class Dispatcher : public QObject {
    */
   void busyStatus(bool busyStatus);
 
-  void compressFile(int id,
+  void compressFile(std::size_t id,
                     const QString& inputFilePath,
                     const QString& outputPath);
 
-  void decompressFile(int id,
+  void decompressFile(std::size_t id,
                       const QString& inputFilePath,
                       const QString& outputFilePath);
 
-  void encryptFile(int id,
+  void encryptFile(std::size_t id,
                    const QString& passphrase,
                    const QString& inputFilePath,
                    const QString& outputPath,
@@ -77,7 +77,7 @@ class Dispatcher : public QObject {
                    const QString& modeOfOperation,
                    bool compress);
 
-  void decryptFile(int id,
+  void decryptFile(std::size_t id,
                    const QString& passphrase,
                    const QString& inputFilePath,
                    const QString& outputPath,
@@ -148,9 +148,12 @@ class Dispatcher : public QObject {
    */
   void stop(const QString& filePath);
 
-  void processPipeline(int id);
+  void processPipeline(std::size_t id);
 
-  void updateFileProgress(int id, const QString& task, qint64 percentProgress);
+  void abortPipeline(std::size_t id);
+
+  void updateFileProgress(std::size_t id, const QString& task,
+                          qint64 percentProgress);
 };
 
 } // namespace Kryvo

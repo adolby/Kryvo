@@ -2,12 +2,9 @@
 #include <QStandardPaths>
 
 const QString Kryvo::Constants::kDot = QStringLiteral(".");
-const QString Kryvo::Constants::kEncryptedFileExtension =
-  QStringLiteral("enc");
-const QString Kryvo::Constants::kCompressedFileExtension =
-  QStringLiteral("gz");
-const QString Kryvo::Constants::kArchiveFileExtension =
-  QStringLiteral("tar");
+const QString Kryvo::Constants::kEncryptedFileExtension = QStringLiteral("enc");
+const QString Kryvo::Constants::kCompressedFileExtension = QStringLiteral("gz");
+const QString Kryvo::Constants::kArchiveFileExtension = QStringLiteral("tar");
 
 const QStringList Kryvo::Constants::kDefaultPaths =
   QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
@@ -26,12 +23,9 @@ const QStringList Kryvo::Constants::messages {
   QObject::tr("Error: Can't decrypt file %1. Is it an encrypted file?"), // 7
   QObject::tr("Error: Can't encrypt file %1. Check that this file exists and "
               "that you have permission to access it and try again."), // 8
-  QObject::tr("Error: Can't compress %1. Please contact "
-              "andrewdolby@gmail.com"), // 9
-  QObject::tr("Error: Can't extract %1. Please contact "
-              "andrewdolby@gmail.com"), // 10
-  QObject::tr("Error: Can't compress file %1."), // 11
-  QObject::tr("Error: Can't decompress file %1.") // 12
+  QObject::tr("Compression stopped. File %1 not fully compressed."), // 9
+  QObject::tr("Decompression stopped. File %1 not fully decompressed."), // 10
+  QObject::tr("Missing encryption provider.") // 11
 };
 
 /*!

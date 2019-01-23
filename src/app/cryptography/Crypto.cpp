@@ -95,8 +95,16 @@ void Kryvo::CryptoPrivate::loadProviders() {
         CryptoProviderInterface* cp =
           qobject_cast<CryptoProviderInterface*>(plugin);
 
-        QObject::connect(plugin, SIGNAL(fileProgress(int,QString,qint64)),
-                         q, SIGNAL(fileProgress(int,QString,qint64)));
+        QObject::connect(plugin, SIGNAL(fileCompleted(std::size_t)),
+                         q, SIGNAL(fileCompleted(std::size_t)));
+
+        QObject::connect(plugin, SIGNAL(fileFailed(std::size_t)),
+                         q, SIGNAL(fileFailed(std::size_t)));
+
+        QObject::connect(plugin,
+                         SIGNAL(fileProgress(std::size_t,QString,qint64)),
+                         q,
+                         SIGNAL(fileProgress(std::size_t,QString,qint64)));
 
         QObject::connect(plugin, SIGNAL(statusMessage(QString)),
                          q, SIGNAL(statusMessage(QString)));
@@ -134,13 +142,13 @@ void Kryvo::CryptoPrivate::encryptFile(int id,
   Q_Q(Crypto);
 
   if (!provider) {
+    emit q->fileFailed(id);
+    emit q->errorMessage(Constants::messages[11]);
     return;
   }
 
   provider->encrypt(id, passphrase, inputFilePath, outputFilePath, cipher,
                     keySize, modeOfOperation, compress);
-
-  emit q->fileEncrypted(id);
 }
 
 void Kryvo::CryptoPrivate::decryptFile(int id,
@@ -155,14 +163,14 @@ void Kryvo::CryptoPrivate::decryptFile(int id,
   Q_Q(Crypto);
 
   if (!provider) {
+    emit q->errorMessage(Constants::messages[11]);
+    emit q->fileFailed(id);
     return;
   }
 
   provider->decrypt(id, passphrase, inputFilePath, outputFilePath,
                     algorithmNameString, keySizeString, pbkdfSaltString,
                     keySaltString, ivSaltString);
-
-  emit q->fileDecrypted(id);
 }
 
 void Kryvo::Crypto::encrypt(int id, const QString& passphrase,

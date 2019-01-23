@@ -22,9 +22,8 @@ class Archiver : public QObject {
   ~Archiver() override;
 
  signals:
-  void fileCompressed(int id, const QString& outputFilePath);
-
-  void fileDecompressed(int id, const QString& outputFilePath);
+  void fileCompleted(std::size_t id);
+  void fileFailed(std::size_t id);
 
   /*!
    * \brief fileProgress Emitted when the file operation progress changes
@@ -33,7 +32,8 @@ class Archiver : public QObject {
    * \param percentProgress Integer representing the current progress as a
    * percent
    */
-  void fileProgress(int id, const QString& task, qint64 percentProgress);
+  void fileProgress(std::size_t id, const QString& task,
+                    qint64 percentProgress);
 
   /*!
    * \brief statusMessage Emitted when a message about the current
@@ -51,10 +51,10 @@ class Archiver : public QObject {
                     const QString& filePath = QString());
 
  public slots:
-  void compress(int id, const QString& inputFilePath,
+  void compress(std::size_t id, const QString& inputFilePath,
                 const QString& outputFilePath);
 
-  void decompress(int id, const QString& inputFilePath,
+  void decompress(std::size_t id, const QString& inputFilePath,
                   const QString& outputFilePath);
 
   void archive(const QStringList& filePaths);
