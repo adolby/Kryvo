@@ -321,7 +321,7 @@ void Kryvo::SettingsFrame::changeCompressionMode() {
 }
 
 void Kryvo::SettingsFrame::changeContainerMode() {
-  Q_D(SettingsFrame);
+//  Q_D(SettingsFrame);
 //  Q_ASSERT(d->containerCheckBox);
 
 //  emit updateContainerMode(d->containerCheckBox->isChecked());
