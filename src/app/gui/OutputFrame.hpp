@@ -15,6 +15,7 @@ class OutputFramePrivate;
  */
 class OutputFrame : public QFrame {
   Q_OBJECT
+  Q_DISABLE_COPY(OutputFrame)
   DECLARE_PRIVATE(OutputFrame)
   std::unique_ptr<OutputFramePrivate> const d_ptr;
 

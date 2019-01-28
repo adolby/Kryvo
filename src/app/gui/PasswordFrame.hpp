@@ -15,6 +15,7 @@ class PasswordFramePrivate;
  */
 class PasswordFrame : public QFrame {
   Q_OBJECT
+  Q_DISABLE_COPY(PasswordFrame)
   DECLARE_PRIVATE(PasswordFrame)
   std::unique_ptr<PasswordFramePrivate> const d_ptr;
 

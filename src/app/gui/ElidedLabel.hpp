@@ -15,6 +15,7 @@ class ElidedLabelPrivate;
 
 class ElidedLabel : public QFrame {
   Q_OBJECT
+  Q_DISABLE_COPY(ElidedLabel)
   DECLARE_PRIVATE(ElidedLabel)
   std::unique_ptr<ElidedLabelPrivate> const d_ptr;
 

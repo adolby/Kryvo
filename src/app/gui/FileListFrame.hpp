@@ -16,6 +16,7 @@ class FileListFramePrivate;
  */
 class FileListFrame : public QFrame {
   Q_OBJECT
+  Q_DISABLE_COPY(FileListFrame)
   DECLARE_PRIVATE(FileListFrame)
   std::unique_ptr<FileListFramePrivate> const d_ptr;
 

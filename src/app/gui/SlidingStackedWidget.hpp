@@ -19,6 +19,7 @@ class SlidingStackedWidgetPrivate;
 */
 class SlidingStackedWidget : public QStackedWidget {
   Q_OBJECT
+  Q_DISABLE_COPY(SlidingStackedWidget)
   DECLARE_PRIVATE(SlidingStackedWidget)
   std::unique_ptr<SlidingStackedWidgetPrivate> const d_ptr;
 

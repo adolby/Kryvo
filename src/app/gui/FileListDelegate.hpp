@@ -12,6 +12,7 @@ namespace Kryvo {
  */
 class FileListDelegate : public QStyledItemDelegate {
   Q_OBJECT
+  Q_DISABLE_COPY(FileListDelegate)
 
  public:
   /*!

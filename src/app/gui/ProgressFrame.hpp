@@ -15,6 +15,7 @@ class ProgressFramePrivate;
  */
 class ProgressFrame : public QFrame {
   Q_OBJECT
+  Q_DISABLE_COPY(ProgressFrame)
   DECLARE_PRIVATE(ProgressFrame)
   std::unique_ptr<ProgressFramePrivate> const d_ptr;
 

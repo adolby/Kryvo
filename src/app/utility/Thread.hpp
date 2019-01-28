@@ -13,6 +13,8 @@ namespace Kryvo {
 
 class Thread final : public QThread {
    Q_OBJECT
+   Q_DISABLE_COPY(Thread)
+
    void run() override {
       connect(QAbstractEventDispatcher::instance(this),
               &QAbstractEventDispatcher::aboutToBlock,

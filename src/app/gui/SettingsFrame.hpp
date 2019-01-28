@@ -16,6 +16,7 @@ class SettingsFramePrivate;
  */
 class SettingsFrame : public QFrame {
   Q_OBJECT
+  Q_DISABLE_COPY(SettingsFrame)
   DECLARE_PRIVATE(SettingsFrame)
   std::unique_ptr<SettingsFramePrivate> const d_ptr;
 

@@ -24,6 +24,7 @@ class MainWindowPrivate;
  */
 class MainWindow : public QMainWindow {
   Q_OBJECT
+  Q_DISABLE_COPY(MainWindow)
   DECLARE_PRIVATE(MainWindow)
   std::unique_ptr<MainWindowPrivate> const d_ptr;
 

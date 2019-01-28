@@ -15,6 +15,7 @@ class ControlButtonFramePrivate;
  */
 class ControlButtonFrame : public QFrame {
   Q_OBJECT
+  Q_DISABLE_COPY(ControlButtonFrame)
   DECLARE_PRIVATE(ControlButtonFrame)
   std::unique_ptr<ControlButtonFramePrivate> const d_ptr;
 

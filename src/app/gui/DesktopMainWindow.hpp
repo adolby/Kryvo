@@ -16,6 +16,8 @@ namespace Kryvo {
  * system.
  */
 class DesktopMainWindow : public MainWindow {
+  Q_DISABLE_COPY(DesktopMainWindow)
+
  public:
   /*!
    * \brief DesktopMainWindow Constructs the application's main window for

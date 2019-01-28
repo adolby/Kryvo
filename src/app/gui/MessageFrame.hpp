@@ -15,6 +15,7 @@ class MessageFramePrivate;
  */
 class MessageFrame : public QFrame {
   Q_OBJECT
+  Q_DISABLE_COPY(MessageFrame)
   DECLARE_PRIVATE(MessageFrame)
   std::unique_ptr<MessageFramePrivate> const d_ptr;
 

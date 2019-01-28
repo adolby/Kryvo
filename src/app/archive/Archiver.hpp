@@ -13,6 +13,7 @@ class ArchiverPrivate;
 
 class Archiver : public QObject {
   Q_OBJECT
+  Q_DISABLE_COPY(Archiver)
   DECLARE_PRIVATE(Archiver)
   std::unique_ptr<ArchiverPrivate> const d_ptr;
 

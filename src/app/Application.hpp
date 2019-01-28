@@ -18,6 +18,7 @@ class ApplicationPrivate;
  */
 class Application : public QObject {
   Q_OBJECT
+  Q_DISABLE_COPY(Application)
   DECLARE_PRIVATE(Application)
   std::unique_ptr<ApplicationPrivate> const d_ptr;
 
