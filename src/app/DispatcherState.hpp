@@ -2,7 +2,7 @@
 #define KRYVO_DISPATCHERSTATE_HPP_
 
 #include <QString>
-#include <QMutex>
+#include <QReadWriteLock>
 #include <atomic>
 #include <deque>
 #include <vector>
@@ -90,7 +90,7 @@ class DispatcherState {
   // encrypting/decrypting a file.
   std::deque<bool> stopped;
 
-  QMutex stoppedMutex;
+  QReadWriteLock stoppedLock;
 
   // The busy status, when set to true, indicates that this class is currently
   // executing a cipher operation.

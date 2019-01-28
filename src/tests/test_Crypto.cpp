@@ -85,7 +85,7 @@ SCENARIO("Test encryption and decryption on various file types",
 
       WHEN("Encrypting and decrypting file: " +
            etd.inputFilePath.toStdString()) {
-        const int id = 0;
+        const std::size_t id = 0;
 
         // Test encryption and decryption
         cryptography.encrypt(id, etd.passphrase, etd.inputFilePath, QString(),
@@ -124,6 +124,8 @@ SCENARIO("Test encryption and decryption on various file types",
         const QString& algorithmNameString = readLine(&inFile);
         const QString& keySizeString = readLine(&inFile);
         const QString& compressString = readLine(&inFile);
+
+        Q_UNUSED(compressString);
 
         const QString& pbkdfSaltString = readLine(&inFile);
         const QString& keySaltString = readLine(&inFile);

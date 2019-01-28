@@ -20,12 +20,12 @@ class Kryvo::CryptoPrivate {
 
   void loadProviders();
 
-  void encryptFile(int id, const QString& passphrase,
+  void encryptFile(std::size_t id, const QString& passphrase,
                    const QString& inputFilePath, const QString& outputPath,
                    const QString& cipher, std::size_t inputKeySize,
                    const QString& modeOfOperation, bool compress);
 
-  void decryptFile(int id, const QString& passphrase,
+  void decryptFile(std::size_t id, const QString& passphrase,
                    const QString& inputFilePath, const QString& outputPath,
                    const QString& algorithmNameString,
                    const QString& keySizeString, const QString& pbkdfSaltString,
@@ -131,14 +131,14 @@ void Kryvo::CryptoPrivate::loadProviders() {
   }
 }
 
-void Kryvo::CryptoPrivate::encryptFile(int id,
+void Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
                                        const QString& passphrase,
                                        const QString& inputFilePath,
                                        const QString& outputFilePath,
                                        const QString& cipher,
-                                       std::size_t keySize,
+                                       const std::size_t keySize,
                                        const QString& modeOfOperation,
-                                       bool compress) {
+                                       const bool compress) {
   Q_Q(Crypto);
 
   if (!provider) {
@@ -151,7 +151,7 @@ void Kryvo::CryptoPrivate::encryptFile(int id,
                     keySize, modeOfOperation, compress);
 }
 
-void Kryvo::CryptoPrivate::decryptFile(int id,
+void Kryvo::CryptoPrivate::decryptFile(const std::size_t id,
                                        const QString& passphrase,
                                        const QString& inputFilePath,
                                        const QString& outputFilePath,
@@ -173,7 +173,7 @@ void Kryvo::CryptoPrivate::decryptFile(int id,
                     keySaltString, ivSaltString);
 }
 
-void Kryvo::Crypto::encrypt(int id, const QString& passphrase,
+void Kryvo::Crypto::encrypt(const std::size_t id, const QString& passphrase,
                             const QString& inputFilePath,
                             const QString& outputFilePath,
                             const QString& cipher, std::size_t inputKeySize,
@@ -184,7 +184,7 @@ void Kryvo::Crypto::encrypt(int id, const QString& passphrase,
                  inputKeySize, modeOfOperation, compress);
 }
 
-void Kryvo::Crypto::decrypt(int id, const QString& passphrase,
+void Kryvo::Crypto::decrypt(const std::size_t id, const QString& passphrase,
                             const QString& inputFilePath,
                             const QString& outputPath,
                             const QString& algorithmNameString,

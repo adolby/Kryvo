@@ -12,6 +12,10 @@ class CryptoProviderInterface {
  public:
   virtual ~CryptoProviderInterface() = default;
 
+  virtual void fileCompleted(std::size_t id) = 0;
+
+  virtual void fileFailed(std::size_t id) = 0;
+
  /*!
   * \brief fileProgress Emitted when the cipher operation file progress changes
   * \param id ID representing file to update progress on

@@ -1,5 +1,6 @@
 #include "DispatcherState.hpp"
-#include <QMutexLocker>
+#include <QWriteLocker>
+#include <QReadLocker>
 #include <QDebug>
 
 Kryvo::DispatcherState::DispatcherState()
@@ -22,8 +23,8 @@ bool Kryvo::DispatcherState::isPaused() const {
   return paused;
 }
 
-void Kryvo::DispatcherState::stop(std::size_t id, const bool stop) {
-  QMutexLocker locker(&stoppedMutex);
+void Kryvo::DispatcherState::stop(const std::size_t id, const bool stop) {
+  QWriteLocker locker(&stoppedLock);
 
   qDebug() << Q_FUNC_INFO << id << stop;
 
@@ -32,8 +33,8 @@ void Kryvo::DispatcherState::stop(std::size_t id, const bool stop) {
   }
 }
 
-bool Kryvo::DispatcherState::isStopped(std::size_t id) {
-  QMutexLocker locker(&stoppedMutex);
+bool Kryvo::DispatcherState::isStopped(const std::size_t id) {
+  QReadLocker locker(&stoppedLock);
 
   bool hasBeenStopped = false;
 
@@ -46,12 +47,13 @@ bool Kryvo::DispatcherState::isStopped(std::size_t id) {
   return hasBeenStopped;
 }
 
-void Kryvo::DispatcherState::init(std::size_t maxId) {
-  QMutexLocker locker(&stoppedMutex);
-
+void Kryvo::DispatcherState::init(const std::size_t maxId) {
   qDebug() << Q_FUNC_INFO << "Max ID: " << maxId;
 
   aborted = false;
+
+  QWriteLocker locker(&stoppedLock);
+
   stopped.clear();
   stopped.resize(maxId);
 }

@@ -21,6 +21,7 @@ class DispatcherPrivate;
 
 class Dispatcher : public QObject {
   Q_OBJECT
+  Q_DISABLE_COPY(Dispatcher)
   DECLARE_PRIVATE(Dispatcher)
   std::unique_ptr<DispatcherPrivate> const d_ptr;
 

@@ -31,7 +31,7 @@ SCENARIO("Test compression and decompression on a text file",
     }
 
     WHEN("Compressing and decompressing file") {
-      const int id = 0;
+      const std::size_t id = 0;
 
       archiver.compress(id, inputFilePath, compressedFilePath);
       archiver.decompress(id, compressedFilePath, decompressedFilePath);

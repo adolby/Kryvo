@@ -14,6 +14,7 @@ class CryptoPrivate;
 
 class Crypto : public QObject {
   Q_OBJECT
+  Q_DISABLE_COPY(Crypto)
   DECLARE_PRIVATE(Crypto)
   std::unique_ptr<CryptoPrivate> const d_ptr;
 
@@ -27,8 +28,8 @@ class Crypto : public QObject {
   ~Crypto() override;
 
  signals:
-  void fileCompleted(int id);
-  void fileFailed(int id);
+  void fileCompleted(std::size_t id);
+  void fileFailed(std::size_t id);
 
   /*!
    * \brief fileProgress Emitted when the cipher operation file progress changes
@@ -37,7 +38,7 @@ class Crypto : public QObject {
    * \param percentProgress Integer representing the current progress as a
    * percent
    */
-  void fileProgress(int id, const QString& task, qint64 percentProgress);
+  void fileProgress(std::size_t id, const QString& task, qint64 percentProgress);
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher
@@ -74,7 +75,7 @@ class Crypto : public QObject {
    * \param modeOfOperation String representing mode of operation
    * \param compress Boolean representing compression mode
    */
-  void encrypt(int id,
+  void encrypt(std::size_t id,
                const QString& passphrase,
                const QString& inputFilePath,
                const QString& outputFilePath,
@@ -97,7 +98,7 @@ class Crypto : public QObject {
    * \param keySaltString Key salt
    * \param ivSaltString Initialization vector salt
    */
-  void decrypt(int id,
+  void decrypt(std::size_t id,
                const QString& passphrase,
                const QString& inputFilePath,
                const QString& outputFilePath,
