@@ -44,6 +44,6 @@ class Constants {
   static QString uniqueFilePath(const QString& filePath);
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_CONSTANTS_HPP_

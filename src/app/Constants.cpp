@@ -9,7 +9,7 @@ const QString Kryvo::Constants::kArchiveFileExtension = QStringLiteral("tar");
 const QStringList Kryvo::Constants::kDefaultPaths =
   QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
 const QString Kryvo::Constants::kDocumentsPath = QString(kDefaultPaths.first() %
-                                                 QStringLiteral("/"));
+                                                         QStringLiteral("/"));
 
 const QStringList Kryvo::Constants::messages {
   QObject::tr("Unknown error: Please contact andrewdolby@gmail.com."), // 0

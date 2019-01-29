@@ -4,11 +4,11 @@
 #include <QCoreApplication>
 #include <QtTest>
 
-int main( int argc, char* argv[] ) {
+int main(int argc, char* argv[]) {
     QCoreApplication a(argc, argv);
 
     QTEST_SET_MAIN_SOURCE_PATH
-    int result = Catch::Session().run( argc, argv );
+    const int result = Catch::Session().run(argc, argv);
 
     return (result < 0xFF ? result : 0xFF);
 }
