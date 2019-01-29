@@ -19,6 +19,8 @@ class Kryvo::ApplicationPrivate {
 };
 
 Kryvo::ApplicationPrivate::ApplicationPrivate() {
+  qRegisterMetaType<std::size_t>("std::size_t");
+
   // Connect GUI encrypt/decrypt actions
   QObject::connect(&gui, &MainWindow::encrypt,
                    &dispatcher, &Dispatcher::encrypt);
@@ -65,7 +67,6 @@ Kryvo::ApplicationPrivate::ApplicationPrivate() {
 
 Kryvo::Application::Application(QObject* parent)
   : QObject(parent), d_ptr(std::make_unique<ApplicationPrivate>()) {
-  qRegisterMetaType<std::size_t>("std::size_t");
 }
 
 Kryvo::Application::~Application() {
