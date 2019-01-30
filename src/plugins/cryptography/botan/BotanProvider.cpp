@@ -323,6 +323,7 @@ bool Kryvo::BotanProviderPrivate::encryptFile(const std::size_t id,
   const bool outFileOpen = outFile.open(QIODevice::WriteOnly);
 
   if (!outFileOpen) {
+    outFile.cancelWriting();
     emit q->errorMessage(Constants::messages[8], inputFilePath);
     emit q->fileFailed(id);
     return false;
@@ -344,7 +345,7 @@ bool Kryvo::BotanProviderPrivate::encryptFile(const std::size_t id,
     QByteArray text = QByteArrayLiteral("Not compressed");
 
     if (compress) {
-      text = QByteArrayLiteral("Compressed");
+      text = QByteArrayLiteral("Gzip Compressed");
     }
 
     return text;
@@ -386,12 +387,14 @@ bool Kryvo::BotanProviderPrivate::encryptFile(const std::size_t id,
                                      &pipe);
 
   if (!success) {
+    outFile.cancelWriting();
     emit q->errorMessage(Constants::messages[8], inputFilePath);
     emit q->fileFailed(id);
     return false;
   }
 
   if (state->isAborted() || state->isStopped(id)) {
+    outFile.cancelWriting();
     emit q->fileFailed(id);
     return false;
   }
@@ -460,6 +463,7 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
   const bool outFileOpen = outFile.open(QIODevice::WriteOnly);
 
   if (!outFileOpen) {
+    outFile.cancelWriting();
     emit q->errorMessage(Constants::messages[7], inputFilePath);
     emit q->fileFailed(id);
     return false;
@@ -497,6 +501,7 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
   const int keySizeInt = keySizeString.toInt(&keySizeIntOk);
 
   if (!keySizeIntOk) {
+    outFile.cancelWriting();
     emit q->errorMessage(Constants::messages[7], inputFilePath);
     emit q->fileFailed(id);
     return false;
@@ -539,12 +544,14 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
                                      &pipe);
 
   if (!success) {
+    outFile.cancelWriting();
     emit q->errorMessage(Constants::messages[7], inputFilePath);
     emit q->fileFailed(id);
     return false;
   }
 
   if (state->isAborted() || state->isStopped(id)) {
+    outFile.cancelWriting();
     emit q->fileFailed(id);
     return false;
   }
@@ -590,6 +597,7 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
         inFile->read(reinterpret_cast<char*>(&buffer[0]), buffer.size());
 
       if (readSize < 0) {
+        outFile->cancelWriting();
         emit q->errorMessage(Constants::messages[5], inFile->fileName());
         emit q->fileFailed(id);
         return false;
@@ -622,10 +630,12 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
 
         if (buffered < 0) {
           if (Botan::ENCRYPTION == direction) {
+            outFile->cancelWriting();
             emit q->errorMessage(Constants::messages[8], inFile->fileName());
             emit q->fileFailed(id);
             return false;
           } else {
+            outFile->cancelWriting();
             emit q->errorMessage(Constants::messages[7], inFile->fileName());
             emit q->fileFailed(id);
             return false;
@@ -637,10 +647,12 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
 
         if (writeSize < 0) {
           if (Botan::ENCRYPTION == direction) {
+            outFile->cancelWriting();
             emit q->errorMessage(Constants::messages[8], inFile->fileName());
             emit q->fileFailed(id);
             return false;
           } else {
+            outFile->cancelWriting();
             emit q->errorMessage(Constants::messages[7], inFile->fileName());
             emit q->fileFailed(id);
             return false;

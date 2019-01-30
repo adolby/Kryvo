@@ -50,6 +50,8 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
                                             QSaveFile* dest, int level) {
   Q_Q(Archiver);
   Q_ASSERT(state);
+  Q_ASSERT(source);
+  Q_ASSERT(dest);
 
   int ret = Z_ERRNO;
 
@@ -158,6 +160,8 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
                                             QSaveFile* dest) {
   Q_Q(Archiver);
   Q_ASSERT(state);
+  Q_ASSERT(source);
+  Q_ASSERT(dest);
 
   int ret = Z_ERRNO;
 
@@ -187,6 +191,7 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
   ret = inflateInit2(&strm, MAX_WBITS + 16);
 
   if (ret != Z_OK) {
+    dest->cancelWriting();
     return ret;
   }
 
