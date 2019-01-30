@@ -396,6 +396,8 @@ bool Kryvo::BotanProviderPrivate::encryptFile(const std::size_t id,
     return false;
   }
 
+  outFile.commit();
+
   // Progress: finished
   emit q->fileProgress(id, QObject::tr("Encrypted"), 100);
 
@@ -403,8 +405,6 @@ bool Kryvo::BotanProviderPrivate::encryptFile(const std::size_t id,
   emit q->statusMessage(Constants::messages[1].arg(inputFilePath));
 
   emit q->fileCompleted(id);
-
-  outFile.commit();
 
   return success;
 }
@@ -554,6 +554,8 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
 
   // Decryption success message
   emit q->statusMessage(Constants::messages[2].arg(inputFilePath));
+
+  emit q->fileCompleted(id);
 
   outFile.commit();
 

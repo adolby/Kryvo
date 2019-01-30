@@ -323,9 +323,9 @@ bool Kryvo::ArchiverPrivate::compressFile(const std::size_t id,
   // Progress: finished
   emit q->fileProgress(id, QObject::tr("Compressed"), 100);
 
-  dest.commit();
-
   emit q->fileCompleted(id);
+
+  dest.commit();
 
   return true;
 }
@@ -388,9 +388,9 @@ bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
   // Progress: finished
   emit q->fileProgress(id, QObject::tr("Decompressed"), 100);
 
-  dest.commit();
-
   emit q->fileCompleted(id);
+
+  dest.commit();
 
   return true;
 }
@@ -430,9 +430,9 @@ void Kryvo::Archiver::decompress(std::size_t id,
 }
 
 void Kryvo::Archiver::archive(const QStringList& filePaths) {
-
+  // TODO: Adapt a tar implementation
 }
 
 void Kryvo::Archiver::extract(const QString& archiveFilePath) {
-
+  // TODO: Adapt a tar implementation
 }
