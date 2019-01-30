@@ -234,6 +234,7 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& passphrase,
         auto removeIntermediateFilesFunction =
           [this, compressedFilePath](std::size_t id) {
             QFile::remove(compressedFilePath);
+            processPipeline(id);
           };
 
         pipeline.stages.push_back(removeIntermediateFilesFunction);
@@ -359,14 +360,14 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
       const QString& uniqueDecompressedFilePath =
         Constants::uniqueFilePath(decompressedFilePath);
 
-      auto decompress =
+      auto decompressFunction =
         [this, q, inFilePath, uniqueDecompressedFilePath](std::size_t id) {
           emit q->decompressFile(id, inFilePath, uniqueDecompressedFilePath);
         };
 
-      pipeline.stages.push_back(decompress);
+      pipeline.stages.push_back(decompressFunction);
 
-      auto decrypt =
+      auto decryptFunction =
         [this, q, passphrase, uniqueDecompressedFilePath,
          uniqueDecryptedFilePath, algorithmNameString, keySizeString,
          pbkdfSaltString, keySaltString, ivSaltString](std::size_t id) {
@@ -376,12 +377,13 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
                               ivSaltString);
         };
 
-      pipeline.stages.push_back(decrypt);
+      pipeline.stages.push_back(decryptFunction);
 
       if (removeIntermediateFiles) {
         auto removeIntermediateFilesFunction =
           [this, uniqueDecompressedFilePath](std::size_t id) {
             QFile::remove(uniqueDecompressedFilePath);
+            processPipeline(id);
           };
 
         pipeline.stages.push_back(removeIntermediateFilesFunction);
@@ -400,7 +402,7 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
         pipeline.stages.push_back(decrypt);
     }
 
-    pipelines[id] = pipeline;
+    pipelines.push_back(pipeline);
   }
 
   state.init(id);
