@@ -93,6 +93,13 @@ bool Kryvo::BotanProviderPrivate::encrypt(const std::size_t id,
     return false;
   }
 
+  if (state->isAborted() || state->isStopped(id)) {
+    emit q->errorMessage(Kryvo::Constants::messages[3], inFilePath);
+    emit q->fileFailed(id);
+
+    return false;
+  }
+
   const QString& algorithm = [&cipher, &keySize, &modeOfOperation]() {
     QString algo = QString(cipher % QStringLiteral("/") % modeOfOperation);
 
@@ -163,6 +170,13 @@ bool Kryvo::BotanProviderPrivate::decrypt(const std::size_t id,
   if (!state) {
     emit q->errorMessage(Constants::messages[0], QString(""));
     emit q->fileFailed(id);
+    return false;
+  }
+
+  if (state->isAborted() || state->isStopped(id)) {
+    emit q->errorMessage(Kryvo::Constants::messages[4], inFilePath);
+    emit q->fileFailed(id);
+
     return false;
   }
 
