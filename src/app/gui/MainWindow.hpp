@@ -60,7 +60,8 @@ class MainWindow : public QMainWindow {
                const QString& cipher,
                std::size_t keySize,
                const QString& modeOfOperation,
-               bool compress);
+               bool compress,
+               bool removeIntermediateFiles);
 
   /*!
    * \brief decrypt Emitted when the user provides all required data for
@@ -71,7 +72,8 @@ class MainWindow : public QMainWindow {
    */
   void decrypt(const QString& passphrase,
                const QStringList& inputFilePath,
-               const QString& outputFilePath);
+               const QString& outputFilePath,
+               bool removeIntermediateFiles);
 
   /*!
    * \brief pause Emitted when the user toggles the Pause push button
@@ -170,6 +172,8 @@ class MainWindow : public QMainWindow {
    * \param compress Boolean representing the new compression mode
    */
   void updateCompressionMode(bool compress);
+
+  void updateRemoveIntermediateFiles(bool removeIntermediate);
 
   /*!
    * \brief updateContainerMode Executed when the container mode is updated

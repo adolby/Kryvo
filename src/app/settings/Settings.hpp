@@ -114,6 +114,21 @@ class Settings {
   bool compressionMode() const;
 
   /*!
+   * \brief removeIntermediateFiles Sets the remove intermediate files
+   * preference
+   * \param removeIntermediate Boolean indicating whether to remove intermediate
+   * files
+   */
+  void removeIntermediateFiles(bool removeIntermediate);
+
+  /*!
+   * \brief removeIntermediateFiles Returns the remove intermediate files
+   * preference
+   * \return Boolean indicating whether to remove intermediate files
+   */
+  bool removeIntermediateFiles() const;
+
+  /*!
    * \brief containerMode Sets the container mode
    * \param container Boolean representing the container mode
    */

@@ -27,11 +27,13 @@ class Kryvo::DispatcherPrivate {
                const QString& cipher,
                std::size_t inputKeySize,
                const QString& modeOfOperation,
-               bool compress);
+               bool compress,
+               bool removeIntermediateFiles);
 
   void decrypt(const QString& passphrase,
                const QStringList& inputFilePaths,
-               const QString& outputPath);
+               const QString& outputPath,
+               bool removeIntermediateFiles);
 
   Dispatcher* const q_ptr{nullptr};
 
@@ -126,7 +128,6 @@ void Kryvo::DispatcherPrivate::processPipeline(const std::size_t id) {
 
   if (pipeline.stage >= pipeline.stages.size()) {
     dispatch();
-
     return;
   }
 
@@ -140,7 +141,7 @@ void Kryvo::DispatcherPrivate::processPipeline(const std::size_t id) {
   func(id);
 }
 
-void Kryvo::DispatcherPrivate::abortPipeline(std::size_t id) {
+void Kryvo::DispatcherPrivate::abortPipeline(const std::size_t id) {
   if (id >= pipelines.size()) {
     return;
   }
@@ -158,9 +159,10 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& passphrase,
                                        const QStringList& inputFilePaths,
                                        const QString& outputPath,
                                        const QString& cipher,
-                                       std::size_t inputKeySize,
+                                       const std::size_t inputKeySize,
                                        const QString& modeOfOperation,
-                                       bool compress) {
+                                       const bool compress,
+                                       const bool removeIntermediateFiles) {
   Q_Q(Dispatcher);
 
   state.busy(true);
@@ -227,6 +229,15 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& passphrase,
         };
 
       pipeline.stages.push_back(encryptFunction);
+
+      if (removeIntermediateFiles) {
+        auto removeIntermediateFilesFunction =
+          [this, compressedFilePath](std::size_t id) {
+            QFile::remove(compressedFilePath);
+          };
+
+        pipeline.stages.push_back(removeIntermediateFilesFunction);
+      }
     } else {
       const QString& encryptedFilePath =
         QString(outPath % QStringLiteral("/") % inputFileInfo.fileName() %
@@ -253,7 +264,8 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& passphrase,
 
 void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
                                        const QStringList& inputFilePaths,
-                                       const QString& outputPath) {
+                                       const QString& outputPath,
+                                       const bool removeIntermediateFiles) {
   Q_Q(Dispatcher);
 
   state.busy(true);
@@ -365,6 +377,15 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
         };
 
       pipeline.stages.push_back(decrypt);
+
+      if (removeIntermediateFiles) {
+        auto removeIntermediateFilesFunction =
+          [this, uniqueDecompressedFilePath](std::size_t id) {
+            QFile::remove(uniqueDecompressedFilePath);
+          };
+
+        pipeline.stages.push_back(removeIntermediateFilesFunction);
+      }
     } else {
         auto decrypt =
           [this, q, passphrase, inFilePath, uniqueDecryptedFilePath,
@@ -397,21 +418,23 @@ void Kryvo::Dispatcher::encrypt(const QString& passphrase,
                                 const QStringList& inputFilePaths,
                                 const QString& outputPath,
                                 const QString& cipher,
-                                std::size_t inputKeySize,
+                                const std::size_t inputKeySize,
                                 const QString& modeOfOperation,
-                                bool compress) {
+                                const bool compress,
+                                const bool removeIntermediateFiles) {
   Q_D(Dispatcher);
 
   d->encrypt(passphrase, inputFilePaths, outputPath, cipher, inputKeySize,
-             modeOfOperation, compress);
+             modeOfOperation, compress, removeIntermediateFiles);
 }
 
 void Kryvo::Dispatcher::decrypt(const QString& passphrase,
                                 const QStringList& inputFilePaths,
-                                const QString& outputPath) {
+                                const QString& outputPath,
+                                const bool removeIntermediateFiles) {
   Q_D(Dispatcher);
 
-  d->decrypt(passphrase, inputFilePaths, outputPath);
+  d->decrypt(passphrase, inputFilePaths, outputPath, removeIntermediateFiles);
 }
 
 void Kryvo::Dispatcher::abort() {

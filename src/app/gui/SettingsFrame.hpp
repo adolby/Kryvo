@@ -26,12 +26,16 @@ class SettingsFrame : public QFrame {
    * \param cipher String representing the cipher name
    * \param keySize String representing the key size
    * \param mode String representing the mode of operation
+   * \param compressionMode Compression enable/disable
+   * \param removeIntermediateFiles Remove intermediate files enable/disable
+   * \param containerMode Container mode archives multiple input files together
    * \param parent QWidget parent
    */
   explicit SettingsFrame(const QString& cipher,
                          std::size_t keySize,
                          const QString& mode,
                          bool compressionMode,
+                         bool removeIntermediateFiles,
                          bool containerMode,
                          QWidget* parent = nullptr);
 
@@ -73,6 +77,13 @@ class SettingsFrame : public QFrame {
   void updateCompressionMode(bool compress);
 
   /*!
+   * \brief updateRemoveIntermediateFiles Emitted when the user has changed the
+   * remove intermediate files preference via the checkbox representing it
+   * \param compress Boolean representing remove intermediate files preference
+   */
+  void updateRemoveIntermediateFiles(bool removeIntermediate);
+
+  /*!
    * \brief updateContainerMode Emitted when the user has changed the container
    * mode via the checkbox representing it
    * \param container Boolean representing container
@@ -99,6 +110,12 @@ class SettingsFrame : public QFrame {
    * \brief changeCompressionMode Executed when the compression mode changes
    */
   void changeCompressionMode();
+
+  /*!
+   * \brief changeRemoveIntermediateFiles Executed when the remove intermediate
+   * files preference changes
+   */
+  void changeRemoveIntermediateFiles();
 
   /*!
    * \brief changeContainerMode Executed when the container mode changes

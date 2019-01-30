@@ -119,6 +119,7 @@ Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
                                     settings->keySize(),
                                     settings->modeOfOperation(),
                                     settings->compressionMode(),
+                                    settings->removeIntermediateFiles(),
                                     settings->containerMode(),
                                     slidingStackedWidget);
   settingsFrame->setObjectName(QStringLiteral("settingsFrame"));
@@ -153,6 +154,9 @@ Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
 
   connect(settingsFrame, &SettingsFrame::updateCompressionMode,
           this, &MainWindow::updateCompressionMode);
+
+  connect(settingsFrame, &SettingsFrame::updateRemoveIntermediateFiles,
+          this, &MainWindow::updateRemoveIntermediateFiles);
 
   connect(settingsFrame, &SettingsFrame::updateContainerMode,
           this, &MainWindow::updateContainerMode);
@@ -227,10 +231,11 @@ void Kryvo::MainWindow::processFiles(const bool cryptDirection) {
                        settings->cipher(),
                        settings->keySize(),
                        settings->modeOfOperation(),
-                       settings->compressionMode());
-        }
-        else {
-          emit decrypt(passphrase, fileList, outputPath);
+                       settings->compressionMode(),
+                       settings->removeIntermediateFiles());
+        } else {
+          emit decrypt(passphrase, fileList, outputPath,
+                       settings->removeIntermediateFiles());
         }
       }
     }
@@ -291,6 +296,11 @@ void Kryvo::MainWindow::updateModeOfOperation(const QString& mode) {
 
 void Kryvo::MainWindow::updateCompressionMode(const bool compress) {
   settings->compressionMode(compress);
+}
+
+void Kryvo::MainWindow::updateRemoveIntermediateFiles(
+  const bool removeIntermediate) {
+  settings->removeIntermediateFiles(removeIntermediate);
 }
 
 void Kryvo::MainWindow::updateContainerMode(const bool container) {

@@ -107,7 +107,8 @@ class Dispatcher : public QObject {
                const QString& cipher,
                std::size_t inputKeySize,
                const QString& modeOfOperation,
-               bool compress);
+               bool compress,
+               bool removeIntermediateFiles);
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
@@ -119,7 +120,8 @@ class Dispatcher : public QObject {
    */
   void decrypt(const QString& passphrase,
                const QStringList& inputFilePaths,
-               const QString& outputPath);
+               const QString& outputPath,
+               bool removeIntermediateFiles);
 
   /*!
    * \brief abort Executed when a signal is received to set the abort status.

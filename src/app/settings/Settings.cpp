@@ -32,6 +32,7 @@ class Kryvo::SettingsPrivate {
   std::size_t keySize{128};
   QString modeOfOperation;
   bool compressionMode{true};
+  bool removeIntermediateFiles{true};
   bool containerMode{false};
   QString outputPath{Kryvo::Constants::kDocumentsPath};
   QString lastOpenPath{Kryvo::Constants::kDocumentsPath};
@@ -60,8 +61,8 @@ void Kryvo::SettingsPrivate::importSettings() {
 
     const QJsonObject& positionObject =
       settings[QStringLiteral("position")].toObject();
-    position = QPoint{positionObject[QStringLiteral("x")].toInt(100),
-                      positionObject[QStringLiteral("y")].toInt(100)};
+    position = QPoint(positionObject[QStringLiteral("x")].toInt(100),
+                      positionObject[QStringLiteral("y")].toInt(100));
 
     maximized = settings[QStringLiteral("maximized")].toBool(false);
 
@@ -77,10 +78,13 @@ void Kryvo::SettingsPrivate::importSettings() {
       static_cast<std::size_t>(settings[QStringLiteral("keySize")].toInt(128));
 
     const QJsonValue& modeOfOperationObject =
-        settings[QStringLiteral("modeOfOperation")];
+      settings[QStringLiteral("modeOfOperation")];
     modeOfOperation = modeOfOperationObject.toString(QStringLiteral("GCM"));
 
     compressionMode = settings[QStringLiteral("compressionMode")].toBool(true);
+
+    removeIntermediateFiles =
+      settings[QStringLiteral("removeIntermediateFiles")].toBool(true);
 
     containerMode = settings[QStringLiteral("containerMode")].toBool(true);
 
@@ -110,6 +114,7 @@ void Kryvo::SettingsPrivate::importSettings() {
     keySize = std::size_t(128);
     modeOfOperation = QStringLiteral("GCM");
     compressionMode = true;
+    removeIntermediateFiles = true;
     containerMode = true;
     outputPath = Constants::kDocumentsPath;
     lastOpenPath = Constants::kDocumentsPath;
@@ -151,6 +156,8 @@ void Kryvo::SettingsPrivate::exportSettings() const {
     settings[QStringLiteral("keySize")] = static_cast<int>(keySize);
     settings[QStringLiteral("modeOfOperation")] = modeOfOperation;
     settings[QStringLiteral("compressionMode")] = compressionMode;
+    settings[QStringLiteral("removeIntermediateFiles")] =
+      removeIntermediateFiles;
     settings[QStringLiteral("containerMode")] = containerMode;
 
     const auto addPathSeparator = [](const QString& inPath) {
@@ -280,6 +287,18 @@ bool Kryvo::Settings::compressionMode() const {
   Q_D(const Settings);
 
   return d->compressionMode;
+}
+
+bool Kryvo::Settings::removeIntermediateFiles() const {
+  Q_D(const Settings);
+
+  return d->removeIntermediateFiles;
+}
+
+void Kryvo::Settings::removeIntermediateFiles(const bool removeIntermediate) {
+  Q_D(Settings);
+
+  d->removeIntermediateFiles = removeIntermediate;
 }
 
 void Kryvo::Settings::containerMode(const bool container) {

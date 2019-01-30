@@ -72,6 +72,7 @@ class Kryvo::SettingsFramePrivate {
   // File settings
   QCheckBox* compressionCheckBox{nullptr};
   QCheckBox* containerCheckBox{nullptr};
+  QCheckBox* removeIntermediateFilesCheckBox{nullptr};
 
   int toolTipWidth{250};
 };
@@ -82,6 +83,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
                                     const std::size_t keySize,
                                     const QString& mode,
                                     const bool compressionMode,
+                                    const bool removeIntermediateFiles,
                                     const bool containerMode,
                                     QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<SettingsFramePrivate>()) {
@@ -214,6 +216,21 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   auto compressionLayout = new QHBoxLayout(compressionFrame);
   compressionLayout->addWidget(d->compressionCheckBox);
 
+  auto removeIntermediateFilesFrame = new QFrame(fileSettingsFrame);
+  removeIntermediateFilesFrame->setSizePolicy(QSizePolicy::Maximum,
+                                              QSizePolicy::Maximum);
+
+  d->removeIntermediateFilesCheckBox =
+    new QCheckBox(tr("Delete intermediate files"), compressionFrame);
+  d->removeIntermediateFilesCheckBox->setObjectName(
+    QStringLiteral("settingsCheckBox"));
+  d->removeIntermediateFilesCheckBox->setChecked(removeIntermediateFiles);
+
+  auto removeIntermediateFilesLayout =
+    new QHBoxLayout(removeIntermediateFilesFrame);
+  removeIntermediateFilesLayout->addWidget(d->removeIntermediateFilesCheckBox);
+
+// TODO: Re-add container setting when feature is complete
 //  auto containerFrame = new QFrame(fileSettingsFrame);
 //  containerFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
@@ -228,6 +245,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   auto fileSettingsLayout = new QVBoxLayout(fileSettingsFrame);
   fileSettingsLayout->addWidget(fileSettingsLabel);
   fileSettingsLayout->addWidget(compressionFrame);
+  fileSettingsLayout->addWidget(removeIntermediateFilesFrame);
 //  fileSettingsLayout->addWidget(containerFrame);
 
   auto contentLayout = new QVBoxLayout(contentFrame);
@@ -255,23 +273,22 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   void (QComboBox::*indexChangedSignal)(const QString&) =
     &QComboBox::currentIndexChanged;
 
-  // Connect cipher combo box change signal to change cipher slot
   connect(d->cipherComboBox, indexChangedSignal,
           this, &SettingsFrame::changeCipher);
 
-  // Connect key size combo box change signal to change key size slot
   connect(d->keySizeComboBox, indexChangedSignal,
           this, &SettingsFrame::changeKeySize);
 
-  // Connect mode combo box change signal to change mode of operation slot
   connect(d->modeComboBox, indexChangedSignal,
           this, &SettingsFrame::changeModeOfOperation);
 
-  // Connect compression check box change signal to change compression mode slot
   connect(d->compressionCheckBox, &QCheckBox::stateChanged,
           this, &SettingsFrame::changeCompressionMode);
 
-  // Connect container check box change signal to change container mode slot
+  connect(d->removeIntermediateFilesCheckBox, &QCheckBox::stateChanged,
+          this, &SettingsFrame::changeRemoveIntermediateFiles);
+
+// TODO: Re-add container setting when feature is complete
 //  connect(d->containerCheckBox, &QCheckBox::stateChanged,
 //          this, &SettingsFrame::changeContainerMode);
 
@@ -320,9 +337,17 @@ void Kryvo::SettingsFrame::changeCompressionMode() {
   emit updateCompressionMode(d->compressionCheckBox->isChecked());
 }
 
-void Kryvo::SettingsFrame::changeContainerMode() {
-//  Q_D(SettingsFrame);
-//  Q_ASSERT(d->containerCheckBox);
+void Kryvo::SettingsFrame::changeRemoveIntermediateFiles() {
+  Q_D(SettingsFrame);
+  Q_ASSERT(d->removeIntermediateFilesCheckBox);
 
-//  emit updateContainerMode(d->containerCheckBox->isChecked());
+  emit updateRemoveIntermediateFiles(
+    d->removeIntermediateFilesCheckBox->isChecked());
+}
+
+void Kryvo::SettingsFrame::changeContainerMode() {
+  Q_D(SettingsFrame);
+  Q_ASSERT(d->containerCheckBox);
+
+  emit updateContainerMode(d->containerCheckBox->isChecked());
 }
