@@ -52,6 +52,10 @@ Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* dispatcher)
   archiver.moveToThread(&archiverThread);
   cryptographer.moveToThread(&cryptographerThread);
 
+  QObject::connect(q_ptr, &Dispatcher::fileCompleted,
+                   q_ptr, &Dispatcher::processPipeline,
+                   Qt::QueuedConnection);
+
   QObject::connect(&archiver, &Archiver::fileProgress,
                    q_ptr, &Dispatcher::updateFileProgress);
 
@@ -68,7 +72,7 @@ Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* dispatcher)
                    &archiver, &Archiver::decompress);
 
   QObject::connect(&archiver, &Archiver::fileCompleted,
-                   q_ptr, &Dispatcher::processPipeline);
+                   q_ptr, &Dispatcher::fileCompleted);
 
   QObject::connect(&archiver, &Archiver::fileFailed,
                    q_ptr, &Dispatcher::abortPipeline);
@@ -89,7 +93,7 @@ Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* dispatcher)
                    &cryptographer, &Crypto::decrypt);
 
   QObject::connect(&cryptographer, &Crypto::fileCompleted,
-                   q_ptr, &Dispatcher::processPipeline);
+                   q_ptr, &Dispatcher::fileCompleted);
 
   QObject::connect(&cryptographer, &Crypto::fileFailed,
                    q_ptr, &Dispatcher::abortPipeline);
@@ -232,9 +236,9 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& passphrase,
 
       if (removeIntermediateFiles) {
         auto removeIntermediateFilesFunction =
-          [this, compressedFilePath](std::size_t id) {
+          [this, q, compressedFilePath](std::size_t id) {
             QFile::remove(compressedFilePath);
-            processPipeline(id);
+            emit q->fileCompleted(id);
           };
 
         pipeline.stages.push_back(removeIntermediateFilesFunction);
@@ -335,6 +339,12 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
     const QString& outputFilePath = QString(outPath % QStringLiteral("/") %
                                             inputFileInfo.fileName());
 
+    Pipeline pipeline;
+
+    pipeline.inputFilePath = inFilePath;
+
+    id = id + 1;
+
     // Remove the .enc extensions if at the end of the file path
     const QString& decryptedFilePath =
       Constants::removeExtension(outputFilePath,
@@ -344,16 +354,22 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
     const QString& uniqueDecryptedFilePath =
       Constants::uniqueFilePath(decryptedFilePath);
 
-    Pipeline pipeline;
+    auto decryptFunction =
+      [this, q, passphrase, inFilePath, uniqueDecryptedFilePath,
+       algorithmNameString, keySizeString, pbkdfSaltString, keySaltString,
+       ivSaltString](std::size_t id) {
+        emit q->decryptFile(id, passphrase, inFilePath,
+                            uniqueDecryptedFilePath, algorithmNameString,
+                            keySizeString, pbkdfSaltString, keySaltString,
+                            ivSaltString);
+      };
 
-    pipeline.inputFilePath = inFilePath;
-
-    id = id + 1;
+    pipeline.stages.push_back(decryptFunction);
 
     if (QByteArrayLiteral("Gzip Compressed") == compressString) {
       // Remove the gz extension if at the end of the file path
       const QString& decompressedFilePath =
-        Constants::removeExtension(outputFilePath,
+        Constants::removeExtension(uniqueDecryptedFilePath,
                                    Constants::kCompressedFileExtension);
 
       // Create a unique file name for the file in this directory
@@ -361,45 +377,23 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
         Constants::uniqueFilePath(decompressedFilePath);
 
       auto decompressFunction =
-        [this, q, inFilePath, uniqueDecompressedFilePath](std::size_t id) {
-          emit q->decompressFile(id, inFilePath, uniqueDecompressedFilePath);
+        [this, q, uniqueDecryptedFilePath,
+         uniqueDecompressedFilePath](std::size_t id) {
+          emit q->decompressFile(id, uniqueDecryptedFilePath,
+                                 uniqueDecompressedFilePath);
         };
 
       pipeline.stages.push_back(decompressFunction);
 
-      auto decryptFunction =
-        [this, q, passphrase, uniqueDecompressedFilePath,
-         uniqueDecryptedFilePath, algorithmNameString, keySizeString,
-         pbkdfSaltString, keySaltString, ivSaltString](std::size_t id) {
-          emit q->decryptFile(id, passphrase, uniqueDecompressedFilePath,
-                              uniqueDecryptedFilePath, algorithmNameString,
-                              keySizeString, pbkdfSaltString, keySaltString,
-                              ivSaltString);
-        };
-
-      pipeline.stages.push_back(decryptFunction);
-
       if (removeIntermediateFiles) {
         auto removeIntermediateFilesFunction =
-          [this, uniqueDecompressedFilePath](std::size_t id) {
-            QFile::remove(uniqueDecompressedFilePath);
-            processPipeline(id);
+          [this, q, decompressedFilePath](std::size_t id) {
+            QFile::remove(decompressedFilePath);
+            emit q->fileCompleted(id);
           };
 
         pipeline.stages.push_back(removeIntermediateFilesFunction);
       }
-    } else {
-        auto decrypt =
-          [this, q, passphrase, inFilePath, uniqueDecryptedFilePath,
-           algorithmNameString, keySizeString, pbkdfSaltString, keySaltString,
-           ivSaltString](std::size_t id) {
-            emit q->decryptFile(id, passphrase, inFilePath,
-                                uniqueDecryptedFilePath, algorithmNameString,
-                                keySizeString, pbkdfSaltString, keySaltString,
-                                ivSaltString);
-          };
-
-        pipeline.stages.push_back(decrypt);
     }
 
     pipelines.push_back(pipeline);

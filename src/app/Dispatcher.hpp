@@ -31,6 +31,8 @@ class Dispatcher : public QObject {
   ~Dispatcher() override;
 
  signals:
+  void fileCompleted(std::size_t id);
+
   /*!
    * \brief fileProgress Emitted when the cipher operation file progress changes
    * \param path String containing path of the file to update progress on
