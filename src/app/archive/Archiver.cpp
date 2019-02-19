@@ -6,8 +6,6 @@
 #include <QStringBuilder>
 #include "zlib.h"
 
-#include <QDebug>
-
 class Kryvo::ArchiverPrivate {
   Q_DISABLE_COPY(ArchiverPrivate)
   Q_DECLARE_PUBLIC(Archiver)
@@ -325,12 +323,12 @@ bool Kryvo::ArchiverPrivate::compressFile(const std::size_t id,
     return false;
   }
 
+  dest.commit();
+
   // Progress: finished
   emit q->fileProgress(id, QObject::tr("Compressed"), 100);
 
   emit q->fileCompleted(id);
-
-  dest.commit();
 
   return true;
 }
@@ -368,8 +366,6 @@ bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
     return false;
   }
 
-  const qint64 totalBytes = source.size();
-
   QSaveFile dest(outputFilePath);
   const bool destFileOpen = dest.open(QIODevice::WriteOnly);
   if (!destFileOpen) {
@@ -390,12 +386,12 @@ bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
     return false;
   }
 
+  dest.commit();
+
   // Progress: finished
   emit q->fileProgress(id, QObject::tr("Decompressed"), 100);
 
   emit q->fileCompleted(id);
-
-  dest.commit();
 
   return true;
 }

@@ -7,8 +7,6 @@
 #include <string>
 #include <stdexcept>
 
-#include <QDebug>
-
 class Kryvo::BotanProviderPrivate {
   Q_DISABLE_COPY(BotanProviderPrivate)
   Q_DECLARE_PUBLIC(BotanProvider)
@@ -570,6 +568,8 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
     return false;
   }
 
+  outFile.commit();
+
   // Progress: finished
   emit q->fileProgress(id, QObject::tr("Decrypted"), 100);
 
@@ -577,8 +577,6 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
   emit q->statusMessage(Constants::messages[2].arg(inputFilePath));
 
   emit q->fileCompleted(id);
-
-  outFile.commit();
 
   return true;
 }

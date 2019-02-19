@@ -6,8 +6,6 @@
 #include "utility/Thread.hpp"
 #include <QCoreApplication>
 
-#include <QDebug>
-
 class Kryvo::DispatcherPrivate {
   Q_DISABLE_COPY(DispatcherPrivate)
   Q_DECLARE_PUBLIC(Dispatcher)
@@ -387,8 +385,8 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
 
       if (removeIntermediateFiles) {
         auto removeIntermediateFilesFunction =
-          [this, q, decompressedFilePath](std::size_t id) {
-            QFile::remove(decompressedFilePath);
+          [this, q, uniqueDecryptedFilePath](std::size_t id) {
+            QFile::remove(uniqueDecryptedFilePath);
             emit q->fileCompleted(id);
           };
 

@@ -101,8 +101,6 @@ void Kryvo::FileListFrame::updateProgress(const QString& path,
                                           const qint64 percent) {
   Q_D(FileListFrame);
 
-//  qDebug() << path << " " << task << " " << percent;
-
   if (path.isEmpty()) {
     return;
   }

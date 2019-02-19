@@ -42,19 +42,19 @@ Kryvo::ApplicationPrivate::ApplicationPrivate() {
                    &dispatcher, &Dispatcher::stop,
                    Qt::DirectConnection);
 
-  // Update cipher progress bars
+  // Update progress bars
   QObject::connect(&dispatcher, &Dispatcher::fileProgress,
                    &gui, &MainWindow::updateFileProgress);
 
-  // Update cipher status message
+  // Update status message
   QObject::connect(&dispatcher, &Dispatcher::statusMessage,
                    &gui, &MainWindow::updateStatusMessage);
 
-  // Update cipher error message
+  // Update error message
   QObject::connect(&dispatcher, &Dispatcher::errorMessage,
                    &gui, &MainWindow::updateError);
 
-  // Update cipher operation in progress status
+  // Update operation in progress status
   QObject::connect(&dispatcher, &Dispatcher::busyStatus,
                    &gui, &MainWindow::updateBusyStatus);
 

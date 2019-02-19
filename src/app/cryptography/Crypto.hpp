@@ -6,7 +6,6 @@
 #include <QObject>
 #include <QString>
 #include <memory>
-#include <queue>
 
 namespace Kryvo {
 

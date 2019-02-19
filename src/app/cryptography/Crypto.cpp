@@ -9,8 +9,6 @@
 #include <QDir>
 #include <QCoreApplication>
 
-#include <QDebug>
-
 class Kryvo::CryptoPrivate {
   Q_DISABLE_COPY(CryptoPrivate)
   Q_DECLARE_PUBLIC(Crypto)

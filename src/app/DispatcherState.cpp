@@ -1,7 +1,6 @@
 #include "DispatcherState.hpp"
 #include <QWriteLocker>
 #include <QReadLocker>
-#include <QDebug>
 
 Kryvo::DispatcherState::DispatcherState()
   : aborted(false), paused(false), busyStatus(false) {
@@ -26,8 +25,6 @@ bool Kryvo::DispatcherState::isPaused() const {
 void Kryvo::DispatcherState::stop(const std::size_t id, const bool stop) {
   QWriteLocker locker(&stoppedLock);
 
-  qDebug() << Q_FUNC_INFO << id << stop;
-
   if (id < stopped.size()) {
     stopped[id] = stop;
   }
@@ -38,8 +35,6 @@ bool Kryvo::DispatcherState::isStopped(const std::size_t id) {
 
   bool hasBeenStopped = false;
 
-  qDebug() << Q_FUNC_INFO << "Stopped size: " << stopped.size();
-
   if (id < stopped.size()) {
     hasBeenStopped = stopped.at(id);
   }
@@ -48,8 +43,6 @@ bool Kryvo::DispatcherState::isStopped(const std::size_t id) {
 }
 
 void Kryvo::DispatcherState::init(const std::size_t maxId) {
-  qDebug() << Q_FUNC_INFO << "Max ID: " << maxId;
-
   aborted = false;
 
   QWriteLocker locker(&stoppedLock);
