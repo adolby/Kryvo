@@ -4,6 +4,7 @@
 #include "cryptography/Crypto.hpp"
 #include "Constants.hpp"
 #include "utility/Thread.hpp"
+#include <QTimer>
 #include <QCoreApplication>
 
 class Kryvo::DispatcherPrivate {
@@ -12,6 +13,8 @@ class Kryvo::DispatcherPrivate {
 
  public:
   explicit DispatcherPrivate(Dispatcher* q);
+
+  bool isComplete();
 
   void dispatch();
 
@@ -100,7 +103,7 @@ Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* dispatcher)
   cryptographerThread.start();
 }
 
-void Kryvo::DispatcherPrivate::dispatch() {
+bool Kryvo::DispatcherPrivate::isComplete() {
   Q_Q(Dispatcher);
 
   bool finished = true;
@@ -110,26 +113,49 @@ void Kryvo::DispatcherPrivate::dispatch() {
 
     if (pipeline.stage < pipeline.stages.size()) {
       finished = false;
-      processPipeline(i);
       break;
     }
   }
 
-  if (finished) {
-    state.busy(false);
-    emit q->busyStatus(state.isBusy());
+  return finished;
+}
+
+void Kryvo::DispatcherPrivate::dispatch() {
+  Q_Q(Dispatcher);
+
+  for (std::size_t i = 0; i < pipelines.size(); ++i) {
+    QTimer::singleShot(0, q, [this, i]() {
+                               processPipeline(i);
+                             });
   }
 }
 
 void Kryvo::DispatcherPrivate::processPipeline(const std::size_t id) {
+  Q_Q(Dispatcher);
+
   if (id >= pipelines.size()) {
+    const bool complete = isComplete();
+
+    if (complete) {
+      state.busy(false);
+      emit q->busyStatus(state.isBusy());
+    }
+
     return;
   }
 
   Pipeline pipeline = pipelines.at(id);
 
+  const bool complete = isComplete();
+
+  if (complete) {
+    state.busy(false);
+    emit q->busyStatus(state.isBusy());
+
+    return;
+  }
+
   if (pipeline.stage >= pipeline.stages.size()) {
-    dispatch();
     return;
   }
 
@@ -144,7 +170,16 @@ void Kryvo::DispatcherPrivate::processPipeline(const std::size_t id) {
 }
 
 void Kryvo::DispatcherPrivate::abortPipeline(const std::size_t id) {
+  Q_Q(Dispatcher);
+
   if (id >= pipelines.size()) {
+    const bool complete = isComplete();
+
+    if (complete) {
+      state.busy(false);
+      emit q->busyStatus(state.isBusy());
+    }
+
     return;
   }
 
@@ -154,7 +189,12 @@ void Kryvo::DispatcherPrivate::abortPipeline(const std::size_t id) {
 
   pipelines[id] = pipeline;
 
-  dispatch();
+  const bool complete = isComplete();
+
+  if (complete) {
+    state.busy(false);
+    emit q->busyStatus(state.isBusy());
+  }
 }
 
 void Kryvo::DispatcherPrivate::encrypt(const QString& passphrase,
