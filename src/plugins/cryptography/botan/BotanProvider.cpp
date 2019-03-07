@@ -604,71 +604,73 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
   pipe->start_msg();
 
   while (!inFile->atEnd() && !state->isAborted() && !state->isStopped(id)) {
-    if (!state->isPaused()) {
-      const qint64 readSize =
-        inFile->read(reinterpret_cast<char*>(&buffer[0]), buffer.size());
+    while (state->isPaused()) {
+      // Wait while paused
+    }
 
-      if (readSize < 0) {
-        outFile->cancelWriting();
-        emit q->errorMessage(Constants::messages[5], inFile->fileName());
-        emit q->fileFailed(id);
-        return false;
-      }
+    const qint64 readSize =
+      inFile->read(reinterpret_cast<char*>(&buffer[0]), buffer.size());
 
-      pipe->write(&buffer[0], static_cast<std::size_t>(readSize));
+    if (readSize < 0) {
+      outFile->cancelWriting();
+      emit q->errorMessage(Constants::messages[5], inFile->fileName());
+      emit q->fileFailed(id);
+      return false;
+    }
 
-      // Calculate progress in percent
-      fileIndex += readSize;
-      const double nextFraction = static_cast<double>(fileIndex) /
-                                  static_cast<double>(size);
-      const int nextPercent = nextFraction * 100;
+    pipe->write(&buffer[0], static_cast<std::size_t>(readSize));
 
-      if (nextPercent > percent && nextPercent < 100) {
-        percent = nextPercent;
+    // Calculate progress in percent
+    fileIndex += readSize;
+    const double nextFraction = static_cast<double>(fileIndex) /
+                                static_cast<double>(size);
+    const int nextPercent = nextFraction * 100;
 
-        const QString& task = Botan::ENCRYPTION == direction ?
-                              QObject::tr("Encrypting") :
-                              QObject::tr("Decrypting");
+    if (nextPercent > percent && nextPercent < 100) {
+      percent = nextPercent;
 
-        emit q->fileProgress(id, task, percent);
-      }
+      const QString& task = Botan::ENCRYPTION == direction ?
+                            QObject::tr("Encrypting") :
+                            QObject::tr("Decrypting");
 
-      if (inFile->atEnd()) {
-        pipe->end_msg();
-      }
+      emit q->fileProgress(id, task, percent);
+    }
 
-      while (pipe->remaining() > 0) {
-        const std::size_t buffered = pipe->read(&buffer[0], buffer.size());
+    if (inFile->atEnd()) {
+      pipe->end_msg();
+    }
 
-        if (buffered < 0) {
-          if (Botan::ENCRYPTION == direction) {
-            outFile->cancelWriting();
-            emit q->errorMessage(Constants::messages[8], inFile->fileName());
-            emit q->fileFailed(id);
-            return false;
-          } else {
-            outFile->cancelWriting();
-            emit q->errorMessage(Constants::messages[7], inFile->fileName());
-            emit q->fileFailed(id);
-            return false;
-          }
+    while (pipe->remaining() > 0) {
+      const std::size_t buffered = pipe->read(&buffer[0], buffer.size());
+
+      if (buffered < 0) {
+        if (Botan::ENCRYPTION == direction) {
+          outFile->cancelWriting();
+          emit q->errorMessage(Constants::messages[8], inFile->fileName());
+          emit q->fileFailed(id);
+          return false;
+        } else {
+          outFile->cancelWriting();
+          emit q->errorMessage(Constants::messages[7], inFile->fileName());
+          emit q->fileFailed(id);
+          return false;
         }
+      }
 
-        const qint64 writeSize =
-          outFile->write(reinterpret_cast<const char*>(&buffer[0]), buffered);
+      const qint64 writeSize =
+        outFile->write(reinterpret_cast<const char*>(&buffer[0]), buffered);
 
-        if (writeSize < 0) {
-          if (Botan::ENCRYPTION == direction) {
-            outFile->cancelWriting();
-            emit q->errorMessage(Constants::messages[8], inFile->fileName());
-            emit q->fileFailed(id);
-            return false;
-          } else {
-            outFile->cancelWriting();
-            emit q->errorMessage(Constants::messages[7], inFile->fileName());
-            emit q->fileFailed(id);
-            return false;
-          }
+      if (writeSize < 0) {
+        if (Botan::ENCRYPTION == direction) {
+          outFile->cancelWriting();
+          emit q->errorMessage(Constants::messages[8], inFile->fileName());
+          emit q->fileFailed(id);
+          return false;
+        } else {
+          outFile->cancelWriting();
+          emit q->errorMessage(Constants::messages[7], inFile->fileName());
+          emit q->fileFailed(id);
+          return false;
         }
       }
     }
