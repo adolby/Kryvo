@@ -622,12 +622,16 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
 
     // Calculate progress in percent
     fileIndex += readSize;
-    const double nextFraction = static_cast<double>(fileIndex) /
-                                static_cast<double>(size);
-    const int nextPercent = nextFraction * 100;
 
-    if (nextPercent > percent && nextPercent < 100) {
-      percent = nextPercent;
+    const double fractionalProgress = static_cast<double>(fileIndex) /
+                                      static_cast<double>(size);
+
+    const double percentProgress = fractionalProgress * 100.0;
+
+    const int percentProgressInteger = static_cast<int>(percentProgress);
+
+    if (percentProgressInteger > percent && percentProgressInteger < 100) {
+      percent = percentProgressInteger;
 
       const QString& task = Botan::ENCRYPTION == direction ?
                             QObject::tr("Encrypting") :

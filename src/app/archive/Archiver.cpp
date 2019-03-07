@@ -81,7 +81,7 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
     return ret;
   }
 
-  qint64 totalBytesWritten = 0;
+  qint64 totalBytesRead = 0;
 
   int j = 0;
 
@@ -133,25 +133,20 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
         dest->cancelWriting();
         return Z_ERRNO;
       }
-
-      totalBytesWritten = totalBytesWritten + bytesWritten;
-
-      const double fractionalProgress =
-        static_cast<double>(totalBytesWritten) /
-        static_cast<double>(totalBytes);
-
-      const int percentProgress = [](double fp) {
-        int progress = static_cast<int>(fp * 100.0);
-
-        if (progress > 100) {
-          progress = 99;
-        }
-
-        return progress;
-      }(fractionalProgress);
-
-      emit q->fileProgress(id, QObject::tr("Compressing"), percentProgress);
     } while (0 == strm.avail_out);
+
+    totalBytesRead = totalBytesRead + bytesRead;
+
+    const double fractionalProgress =
+      static_cast<double>(totalBytesRead) /
+      static_cast<double>(totalBytes);
+
+    const double percentProgress = fractionalProgress * 100.0;
+
+    const int percentProgressInteger = static_cast<int>(percentProgress);
+
+    emit q->fileProgress(id, QObject::tr("Compressing"),
+                         percentProgressInteger);
 
     Q_ASSERT(0 == strm.avail_in); /* all input will be used */
 
@@ -211,7 +206,7 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
     return ret;
   }
 
-  qint64 totalBytesWritten = 0;
+  qint64 totalBytesRead = 0;
 
   int j = 0;
 
@@ -281,25 +276,20 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
         dest->cancelWriting();
         return Z_ERRNO;
       }
-
-      totalBytesWritten = totalBytesWritten + bytesWritten;
-
-      const double fractionalProgress =
-        static_cast<double>(totalBytesWritten) /
-        static_cast<double>(totalBytes);
-
-      const int percentProgress = [](double fp) {
-        int progress = static_cast<int>(fp * 100.0);
-
-        if (progress > 100) {
-          progress = 99;
-        }
-
-        return progress;
-      }(fractionalProgress);
-
-      emit q->fileProgress(id, QObject::tr("Decompressing"), percentProgress);
     } while (0 == strm.avail_out);
+
+    totalBytesRead = totalBytesRead + bytesRead;
+
+    const double fractionalProgress =
+      static_cast<double>(totalBytesRead) /
+      static_cast<double>(totalBytes);
+
+    const double percentProgress = fractionalProgress * 100.0;
+
+    const int percentProgressInteger = static_cast<int>(percentProgress);
+
+    emit q->fileProgress(id, QObject::tr("Decompressing"),
+                         percentProgressInteger);
 
     /* done when inflate() says it's done */
   } while (ret != Z_STREAM_END);
