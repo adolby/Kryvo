@@ -30,7 +30,7 @@ class Kryvo::ArchiverPrivate {
 
   DispatcherState* state{nullptr};
 
-  static constexpr qint64 kChunk{16384};
+  static constexpr qint64 kChunk{256000};
 };
 
 Kryvo::ArchiverPrivate::ArchiverPrivate(Archiver* archiver,
@@ -83,12 +83,17 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
 
   qint64 totalBytesWritten = 0;
 
+  int j = 0;
+
   /* compress until end of file */
   do {
     if (state->isAborted() || state->isStopped(id)) {
       deflateEnd(&strm);
       dest->cancelWriting();
       return Z_ERRNO;
+    }
+
+    while (state->isPaused()) {
     }
 
     const qint64 bytesRead = source->read(in.data(), kChunk);
@@ -105,9 +110,14 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
 
     strm.next_in = reinterpret_cast<unsigned char*>(in.data());
 
+    int i = 0;
+
     /* run deflate() on input until output buffer not full, finish
        compression if all of source has been read in */
     do {
+      while (state->isPaused()) {
+      }
+
       strm.avail_out = kChunk;
       strm.next_out = reinterpret_cast<unsigned char*>(out.data());
       ret = deflate(&strm, flush); /* no bad return value */
@@ -118,21 +128,29 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
 
       const qint64 bytesWritten = dest->write(out.data(), have);
 
+      if (bytesWritten != have || bytesWritten < 0) {
+        deflateEnd(&strm);
+        dest->cancelWriting();
+        return Z_ERRNO;
+      }
+
       totalBytesWritten = totalBytesWritten + bytesWritten;
 
       const double fractionalProgress =
         static_cast<double>(totalBytesWritten) /
         static_cast<double>(totalBytes);
 
-      const int percentProgress = fractionalProgress * 100;
+      const int percentProgress = [](double fp) {
+        int progress = static_cast<int>(fp * 100.0);
+
+        if (progress > 100) {
+          progress = 99;
+        }
+
+        return progress;
+      }(fractionalProgress);
 
       emit q->fileProgress(id, QObject::tr("Compressing"), percentProgress);
-
-      if (bytesWritten != have || bytesWritten < 0) {
-        deflateEnd(&strm);
-        dest->cancelWriting();
-        return Z_ERRNO;
-      }
     } while (0 == strm.avail_out);
 
     Q_ASSERT(0 == strm.avail_in); /* all input will be used */
@@ -195,12 +213,17 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
 
   qint64 totalBytesWritten = 0;
 
+  int j = 0;
+
   /* decompress until deflate stream ends or end of file */
   do {
     if (state->isAborted() || state->isStopped(id)) {
-      deflateEnd(&strm);
+      inflateEnd(&strm);
       dest->cancelWriting();
       return Z_ERRNO;
+    }
+
+    while (state->isPaused()) {
     }
 
     const qint64 bytesRead = source->read(in.data(), kChunk);
@@ -219,8 +242,13 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
 
     strm.next_in = reinterpret_cast<unsigned char*>(in.data());
 
+    int i = 0;
+
     /* run inflate() on input until output buffer not full */
     do {
+      while (state->isPaused()) {
+      }
+
       strm.avail_out = kChunk;
       strm.next_out = reinterpret_cast<unsigned char*>(out.data());
       ret = inflate(&strm, Z_NO_FLUSH);
@@ -228,37 +256,53 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
       Q_ASSERT(ret != Z_STREAM_ERROR); /* state not clobbered */
 
       switch (ret) {
-      case Z_NEED_DICT:
-        ret = Z_DATA_ERROR; /* and fall through */
-      case Z_DATA_ERROR:
-      case Z_MEM_ERROR:
-        inflateEnd(&strm);
-        dest->cancelWriting();
-        return ret;
+        case Z_NEED_DICT: {
+          ret = Z_DATA_ERROR;
+          // Fall through
+        }
+
+        case Z_DATA_ERROR: {
+          // Fall through
+        }
+
+        case Z_MEM_ERROR: {
+          inflateEnd(&strm);
+          dest->cancelWriting();
+          return ret;
+        }
       }
 
       have = kChunk - strm.avail_out;
 
       const qint64 bytesWritten = dest->write(out.data(), have);
 
-      totalBytesWritten = totalBytesWritten + bytesWritten;
-
-      const double fractionalProgress =
-        static_cast<double>(totalBytesWritten / totalBytes);
-
-      const int percentProgress = fractionalProgress * 100;
-
-      emit q->fileProgress(id, QObject::tr("Decompressing"), percentProgress);
-
       if (bytesWritten != have || bytesWritten < 0) {
         inflateEnd(&strm);
         dest->cancelWriting();
         return Z_ERRNO;
       }
+
+      totalBytesWritten = totalBytesWritten + bytesWritten;
+
+      const double fractionalProgress =
+        static_cast<double>(totalBytesWritten) /
+        static_cast<double>(totalBytes);
+
+      const int percentProgress = [](double fp) {
+        int progress = static_cast<int>(fp * 100.0);
+
+        if (progress > 100) {
+          progress = 99;
+        }
+
+        return progress;
+      }(fractionalProgress);
+
+      emit q->fileProgress(id, QObject::tr("Decompressing"), percentProgress);
     } while (0 == strm.avail_out);
 
     /* done when inflate() says it's done */
-  } while (ret != Z_STREAM_END && !state->isAborted() && !state->isStopped(id));
+  } while (ret != Z_STREAM_END);
 
   /* clean up and return */
   inflateEnd(&strm);
