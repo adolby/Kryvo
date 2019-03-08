@@ -5,7 +5,7 @@ environment:
   - QTPATH: C:\Qt\5.12.1\msvc2017_64
     PLATFORM: amd64
     COMPILER: msvc
-    VSVER: 14
+    VSVER: 15
 
 clone_depth: 1
 
