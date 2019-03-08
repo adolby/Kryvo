@@ -3,7 +3,7 @@ echo on
 SET project_dir="%cd%"
 
 echo Set up environment...
-set PATH=%QT%\bin\;C:\Qt\Tools\QtCreator\bin\;C:\Qt\QtIFW3.0.4\bin\;%PATH%
+set PATH=%QTPATH%\bin\;C:\Qt\Tools\QtCreator\bin\;C:\Qt\Tools\mingw530_32\QtIFW3.0.1\bin\;%PATH%
 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 
 echo Building Kryvo...
@@ -16,8 +16,8 @@ cp %project_dir%\tests\data\test-data.zip test-data.zip
 7z x test-data.zip
 
 echo Running tests...
-windeployqt CryptoTests.exe
-CryptoTests
+windeployqt tests.exe
+tests
 
 echo Packaging...
 cd %project_dir%\build\windows\msvc\x86_64\release\

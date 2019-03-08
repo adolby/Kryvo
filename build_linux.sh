@@ -75,8 +75,8 @@ echo "Extracting test data..."
 
 # Run tests
 echo "Running tests..."
-chmod +x CryptoTests
-./CryptoTests
+chmod +x tests
+./tests
 
 # Package Kryvo
 echo "Packaging..."
