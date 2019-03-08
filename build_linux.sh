@@ -2,7 +2,6 @@
 
 set -o errexit -o nounset
 
-# Hold on to current directory
 project_dir=$(pwd)
 qt_install_dir=/opt
 
@@ -42,11 +41,20 @@ PATH=${qt_install_dir}/Qt/5.11.2/gcc_64/bin/:${qt_install_dir}/Qt/QtIFW3.0.4/bin
 cd ${project_dir}
 
 # Clean build directory
-make distclean
 rm -rf ${project_dir}/build/linux/
+
+mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/
+mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/lib/
+mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/lib/zlib/
+mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/test/
 
 # Build Kryvo
 echo "Building Kryvo..."
+
+if [ -f "${project_dir}/Makefile" ]; then
+  make distclean
+fi
+
 qmake CONFIG+=release -spec linux-g++-64
 make
 
@@ -82,6 +90,7 @@ chmod +x tests
 echo "Packaging..."
 
 # Copy plugins for app
+echo "Copy plugins to app..."
 mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/plugins/cryptography/botan/
 cd ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/plugins/cryptography/botan/
 cp ${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so libbotan.so
