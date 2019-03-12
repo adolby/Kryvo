@@ -74,7 +74,9 @@ cd ${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/MacOS
 cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
 
 echo "Extracting test data..."
-7z x test-data.zip &> /dev/null
+7z x test-data.zip
+
+ls -la
 
 # Run tests
 echo "Running tests..."
