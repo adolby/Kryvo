@@ -94,7 +94,7 @@ SCENARIO("Test encryption and decryption on various file types",
                                 static_cast<std::size_t>(etd.keySize),
                                 etd.modeOfOperation, etd.compress);
 
-        Q_ASSERT(encrypted);
+        REQUIRE(encrypted);
 
         QFile inFile(etd.encryptedFilePath);
 
@@ -152,7 +152,7 @@ SCENARIO("Test encryption and decryption on various file types",
                                 keySizeString, pbkdfSaltString, keySaltString,
                                 ivSaltString);
 
-        Q_ASSERT(decrypted);
+        REQUIRE(decrypted);
 
         // Compare initial file with decrypted file
         const bool equivalentTest =
