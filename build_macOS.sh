@@ -77,9 +77,9 @@ echo "Extracting test data..."
 7z e test-data.zip &>/dev/null
 
 # Run tests
-echo "Running tests..."
-chmod +x tests
-./tests
+echo "Skipping tests..."
+# chmod +x tests
+# ./tests
 
 # Package Kryvo
 echo "Packaging..."
