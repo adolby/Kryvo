@@ -710,15 +710,15 @@ bool Kryvo::BotanProvider::encrypt(const std::size_t id,
                     modeOfOperation, compress);
 }
 
-bool  Kryvo::BotanProvider::decrypt(const std::size_t id,
-                                    const QString& passphrase,
-                                    const QString& inFilePath,
-                                    const QString& outFilePath,
-                                    const QString& algorithmNameString,
-                                    const QString& keySizeString,
-                                    const QString& pbkdfSaltString,
-                                    const QString& keySaltString,
-                                    const QString& ivSaltString) {
+bool Kryvo::BotanProvider::decrypt(const std::size_t id,
+                                   const QString& passphrase,
+                                   const QString& inFilePath,
+                                   const QString& outFilePath,
+                                   const QString& algorithmNameString,
+                                   const QString& keySizeString,
+                                   const QString& pbkdfSaltString,
+                                   const QString& keySaltString,
+                                   const QString& ivSaltString) {
   Q_D(BotanProvider);
 
   return d->decrypt(id, passphrase, inFilePath, outFilePath,

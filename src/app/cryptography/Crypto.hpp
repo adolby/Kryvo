@@ -74,7 +74,7 @@ class Crypto : public QObject {
    * \param modeOfOperation String representing mode of operation
    * \param compress Boolean representing compression mode
    */
-  void encrypt(std::size_t id,
+  bool encrypt(std::size_t id,
                const QString& passphrase,
                const QString& inputFilePath,
                const QString& outputFilePath,
@@ -97,7 +97,7 @@ class Crypto : public QObject {
    * \param keySaltString Key salt
    * \param ivSaltString Initialization vector salt
    */
-  void decrypt(std::size_t id,
+  bool decrypt(std::size_t id,
                const QString& passphrase,
                const QString& inputFilePath,
                const QString& outputFilePath,

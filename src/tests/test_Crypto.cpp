@@ -71,7 +71,7 @@ SCENARIO("Test encryption and decryption on various file types",
                               QStringLiteral("test3 (2).zip"));
 
   Kryvo::DispatcherState state;
-  Kryvo::Crypto cryptography(&state);
+  Kryvo::Crypto cryptographer(&state);
 
   for (const EncryptionTestData& etd : testDataVector) {
     GIVEN("Test file: " + etd.inputFilePath.toStdString()) {
@@ -88,9 +88,13 @@ SCENARIO("Test encryption and decryption on various file types",
         const std::size_t id = 0;
 
         // Test encryption and decryption
-        cryptography.encrypt(id, etd.passphrase, etd.inputFilePath, QString(),
-                             etd.cipher, static_cast<std::size_t>(etd.keySize),
-                             etd.modeOfOperation, etd.compress);
+        const bool encrypted =
+          cryptographer.encrypt(id, etd.passphrase, etd.inputFilePath,
+                                etd.encryptedFilePath, etd.cipher,
+                                static_cast<std::size_t>(etd.keySize),
+                                etd.modeOfOperation, etd.compress);
+
+        Q_ASSERT(encrypted);
 
         QFile inFile(etd.encryptedFilePath);
 
@@ -134,7 +138,7 @@ SCENARIO("Test encryption and decryption on various file types",
         const QByteArray& footerString = readLine(&inFile);
 
         if (footerString !=
-          QByteArrayLiteral("---------------------------------")) {
+            QByteArrayLiteral("---------------------------------")) {
           const QString& headerError = QStringLiteral("Footer error in %1");
 
           FAIL(headerError.arg(etd.encryptedFilePath).toStdString());
@@ -142,9 +146,13 @@ SCENARIO("Test encryption and decryption on various file types",
 
         inFile.close();
 
-        cryptography.decrypt(id, etd.passphrase, etd.encryptedFilePath,
-                             QString(), algorithmNameString, keySizeString,
-                             pbkdfSaltString, keySaltString, ivSaltString);
+        const bool decrypted =
+          cryptographer.decrypt(id, etd.passphrase, etd.encryptedFilePath,
+                                etd.decryptedFilePath, algorithmNameString,
+                                keySizeString, pbkdfSaltString, keySaltString,
+                                ivSaltString);
+
+        Q_ASSERT(decrypted);
 
         // Compare initial file with decrypted file
         const bool equivalentTest =

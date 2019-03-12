@@ -18,12 +18,12 @@ class Kryvo::CryptoPrivate {
 
   void loadProviders();
 
-  void encryptFile(std::size_t id, const QString& passphrase,
+  bool encryptFile(std::size_t id, const QString& passphrase,
                    const QString& inputFilePath, const QString& outputPath,
                    const QString& cipher, std::size_t inputKeySize,
                    const QString& modeOfOperation, bool compress);
 
-  void decryptFile(std::size_t id, const QString& passphrase,
+  bool decryptFile(std::size_t id, const QString& passphrase,
                    const QString& inputFilePath, const QString& outputPath,
                    const QString& algorithmNameString,
                    const QString& keySizeString, const QString& pbkdfSaltString,
@@ -127,9 +127,11 @@ void Kryvo::CryptoPrivate::loadProviders() {
 //      }
     }
   }
+
+  Q_ASSERT(provider);
 }
 
-void Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
+bool Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
                                        const QString& passphrase,
                                        const QString& inputFilePath,
                                        const QString& outputFilePath,
@@ -142,14 +144,14 @@ void Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
   if (!provider) {
     emit q->fileFailed(id);
     emit q->errorMessage(Constants::messages[11]);
-    return;
+    return false;
   }
 
-  provider->encrypt(id, passphrase, inputFilePath, outputFilePath, cipher,
-                    keySize, modeOfOperation, compress);
+  return provider->encrypt(id, passphrase, inputFilePath, outputFilePath,
+                           cipher, keySize, modeOfOperation, compress);
 }
 
-void Kryvo::CryptoPrivate::decryptFile(const std::size_t id,
+bool Kryvo::CryptoPrivate::decryptFile(const std::size_t id,
                                        const QString& passphrase,
                                        const QString& inputFilePath,
                                        const QString& outputFilePath,
@@ -163,26 +165,31 @@ void Kryvo::CryptoPrivate::decryptFile(const std::size_t id,
   if (!provider) {
     emit q->errorMessage(Constants::messages[11]);
     emit q->fileFailed(id);
-    return;
+    return false;
   }
 
-  provider->decrypt(id, passphrase, inputFilePath, outputFilePath,
-                    algorithmNameString, keySizeString, pbkdfSaltString,
-                    keySaltString, ivSaltString);
+  return provider->decrypt(id, passphrase, inputFilePath, outputFilePath,
+                           algorithmNameString, keySizeString, pbkdfSaltString,
+                           keySaltString, ivSaltString);
 }
 
-void Kryvo::Crypto::encrypt(const std::size_t id, const QString& passphrase,
+bool Kryvo::Crypto::encrypt(const std::size_t id, const QString& passphrase,
                             const QString& inputFilePath,
                             const QString& outputFilePath,
                             const QString& cipher, std::size_t inputKeySize,
                             const QString& modeOfOperation, bool compress) {
   Q_D(Crypto);
 
-  d->encryptFile(id, passphrase, inputFilePath, outputFilePath, cipher,
-                 inputKeySize, modeOfOperation, compress);
+  const bool encrypted = d->encryptFile(id, passphrase, inputFilePath,
+                                        outputFilePath, cipher, inputKeySize,
+                                        modeOfOperation, compress);
+
+  Q_ASSERT(encrypted);
+
+  return encrypted;
 }
 
-void Kryvo::Crypto::decrypt(const std::size_t id, const QString& passphrase,
+bool Kryvo::Crypto::decrypt(const std::size_t id, const QString& passphrase,
                             const QString& inputFilePath,
                             const QString& outputPath,
                             const QString& algorithmNameString,
@@ -192,7 +199,12 @@ void Kryvo::Crypto::decrypt(const std::size_t id, const QString& passphrase,
                             const QString& ivSaltString) {
   Q_D(Crypto);
 
-  d->decryptFile(id, passphrase, inputFilePath, outputPath,
-                 algorithmNameString, keySizeString, pbkdfSaltString,
-                 keySaltString, ivSaltString);
+  const bool decrypted = d->decryptFile(id, passphrase, inputFilePath,
+                                        outputPath, algorithmNameString,
+                                        keySizeString, pbkdfSaltString,
+                                        keySaltString, ivSaltString);
+
+  Q_ASSERT(decrypted);
+
+  return decrypted;
 }
