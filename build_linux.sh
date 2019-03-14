@@ -7,7 +7,7 @@ qt_install_dir=/opt
 
 # Get Qt
 echo "Installing Qt..."
-cd ${qt_install_dir}
+cd "${qt_install_dir}"
 echo "Downloading Qt files..."
 wget https://github.com/adolby/qt-more-builds/releases/download/5.12.1/qt-opensource-5.12.1-linux-x86_64.7z
 echo "Extracting Qt files..."
@@ -38,15 +38,15 @@ PATH=${qt_install_dir}/Qt/5.12.1/gcc_64/bin/:${qt_install_dir}/Qt/Tools/QtInstal
 # cp botan_all.cpp ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all.cpp
 # cp botan_all.h ${project_dir}/src/cryptography/botan/linux/gcc/x86_64/botan_all.h
 
-cd ${project_dir}
+cd "${project_dir}"
 
 # Clean build directory
-rm -rf ${project_dir}/build/linux/
+rm -rf "${project_dir}/build/linux/"
 
-mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/
-mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/lib/
-mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/lib/zlib/
-mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/test/
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/lib/"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/lib/zlib/"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/test/"
 
 # Build Kryvo
 echo "Building Kryvo..."
@@ -60,7 +60,7 @@ make
 
 # Copy Qt dependencies for test app
 echo "Copy Qt dependencies to test app..."
-cd ${project_dir}/build/linux/gcc/x86_64/release/test/
+cd "${project_dir}/build/linux/gcc/x86_64/release/test/"
 cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
 cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
 cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
@@ -69,14 +69,14 @@ cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Test.so.5.12.1" "libQt5Test.so.
 
 # Copy plugins for test app
 echo "Copy plugins for test app..."
-mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/
-cd ${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/
-cp ${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so libbotan.so
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
+cd "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
+cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
 
 # Copy test data
 echo "Copying test data archive..."
-cd ${project_dir}/build/linux/gcc/x86_64/release/test/
-cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
+cd "${project_dir}/build/linux/gcc/x86_64/release/test/"
+cp "${project_dir}/src/tests/data/test-data.zip" test-data.zip
 
 echo "Extracting test data..."
 7z x test-data.zip &> /dev/null
@@ -91,11 +91,11 @@ echo "Packaging..."
 
 # Copy plugins for app
 echo "Copy plugins to app..."
-mkdir -p ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/plugins/cryptography/botan/
-cd ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/plugins/cryptography/botan/
-cp ${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so libbotan.so
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/plugins/cryptography/botan/"
+cd "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/plugins/cryptography/botan/"
+cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
 
-cd ${project_dir}/build/linux/gcc/x86_64/release/Kryvo/
+cd "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/"
 
 rm -rf moc
 rm -rf obj
