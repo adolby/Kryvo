@@ -15,12 +15,12 @@ echo "Extracting Qt files..."
 
 # Install Qt Installer Framework
 echo "Installing Qt Installer Framework..."
-wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.0.4/qt-installer-framework-opensource-3.0.4-linux.7z
-7z x qt-installer-framework-opensource-3.0.4-linux.7z &> /dev/null
+wget https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.0.6/qt-installer-framework-opensource-3.0.6-linux.7z
+7z x qt-installer-framework-opensource-3.0.6-linux.7z &> /dev/null
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
-PATH=${qt_install_dir}/Qt/5.12.1/gcc_64/bin/:${qt_install_dir}/Qt/QtIFW3.0.4/bin/:${PATH}
+PATH=${qt_install_dir}/Qt/5.12.1/gcc_64/bin/:${qt_install_dir}/Qt/Tools/QtInstallerFramework/3.0/bin/:${PATH}
 
 # Get Botan
 # echo "Installing Botan..."
