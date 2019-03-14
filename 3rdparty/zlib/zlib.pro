@@ -65,11 +65,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/android/debug/lib/zlib/
+      DESTDIR = $$PWD/../../build/android/debug/lib/zlib/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/android/release/lib/zlib/
+      DESTDIR = $$PWD/../../build/android/release/lib/zlib/
     }
   } # End Android
 
@@ -80,11 +80,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/linux/clang/x86_64/debug/lib/zlib/
+      DESTDIR = $$PWD/../../build/linux/clang/x86_64/debug/lib/zlib/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/linux/clang/x86_64/release/lib/zlib/
+      DESTDIR = $$PWD/../../build/linux/clang/x86_64/release/lib/zlib/
     }
   } # End clang
 
@@ -95,11 +95,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/linux/gcc/x86_64/debug/lib/zlib/
+      DESTDIR = $$PWD/../../build/linux/gcc/x86_64/debug/lib/zlib/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/linux/gcc/x86_64/release/lib/zlib/
+      DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/lib/zlib/
     }
   } # End g++
 } # End Linux
@@ -114,11 +114,11 @@ darwin {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/iOS/debug/lib/zlib/
+      DESTDIR = $$PWD/../../build/iOS/debug/lib/zlib/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/iOS/release/lib/zlib/
+      DESTDIR = $$PWD/../../build/iOS/release/lib/zlib/
     }
   } # End ios
 
@@ -128,11 +128,11 @@ darwin {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/macOS/clang/x86_64/debug/lib/zlib/
+      DESTDIR = $$PWD/../../build/macOS/clang/x86_64/debug/lib/zlib/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/macOS/clang/x86_64/release/lib/zlib/
+      DESTDIR = $$PWD/../../build/macOS/clang/x86_64/release/lib/zlib/
     }
   } # End macos
 } # End darwin
@@ -145,11 +145,11 @@ win32 {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/windows/mingw/x86_32/debug/lib/zlib/
+      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/debug/lib/zlib/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/windows/mingw/x86_32/release/lib/zlib/
+      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/release/lib/zlib/
     }
   }
 
@@ -163,11 +163,11 @@ win32 {
 
       debug {
         message(Debug)
-        DESTDIR = ../../build/windows/msvc/x86_64/debug/lib/zlib/
+        DESTDIR = $$PWD/../../build/windows/msvc/x86_64/debug/lib/zlib/
       }
       release {
         message(Release)
-        DESTDIR = ../../build/windows/msvc/x86_64/release/lib/zlib/
+        DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/lib/zlib/
       }
     }
   }
