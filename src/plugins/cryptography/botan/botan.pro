@@ -1,4 +1,4 @@
-include(../../../../defaults.pri)
+include($$PWD/../../../../defaults.pri)
 
 QT += core
 
@@ -27,13 +27,13 @@ CONFIG(release, debug|release) {
 
 SOURCES += \
   BotanProvider.cpp \
-  ../../../app/Constants.cpp \
-  ../../../app/DispatcherState.cpp
+  $$PWD/../../../app/Constants.cpp \
+  $$PWD/../../../app/DispatcherState.cpp
 
 HEADERS += \
   BotanProvider.hpp \
-  ../../../app/Constants.hpp \
-  ../../../app/DispatcherState.hpp
+  $$PWD/../../../app/Constants.hpp \
+  $$PWD/../../../app/DispatcherState.hpp
 
 LIBS += -lz
 
@@ -55,11 +55,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/android/debug/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/android/debug/plugins/cryptography/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/android/release/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/android/release/plugins/cryptography/botan
     }
   } # End android
 
@@ -82,11 +82,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/linux/clang/x86_64/debug/plugins/cryptograpy/botan
+      DESTDIR = $$PWD/../../../../build/linux/clang/x86_64/debug/plugins/cryptograpy/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/linux/clang/x86_64/release/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/linux/clang/x86_64/release/plugins/cryptography/botan
     }
   } # End clang
 
@@ -109,11 +109,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/linux/gcc/x86_64/debug/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/linux/gcc/x86_64/debug/plugins/cryptography/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/linux/gcc/x86_64/release/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/linux/gcc/x86_64/release/plugins/cryptography/botan
     }
   } # End g++
 } # End linux
@@ -134,11 +134,11 @@ darwin {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/iOS/debug/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/iOS/debug/plugins/cryptography/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/iOS/release/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/iOS/release/plugins/cryptography/botan
     }
   } # End ios
 
@@ -163,11 +163,11 @@ darwin {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/macOS/clang/x86_64/debug/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/macOS/clang/x86_64/debug/plugins/cryptography/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/macOS/clang/x86_64/release/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/macOS/clang/x86_64/release/plugins/cryptography/botan
     }
   } # End macos
 } # End darwin
@@ -196,11 +196,11 @@ win32 {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/windows/mingw/x86_32/debug/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/windows/mingw/x86_32/debug/plugins/cryptography/botan
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/windows/mingw/x86_32/release/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/windows/mingw/x86_32/release/plugins/cryptography/botan
     }
   } # End win32-g++
 
@@ -230,11 +230,11 @@ win32 {
 
       debug {
         message(Debug)
-        DESTDIR = ../../../../build/windows/msvc/x86_64/debug/plugins/cryptography/botan
+        DESTDIR = $$PWD/../../../../build/windows/msvc/x86_64/debug/plugins/cryptography/botan
       }
       release {
         message(Release)
-        DESTDIR = ../../../../build/windows/msvc/x86_64/release/plugins/cryptography/botan
+        DESTDIR = $$PWD/../../../../build/windows/msvc/x86_64/release/plugins/cryptography/botan
       }
     }
   } # End win32-msvc

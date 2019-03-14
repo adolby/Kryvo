@@ -25,17 +25,17 @@ CONFIG(release, debug|release) {
 
 SOURCES += \
   OpenSslProvider.cpp \
-  ../../../app/Constants.cpp \
-  ../../../app/cryptography/CryptoState.cpp
+  $$PWD/../../../app/Constants.cpp \
+  $$PWD/../../../app/cryptography/CryptoState.cpp
 
 HEADERS += \
   OpenSslProvider.hpp \
-  ../../../app/Constants.hpp \
-  ../../../app/cryptography/CryptoState.hpp
+  $$PWD/../../../app/Constants.hpp \
+  $$PWD/../../../app/cryptography/CryptoState.hpp
 
 INCLUDEPATH += \
-  ../../../app/ \
-  ../../../lib/zlib/
+  $$PWD/../../../app/ \
+  $$PWD/../../../lib/zlib/
 
 # Platform-specific configuration
 linux {
@@ -49,11 +49,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/android/debug/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../../../build/android/debug/plugins/cryptography/openssl
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/android/release/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../../../build/android/release/plugins/cryptography/openssl
     }
   } # End Android
 
@@ -64,11 +64,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/linux/clang/x86_64/debug/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../../../build/linux/clang/x86_64/debug/plugins/cryptography/openssl
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/linux/clang/x86_64/release/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../../../build/linux/clang/x86_64/release/plugins/cryptography/openssl
     }
   } # End clang
 
@@ -79,11 +79,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/linux/gcc/x86_64/debug/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../../../build/linux/gcc/x86_64/debug/plugins/cryptography/openssl
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/linux/gcc/x86_64/release/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../../../build/linux/gcc/x86_64/release/plugins/cryptography/openssl
     }
   } # End g++
 } # End Linux
@@ -103,11 +103,11 @@ mac {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/iOS/debug/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../../../build/iOS/debug/plugins/cryptography/openssl
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/iOS/release/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../../../build/iOS/release/plugins/cryptography/openssl
     }
   } # End iOS
 
@@ -117,11 +117,11 @@ mac {
 
     debug {
       message(Debug)
-      DESTDIR = ../../../../build/macOS/clang/x86_64/debug/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../../../build/macOS/clang/x86_64/debug/plugins/cryptography/openssl
     }
     release {
       message(Release)
-      DESTDIR = ../../../../build/macOS/clang/x86_64/release/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../../../build/macOS/clang/x86_64/release/plugins/cryptography/openssl
     }
   } # End macOS
 } # End Mac
@@ -134,11 +134,11 @@ win32 {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/windows/mingw/x86_32/debug/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/debug/plugins/cryptography/openssl
     }
     release {
       message(Release)
-      DESTDIR = ../../build/windows/mingw/x86_32/release/plugins/cryptography/openssl
+      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/release/plugins/cryptography/openssl
     }
   }
 
@@ -154,11 +154,11 @@ win32 {
 
       debug {
         message(Debug)
-        DESTDIR = ../../../../build/windows/msvc/x86_64/debug/plugins/cryptography/openssl
+        DESTDIR = $$PWD/../../../../build/windows/msvc/x86_64/debug/plugins/cryptography/openssl
       }
       release {
         message(Release)
-        DESTDIR = ../../../../build/windows/msvc/x86_64/release/plugins/cryptography/openssl
+        DESTDIR = $$PWD/../../../../build/windows/msvc/x86_64/release/plugins/cryptography/openssl
       }
     }
   }

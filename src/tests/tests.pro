@@ -1,4 +1,4 @@
-include(../../defaults.pri)
+include($$PWD/../../defaults.pri)
 
 TARGET = tests
 
@@ -28,11 +28,11 @@ CONFIG(release, debug|release) {
 }
 
 SOURCES += \
-  ../app/Constants.cpp \
-  ../app/DispatcherState.cpp \
-  ../app/Dispatcher.cpp \
-  ../app/archive/Archiver.cpp \
-  ../app/cryptography/Crypto.cpp \
+  $$PWD/../app/Constants.cpp \
+  $$PWD/../app/DispatcherState.cpp \
+  $$PWD/../app/Dispatcher.cpp \
+  $$PWD/../app/archive/Archiver.cpp \
+  $$PWD/../app/cryptography/Crypto.cpp \
   test_Crypto.cpp \
   test_Archiver.cpp \
   FileOperations.cpp \
@@ -40,12 +40,12 @@ SOURCES += \
   main.cpp
 
 HEADERS += \
-  ../app/Constants.hpp \
-  ../app/DispatcherState.hpp \
-  ../app/Dispatcher.hpp \
-  ../app/archive/Archiver.hpp \
-  ../app/cryptography/Crypto.hpp \
-  ../app/utility/Thread.hpp \
+  $$PWD/../app/Constants.hpp \
+  $$PWD/../app/DispatcherState.hpp \
+  $$PWD/../app/Dispatcher.hpp \
+  $$PWD/../app/archive/Archiver.hpp \
+  $$PWD/../app/cryptography/Crypto.hpp \
+  $$PWD/../app/utility/Thread.hpp \
   FileOperations.hpp
 
 LIBS += -lz
@@ -66,11 +66,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/android/debug/test/
+      DESTDIR = $$PWD/../../build/android/debug/test/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/android/release/test/
+      DESTDIR = $$PWD/../../build/android/release/test/
     }
   } # End android
 
@@ -81,11 +81,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/linux/clang/x86_64/debug/test/
+      DESTDIR = $$PWD/../../build/linux/clang/x86_64/debug/test/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/linux/clang/x86_64/release/test/
+      DESTDIR = $$PWD/../../build/linux/clang/x86_64/release/test/
     }
   } # End clang
 
@@ -96,11 +96,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/linux/gcc/x86_64/debug/test/
+      DESTDIR = $$PWD/../../build/linux/gcc/x86_64/debug/test/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/linux/gcc/x86_64/release/test/
+      DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/test/
     }
   } # End g++
 } # End linux
@@ -115,11 +115,11 @@ darwin {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/iOS/debug/test/
+      DESTDIR = $$PWD/../../build/iOS/debug/test/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/iOS/release/test/
+      DESTDIR = $$PWD/../../build/iOS/release/test/
     }
   } # End ios
 
@@ -129,11 +129,11 @@ darwin {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/macOS/clang/x86_64/debug/test/
+      DESTDIR = $$PWD/../../build/macOS/clang/x86_64/debug/test/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/macOS/clang/x86_64/release/test/
+      DESTDIR = $$PWD/../../build/macOS/clang/x86_64/release/test/
     }
   } # End macos
 } # End darwin
@@ -146,11 +146,11 @@ win32 {
 
     debug {
       message(Debug)
-      DESTDIR = ../../build/windows/mingw/x86/debug/test/
+      DESTDIR = $$PWD/../../build/windows/mingw/x86/debug/test/
     }
     release {
       message(Release)
-      DESTDIR = ../../build/windows/mingw/x86/release/test/
+      DESTDIR = $$PWD/../../build/windows/mingw/x86/release/test/
     }
   } # End win32-g++
 
@@ -164,11 +164,11 @@ win32 {
 
       debug {
         message(Debug)
-        DESTDIR = ../../build/windows/msvc/x86_64/debug/test/
+        DESTDIR = $$PWD/../../build/windows/msvc/x86_64/debug/test/
       }
       release {
         message(Release)
-        DESTDIR = ../../build/windows/msvc/x86_64/release/test/
+        DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/test/
       }
     }
   } # End win32-msvc
