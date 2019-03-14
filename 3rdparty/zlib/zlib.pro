@@ -176,5 +176,5 @@ win32 {
 OBJECTS_DIR = $${DESTDIR}/obj
 MOC_DIR = $${DESTDIR}/moc
 
-message(OBJECTS_DIR)
-message(MOC_DIR)
+message($$OBJECTS_DIR)
+message($$MOC_DIR)
