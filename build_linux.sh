@@ -11,12 +11,12 @@ cd "${qt_install_dir}"
 echo "Downloading Qt files..."
 wget -N https://github.com/adolby/qt-more-builds/releases/download/5.12.1/qt-opensource-5.12.1-linux-x86_64.7z
 echo "Extracting Qt files..."
-7z x qt-opensource-5.12.1-linux-x86_64.7z
+7z x qt-opensource-5.12.1-linux-x86_64.7z &> /dev/null
 
 # Install Qt Installer Framework
 echo "Installing Qt Installer Framework..."
 wget -N https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.0.6/qt-installer-framework-opensource-3.0.6-linux.7z
-7z x qt-installer-framework-opensource-3.0.6-linux.7z
+7z x qt-installer-framework-opensource-3.0.6-linux.7z &> /dev/null
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
