@@ -2,11 +2,10 @@
 <Package>
     <DisplayName>Kryvo</DisplayName>
     <Description>Install Kryvo.</Description>
-    <Version>0.9.9</Version>
-    <ReleaseDate>2016-09-19</ReleaseDate>
+    <Version>1.0.0</Version>
+    <ReleaseDate>2019-03-20</ReleaseDate>
     <Licenses>
         <License name="MIT License" file="Kryvo License" />
     </Licenses>
-    <Default>script</Default>
-    <Script>installscript.qs</Script>
+    <Default>true</Default>
 </Package>

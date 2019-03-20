@@ -3,7 +3,7 @@
     <DisplayName>Kryvo</DisplayName>
     <Description>Install Kryvo.</Description>
     <Version>1.0.0</Version>
-    <ReleaseDate>2018-04-30</ReleaseDate>
+    <ReleaseDate>2019-03-20</ReleaseDate>
     <Licenses>
         <License name="MIT License" file="Kryvo License" />
     </Licenses>
