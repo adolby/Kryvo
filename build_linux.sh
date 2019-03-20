@@ -1,9 +1,11 @@
 #!/bin/bash
 
+# Preconditions: chrpath is required
+
 set -o errexit -o nounset
 
 project_dir=$(pwd)
-qt_install_dir=/opt
+qt_install_dir=~
 
 # Get Qt
 echo "Installing Qt..."
@@ -11,12 +13,12 @@ cd "${qt_install_dir}"
 echo "Downloading Qt files..."
 wget -N https://github.com/adolby/qt-more-builds/releases/download/5.12.1/qt-opensource-5.12.1-linux-x86_64.7z
 echo "Extracting Qt files..."
-7z x qt-opensource-5.12.1-linux-x86_64.7z &> /dev/null
+7z x qt-opensource-5.12.1-linux-x86_64.7z -aos &> /dev/null
 
 # Install Qt Installer Framework
 echo "Installing Qt Installer Framework..."
 wget -N https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.0.6/qt-installer-framework-opensource-3.0.6-linux.7z
-7z x qt-installer-framework-opensource-3.0.6-linux.7z &> /dev/null
+7z x qt-installer-framework-opensource-3.0.6-linux.7z -aos &> /dev/null
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
@@ -44,6 +46,9 @@ cd "${project_dir}"
 rm -rf "${project_dir}/build/linux/"
 
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/moc"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/qrc"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/obj"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/lib/"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/lib/zlib/"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/test/"
@@ -79,7 +84,7 @@ cd "${project_dir}/build/linux/gcc/x86_64/release/test/"
 cp "${project_dir}/src/tests/data/test-data.zip" test-data.zip
 
 echo "Extracting test data..."
-7z x test-data.zip &> /dev/null
+7z e test-data.zip -aos &> /dev/null
 
 # Run tests
 echo "Running tests..."
@@ -130,6 +135,7 @@ mkdir themes
 cp "${project_dir}/resources/stylesheets/kryvo.qss" "themes/kryvo.qss"
 
 echo "Copying files for installer..."
+mkdir -p "${project_dir}/installer/linux/packages/io.kryvo/data/"
 cp -R * "${project_dir}/installer/linux/packages/io.kryvo/data/"
 
 TAG_NAME="${TAG_NAME:-dev}"

@@ -1,6 +1,6 @@
 #!/bin/sh
-DYLD_FRAMEWORK_PATH=/Users/andrew/Qt/5.9.7/clang_64/lib${DYLD_FRAMEWORK_PATH:+:$DYLD_FRAMEWORK_PATH}
-export DYLD_FRAMEWORK_PATH
-QT_PLUGIN_PATH=/Users/andrew/Qt/5.9.7/clang_64/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}
+LD_LIBRARY_PATH=/home/andrew/Qt/5.12.1/gcc_64/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH
+QT_PLUGIN_PATH=/home/andrew/Qt/5.12.1/gcc_64/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}
 export QT_PLUGIN_PATH
 exec "$@"

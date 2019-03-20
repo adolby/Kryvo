@@ -1,5 +1,5 @@
 /*
-* Botan 2.7.0 Amalgamation
+* Botan 2.9.0 Amalgamation
 * (C) 1999-2018 The Botan Authors
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -8,6 +8,7 @@
 #ifndef BOTAN_AMALGAMATION_INTERNAL_H_
 #define BOTAN_AMALGAMATION_INTERNAL_H_
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <condition_variable>
@@ -21,7 +22,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -57,14 +58,32 @@ class Barrier final
 namespace Botan {
 
 /**
+* If top bit of arg is set, return ~0. Otherwise return 0.
+*/
+template<typename T>
+inline T expand_top_bit(T a)
+   {
+   return static_cast<T>(0) - (a >> (sizeof(T)*8-1));
+   }
+
+/**
+* If arg is zero, return ~0. Otherwise return 0
+*/
+template<typename T>
+inline T ct_is_zero(T x)
+   {
+   return expand_top_bit<T>(~x & (x - 1));
+   }
+
+/**
 * Power of 2 test. T should be an unsigned integer type
 * @param arg an integer value
 * @return true iff arg is 2^n for some n > 0
 */
 template<typename T>
-inline bool is_power_of_2(T arg)
+inline constexpr bool is_power_of_2(T arg)
    {
-   return ((arg != 0 && arg != 1) && ((arg & (arg-1)) == 0));
+   return (arg != 0) && (arg != 1) && ((arg & static_cast<T>(arg-1)) == 0);
    }
 
 /**
@@ -76,25 +95,18 @@ inline bool is_power_of_2(T arg)
 template<typename T>
 inline size_t high_bit(T n)
    {
-   for(size_t i = 8*sizeof(T); i > 0; --i)
-      if((n >> (i - 1)) & 0x01)
-         return i;
-   return 0;
-   }
+   size_t hb = 0;
 
-/**
-* Return the index of the lowest set bit
-* T is an unsigned integer type
-* @param n an integer value
-* @return index of the lowest set bit in n
-*/
-template<typename T>
-inline size_t low_bit(T n)
-   {
-   for(size_t i = 0; i != 8*sizeof(T); ++i)
-      if((n >> i) & 0x01)
-         return (i + 1);
-   return 0;
+   for(size_t s = 8*sizeof(T) / 2; s > 0; s /= 2)
+      {
+      const size_t z = s * ((~ct_is_zero(n >> s)) & 1);
+      hb += z;
+      n >>= z;
+      }
+
+   hb += n;
+
+   return hb;
    }
 
 /**
@@ -105,27 +117,18 @@ inline size_t low_bit(T n)
 template<typename T>
 inline size_t significant_bytes(T n)
    {
-   for(size_t i = 0; i != sizeof(T); ++i)
-      if(get_byte(i, n))
-         return sizeof(T)-i;
-   return 0;
-   }
+   size_t b = 0;
 
-/**
-* Compute Hamming weights
-* @param n an integer value
-* @return number of bits in n set to 1
-*/
-template<typename T>
-inline size_t hamming_weight(T n)
-   {
-   const uint8_t NIBBLE_WEIGHTS[] = {
-      0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
+   for(size_t s = 8*sizeof(n) / 2; s >= 8; s /= 2)
+      {
+      const size_t z = s * (~ct_is_zero(n >> s) & 1);
+      b += z/8;
+      n >>= z;
+      }
 
-   size_t weight = 0;
-   for(size_t i = 0; i != 2*sizeof(T); ++i)
-      weight += NIBBLE_WEIGHTS[(n >> (4*i)) & 0x0F];
-   return weight;
+   b += (n != 0);
+
+   return b;
    }
 
 /**
@@ -136,47 +139,22 @@ inline size_t hamming_weight(T n)
 template<typename T>
 inline size_t ctz(T n)
    {
-   for(size_t i = 0; i != 8*sizeof(T); ++i)
-      if((n >> i) & 0x01)
-         return i;
-   return 8*sizeof(T);
+   /*
+   * If n == 0 then this function will compute 8*sizeof(T)-1, so
+   * initialize lb to 1 if n == 0 to produce the expected result.
+   */
+   size_t lb = ct_is_zero(n) & 1;
+
+   for(size_t s = 8*sizeof(T) / 2; s > 0; s /= 2)
+      {
+      const T mask = (static_cast<T>(1) << s) - 1;
+      const size_t z = s * (ct_is_zero(n & mask) & 1);
+      lb += z;
+      n >>= z;
+      }
+
+   return lb;
    }
-
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-
-template<>
-inline size_t ctz(uint32_t n)
-   {
-   if(n == 0)
-      return 32;
-   return __builtin_ctz(n);
-   }
-
-template<>
-inline size_t ctz(uint64_t n)
-   {
-   if(n == 0)
-      return 64;
-   return __builtin_ctzll(n);
-   }
-
-template<>
-inline size_t high_bit(uint32_t x)
-   {
-   if(x == 0)
-      return 0;
-   return (32 - __builtin_clz(x));
-   }
-
-template<>
-inline size_t high_bit(uint64_t x)
-   {
-   if(x == 0)
-      return 0;
-   return (64 - __builtin_clzll(x));
-   }
-
-#endif
 
 template<typename T>
 size_t ceil_log2(T x)
@@ -194,6 +172,18 @@ size_t ceil_log2(T x)
       }
 
    return result;
+   }
+
+// Potentially variable time ctz used for OCB
+inline size_t var_ctz32(uint32_t n)
+   {
+#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+   if(n == 0)
+      return 32;
+   return __builtin_ctz(n);
+#else
+   return ctz<uint32_t>(n);
+#endif
    }
 
 }
@@ -507,10 +497,33 @@ size_t base_encode(Base&& base,
    return output_produced;
    }
 
+
+template <typename Base>
+std::string base_encode_to_string(Base&& base, const uint8_t input[], size_t input_length)
+   {
+   const size_t output_length = base.encode_max_output(input_length);
+   std::string output(output_length, 0);
+
+   size_t consumed = 0;
+   size_t produced = 0;
+
+   if(output_length > 0)
+      {
+      produced = base_encode(base, &output.front(),
+                                   input, input_length,
+                                   consumed, true);
+      }
+
+   BOTAN_ASSERT_EQUAL(consumed, input_length, "Consumed the entire input");
+   BOTAN_ASSERT_EQUAL(produced, output.size(), "Produced expected size");
+
+   return output;
+   }
+
 /**
 * Perform decoding using the base provided
 * @param base object giving access to the encodings specifications
-* @param output an array of at least base.decode_max_output bytes
+* @param output an array of at least Base::decode_max_output bytes
 * @param input some base input
 * @param input_length length of input in bytes
 * @param input_consumed is an output parameter which says how many
@@ -588,79 +601,35 @@ size_t base_decode(Base&& base,
    return written;
    }
 
-}
-
-namespace Botan {
-
-/*
-* Allocation Size Tracking Helper for Zlib/Bzlib/LZMA
-*/
-class Compression_Alloc_Info final
+template<typename Base>
+size_t base_decode_full(Base&& base, uint8_t output[], const char input[], size_t input_length, bool ignore_ws)
    {
-   public:
-      template<typename T>
-      static void* malloc(void* self, T n, T size)
-         {
-         return static_cast<Compression_Alloc_Info*>(self)->do_malloc(n, size);
-         }
+   size_t consumed = 0;
+   const size_t written = base_decode(base, output, input, input_length, consumed, true, ignore_ws);
 
-      static void free(void* self, void* ptr)
-         {
-         static_cast<Compression_Alloc_Info*>(self)->do_free(ptr);
-         }
+   if(consumed != input_length)
+      {
+      throw Invalid_Argument(base.name() + " decoding failed, input did not have full bytes");
+      }
 
-   private:
-      void* do_malloc(size_t n, size_t size);
-      void do_free(void* ptr);
+   return written;
+   }
 
-      std::unordered_map<void*, size_t> m_current_allocs;
-   };
-
-/**
-* Wrapper for Zlib/Bzlib/LZMA stream types
-*/
-template<typename Stream, typename ByteType>
-class Zlib_Style_Stream : public Compression_Stream
+template<typename Vector, typename Base>
+Vector base_decode_to_vec(Base&& base,
+                          const char input[],
+                          size_t input_length,
+                          bool ignore_ws)
    {
-   public:
-      void next_in(uint8_t* b, size_t len) override
-         {
-         m_stream.next_in = reinterpret_cast<ByteType*>(b);
-         m_stream.avail_in = len;
-         }
+   const size_t output_length = base.decode_max_output(input_length);
+   Vector bin(output_length);
 
-      void next_out(uint8_t* b, size_t len) override
-         {
-         m_stream.next_out = reinterpret_cast<ByteType*>(b);
-         m_stream.avail_out = len;
-         }
+   const size_t written =
+      base_decode_full(base, bin.data(), input, input_length, ignore_ws);
 
-      size_t avail_in() const override { return m_stream.avail_in; }
-
-      size_t avail_out() const override { return m_stream.avail_out; }
-
-      Zlib_Style_Stream()
-         {
-         clear_mem(&m_stream, 1);
-         m_allocs.reset(new Compression_Alloc_Info);
-         }
-
-      ~Zlib_Style_Stream()
-         {
-         clear_mem(&m_stream, 1);
-         m_allocs.reset();
-         }
-
-   protected:
-      typedef Stream stream_t;
-
-      stream_t* streamp() { return &m_stream; }
-
-      Compression_Alloc_Info* alloc() { return m_allocs.get(); }
-   private:
-      stream_t m_stream;
-      std::unique_ptr<Compression_Alloc_Info> m_allocs;
-   };
+   bin.resize(written);
+   return bin;
+   }
 
 }
 
@@ -721,127 +690,311 @@ inline void unpoison(T& p)
 #endif
    }
 
-/*
-* T should be an unsigned machine integer type
-* Expand to a mask used for other operations
-* @param in an integer
-* @return If n is zero, returns zero. Otherwise
-* returns a T with all bits set for use as a mask with
-* select.
+/**
+* A Mask type used for constant-time operations. A Mask<T> always has value
+* either 0 (all bits cleared) or ~0 (all bits set). All operations in a Mask<T>
+* are intended to compile to code which does not contain conditional jumps.
+* This must be verified with tooling (eg binary disassembly or using valgrind)
+* since you never know what a compiler might do.
 */
 template<typename T>
-inline T expand_mask(T x)
+class Mask
    {
-   T r = x;
-   // First fold r down to a single bit
-   for(size_t i = 1; i != sizeof(T)*8; i *= 2)
-      {
-      r = r | static_cast<T>(r >> i);
-      }
-   r &= 1;
-   r = static_cast<T>(~(r - 1));
-   return r;
-   }
+   public:
+      static_assert(std::is_unsigned<T>::value, "CT::Mask only defined for unsigned integer types");
+
+      Mask(const Mask<T>& other) = default;
+      Mask<T>& operator=(const Mask<T>& other) = default;
+
+      /**
+      * Derive a Mask from a Mask of a larger type
+      */
+      template<typename U>
+      Mask(Mask<U> o) : m_mask(static_cast<T>(o.value()))
+         {
+         static_assert(sizeof(U) > sizeof(T), "sizes ok");
+         }
+
+      /**
+      * Return a Mask<T> with all bits set
+      */
+      static Mask<T> set()
+         {
+         return Mask<T>(static_cast<T>(~0));
+         }
+
+      /**
+      * Return a Mask<T> with all bits cleared
+      */
+      static Mask<T> cleared()
+         {
+         return Mask<T>(0);
+         }
+
+      /**
+      * Return a Mask<T> which is set if v is != 0
+      */
+      static Mask<T> expand(T v)
+         {
+         return ~Mask<T>::is_zero(v);
+         }
+
+      /**
+      * Return a Mask<T> which is set if m is set
+      */
+      template<typename U>
+      static Mask<T> expand(Mask<U> m)
+         {
+         static_assert(sizeof(U) < sizeof(T), "sizes ok");
+         return ~Mask<T>::is_zero(m.value());
+         }
+
+      /**
+      * Return a Mask<T> which is set if v is == 0 or cleared otherwise
+      */
+      static Mask<T> is_zero(T x)
+         {
+         return Mask<T>(ct_is_zero<T>(x));
+         }
+
+      /**
+      * Return a Mask<T> which is set if x == y
+      */
+      static Mask<T> is_equal(T x, T y)
+         {
+         return Mask<T>::is_zero(static_cast<T>(x ^ y));
+         }
+
+      /**
+      * Return a Mask<T> which is set if x < y
+      */
+      static Mask<T> is_lt(T x, T y)
+         {
+         return Mask<T>(expand_top_bit<T>(x^((x^y) | ((x-y)^x))));
+         }
+
+      /**
+      * Return a Mask<T> which is set if x > y
+      */
+      static Mask<T> is_gt(T x, T y)
+         {
+         return Mask<T>::is_lt(y, x);
+         }
+
+      /**
+      * Return a Mask<T> which is set if x <= y
+      */
+      static Mask<T> is_lte(T x, T y)
+         {
+         return ~Mask<T>::is_gt(x, y);
+         }
+
+      /**
+      * Return a Mask<T> which is set if x >= y
+      */
+      static Mask<T> is_gte(T x, T y)
+         {
+         return ~Mask<T>::is_lt(x, y);
+         }
+
+      /**
+      * AND-combine two masks
+      */
+      Mask<T>& operator&=(Mask<T> o)
+         {
+         m_mask &= o.value();
+         return (*this);
+         }
+
+      /**
+      * XOR-combine two masks
+      */
+      Mask<T>& operator^=(Mask<T> o)
+         {
+         m_mask ^= o.value();
+         return (*this);
+         }
+
+      /**
+      * OR-combine two masks
+      */
+      Mask<T>& operator|=(Mask<T> o)
+         {
+         m_mask |= o.value();
+         return (*this);
+         }
+
+      /**
+      * AND-combine two masks
+      */
+      friend Mask<T> operator&(Mask<T> x, Mask<T> y)
+         {
+         return Mask<T>(x.value() & y.value());
+         }
+
+      /**
+      * XOR-combine two masks
+      */
+      friend Mask<T> operator^(Mask<T> x, Mask<T> y)
+         {
+         return Mask<T>(x.value() ^ y.value());
+         }
+
+      /**
+      * OR-combine two masks
+      */
+      friend Mask<T> operator|(Mask<T> x, Mask<T> y)
+         {
+         return Mask<T>(x.value() | y.value());
+         }
+
+      /**
+      * Negate this mask
+      */
+      Mask<T> operator~() const
+         {
+         return Mask<T>(~value());
+         }
+
+      /**
+      * Return x if the mask is set, or otherwise zero
+      */
+      T if_set_return(T x) const
+         {
+         return m_mask & x;
+         }
+
+      /**
+      * Return x if the mask is cleared, or otherwise zero
+      */
+      T if_not_set_return(T x) const
+         {
+         return ~m_mask & x;
+         }
+
+      /**
+      * If this mask is set, return x, otherwise return y
+      */
+      T select(T x, T y) const
+         {
+         // (x & value()) | (y & ~value())
+         return static_cast<T>(y ^ (value() & (x ^ y)));
+         }
+
+      T select_and_unpoison(T x, T y) const
+         {
+         T r = this->select(x, y);
+         CT::unpoison(r);
+         return r;
+         }
+
+      /**
+      * If this mask is set, return x, otherwise return y
+      */
+      Mask<T> select_mask(Mask<T> x, Mask<T> y) const
+         {
+         return Mask<T>(select(x.value(), y.value()));
+         }
+
+      /**
+      * Conditionally set output to x or y, depending on if mask is set or
+      * cleared (resp)
+      */
+      void select_n(T output[], const T x[], const T y[], size_t len) const
+         {
+         for(size_t i = 0; i != len; ++i)
+            output[i] = this->select(x[i], y[i]);
+         }
+
+      /**
+      * If this mask is set, zero out buf, otherwise do nothing
+      */
+      void if_set_zero_out(T buf[], size_t elems)
+         {
+         for(size_t i = 0; i != elems; ++i)
+            {
+            buf[i] = this->if_not_set_return(buf[i]);
+            }
+         }
+
+      /**
+      * Return the value of the mask, unpoisoned
+      */
+      T unpoisoned_value() const
+         {
+         T r = value();
+         CT::unpoison(r);
+         return r;
+         }
+
+      /**
+      * Return true iff this mask is set
+      */
+      bool is_set() const
+         {
+         return unpoisoned_value() != 0;
+         }
+
+      /**
+      * Return the underlying value of the mask
+      */
+      T value() const
+         {
+         return m_mask;
+         }
+
+   private:
+      Mask(T m) : m_mask(m) {}
+
+      T m_mask;
+   };
 
 template<typename T>
-inline T expand_top_bit(T a)
+inline Mask<T> conditional_copy_mem(T cnd,
+                                    T* to,
+                                    const T* from0,
+                                    const T* from1,
+                                    size_t elems)
    {
-   return expand_mask<T>(a >> (sizeof(T)*8-1));
-   }
-
-template<typename T>
-inline T select(T mask, T from0, T from1)
-   {
-   return static_cast<T>((from0 & mask) | (from1 & ~mask));
-   }
-
-template<typename T>
-inline T select2(T mask0, T val0, T mask1, T val1, T val2)
-   {
-   return select<T>(mask0, val0, select<T>(mask1, val1, val2));
-   }
-
-template<typename T>
-inline T select3(T mask0, T val0, T mask1, T val1, T mask2, T val2, T val3)
-   {
-   return select2<T>(mask0, val0, mask1, val1, select<T>(mask2, val2, val3));
-   }
-
-template<typename PredT, typename ValT>
-inline ValT val_or_zero(PredT pred_val, ValT val)
-   {
-   return select(CT::expand_mask<ValT>(pred_val), val, static_cast<ValT>(0));
-   }
-
-template<typename T>
-inline T is_zero(T x)
-   {
-   return static_cast<T>(~expand_mask(x));
-   }
-
-template<typename T>
-inline T is_equal(T x, T y)
-   {
-   return is_zero<T>(x ^ y);
-   }
-
-template<typename T>
-inline T is_less(T a, T b)
-   {
-   return expand_top_bit<T>(a ^ ((a^b) | ((a-b)^a)));
-   }
-
-template<typename T>
-inline T is_lte(T a, T b)
-   {
-   return CT::is_less(a, b) | CT::is_equal(a, b);
-   }
-
-template<typename T>
-inline T conditional_copy_mem(T value,
-                              T* to,
-                              const T* from0,
-                              const T* from1,
-                              size_t elems)
-   {
-   const T mask = CT::expand_mask(value);
-
-   for(size_t i = 0; i != elems; ++i)
-      {
-      to[i] = CT::select(mask, from0[i], from1[i]);
-      }
-
+   const auto mask = CT::Mask<T>::expand(cnd);
+   mask.select_n(to, from0, from1, elems);
    return mask;
    }
 
 template<typename T>
-inline void cond_zero_mem(T cond,
-                          T* array,
-                          size_t elems)
+inline void conditional_swap(bool cnd, T& x, T& y)
    {
-   const T mask = CT::expand_mask(cond);
-   const T zero(0);
+   const auto swap = CT::Mask<T>::expand(cnd);
 
-   for(size_t i = 0; i != elems; ++i)
-      {
-      array[i] = CT::select(mask, zero, array[i]);
-      }
+   T t0 = swap.select(y, x);
+   T t1 = swap.select(x, y);
+   x = t0;
+   y = t1;
    }
 
-inline secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t length)
+template<typename T>
+inline void conditional_swap_ptr(bool cnd, T& x, T& y)
    {
-   size_t leading_zeros = 0;
+   uintptr_t xp = reinterpret_cast<uintptr_t>(x);
+   uintptr_t yp = reinterpret_cast<uintptr_t>(y);
 
-   uint8_t only_zeros = 0xFF;
+   conditional_swap<uintptr_t>(cnd, xp, yp);
 
-   for(size_t i = 0; i != length; ++i)
-      {
-      only_zeros = only_zeros & CT::is_zero<uint8_t>(in[i]);
-      leading_zeros += CT::select<uint8_t>(only_zeros, 1, 0);
-      }
-
-   return secure_vector<uint8_t>(in + leading_zeros, in + length);
+   x = reinterpret_cast<T>(xp);
+   y = reinterpret_cast<T>(yp);
    }
+
+/**
+* If bad_mask is unset, return in[delim_idx:input_length] copied to
+* new buffer. If bad_mask is set, return an all zero vector of
+* unspecified length.
+*/
+secure_vector<uint8_t> copy_output(CT::Mask<uint8_t> bad_input,
+                                   const uint8_t input[],
+                                   size_t input_length,
+                                   size_t delim_idx);
+
+secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t length);
 
 inline secure_vector<uint8_t> strip_leading_zeros(const secure_vector<uint8_t>& in)
    {
@@ -901,6 +1054,28 @@ class Montgomery_Exponentiator final : public Modular_Exponentiator
 
       BigInt m_e;
       Power_Mod::Usage_Hints m_hints;
+   };
+
+}
+
+namespace Botan {
+
+/**
+* Entropy source reading from kernel devices like /dev/random
+*/
+class Device_EntropySource final : public Entropy_Source
+   {
+   public:
+      std::string name() const override { return "dev_random"; }
+
+      size_t poll(RandomNumberGenerator& rng) override;
+
+      explicit Device_EntropySource(const std::vector<std::string>& fsnames);
+
+      ~Device_EntropySource();
+   private:
+      std::vector<int> m_dev_fds;
+      int m_max_fd;
    };
 
 }
@@ -1051,16 +1226,16 @@ class FE_25519
       FE_25519(int init = 0)
          {
          if(init != 0 && init != 1)
-            { throw std::invalid_argument("Invalid FE_25519 initial value"); }
-         memset(m_fe, 0, 10 * sizeof(int32_t));
+            throw Invalid_Argument("Invalid FE_25519 initial value");
+         clear_mem(m_fe, 10);
          m_fe[0] = init;
          }
 
       FE_25519(std::initializer_list<int32_t> x)
          {
          if(x.size() != 10)
-            { throw std::invalid_argument("Invalid FE_25519 initializer list"); }
-         memcpy(m_fe, x.begin(), 10 * sizeof(int32_t));
+            throw Invalid_Argument("Invalid FE_25519 initializer list");
+         copy_mem(m_fe, x.begin(), 10);
          }
 
       FE_25519(int64_t h0, int64_t h1, int64_t h2, int64_t h3, int64_t h4,
@@ -1081,10 +1256,8 @@ class FE_25519
       FE_25519(const FE_25519& other) = default;
       FE_25519& operator=(const FE_25519& other) = default;
 
-#if !defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
       FE_25519(FE_25519&& other) = default;
       FE_25519& operator=(FE_25519&& other) = default;
-#endif
 
       void from_bytes(const uint8_t b[32]);
       void to_bytes(uint8_t b[32]) const;
@@ -1349,26 +1522,22 @@ void sc_muladd(uint8_t*, const uint8_t*, const uint8_t*, const uint8_t*);
 
 }
 
-namespace Botan {
-
-/**
-* Win32 Entropy Source
-*/
-class Win32_EntropySource final : public Entropy_Source
-   {
-   public:
-      std::string name() const override { return "system_stats"; }
-      size_t poll(RandomNumberGenerator& rng) override;
-   };
-
-}
-
 namespace Botan_FFI {
 
 class BOTAN_UNSTABLE_API FFI_Error final : public Botan::Exception
    {
    public:
-      explicit FFI_Error(const std::string& what) : Exception("FFI error", what) {}
+      FFI_Error(const std::string& what, int err_code) :
+         Exception("FFI error", what),
+         m_err_code(err_code)
+         {}
+
+      int error_code() const noexcept override { return m_err_code; }
+
+      Botan::ErrorType error_type() const noexcept override { return Botan::ErrorType::InvalidArgument; }
+
+   private:
+      int m_err_code;
    };
 
 template<typename T, uint32_t MAGIC>
@@ -1393,45 +1562,24 @@ struct botan_struct
    struct NAME final : public Botan_FFI::botan_struct<TYPE, MAGIC> { explicit NAME(TYPE* x) : botan_struct(x) {} }
 
 // Declared in ffi.cpp
-int ffi_error_exception_thrown(const char* func_name, const char* exn);
+int ffi_error_exception_thrown(const char* func_name, const char* exn,
+                               int rc = BOTAN_FFI_ERROR_EXCEPTION_THROWN);
 
 template<typename T, uint32_t M>
 T& safe_get(botan_struct<T,M>* p)
    {
    if(!p)
-      throw FFI_Error("Null pointer argument");
+      throw FFI_Error("Null pointer argument", BOTAN_FFI_ERROR_NULL_POINTER);
    if(p->magic_ok() == false)
-      throw FFI_Error("Bad magic in ffi object");
+      throw FFI_Error("Bad magic in ffi object", BOTAN_FFI_ERROR_INVALID_OBJECT);
 
-   T* t = p->unsafe_get();
-   if(t)
+   if(T* t = p->unsafe_get())
       return *t;
-   else
-      throw FFI_Error("Invalid object pointer");
+
+   throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
    }
 
-template<typename Thunk>
-int ffi_guard_thunk(const char* func_name, Thunk thunk)
-   {
-   try
-      {
-      return thunk();
-      }
-   catch(std::bad_alloc&)
-      {
-      return ffi_error_exception_thrown(func_name, "bad_alloc");
-      }
-   catch(std::exception& e)
-      {
-      return ffi_error_exception_thrown(func_name, e.what());
-      }
-   catch(...)
-      {
-      return ffi_error_exception_thrown(func_name, "unknown exception");
-      }
-
-   return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
-   }
+int ffi_guard_thunk(const char* func_name, std::function<int ()>);
 
 template<typename T, uint32_t M, typename F>
 int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
@@ -1446,7 +1594,7 @@ int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
    }
 
 #define BOTAN_FFI_DO(T, obj, param, block)                              \
-   apply_fn(obj, BOTAN_CURRENT_FUNCTION,                                \
+   apply_fn(obj, __func__,                                \
             [=](T& param) -> int { do { block } while(0); return BOTAN_FFI_SUCCESS; })
 
 template<typename T, uint32_t M>
@@ -1473,21 +1621,27 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name)
       }
    }
 
-#define BOTAN_FFI_CHECKED_DELETE(o) ffi_delete_object(o, BOTAN_CURRENT_FUNCTION)
+#define BOTAN_FFI_CHECKED_DELETE(o) ffi_delete_object(o, __func__)
 
 inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], size_t buf_len)
    {
+   if(out_len == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
    const size_t avail = *out_len;
    *out_len = buf_len;
 
-   if(avail >= buf_len)
+   if((avail >= buf_len) && (out != nullptr))
       {
       Botan::copy_mem(out, buf, buf_len);
       return BOTAN_FFI_SUCCESS;
       }
    else
       {
-      Botan::clear_mem(out, avail);
+      if(out != nullptr)
+         {
+         Botan::clear_mem(out, avail);
+         }
       return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
       }
    }
@@ -1590,7 +1744,7 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator &rng,
 
 namespace Botan {
 
-class Memory_Pool final
+class BOTAN_TEST_API Memory_Pool final
    {
    public:
       /**
@@ -1613,7 +1767,7 @@ class Memory_Pool final
 
       void* allocate(size_t size);
 
-      bool deallocate(void* p, size_t size) BOTAN_NOEXCEPT;
+      bool deallocate(void* p, size_t size) noexcept;
 
       Memory_Pool(const Memory_Pool&) = delete;
 
@@ -1678,15 +1832,10 @@ BigInt monty_multi_exp(std::shared_ptr<const Montgomery_Params> params_p,
 
 namespace Botan {
 
-#if (BOTAN_MP_WORD_BITS == 8)
-  typedef uint16_t dword;
-  #define BOTAN_HAS_MP_DWORD
-#elif (BOTAN_MP_WORD_BITS == 16)
-  typedef uint32_t dword;
-  #define BOTAN_HAS_MP_DWORD
-#elif (BOTAN_MP_WORD_BITS == 32)
+#if (BOTAN_MP_WORD_BITS == 32)
   typedef uint64_t dword;
   #define BOTAN_HAS_MP_DWORD
+
 #elif (BOTAN_MP_WORD_BITS == 64)
   #if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
     typedef uint128_t dword;
@@ -1696,21 +1845,19 @@ namespace Botan {
   #endif
 
 #else
-  #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
+  #error BOTAN_MP_WORD_BITS must be 32 or 64
 #endif
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_32) && (BOTAN_MP_WORD_BITS == 32)
 
   #if defined(BOTAN_USE_GCC_INLINE_ASM)
     #define BOTAN_MP_USE_X86_32_ASM
-    #define ASM(x) x "\n\t"
   #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
     #define BOTAN_MP_USE_X86_32_MSVC_ASM
   #endif
 
-#elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && (BOTAN_MP_WORD_BITS == 64) && (BOTAN_USE_GCC_INLINE_ASM)
+#elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && (BOTAN_MP_WORD_BITS == 64) && defined(BOTAN_USE_GCC_INLINE_ASM)
   #define BOTAN_MP_USE_X86_64_ASM
-  #define ASM(x) x "\n\t"
 #endif
 
 #if defined(BOTAN_MP_USE_X86_32_ASM) || defined(BOTAN_MP_USE_X86_64_ASM)
@@ -2698,22 +2845,108 @@ const word MP_WORD_MAX = MP_WORD_MASK;
 * If cond > 0, swaps x[0:size] with y[0:size]
 * Runs in constant time
 */
-BOTAN_TEST_API
-void bigint_cnd_swap(word cnd, word x[], word y[], size_t size);
+inline void bigint_cnd_swap(word cnd, word x[], word y[], size_t size)
+   {
+   const auto mask = CT::Mask<word>::expand(cnd);
+
+   for(size_t i = 0; i != size; ++i)
+      {
+      const word a = x[i];
+      const word b = y[i];
+      x[i] = mask.select(b, a);
+      y[i] = mask.select(a, b);
+      }
+   }
+
+inline word bigint_cnd_add(word cnd, word x[], word x_size,
+                           const word y[], size_t y_size)
+   {
+   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
+
+   const auto mask = CT::Mask<word>::expand(cnd);
+
+   word carry = 0;
+
+   const size_t blocks = y_size - (y_size % 8);
+   word z[8] = { 0 };
+
+   for(size_t i = 0; i != blocks; i += 8)
+      {
+      carry = word8_add3(z, x + i, y + i, carry);
+      mask.select_n(x + i, z, x + i, 8);
+      }
+
+   for(size_t i = blocks; i != y_size; ++i)
+      {
+      z[0] = word_add(x[i], y[i], &carry);
+      x[i] = mask.select(z[0], x[i]);
+      }
+
+   for(size_t i = y_size; i != x_size; ++i)
+      {
+      z[0] = word_add(x[i], 0, &carry);
+      x[i] = mask.select(z[0], x[i]);
+      }
+
+   return mask.if_set_return(carry);
+   }
 
 /*
 * If cond > 0 adds x[0:size] and y[0:size] and returns carry
 * Runs in constant time
 */
-BOTAN_TEST_API
-word bigint_cnd_add(word cnd, word x[], const word y[], size_t size);
+inline word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
+   {
+   return bigint_cnd_add(cnd, x, size, y, size);
+   }
 
 /*
 * If cond > 0 subtracts x[0:size] and y[0:size] and returns borrow
 * Runs in constant time
 */
-BOTAN_TEST_API
-word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size);
+inline word bigint_cnd_sub(word cnd,
+                           word x[], size_t x_size,
+                           const word y[], size_t y_size)
+   {
+   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
+
+   const auto mask = CT::Mask<word>::expand(cnd);
+
+   word carry = 0;
+
+   const size_t blocks = y_size - (y_size % 8);
+   word z[8] = { 0 };
+
+   for(size_t i = 0; i != blocks; i += 8)
+      {
+      carry = word8_sub3(z, x + i, y + i, carry);
+      mask.select_n(x + i, z, x + i, 8);
+      }
+
+   for(size_t i = blocks; i != y_size; ++i)
+      {
+      z[0] = word_sub(x[i], y[i], &carry);
+      x[i] = mask.select(z[0], x[i]);
+      }
+
+   for(size_t i = y_size; i != x_size; ++i)
+      {
+      z[0] = word_sub(x[i], 0, &carry);
+      x[i] = mask.select(z[0], x[i]);
+      }
+
+   return mask.if_set_return(carry);
+   }
+
+/*
+* If cond > 0 adds x[0:size] and y[0:size] and returns carry
+* Runs in constant time
+*/
+inline word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
+   {
+   return bigint_cnd_sub(cnd, x, size, y, size);
+   }
+
 
 /*
 * Equivalent to
@@ -2722,15 +2955,139 @@ word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size);
 *
 * Mask must be either 0 or all 1 bits
 */
-void bigint_cnd_addsub(word mask, word x[], const word y[], size_t size);
+inline void bigint_cnd_add_or_sub(CT::Mask<word> mask, word x[], const word y[], size_t size)
+   {
+   const size_t blocks = size - (size % 8);
+
+   word carry = 0;
+   word borrow = 0;
+
+   word t0[8] = { 0 };
+   word t1[8] = { 0 };
+
+   for(size_t i = 0; i != blocks; i += 8)
+      {
+      carry = word8_add3(t0, x + i, y + i, carry);
+      borrow = word8_sub3(t1, x + i, y + i, borrow);
+
+      for(size_t j = 0; j != 8; ++j)
+         x[i+j] = mask.select(t0[j], t1[j]);
+      }
+
+   for(size_t i = blocks; i != size; ++i)
+      {
+      const word a = word_add(x[i], y[i], &carry);
+      const word s = word_sub(x[i], y[i], &borrow);
+
+      x[i] = mask.select(a, s);
+      }
+   }
+
+/*
+* Equivalent to
+*   bigint_cnd_add( mask, x, size, y, size);
+*   bigint_cnd_sub(~mask, x, size, z, size);
+*
+* Mask must be either 0 or all 1 bits
+*
+* Returns the carry or borrow resp
+*/
+inline word bigint_cnd_addsub(CT::Mask<word> mask, word x[],
+                              const word y[], const word z[],
+                              size_t size)
+   {
+   const size_t blocks = size - (size % 8);
+
+   word carry = 0;
+   word borrow = 0;
+
+   word t0[8] = { 0 };
+   word t1[8] = { 0 };
+
+   for(size_t i = 0; i != blocks; i += 8)
+      {
+      carry = word8_add3(t0, x + i, y + i, carry);
+      borrow = word8_sub3(t1, x + i, z + i, borrow);
+
+      for(size_t j = 0; j != 8; ++j)
+         x[i+j] = mask.select(t0[j], t1[j]);
+      }
+
+   for(size_t i = blocks; i != size; ++i)
+      {
+      t0[0] = word_add(x[i], y[i], &carry);
+      t1[0] = word_sub(x[i], z[i], &borrow);
+      x[i] = mask.select(t0[0], t1[0]);
+      }
+
+   return mask.select(carry, borrow);
+   }
 
 /*
 * 2s complement absolute value
 * If cond > 0 sets x to ~x + 1
 * Runs in constant time
 */
-BOTAN_TEST_API
-void bigint_cnd_abs(word cnd, word x[], size_t size);
+inline void bigint_cnd_abs(word cnd, word x[], size_t size)
+   {
+   const auto mask = CT::Mask<word>::expand(cnd);
+
+   word carry = mask.if_set_return(1);
+   for(size_t i = 0; i != size; ++i)
+      {
+      const word z = word_add(~x[i], 0, &carry);
+      x[i] = mask.select(z, x[i]);
+      }
+   }
+
+/**
+* Two operand addition with carry out
+*/
+inline word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size)
+   {
+   word carry = 0;
+
+   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
+
+   const size_t blocks = y_size - (y_size % 8);
+
+   for(size_t i = 0; i != blocks; i += 8)
+      carry = word8_add2(x + i, y + i, carry);
+
+   for(size_t i = blocks; i != y_size; ++i)
+      x[i] = word_add(x[i], y[i], &carry);
+
+   for(size_t i = y_size; i != x_size; ++i)
+      x[i] = word_add(x[i], 0, &carry);
+
+   return carry;
+   }
+
+/**
+* Three operand addition with carry out
+*/
+inline word bigint_add3_nc(word z[],
+                           const word x[], size_t x_size,
+                           const word y[], size_t y_size)
+   {
+   if(x_size < y_size)
+      { return bigint_add3_nc(z, y, y_size, x, x_size); }
+
+   word carry = 0;
+
+   const size_t blocks = y_size - (y_size % 8);
+
+   for(size_t i = 0; i != blocks; i += 8)
+      carry = word8_add3(z + i, x + i, y + i, carry);
+
+   for(size_t i = blocks; i != y_size; ++i)
+      z[i] = word_add(x[i], y[i], &carry);
+
+   for(size_t i = y_size; i != x_size; ++i)
+      z[i] = word_add(x[i], 0, &carry);
+
+   return carry;
+   }
 
 /**
 * Two operand addition
@@ -2739,115 +3096,492 @@ void bigint_cnd_abs(word cnd, word x[], size_t size);
 * @param y the second operand
 * @param y_size size of y (must be >= x_size)
 */
-void bigint_add2(word x[], size_t x_size,
-                 const word y[], size_t y_size);
+inline void bigint_add2(word x[], size_t x_size,
+                        const word y[], size_t y_size)
+   {
+   x[x_size] += bigint_add2_nc(x, x_size, y, y_size);
+   }
 
 /**
 * Three operand addition
 */
-void bigint_add3(word z[],
-                 const word x[], size_t x_size,
-                 const word y[], size_t y_size);
-
-/**
-* Two operand addition with carry out
-*/
-word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size);
-
-/**
-* Three operand addition with carry out
-*/
-word bigint_add3_nc(word z[],
-                    const word x[], size_t x_size,
-                    const word y[], size_t y_size);
+inline void bigint_add3(word z[],
+                        const word x[], size_t x_size,
+                        const word y[], size_t y_size)
+   {
+   z[x_size > y_size ? x_size : y_size] +=
+      bigint_add3_nc(z, x, x_size, y, y_size);
+   }
 
 /**
 * Two operand subtraction
 */
-word bigint_sub2(word x[], size_t x_size,
-                 const word y[], size_t y_size);
+inline word bigint_sub2(word x[], size_t x_size,
+                        const word y[], size_t y_size)
+   {
+   word borrow = 0;
+
+   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
+
+   const size_t blocks = y_size - (y_size % 8);
+
+   for(size_t i = 0; i != blocks; i += 8)
+      borrow = word8_sub2(x + i, y + i, borrow);
+
+   for(size_t i = blocks; i != y_size; ++i)
+      x[i] = word_sub(x[i], y[i], &borrow);
+
+   for(size_t i = y_size; i != x_size; ++i)
+      x[i] = word_sub(x[i], 0, &borrow);
+
+   return borrow;
+   }
 
 /**
 * Two operand subtraction, x = y - x; assumes y >= x
 */
-void bigint_sub2_rev(word x[], const word y[], size_t y_size);
+inline void bigint_sub2_rev(word x[], const word y[], size_t y_size)
+   {
+   word borrow = 0;
+
+   const size_t blocks = y_size - (y_size % 8);
+
+   for(size_t i = 0; i != blocks; i += 8)
+      borrow = word8_sub2_rev(x + i, y + i, borrow);
+
+   for(size_t i = blocks; i != y_size; ++i)
+      x[i] = word_sub(y[i], x[i], &borrow);
+
+   BOTAN_ASSERT(borrow == 0, "y must be greater than x");
+   }
 
 /**
 * Three operand subtraction
 */
-word bigint_sub3(word z[],
-                 const word x[], size_t x_size,
-                 const word y[], size_t y_size);
+inline word bigint_sub3(word z[],
+                        const word x[], size_t x_size,
+                        const word y[], size_t y_size)
+   {
+   word borrow = 0;
+
+   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
+
+   const size_t blocks = y_size - (y_size % 8);
+
+   for(size_t i = 0; i != blocks; i += 8)
+      borrow = word8_sub3(z + i, x + i, y + i, borrow);
+
+   for(size_t i = blocks; i != y_size; ++i)
+      z[i] = word_sub(x[i], y[i], &borrow);
+
+   for(size_t i = y_size; i != x_size; ++i)
+      z[i] = word_sub(x[i], 0, &borrow);
+
+   return borrow;
+   }
 
 /**
 * Return abs(x-y), ie if x >= y, then compute z = x - y
 * Otherwise compute z = y - x
 * No borrow is possible since the result is always >= 0
 *
-* Returns 1 if x >= y or 0 if x < y
+* Returns ~0 if x >= y or 0 if x < y
 * @param z output array of at least N words
 * @param x input array of N words
 * @param y input array of N words
 * @param N length of x and y
 * @param ws array of at least 2*N words
 */
-word bigint_sub_abs(word z[],
-                    const word x[], const word y[], size_t N,
-                    word ws[]);
+inline CT::Mask<word>
+bigint_sub_abs(word z[],
+               const word x[], const word y[], size_t N,
+               word ws[])
+   {
+   // Subtract in both direction then conditional copy out the result
+
+   word* ws0 = ws;
+   word* ws1 = ws + N;
+
+   word borrow0 = 0;
+   word borrow1 = 0;
+
+   const size_t blocks = N - (N % 8);
+
+   for(size_t i = 0; i != blocks; i += 8)
+      {
+      borrow0 = word8_sub3(ws0 + i, x + i, y + i, borrow0);
+      borrow1 = word8_sub3(ws1 + i, y + i, x + i, borrow1);
+      }
+
+   for(size_t i = blocks; i != N; ++i)
+      {
+      ws0[i] = word_sub(x[i], y[i], &borrow0);
+      ws1[i] = word_sub(y[i], x[i], &borrow1);
+      }
+
+   return CT::conditional_copy_mem(borrow0, z, ws1, ws0, N);
+   }
 
 /*
 * Shift Operations
 */
-void bigint_shl1(word x[], size_t x_size,
-                 size_t word_shift, size_t bit_shift);
+inline void bigint_shl1(word x[], size_t x_size, size_t x_words,
+                        size_t word_shift, size_t bit_shift)
+   {
+   copy_mem(x + word_shift, x, x_words);
+   clear_mem(x, word_shift);
 
-void bigint_shr1(word x[], size_t x_size,
-                 size_t word_shift, size_t bit_shift);
+   const auto carry_mask = CT::Mask<word>::expand(bit_shift);
+   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
 
-void bigint_shl2(word y[], const word x[], size_t x_size,
-                 size_t word_shift, size_t bit_shift);
+   word carry = 0;
+   for(size_t i = word_shift; i != x_size; ++i)
+      {
+      const word w = x[i];
+      x[i] = (w << bit_shift) | carry;
+      carry = carry_mask.if_set_return(w >> carry_shift);
+      }
+   }
 
-void bigint_shr2(word y[], const word x[], size_t x_size,
-                 size_t word_shift, size_t bit_shift);
+inline void bigint_shr1(word x[], size_t x_size,
+                        size_t word_shift, size_t bit_shift)
+   {
+   const size_t top = x_size >= word_shift ? (x_size - word_shift) : 0;
+
+   copy_mem(x, x + word_shift, top);
+   clear_mem(x + top, std::min(word_shift, x_size));
+
+   const auto carry_mask = CT::Mask<word>::expand(bit_shift);
+   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+
+   word carry = 0;
+
+   for(size_t i = 0; i != top; ++i)
+      {
+      const word w = x[top - i - 1];
+      x[top-i-1] = (w >> bit_shift) | carry;
+      carry = carry_mask.if_set_return(w << carry_shift);
+      }
+   }
+
+inline void bigint_shl2(word y[], const word x[], size_t x_size,
+                        size_t word_shift, size_t bit_shift)
+   {
+   copy_mem(y + word_shift, x, x_size);
+
+   const auto carry_mask = CT::Mask<word>::expand(bit_shift);
+   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+
+   word carry = 0;
+   for(size_t i = word_shift; i != x_size + word_shift + 1; ++i)
+      {
+      const word w = y[i];
+      y[i] = (w << bit_shift) | carry;
+      carry = carry_mask.if_set_return(w >> carry_shift);
+      }
+   }
+
+inline void bigint_shr2(word y[], const word x[], size_t x_size,
+                        size_t word_shift, size_t bit_shift)
+   {
+   const size_t new_size = x_size < word_shift ? 0 : (x_size - word_shift);
+
+   copy_mem(y, x + word_shift, new_size);
+
+   const auto carry_mask = CT::Mask<word>::expand(bit_shift);
+   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+
+   word carry = 0;
+   for(size_t i = new_size; i > 0; --i)
+      {
+      word w = y[i-1];
+      y[i-1] = (w >> bit_shift) | carry;
+      carry = carry_mask.if_set_return(w << carry_shift);
+      }
+   }
 
 /*
 * Linear Multiply
 */
-void bigint_linmul2(word x[], size_t x_size, word y);
-void bigint_linmul3(word z[], const word x[], size_t x_size, word y);
+inline void bigint_linmul2(word x[], size_t x_size, word y)
+   {
+   const size_t blocks = x_size - (x_size % 8);
+
+   word carry = 0;
+
+   for(size_t i = 0; i != blocks; i += 8)
+      carry = word8_linmul2(x + i, y, carry);
+
+   for(size_t i = blocks; i != x_size; ++i)
+      x[i] = word_madd2(x[i], y, &carry);
+
+   x[x_size] = carry;
+   }
+
+inline void bigint_linmul3(word z[], const word x[], size_t x_size, word y)
+   {
+   const size_t blocks = x_size - (x_size % 8);
+
+   word carry = 0;
+
+   for(size_t i = 0; i != blocks; i += 8)
+      carry = word8_linmul3(z + i, x + i, y, carry);
+
+   for(size_t i = blocks; i != x_size; ++i)
+      z[i] = word_madd2(x[i], y, &carry);
+
+   z[x_size] = carry;
+   }
 
 /**
-* Montgomery Reduction
-* @param z integer to reduce, of size exactly 2*(p_size+1).
-           Output is in the first p_size+1 words, higher
-           words are set to zero.
-* @param p modulus
-* @param p_size size of p
-* @param p_dash Montgomery value
-* @param workspace array of at least 2*(p_size+1) words
-* @param ws_size size of workspace in words
+* Compare x and y
+* Return -1 if x < y
+* Return 0 if x == y
+* Return 1 if x > y
 */
-void bigint_monty_redc(word z[],
-                       const word p[], size_t p_size,
-                       word p_dash,
-                       word workspace[],
-                       size_t ws_size);
+inline int32_t bigint_cmp(const word x[], size_t x_size,
+                          const word y[], size_t y_size)
+   {
+   static_assert(sizeof(word) >= sizeof(uint32_t), "Size assumption");
+
+   const word LT = static_cast<word>(-1);
+   const word EQ = 0;
+   const word GT = 1;
+
+   const size_t common_elems = std::min(x_size, y_size);
+
+   word result = EQ; // until found otherwise
+
+   for(size_t i = 0; i != common_elems; i++)
+      {
+      const auto is_eq = CT::Mask<word>::is_equal(x[i], y[i]);
+      const auto is_lt = CT::Mask<word>::is_lt(x[i], y[i]);
+
+      result = is_eq.select(result, is_lt.select(LT, GT));
+      }
+
+   if(x_size < y_size)
+      {
+      word mask = 0;
+      for(size_t i = x_size; i != y_size; i++)
+         mask |= y[i];
+
+      // If any bits were set in high part of y, then x < y
+      result = CT::Mask<word>::is_zero(mask).select(result, LT);
+      }
+   else if(y_size < x_size)
+      {
+      word mask = 0;
+      for(size_t i = y_size; i != x_size; i++)
+         mask |= x[i];
+
+      // If any bits were set in high part of x, then x > y
+      result = CT::Mask<word>::is_zero(mask).select(result, GT);
+      }
+
+   CT::unpoison(result);
+   BOTAN_DEBUG_ASSERT(result == LT || result == GT || result == EQ);
+   return static_cast<int32_t>(result);
+   }
 
 /**
-* Compare x and y returning early
+* Compare x and y
+* Return ~0 if x[0:x_size] < y[0:y_size] or 0 otherwise
+* If lt_or_equal is true, returns ~0 also for x == y
 */
-int32_t bigint_cmp(const word x[], size_t x_size,
-                   const word y[], size_t y_size);
+inline CT::Mask<word>
+bigint_ct_is_lt(const word x[], size_t x_size,
+                const word y[], size_t y_size,
+                bool lt_or_equal = false)
+   {
+   const size_t common_elems = std::min(x_size, y_size);
+
+   auto is_lt = CT::Mask<word>::expand(lt_or_equal);
+
+   for(size_t i = 0; i != common_elems; i++)
+      {
+      const auto eq = CT::Mask<word>::is_equal(x[i], y[i]);
+      const auto lt = CT::Mask<word>::is_lt(x[i], y[i]);
+      is_lt = eq.select_mask(is_lt, lt);
+      }
+
+   if(x_size < y_size)
+      {
+      word mask = 0;
+      for(size_t i = x_size; i != y_size; i++)
+         mask |= y[i];
+      // If any bits were set in high part of y, then is_lt should be forced true
+      is_lt |= CT::Mask<word>::expand(mask);
+      }
+   else if(y_size < x_size)
+      {
+      word mask = 0;
+      for(size_t i = y_size; i != x_size; i++)
+         mask |= x[i];
+
+      // If any bits were set in high part of x, then is_lt should be false
+      is_lt &= CT::Mask<word>::is_zero(mask);
+      }
+
+   return is_lt;
+   }
+
+inline CT::Mask<word>
+bigint_ct_is_eq(const word x[], size_t x_size,
+                const word y[], size_t y_size)
+   {
+   const size_t common_elems = std::min(x_size, y_size);
+
+   word diff = 0;
+
+   for(size_t i = 0; i != common_elems; i++)
+      {
+      diff |= (x[i] ^ y[i]);
+      }
+
+   // If any bits were set in high part of x/y, then they are not equal
+   if(x_size < y_size)
+      {
+      for(size_t i = x_size; i != y_size; i++)
+         diff |= y[i];
+      }
+   else if(y_size < x_size)
+      {
+      for(size_t i = y_size; i != x_size; i++)
+         diff |= x[i];
+      }
+
+   return CT::Mask<word>::is_zero(diff);
+   }
+
+/**
+* Set z to abs(x-y), ie if x >= y, then compute z = x - y
+* Otherwise compute z = y - x
+* No borrow is possible since the result is always >= 0
+*
+* Return the relative size of x vs y (-1, 0, 1)
+*
+* @param z output array of max(x_size,y_size) words
+* @param x input param
+* @param x_size length of x
+* @param y input param
+* @param y_size length of y
+*/
+inline int32_t
+bigint_sub_abs(word z[],
+               const word x[], size_t x_size,
+               const word y[], size_t y_size)
+   {
+   const int32_t relative_size = bigint_cmp(x, x_size, y, y_size);
+
+   // Swap if relative_size == -1
+   CT::conditional_swap_ptr(relative_size < 0, x, y);
+   CT::conditional_swap(relative_size < 0, x_size, y_size);
+
+   /*
+   * We know at this point that x >= y so if y_size is larger than
+   * x_size, we are guaranteed they are just leading zeros which can
+   * be ignored
+   */
+   y_size = std::min(x_size, y_size);
+
+   bigint_sub3(z, x, x_size, y, y_size);
+
+   return relative_size;
+   }
+
+/**
+* Set t to t-s modulo mod
+*
+* @param t first integer
+* @param s second integer
+* @param mod the modulus
+* @param mod_sw size of t, s, and mod
+* @param ws workspace of size mod_sw
+*/
+inline void
+bigint_mod_sub(word t[], const word s[], const word mod[], size_t mod_sw, word ws[])
+   {
+   // is t < s or not?
+   const auto is_lt = bigint_ct_is_lt(t, mod_sw, s, mod_sw);
+
+   // ws = p - s
+   const word borrow = bigint_sub3(ws, mod, mod_sw, s, mod_sw);
+
+   // Compute either (t - s) or (t + (p - s)) depending on mask
+   const word carry = bigint_cnd_addsub(is_lt, t, ws, s, mod_sw);
+
+   BOTAN_DEBUG_ASSERT(borrow == 0 && carry == 0);
+   BOTAN_UNUSED(carry, borrow);
+   }
+
+template<size_t N>
+inline void bigint_mod_sub_n(word t[], const word s[], const word mod[], word ws[])
+   {
+   // is t < s or not?
+   const auto is_lt = bigint_ct_is_lt(t, N, s, N);
+
+   // ws = p - s
+   const word borrow = bigint_sub3(ws, mod, N, s, N);
+
+   // Compute either (t - s) or (t + (p - s)) depending on mask
+   const word carry = bigint_cnd_addsub(is_lt, t, ws, s, N);
+
+   BOTAN_DEBUG_ASSERT(borrow == 0 && carry == 0);
+   BOTAN_UNUSED(carry, borrow);
+   }
 
 /**
 * Compute ((n1<<bits) + n0) / d
 */
-word bigint_divop(word n1, word n0, word d);
+inline word bigint_divop(word n1, word n0, word d)
+   {
+   if(d == 0)
+      throw Invalid_Argument("bigint_divop divide by zero");
+
+#if defined(BOTAN_HAS_MP_DWORD)
+   return ((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) / d;
+#else
+
+   word high = n1 % d;
+   word quotient = 0;
+
+   for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i)
+      {
+      word high_top_bit = (high & MP_WORD_TOP_BIT);
+
+      high <<= 1;
+      high |= (n0 >> (BOTAN_MP_WORD_BITS-1-i)) & 1;
+      quotient <<= 1;
+
+      if(high_top_bit || high >= d)
+         {
+         high -= d;
+         quotient |= 1;
+         }
+      }
+
+   return quotient;
+#endif
+   }
 
 /**
 * Compute ((n1<<bits) + n0) % d
 */
-word bigint_modop(word n1, word n0, word d);
+inline word bigint_modop(word n1, word n0, word d)
+   {
+   if(d == 0)
+      throw Invalid_Argument("bigint_modop divide by zero");
+
+#if defined(BOTAN_HAS_MP_DWORD)
+   return ((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) % d;
+#else
+   word z = bigint_divop(n1, n0, d);
+   word dummy = 0;
+   z = word_madd2(z, d, &dummy);
+   return (n0-z);
+#endif
+   }
 
 /*
 * Comba Multiplication / Squaring
@@ -2865,6 +3599,23 @@ void bigint_comba_sqr8(word out[16], const word in[8]);
 void bigint_comba_sqr9(word out[18], const word in[9]);
 void bigint_comba_sqr16(word out[32], const word in[16]);
 void bigint_comba_sqr24(word out[48], const word in[24]);
+
+/**
+* Montgomery Reduction
+* @param z integer to reduce, of size exactly 2*(p_size+1).
+           Output is in the first p_size+1 words, higher
+           words are set to zero.
+* @param p modulus
+* @param p_size size of p
+* @param p_dash Montgomery value
+* @param workspace array of at least 2*(p_size+1) words
+* @param ws_size size of workspace in words
+*/
+void bigint_monty_redc(word z[],
+                       const word p[], size_t p_size,
+                       word p_dash,
+                       word workspace[],
+                       size_t ws_size);
 
 /*
 * High Level Multiplication/Squaring Interfaces
@@ -2921,6 +3672,12 @@ namespace OS {
 uint32_t BOTAN_TEST_API get_process_id();
 
 /**
+* Test if we are currently running with elevated permissions
+* eg setuid, setgid, or with POSIX caps set.
+*/
+bool running_in_privileged_state();
+
+/**
 * @return CPU processor clock, if available
 *
 * On Windows, calls QueryPerformanceCounter.
@@ -2929,7 +3686,7 @@ uint32_t BOTAN_TEST_API get_process_id();
 * Currently supported processors are x86, PPC, Alpha, SPARC, IA-64, S/390x, and HP-PA.
 * If no CPU cycle counter is available on this system, returns zero.
 */
-uint64_t BOTAN_TEST_API get_processor_timestamp();
+uint64_t BOTAN_TEST_API get_cpu_cycle_counter();
 
 /*
 * @return best resolution timestamp available
@@ -2961,6 +3718,14 @@ size_t get_memory_locking_limit();
 * current system. Otherwise returns some default value (eg 4096)
 */
 size_t system_page_size();
+
+/**
+* Read the value of an environment variable. Return nullptr if
+* no such variable is set. If the process seems to be running in
+* a privileged state (such as setuid) then always returns nullptr,
+* similiar to glibc's secure_getenv.
+*/
+const char* read_env_variable(const std::string& var_name);
 
 /**
 * Request so many bytes of page-aligned RAM locked into memory using
@@ -2999,6 +3764,31 @@ void free_locked_pages(void* ptr, size_t length);
 * -1 illegal instruction detected
 */
 int BOTAN_TEST_API run_cpu_instruction_probe(std::function<int ()> probe_fn);
+
+/**
+* Represents a terminal state
+*/
+class BOTAN_UNSTABLE_API Echo_Suppression
+   {
+   public:
+      /**
+      * Reenable echo on this terminal. Can be safely called
+      * multiple times. May throw if an error occurs.
+      */
+      virtual void reenable_echo() = 0;
+
+      /**
+      * Implicitly calls reenable_echo, but swallows/ignored all
+      * errors which would leave the terminal in an invalid state.
+      */
+      virtual ~Echo_Suppression() = default;
+   };
+
+/**
+* Suppress echo on the terminal
+* Returns null if this operation is not supported on the current system.
+*/
+std::unique_ptr<Echo_Suppression> BOTAN_UNSTABLE_API suppress_echo_on_terminal();
 
 }
 
@@ -3123,7 +3913,7 @@ class Verification_with_EMSA : public Verification
       * @return the message prefix if this signature scheme uses
       * a message prefix, signaled via has_prefix()
       */
-      virtual secure_vector<uint8_t> message_prefix() const { throw Exception( "No prefix" ); }
+      virtual secure_vector<uint8_t> message_prefix() const { throw Invalid_State("No prefix"); }
 
       /**
       * @return boolean specifying if this key type supports message
@@ -3187,7 +3977,7 @@ class Signature_with_EMSA : public Signature
       * @return the message prefix if this signature scheme uses
       * a message prefix, signaled via has_prefix()
       */
-      virtual secure_vector<uint8_t> message_prefix() const { throw Exception( "No prefix" ); }
+      virtual secure_vector<uint8_t> message_prefix() const { throw Invalid_State("No prefix"); }
 
       std::unique_ptr<EMSA> clone_emsa() const { return std::unique_ptr<EMSA>(m_emsa->clone()); }
 
@@ -3288,6 +4078,9 @@ class PointGFp_Base_Point_Precompute final
    private:
       const PointGFp& m_base_point;
       const Modular_Reducer& m_mod_order;
+
+      enum { WINDOW_BITS = 3 };
+      enum { WINDOW_SIZE = (1 << WINDOW_BITS) - 1 };
 
       const size_t m_p_words;
       const size_t m_T_size;
@@ -3396,6 +4189,124 @@ inline void prefetch_readwrite(const T* addr, size_t length)
 
 namespace Botan {
 
+class BigInt;
+class Modular_Reducer;
+class Montgomery_Params;
+class RandomNumberGenerator;
+
+/**
+* Perform Lucas primality test
+* @see FIPS 186-4 C.3.3
+*
+* @warning it is possible to construct composite integers which pass
+* this test alone.
+*
+* @param n the positive integer to test
+* @param mod_n a pre-created Modular_Reducer for n
+* @return true if n seems probably prime, false if n is composite
+*/
+bool BOTAN_TEST_API is_lucas_probable_prime(const BigInt& n, const Modular_Reducer& mod_n);
+
+/**
+* Perform Bailie-PSW primality test
+*
+* This is a combination of Miller-Rabin with base 2 and a Lucas test. No known
+* composite integer passes both tests, though it is conjectured that infinitely
+* many composite counterexamples exist.
+*
+* @param n the positive integer to test
+* @param mod_n a pre-created Modular_Reducer for n
+* @return true if n seems probably prime, false if n is composite
+*/
+bool BOTAN_TEST_API is_bailie_psw_probable_prime(const BigInt& n, const Modular_Reducer& mod_n);
+
+/**
+* Perform Bailie-PSW primality test
+*
+* This is a combination of Miller-Rabin with base 2 and a Lucas test. No known
+* composite integer passes both tests, though it is conjectured that infinitely
+* many composite counterexamples exist.
+*
+* @param n the positive integer to test
+* @return true if n seems probably prime, false if n is composite
+*/
+bool is_bailie_psw_probable_prime(const BigInt& n);
+
+/**
+* Return required number of Miller-Rabin tests in order to
+* reach the specified probability of error.
+*
+* @param n_bits the bit-length of the integer being tested
+* @param prob chance of false positive is bounded by 1/2**prob
+* @param random is set if (and only if) the integer was randomly generated by us
+*        and thus cannot have been maliciously constructed.
+*/
+size_t miller_rabin_test_iterations(size_t n_bits, size_t prob, bool random);
+
+/**
+* Perform a single Miller-Rabin test with specified base
+*
+* @param n the positive integer to test
+* @param mod_n a pre-created Modular_Reducer for n
+* @param monty_n Montgomery parameters for n
+* @param a the base to check
+* @return result of primality test
+*/
+bool passes_miller_rabin_test(const BigInt& n,
+                              const Modular_Reducer& mod_n,
+                              const std::shared_ptr<Montgomery_Params>& monty_n,
+                              const BigInt& a);
+
+/**
+* Perform t iterations of a Miller-Rabin primality test with random bases
+*
+* @param n the positive integer to test
+* @param mod_n a pre-created Modular_Reducer for n
+* @param rng a random number generator
+* @param t number of tests to perform
+*
+* @return result of primality test
+*/
+bool BOTAN_TEST_API is_miller_rabin_probable_prime(const BigInt& n,
+                                                   const Modular_Reducer& mod_n,
+                                                   RandomNumberGenerator& rng,
+                                                   size_t t);
+
+}
+
+namespace Botan {
+
+class File_Descriptor_Source
+   {
+   public:
+      virtual int next_fd() = 0;
+      virtual ~File_Descriptor_Source() = default;
+   };
+
+/**
+* File Tree Walking Entropy Source
+*/
+class ProcWalking_EntropySource final : public Entropy_Source
+   {
+   public:
+      std::string name() const override { return "proc_walk"; }
+
+      size_t poll(RandomNumberGenerator& rng) override;
+
+      explicit ProcWalking_EntropySource(const std::string& root_dir) :
+         m_path(root_dir), m_dir(nullptr) {}
+
+   private:
+      const std::string m_path;
+      mutex_type m_mutex;
+      std::unique_ptr<File_Descriptor_Source> m_dir;
+      secure_vector<uint8_t> m_buf;
+   };
+
+}
+
+namespace Botan {
+
 /**
 * Entropy source using the rdrand instruction first introduced on
 * Intel's Ivy Bridge architecture.
@@ -3448,12 +4359,9 @@ inline size_t round_up(size_t n, size_t align_to)
 * @return n rounded down to a multiple of align_to
 */
 template<typename T>
-inline T round_down(T n, T align_to)
+inline constexpr T round_down(T n, T align_to)
    {
-   if(align_to == 0)
-      return n;
-
-   return (n - (n % align_to));
+   return (align_to == 0) ? n : (n - (n % align_to));
    }
 
 /**
@@ -3478,6 +4386,8 @@ class BOTAN_PUBLIC_API(2,0) Integer_Overflow_Detected final : public Exception
       Integer_Overflow_Detected(const std::string& file, int line) :
          Exception("Integer overflow detected at " + file + ":" + std::to_string(line))
          {}
+
+      ErrorType error_type() const noexcept override { return ErrorType::InternalError; }
    };
 
 inline size_t checked_add(size_t x, size_t y, const char* file, int line)
@@ -3941,6 +4851,8 @@ class Semaphore final
 #elif defined(BOTAN_TARGET_SUPPORTS_NEON)
   #include <arm_neon.h>
   #define BOTAN_SIMD_USE_NEON
+
+#else
 #endif
 
 namespace Botan {
@@ -3962,10 +4874,8 @@ class SIMD_4x32 final
       SIMD_4x32& operator=(const SIMD_4x32& other) = default;
       SIMD_4x32(const SIMD_4x32& other) = default;
 
-#if !defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
       SIMD_4x32& operator=(SIMD_4x32&& other) = default;
       SIMD_4x32(SIMD_4x32&& other) = default;
-#endif
 
       /**
       * Zero initialize SIMD register with 4 32-bit elements
@@ -4055,14 +4965,8 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
-         uint32_t in32[4];
-         std::memcpy(in32, in, 16);
-         if(CPUID::is_big_endian())
-            {
-            bswap_4(in32);
-            }
-         return SIMD_4x32(vld1q_u32(in32));
-
+         SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
+         return CPUID::is_big_endian() ? l.bswap() : l;
 #else
          SIMD_4x32 out;
          Botan::load_le(out.m_scalar, static_cast<const uint8_t*>(in), 4);
@@ -4087,13 +4991,8 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
-         uint32_t in32[4];
-         std::memcpy(in32, in, 16);
-         if(CPUID::is_little_endian())
-            {
-            bswap_4(in32);
-            }
-         return SIMD_4x32(vld1q_u32(in32));
+         SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
+         return CPUID::is_little_endian() ? l.bswap() : l;
 
 #else
          SIMD_4x32 out;
@@ -4124,14 +5023,11 @@ class SIMD_4x32 final
 
          if(CPUID::is_big_endian())
             {
-            SIMD_4x32 swap = bswap();
-            swap.store_be(out);
+            bswap().store_le(out);
             }
          else
             {
-            uint32_t out32[4] = { 0 };
-            vst1q_u32(out32, m_neon);
-            copy_out_le(out, 16, out32);
+            vst1q_u8(out, vreinterpretq_u8_u32(m_neon));
             }
 #else
          Botan::store_le(out, m_scalar[0], m_scalar[1], m_scalar[2], m_scalar[3]);
@@ -4160,14 +5056,11 @@ class SIMD_4x32 final
 
          if(CPUID::is_little_endian())
             {
-            SIMD_4x32 swap = bswap();
-            swap.store_le(out);
+            bswap().store_le(out);
             }
          else
             {
-            uint32_t out32[4] = { 0 };
-            vst1q_u32(out32, m_neon);
-            copy_out_be(out, 16, out32);
+            vst1q_u8(out, vreinterpretq_u8_u32(m_neon));
             }
 
 #else
@@ -4183,55 +5076,10 @@ class SIMD_4x32 final
       template<size_t ROT1, size_t ROT2, size_t ROT3>
       SIMD_4x32 rho() const
          {
-         SIMD_4x32 res;
-
-#if defined(BOTAN_SIMD_USE_SSE2)
-
-         res.m_sse = _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-ROT1)),
-                                  _mm_srli_epi32(m_sse, static_cast<int>(ROT1)));
-         res.m_sse = _mm_xor_si128(
-            res.m_sse,
-            _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-ROT2)),
-                         _mm_srli_epi32(m_sse, static_cast<int>(ROT2))));
-         res.m_sse = _mm_xor_si128(
-            res.m_sse,
-            _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(32-ROT3)),
-                         _mm_srli_epi32(m_sse, static_cast<int>(ROT3))));
-
-#elif defined(BOTAN_SIMD_USE_ALTIVEC)
-
-         const unsigned int r1 = static_cast<unsigned int>(32-ROT1);
-         const unsigned int r2 = static_cast<unsigned int>(32-ROT2);
-         const unsigned int r3 = static_cast<unsigned int>(32-ROT3);
-         res.m_vmx = vec_rl(m_vmx, (__vector unsigned int){r1, r1, r1, r1});
-         res.m_vmx = vec_xor(res.m_vmx, vec_rl(m_vmx, (__vector unsigned int){r2, r2, r2, r2}));
-         res.m_vmx = vec_xor(res.m_vmx, vec_rl(m_vmx, (__vector unsigned int){r3, r3, r3, r3}));
-
-#elif defined(BOTAN_SIMD_USE_NEON)
-         res.m_neon = vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-ROT1)),
-                                vshrq_n_u32(m_neon, static_cast<int>(ROT1)));
-
-         res.m_neon = veorq_u32(
-            res.m_neon,
-            vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-ROT2)),
-                      vshrq_n_u32(m_neon, static_cast<int>(ROT2))));
-
-         res.m_neon = veorq_u32(
-            res.m_neon,
-            vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(32-ROT3)),
-                      vshrq_n_u32(m_neon, static_cast<int>(ROT3))));
-
-#else
-
-         for(size_t i = 0; i != 4; ++i)
-            {
-            res.m_scalar[i] = Botan::rotr<ROT1>(m_scalar[i]) ^
-                              Botan::rotr<ROT2>(m_scalar[i]) ^
-                              Botan::rotr<ROT3>(m_scalar[i]);
-            }
-#endif
-
-         return res;
+         const SIMD_4x32 rot1 = this->rotr<ROT1>();
+         const SIMD_4x32 rot2 = this->rotr<ROT2>();
+         const SIMD_4x32 rot3 = this->rotr<ROT3>();
+         return (rot1 ^ rot2 ^ rot3);
          }
 
       /**
@@ -4253,8 +5101,31 @@ class SIMD_4x32 final
          return SIMD_4x32(vec_rl(m_vmx, (__vector unsigned int){r, r, r, r}));
 
 #elif defined(BOTAN_SIMD_USE_NEON)
+
+         #if defined(BOTAN_TARGET_ARCH_IS_ARM32)
+
          return SIMD_4x32(vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(ROT)),
                                     vshrq_n_u32(m_neon, static_cast<int>(32-ROT))));
+
+         #else
+
+         if(ROT == 8)
+            {
+            const uint8_t maskb[16] = { 3,0,1,2, 7,4,5,6, 11,8,9,10, 15,12,13,14 };
+            const uint8x16_t mask = vld1q_u8(maskb);
+            return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(m_neon), mask)));
+            }
+         else if(ROT == 16)
+            {
+            return SIMD_4x32(vreinterpretq_u32_u16(vrev32q_u16(vreinterpretq_u16_u32(m_neon))));
+            }
+         else
+            {
+            return SIMD_4x32(vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(ROT)),
+                                       vshrq_n_u32(m_neon, static_cast<int>(32-ROT))));
+            }
+
+         #endif
 
 #else
          return SIMD_4x32(Botan::rotl<ROT>(m_scalar[0]),
@@ -4500,15 +5371,8 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
-         //return SIMD_4x32(vrev64q_u32(m_neon));
+         return SIMD_4x32(vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(m_neon))));
 
-         // FIXME this is really slow
-         SIMD_4x32 ror8 = this->rotr<8>();
-         SIMD_4x32 rol8 = this->rotl<8>();
-
-         const SIMD_4x32 mask1 = SIMD_4x32::splat(0xFF00FF00);
-         const SIMD_4x32 mask2 = SIMD_4x32::splat(0x00FF00FF);
-         return (ror8 & mask1) | (rol8 & mask2);
 #else
          // scalar
          return SIMD_4x32(reverse_bytes(m_scalar[0]),
@@ -4606,8 +5470,6 @@ class SIMD_4x32 final
       uint32_t m_scalar[4];
 #endif
    };
-
-typedef SIMD_4x32 SIMD_32;
 
 }
 
@@ -4749,6 +5611,176 @@ void map_remove_if(Pred pred, T& assoc)
          i++;
       }
    }
+
+}
+
+namespace Botan {
+
+class BOTAN_TEST_API Timer final
+   {
+   public:
+      Timer(const std::string& name,
+            const std::string& provider,
+            const std::string& doing,
+            uint64_t event_mult,
+            size_t buf_size,
+            double clock_cycle_ratio,
+            uint64_t clock_speed)
+         : m_name(name + ((provider.empty() || provider == "base") ? "" : " [" + provider + "]"))
+         , m_doing(doing)
+         , m_buf_size(buf_size)
+         , m_event_mult(event_mult)
+         , m_clock_cycle_ratio(clock_cycle_ratio)
+         , m_clock_speed(clock_speed)
+         {}
+
+      Timer(const std::string& name) :
+         Timer(name, "", "", 1, 0, 0.0, 0)
+         {}
+
+      Timer(const std::string& name, size_t buf_size) :
+         Timer(name, "", "", buf_size, buf_size, 0.0, 0)
+         {}
+
+      Timer(const Timer& other) = default;
+
+      void start();
+
+      void stop();
+
+      bool under(std::chrono::milliseconds msec)
+         {
+         return (milliseconds() < msec.count());
+         }
+
+      class Timer_Scope final
+         {
+         public:
+            explicit Timer_Scope(Timer& timer)
+               : m_timer(timer)
+               {
+               m_timer.start();
+               }
+            ~Timer_Scope()
+               {
+               try
+                  {
+                  m_timer.stop();
+                  }
+               catch(...) {}
+               }
+         private:
+            Timer& m_timer;
+         };
+
+      template<typename F>
+      auto run(F f) -> decltype(f())
+         {
+         Timer_Scope timer(*this);
+         return f();
+         }
+
+      template<typename F>
+      void run_until_elapsed(std::chrono::milliseconds msec, F f)
+         {
+         while(this->under(msec))
+            {
+            run(f);
+            }
+         }
+
+      uint64_t value() const
+         {
+         return m_time_used;
+         }
+
+      double seconds() const
+         {
+         return milliseconds() / 1000.0;
+         }
+
+      double milliseconds() const
+         {
+         return value() / 1000000.0;
+         }
+
+      double ms_per_event() const
+         {
+         return milliseconds() / events();
+         }
+
+      uint64_t cycles_consumed() const
+         {
+         if(m_clock_speed != 0)
+            {
+            return static_cast<uint64_t>((m_clock_speed * value()) / 1000.0);
+            }
+         return m_cpu_cycles_used;
+         }
+
+      uint64_t events() const
+         {
+         return m_event_count * m_event_mult;
+         }
+
+      const std::string& get_name() const
+         {
+         return m_name;
+         }
+
+      const std::string& doing() const
+         {
+         return m_doing;
+         }
+
+      size_t buf_size() const
+         {
+         return m_buf_size;
+         }
+
+      double bytes_per_second() const
+         {
+         return seconds() > 0.0 ? events() / seconds() : 0.0;
+         }
+
+      double events_per_second() const
+         {
+         return seconds() > 0.0 ? events() / seconds() : 0.0;
+         }
+
+      double seconds_per_event() const
+         {
+         return events() > 0 ? seconds() / events() : 0.0;
+         }
+
+      void set_custom_msg(const std::string& s)
+         {
+         m_custom_msg = s;
+         }
+
+      bool operator<(const Timer& other) const;
+
+      std::string to_string() const;
+
+   private:
+      std::string result_string_bps() const;
+      std::string result_string_ops() const;
+
+      // const data
+      std::string m_name, m_doing;
+      size_t m_buf_size;
+      uint64_t m_event_mult;
+      double m_clock_cycle_ratio;
+      uint64_t m_clock_speed;
+
+      // set at runtime
+      std::string m_custom_msg;
+      uint64_t m_time_used = 0, m_timer_start = 0;
+      uint64_t m_event_count = 0;
+
+      uint64_t m_max_time = 0, m_min_time = 0;
+      uint64_t m_cpu_cycles_start = 0, m_cpu_cycles_used = 0;
+   };
 
 }
 
@@ -5832,7 +6864,7 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers
 
       uint64_t next_read_sequence() override
          {
-         throw Exception("DTLS uses explicit sequence numbers");
+         throw Invalid_State("DTLS uses explicit sequence numbers");
          }
 
       bool already_seen(uint64_t sequence) const override
@@ -6021,6 +7053,8 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature,
       secure_vector<uint8_t> sign(RandomNumberGenerator&) override;
 
       void update(const uint8_t msg[], size_t msg_len) override;
+
+      size_t signature_length() const override;
 
    private:
       /**

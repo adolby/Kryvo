@@ -83,17 +83,17 @@ linux {
   android {
     message(Android)
 
-    ANDROID_PACKAGE_SOURCE_DIR = $$(PWD)/../../resources/android
+    ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../../resources/android
 
     debug {
       message(Debug)
-      LIBS += -L$$(PWD)/../../build/android/armv7/debug/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/android/armv7/debug/Kryvo
+      LIBS += -L$$PWD/../../build/android/armv7/debug/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/android/armv7/debug/Kryvo
     }
     release {
       message(Release)
-      LIBS += -L$$(PWD)/../../build/android/armv7/release/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/android/armv7/release/Kryvo
+      LIBS += -L$$PWD/../../build/android/armv7/release/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/android/armv7/release/Kryvo
     }
   } # End android
 
@@ -109,18 +109,18 @@ linux {
 
     debug {
       message(Debug)
-      LIBS += -L$$(PWD)/../../build/linux/clang/x86_64/debug/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/linux/clang/x86_64/debug/Kryvo
+      LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/linux/clang/x86_64/debug/Kryvo
     }
     release {
       message(Release)
-      LIBS += -L$$(PWD)/../../build/linux/clang/x86_64/release/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/linux/clang/x86_64/release/Kryvo
+      LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/linux/clang/x86_64/release/Kryvo
     }
-  } # End linux-clang
+  } # End clang
 
-  linux-g++ {
-    message(g++)
+  linux-g++-64 {
+    message(g++ x86_64)
 
     QT += widgets
 
@@ -131,15 +131,15 @@ linux {
 
     debug {
       message(Debug)
-      LIBS += -L$$(PWD)/../../build/linux/gcc/x86_64/debug/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/linux/gcc/x86_64/debug/Kryvo
+      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/linux/gcc/x86_64/debug/Kryvo
     }
     release {
       message(Release)
-      LIBS += -L$$(PWD)/../../build/linux/gcc/x86_64/release/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/linux/gcc/x86_64/release/Kryvo
+      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/Kryvo
     }
-  } # End linux-g++
+  } # End g++ x86_64
 } # End linux
 
 darwin {
@@ -152,13 +152,13 @@ darwin {
 
     debug {
       message(Debug)
-      LIBS += -L$$(PWD)/../../build/iOS/debug/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/iOS/debug/Kryvo
+      LIBS += -L$$PWD/../../build/iOS/debug/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/iOS/debug/Kryvo
     }
     release {
       message(Release)
-      LIBS += -L$$(PWD)/../../build/iOS/release/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/iOS/release/Kryvo
+      LIBS += -L$$PWD/../../build/iOS/release/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/iOS/release/Kryvo
     }
 
     LIBS += -framework Foundation -framework CoreFoundation -framework UIKit
@@ -177,17 +177,17 @@ darwin {
     HEADERS += gui/DesktopMainWindow.hpp
 
     QMAKE_TARGET_BUNDLE_PREFIX = app.kryvo
-    ICON = $$(PWD)/../../resources/icons/kryvo.icns
+    ICON = $$PWD/../../resources/icons/kryvo.icns
 
     debug {
       message(Debug)
-      LIBS += -L$$(PWD)/../../build/macOS/clang/x86_64/debug/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/macOS/clang/x86_64/debug/Kryvo
+      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/macOS/clang/x86_64/debug/Kryvo
     }
     release {
       message(Release)
-      LIBS += -L$$(PWD)/../../build/macOS/clang/x86_64/release/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/macOS/clang/x86_64/release/Kryvo
+      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/macOS/clang/x86_64/release/Kryvo
     }
   } # End macos
 } # End darwin
@@ -205,13 +205,13 @@ win32 {
 
     debug {
       message(Debug)
-      LIBS += -L$$(PWD)/../../build/windows/mingw/x86/debug/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/windows/mingw/x86/debug/Kryvo/
+      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/windows/mingw/x86/debug/Kryvo
     }
     release {
       message(Release)
-      LIBS += -L$$(PWD)/../../build/windows/mingw/x86/release/lib/zlib -lz
-      DESTDIR = $$(PWD)/../../build/windows/mingw/x86/release/Kryvo/
+      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/lib/zlib -lz
+      DESTDIR = $$PWD/../../build/windows/mingw/x86/release/Kryvo
     }
   } # End win32-g++
 
@@ -227,24 +227,22 @@ win32 {
 
       debug {
         message(Debug)
-        LIBS += -L$$(PWD)/../../build/windows/msvc/x86_64/debug/lib/zlib -lz
-        DESTDIR = $$(PWD)/../../build/windows/msvc/x86_64/debug/Kryvo/
+        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/lib/zlib -lz
+        DESTDIR = $$PWD/../../build/windows/msvc/x86_64/debug/Kryvo
       }
       release {
         message(Release)
-        LIBS += -L$$(PWD)/../../build/windows/msvc/x86_64/release/lib/zlib -lz
-        DESTDIR = $$(PWD)/../../build/windows/msvc/x86_64/release/Kryvo/
+        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/lib/zlib -lz
+        DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/Kryvo
       }
     }
   } # End win32-msvc
 
-  RC_ICONS += $$(PWD)/../../resources/icons/kryvo.ico
+  RC_ICONS += $$PWD/../../resources/icons/kryvo.ico
 } # End win32
 
 OBJECTS_DIR = $${DESTDIR}/obj
 MOC_DIR = $${DESTDIR}/moc
 RCC_DIR = $${DESTDIR}/qrc
 
-message($$RCC_DIR)
-
-RESOURCES += $$(PWD)/../../resources/assets.qrc
+RESOURCES += $$PWD/../../resources/assets.qrc

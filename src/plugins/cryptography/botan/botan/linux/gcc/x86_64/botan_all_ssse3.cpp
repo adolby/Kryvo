@@ -1,6 +1,6 @@
 /*
-* Botan 1.11.32 Amalgamation
-* (C) 1999-2013,2014,2015 Jack Lloyd and others
+* Botan 2.9.0 Amalgamation
+* (C) 1999-2018 The Botan Authors
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,6 +8,9 @@
 #include "botan_all.h"
 #include "botan_all_internal.h"
 
+#if defined(__GNUG__) && !defined(__clang__)
+#pragma GCC target ("ssse3")
+#endif
 /*
 * AES using SSSE3
 * (C) 2010,2016 Jack Lloyd
@@ -15,7 +18,7 @@
 * This is more or less a direct translation of public domain x86-64
 * assembly written by Mike Hamburg, described in "Accelerating AES
 * with Vector Permute Instructions" (CHES 2009). His original code is
-* available at http://crypto.stanford.edu/vpaes/
+* available at https://crypto.stanford.edu/vpaes/
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -59,6 +62,7 @@ const __m128i sr[4] = {
 
 #define mm_xor3(x, y, z) _mm_xor_si128(x, _mm_xor_si128(y, z))
 
+BOTAN_FUNC_ISA("ssse3")
 __m128i aes_schedule_transform(__m128i input,
                                __m128i table_1,
                                __m128i table_2)
@@ -71,7 +75,8 @@ __m128i aes_schedule_transform(__m128i input,
       _mm_shuffle_epi8(table_2, i_2));
    }
 
-__m128i aes_schedule_mangle(__m128i k, byte round_no)
+BOTAN_FUNC_ISA("ssse3")
+__m128i aes_schedule_mangle(__m128i k, uint8_t round_no)
    {
    __m128i t = _mm_shuffle_epi8(_mm_xor_si128(k, _mm_set1_epi8(0x5B)),
                                 mc_forward[0]);
@@ -85,6 +90,7 @@ __m128i aes_schedule_mangle(__m128i k, byte round_no)
    return _mm_shuffle_epi8(t2, sr[round_no % 4]);
    }
 
+BOTAN_FUNC_ISA("ssse3")
 __m128i aes_schedule_192_smear(__m128i x, __m128i y)
    {
    return mm_xor3(y,
@@ -92,7 +98,8 @@ __m128i aes_schedule_192_smear(__m128i x, __m128i y)
                   _mm_shuffle_epi32(y, 0x80));
    }
 
-__m128i aes_schedule_mangle_dec(__m128i k, byte round_no)
+BOTAN_FUNC_ISA("ssse3")
+__m128i aes_schedule_mangle_dec(__m128i k, uint8_t round_no)
    {
    const __m128i dsk[8] = {
       _mm_set_epi32(0x4AED9334, 0x82255BFC, 0xB6116FC8, 0x7ED9A700),
@@ -120,7 +127,8 @@ __m128i aes_schedule_mangle_dec(__m128i k, byte round_no)
    return _mm_shuffle_epi8(output, sr[round_no % 4]);
    }
 
-__m128i aes_schedule_mangle_last(__m128i k, byte round_no)
+BOTAN_FUNC_ISA("ssse3")
+__m128i aes_schedule_mangle_last(__m128i k, uint8_t round_no)
    {
    const __m128i out_tr1 = _mm_set_epi32(
       0xF7974121, 0xDEBE6808, 0xFF9F4929, 0xD6B66000);
@@ -132,6 +140,7 @@ __m128i aes_schedule_mangle_last(__m128i k, byte round_no)
    return aes_schedule_transform(k, out_tr1, out_tr2);
    }
 
+BOTAN_FUNC_ISA("ssse3")
 __m128i aes_schedule_mangle_last_dec(__m128i k)
    {
    const __m128i deskew1 = _mm_set_epi32(
@@ -143,6 +152,7 @@ __m128i aes_schedule_mangle_last_dec(__m128i k)
    return aes_schedule_transform(k, deskew1, deskew2);
    }
 
+BOTAN_FUNC_ISA("ssse3")
 __m128i aes_schedule_round(__m128i* rcon, __m128i input1, __m128i input2)
    {
    if(rcon)
@@ -178,6 +188,7 @@ __m128i aes_schedule_round(__m128i* rcon, __m128i input1, __m128i input2)
                   smeared);
    }
 
+BOTAN_FUNC_ISA("ssse3")
 __m128i aes_ssse3_encrypt(__m128i B, const __m128i* keys, size_t rounds)
    {
    const __m128i sb2u = _mm_set_epi32(
@@ -247,6 +258,7 @@ __m128i aes_ssse3_encrypt(__m128i B, const __m128i* keys, size_t rounds)
       }
    }
 
+BOTAN_FUNC_ISA("ssse3")
 __m128i aes_ssse3_decrypt(__m128i B, const __m128i* keys, size_t rounds)
    {
    const __m128i k_dipt1 = _mm_set_epi32(
@@ -314,7 +326,7 @@ __m128i aes_ssse3_decrypt(__m128i B, const __m128i* keys, size_t rounds)
          x = _mm_xor_si128(x, K);
          x = _mm_xor_si128(x, y);
 
-         const u32bit which_sr = ((((rounds - 1) << 4) ^ 48) & 48) / 16;
+         const uint32_t which_sr = ((((rounds - 1) << 4) ^ 48) & 48) / 16;
          return _mm_shuffle_epi8(x, sr[which_sr]);
          }
 
@@ -344,7 +356,8 @@ __m128i aes_ssse3_decrypt(__m128i B, const __m128i* keys, size_t rounds)
 /*
 * AES-128 Encryption
 */
-void AES_128::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
+BOTAN_FUNC_ISA("ssse3")
+void AES_128::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -353,7 +366,7 @@ void AES_128::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
 
    CT::poison(in, blocks * block_size());
 
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
       _mm_storeu_si128(out_mm + i, aes_ssse3_encrypt(B, keys, 10));
@@ -366,7 +379,8 @@ void AES_128::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-128 Decryption
 */
-void AES_128::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
+BOTAN_FUNC_ISA("ssse3")
+void AES_128::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -375,7 +389,7 @@ void AES_128::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
 
    CT::poison(in, blocks * block_size());
 
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
       _mm_storeu_si128(out_mm + i, aes_ssse3_decrypt(B, keys, 10));
@@ -388,7 +402,8 @@ void AES_128::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-128 Key Schedule
 */
-void AES_128::ssse3_key_schedule(const byte keyb[], size_t)
+BOTAN_FUNC_ISA("ssse3")
+void AES_128::ssse3_key_schedule(const uint8_t keyb[], size_t)
    {
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);
@@ -426,7 +441,8 @@ void AES_128::ssse3_key_schedule(const byte keyb[], size_t)
 /*
 * AES-192 Encryption
 */
-void AES_192::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
+BOTAN_FUNC_ISA("ssse3")
+void AES_192::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -448,7 +464,8 @@ void AES_192::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-192 Decryption
 */
-void AES_192::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
+BOTAN_FUNC_ISA("ssse3")
+void AES_192::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -470,7 +487,8 @@ void AES_192::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-192 Key Schedule
 */
-void AES_192::ssse3_key_schedule(const byte keyb[], size_t)
+BOTAN_FUNC_ISA("ssse3")
+void AES_192::ssse3_key_schedule(const uint8_t keyb[], size_t)
    {
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);
@@ -537,7 +555,8 @@ void AES_192::ssse3_key_schedule(const byte keyb[], size_t)
 /*
 * AES-256 Encryption
 */
-void AES_256::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
+BOTAN_FUNC_ISA("ssse3")
+void AES_256::ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -559,7 +578,8 @@ void AES_256::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-256 Decryption
 */
-void AES_256::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
+BOTAN_FUNC_ISA("ssse3")
+void AES_256::ssse3_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -581,7 +601,8 @@ void AES_256::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-256 Key Schedule
 */
-void AES_256::ssse3_key_schedule(const byte keyb[], size_t)
+BOTAN_FUNC_ISA("ssse3")
+void AES_256::ssse3_key_schedule(const uint8_t keyb[], size_t)
    {
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);
@@ -622,6 +643,65 @@ void AES_256::ssse3_key_schedule(const byte keyb[], size_t)
 
    _mm_storeu_si128(EK_mm + 14, aes_schedule_mangle_last(key2, 2));
    _mm_storeu_si128(DK_mm + 0, aes_schedule_mangle_last_dec(key2));
+   }
+
+}
+/*
+* (C) 2017 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include <immintrin.h>
+
+namespace Botan {
+
+BOTAN_FUNC_ISA("ssse3")
+void gcm_multiply_ssse3(uint8_t x[16],
+                        const uint64_t HM[256],
+                        const uint8_t input_bytes[], size_t blocks)
+   {
+   const __m128i BSWAP_MASK = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+
+   const __m128i* HM_mm = reinterpret_cast<const __m128i*>(HM);
+
+   __m128i X = _mm_loadu_si128(reinterpret_cast<__m128i*>(x));
+   X = _mm_shuffle_epi8(X, BSWAP_MASK);
+
+   const __m128i ones = _mm_set1_epi8(-1);
+
+   for(size_t b = 0; b != blocks; ++b)
+      {
+      __m128i M = _mm_loadu_si128(reinterpret_cast<const __m128i*>(input_bytes) + b);
+      M = _mm_shuffle_epi8(M, BSWAP_MASK);
+
+      X = _mm_xor_si128(X, M);
+
+      __m128i Z = _mm_setzero_si128();
+
+      for(size_t i = 0; i != 64; i += 2)
+         {
+         const __m128i HM0 = _mm_loadu_si128(HM_mm + 2*i);
+         const __m128i HM1 = _mm_loadu_si128(HM_mm + 2*i + 1);
+         const __m128i HM2 = _mm_loadu_si128(HM_mm + 2*i + 2);
+         const __m128i HM3 = _mm_loadu_si128(HM_mm + 2*i + 3);
+
+         const __m128i XMASK1 = _mm_add_epi64(_mm_srli_epi64(X, 63), ones);
+         X = _mm_slli_epi64(X, 1);
+         const __m128i XMASK2 = _mm_add_epi64(_mm_srli_epi64(X, 63), ones);
+         X = _mm_slli_epi64(X, 1);
+
+         Z = _mm_xor_si128(Z, _mm_andnot_si128(_mm_unpackhi_epi64(XMASK1, XMASK1), HM0));
+         Z = _mm_xor_si128(Z, _mm_andnot_si128(_mm_unpacklo_epi64(XMASK1, XMASK1), HM1));
+         Z = _mm_xor_si128(Z, _mm_andnot_si128(_mm_unpackhi_epi64(XMASK2, XMASK2), HM2));
+         Z = _mm_xor_si128(Z, _mm_andnot_si128(_mm_unpacklo_epi64(XMASK2, XMASK2), HM3));
+         }
+
+      X = _mm_shuffle_epi32(Z, _MM_SHUFFLE(1, 0, 3, 2));
+      }
+
+   X = _mm_shuffle_epi8(X, BSWAP_MASK);
+   _mm_storeu_si128(reinterpret_cast<__m128i*>(x), X);
    }
 
 }
