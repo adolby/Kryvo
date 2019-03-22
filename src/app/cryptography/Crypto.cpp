@@ -128,7 +128,7 @@ void Kryvo::CryptoPrivate::loadProviders() {
     }
   }
 
-  Q_ASSERT(provider);
+  Q_ASSERT_X(provider, "loadProviders", "Provider plugin is missing");
 }
 
 bool Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
