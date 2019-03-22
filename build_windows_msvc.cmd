@@ -3,7 +3,7 @@ echo on
 SET project_dir="%cd%"
 
 echo Set up environment...
-set PATH=%QTPATH%\bin\;C:\Qt\Tools\QtCreator\bin\;C:\Qt\Tools\mingw530_32\QtIFW3.0.1\bin\;%PATH%
+set PATH=%QTPATH%\bin\;C:\Qt\QtIFW-3.0.1\bin\;%PATH%
 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 
 echo Building Kryvo...
@@ -33,11 +33,11 @@ copy "%project_dir%\README.md" "Kryvo\README.md"
 copy "%project_dir%\LICENSE" "Kryvo\LICENSE.txt"
 copy "%project_dir%\Botan License" "Kryvo\Botan License.txt"
 copy "%project_dir%\Qt License" "Kryvo\Qt License.txt"
-mkdir %project_dir%\Kryvo\themes\
+mkdir "%project_dir%\Kryvo\themes\"
 copy "%project_dir%\resources\stylesheets\kryvo.qss" "Kryvo\themes\kryvo.qss"
 
 echo Copying files for installer...
-mkdir %project_dir%\installer\windows\x86_64\packages\io.kryvo\data\
+mkdir "%project_dir%\installer\windows\x86_64\packages\io.kryvo\data\"
 robocopy Kryvo\ %project_dir%\installer\windows\x86_64\packages\io.kryvo\data\ /E
 
 echo Packaging portable archive...
