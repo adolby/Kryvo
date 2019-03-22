@@ -83,8 +83,6 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
 
   qint64 totalBytesRead = 0;
 
-  int j = 0;
-
   /* compress until end of file */
   do {
     if (state->isAborted() || state->isStopped(id)) {
@@ -109,8 +107,6 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
     flush = source->atEnd() ? Z_FINISH : Z_NO_FLUSH;
 
     strm.next_in = reinterpret_cast<unsigned char*>(in.data());
-
-    int i = 0;
 
     /* run deflate() on input until output buffer not full, finish
        compression if all of source has been read in */
@@ -208,8 +204,6 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
 
   qint64 totalBytesRead = 0;
 
-  int j = 0;
-
   /* decompress until deflate stream ends or end of file */
   do {
     if (state->isAborted() || state->isStopped(id)) {
@@ -236,8 +230,6 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
     }
 
     strm.next_in = reinterpret_cast<unsigned char*>(in.data());
-
-    int i = 0;
 
     /* run inflate() on input until output buffer not full */
     do {
