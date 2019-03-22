@@ -1,5 +1,5 @@
 /*
-* Botan 2.7.0 Amalgamation
+* Botan 2.9.0 Amalgamation
 * (C) 1999-2018 The Botan Authors
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -27,8 +27,14 @@ namespace Botan {
 
 RDRAND_RNG::RDRAND_RNG()
    {
-   if(!CPUID::has_rdrand())
-      throw Exception("Current CPU does not support RDRAND instruction");
+   if(!RDRAND_RNG::available())
+      throw Invalid_State("Current CPU does not support RDRAND instruction");
+   }
+
+//static
+bool RDRAND_RNG::available()
+   {
+   return CPUID::has_rdrand();
    }
 
 //static
