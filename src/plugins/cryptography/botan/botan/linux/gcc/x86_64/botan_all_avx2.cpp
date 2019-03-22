@@ -8,7 +8,6 @@
 #include "botan_all.h"
 #include "botan_all_internal.h"
 
-//#include <botan/types.h>
 #include <immintrin.h>
 
 namespace Botan {
