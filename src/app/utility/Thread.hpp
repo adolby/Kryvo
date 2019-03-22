@@ -21,16 +21,22 @@ class Thread final : public QThread {
               this, &Thread::aboutToBlock);
       QThread::run();
    }
+
    QAtomicInt inDestructor;
+
 public:
-   using QThread::QThread;
+  Thread( QObject* parent = nullptr ) : QThread( parent ) {
+  }
+
    /// Take an object and prevent timer resource leaks when the object is about
    /// to become threadless.
    void takeObject(QObject *obj) {
       // Work around to prevent
       // QBasicTimer::stop: Failed. Possibly trying to stop from a different thread
       static constexpr char kRegistered[] = "__ThreadRegistered";
+
       static constexpr char kMoved[] = "__Moved";
+
       if (!obj->property(kRegistered).isValid()) {
          QObject::connect(this, &Thread::finished, obj, [this, obj]{
             if (!inDestructor.load() || obj->thread() != this)
@@ -57,12 +63,14 @@ public:
       }
       obj->moveToThread(this);
    }
+
    ~Thread() override {
       inDestructor.store(1);
       requestInterruption();
       quit();
       wait();
    }
+
    Q_SIGNAL void aboutToBlock();
 };
 
