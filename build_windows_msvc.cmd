@@ -13,7 +13,7 @@ nmake
 echo Copying test data...
 cd %project_dir%\build\windows\msvc\x86_64\release\test\
 cp %project_dir%\src\tests\data\test-data.zip test-data.zip
-7z x test-data.zip
+7z e test-data.zip
 
 echo Running tests...
 windeployqt tests.exe
