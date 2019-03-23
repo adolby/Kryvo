@@ -11,16 +11,16 @@ qmake -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
 nmake
 
 echo Copying test data...
-cd %project_dir%\build\windows\msvc\x86_64\release\test\
-cp %project_dir%\src\tests\data\test-data.zip test-data.zip
-7z e test-data.zip
+cd "%project_dir%\build\windows\msvc\x86_64\release\test\"
+copy "%project_dir%\src\tests\data\test-data.zip" test-data.zip
+7z.exe e test-data.zip
 
 echo Running tests...
 windeployqt tests.exe
 tests
 
 echo Packaging...
-cd %project_dir%\build\windows\msvc\x86_64\release\
+cd "%project_dir%\build\windows\msvc\x86_64\release\"
 windeployqt Kryvo\Kryvo.exe
 
 rd /s /q Kryvo\moc\
@@ -41,8 +41,8 @@ mkdir "%project_dir%\installer\windows\x86_64\packages\io.kryvo\data\"
 robocopy Kryvo\ %project_dir%\installer\windows\x86_64\packages\io.kryvo\data\ /E
 
 echo Packaging portable archive...
-7z a kryvo_%TAG_NAME%_windows_x86_64_portable.zip Kryvo
+7z.exe a kryvo_%TAG_NAME%_windows_x86_64_portable.zip Kryvo
 
 echo Creating installer...
-cd %project_dir%\installer\windows\x86_64\
+cd "%project_dir%\installer\windows\x86_64\"
 binarycreator.exe --offline-only -c config\config.xml -p packages kryvo_%TAG_NAME%_windows_x86_64_installer.exe
