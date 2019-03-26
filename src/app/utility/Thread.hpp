@@ -25,7 +25,7 @@ class Thread final : public QThread {
    QAtomicInt inDestructor;
 
 public:
-  Thread( QObject* parent = nullptr ) : QThread( parent ) {
+  Thread(QObject* parent = nullptr) : QThread(parent) {
   }
 
    /// Take an object and prevent timer resource leaks when the object is about
