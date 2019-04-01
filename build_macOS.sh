@@ -19,7 +19,7 @@ brew install qt
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
-PATH=/usr/local/opt/qt/bin/:${PATH}
+PATH="usr/local/opt/qt/bin/:${PATH}"
 
 # Get Botan
 # echo "Installing Botan..."
@@ -37,15 +37,20 @@ PATH=/usr/local/opt/qt/bin/:${PATH}
 # cp botan_all.cpp ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all.cpp
 # cp botan_all.h ${project_dir}/src/cryptography/botan/macOS/clang/x86_64/botan_all.h
 
-cd ${project_dir}
+cd "${project_dir}"
 
 # Clean build directory
-rm -rf ${project_dir}/build/macOS/
+rm -rf "${project_dir}/build/macOS/"
 
-mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/
-mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/lib/
-mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/lib/zlib/
-mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/test/
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/widgets/"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/widgets/moc"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/widgets/qrc"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/widgets/obj"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/quick/"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/lib/"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/lib/zlib/"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/test/"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/Kryvo/"
 
 # Build Kryvo
 echo "Building Kryvo..."
@@ -58,20 +63,20 @@ qmake CONFIG+=release
 make
 
 # Copy Qt dependencies for test app
-echo "Copy Qt dependencies to test app..."
-cd ${project_dir}/build/macOS/clang/x86_64/release/test/
+echo "Copying Qt dependencies to test app..."
+cd "${project_dir}/build/macOS/clang/x86_64/release/test/"
 macdeployqt tests.app
 
 # Copy plugins to test app
-echo "Copy plugins to test app..."
-mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/PlugIns/cryptography/botan/
-cd ${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/PlugIns/cryptography/botan/
-cp ${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib libbotan.dylib
+echo "Copying plugins for test app..."
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/PlugIns/cryptography/botan/"
+cd "${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/PlugIns/cryptography/botan/"
+cp "${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib" libbotan.dylib
 
 # Copy test data
 echo "Copying test data archive..."
-cd ${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/MacOS/
-cp ${project_dir}/src/tests/data/test-data.zip test-data.zip
+cd "${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/MacOS/"
+cp "${project_dir}/src/tests/data/test-data.zip" test-data.zip
 
 echo "Extracting test data..."
 7z e test-data.zip &>/dev/null
@@ -81,16 +86,19 @@ echo "Skipping tests..."
 # chmod +x tests
 # ./tests
 
+# Copy plugins to app
+echo "Copy plugins to app..."
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/Kryvo/Kryvo.app/Contents/PlugIns/cryptography/botan/"
+cd "${project_dir}/build/macOS/clang/x86_64/release/widgets/Kryvo.app/Contents/PlugIns/cryptography/botan/"
+cp "${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib" libbotan.dylib
+
 # Package Kryvo
 echo "Packaging..."
 
-# Copy plugins to app
-echo "Copy plugins to app..."
-mkdir -p ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/Kryvo.app/Contents/PlugIns/cryptography/botan/
-cd ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/Kryvo.app/Contents/PlugIns/cryptography/botan/
-cp ${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib libbotan.dylib
+echo "Copying app to packaging directory..."
+cp -r "${project_dir}/build/macOS/clang/x86_64/release/widgets/." "${project_dir}/build/macOS/clang/x86_64/release/Kryvo/"
 
-cd ${project_dir}/build/macOS/clang/x86_64/release/Kryvo/
+cd "${project_dir}/build/macOS/clang/x86_64/release/Kryvo/"
 
 rm -rf moc
 rm -rf obj

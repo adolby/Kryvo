@@ -65,11 +65,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = $$PWD/../../build/android/debug/lib/zlib
+      DESTDIR = $$PWD/../../build/android/armv7/debug/lib/zlib
     }
     release {
       message(Release)
-      DESTDIR = $$PWD/../../build/android/release/lib/zlib
+      DESTDIR = $$PWD/../../build/android/armv7/release/lib/zlib
     }
   } # End Android
 

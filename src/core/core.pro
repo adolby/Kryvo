@@ -1,13 +1,12 @@
 include(../../defaults.pri)
 
-QT += testlib
-QT -= gui
+QT += core
 
-TARGET = tests
+TARGET = core
 
-TEMPLATE = app
+TEMPLATE = lib
 
-CONFIG += console warn_on testcase c++14
+CONFIG += staticlib c++14
 
 # Qt Creator Debug/Release Differentiation
 # Ensure one "debug_and_release" in CONFIG, for clarity.
@@ -27,16 +26,27 @@ CONFIG(release, debug|release) {
 }
 
 SOURCES += \
-  test_Crypto.cpp \
-  test_Archiver.cpp \
-  FileOperations.cpp \
-  test_FileOperations.cpp \
-  main.cpp
+  Constants.cpp \
+  Dispatcher.cpp \
+  DispatcherState.cpp \
+  Plugin.cpp \
+  PluginLoader.cpp \
+  archive/Archiver.cpp \
+  cryptography/Crypto.cpp \
+  settings/Settings.cpp
 
 HEADERS += \
-  FileOperations.hpp
-
-LIBS += -lz
+  Constants.hpp \
+  Dispatcher.hpp \
+  DispatcherState.hpp \
+  Plugin.hpp \
+  PluginLoader.hpp \
+  archive/Archiver.hpp \
+  cryptography/Crypto.hpp \
+  cryptography/CryptoProviderInterface.hpp \
+  settings/Settings.hpp \
+  utility/Thread.hpp \
+  utility/pimpl.h
 
 # Platform-specific configuration
 linux {
@@ -48,67 +58,53 @@ linux {
   android {
     message(Android)
 
-#    HEADERS += src/libs/botan/android/android_to_string.h
-
-    ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../resources/android
-
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/android/armv7/debug/core -lcore
       LIBS += -L$$PWD/../../build/android/armv7/debug/lib/zlib -lz
       LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/android/armv7/debug/test
+      DESTDIR = $$PWD/../../build/android/armv7/debug/core
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/android/armv7/release/core -lcore
       LIBS += -L$$PWD/../../build/android/armv7/release/lib/zlib -lz
       LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/android/armv7/release/test
+      DESTDIR = $$PWD/../../build/android/armv7/release/core
     }
   } # End android
 
   linux-clang {
     message(clang)
 
-    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
-
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/core -lcore
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/lib/zlib -lz
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/linux/clang/x86_64/debug/test
+      DESTDIR = $$PWD/../../build/linux/clang/x86_64/debug/core
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/core -lcore
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/lib/zlib -lz
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/linux/clang/x86_64/release/test
+      DESTDIR = $$PWD/../../build/linux/clang/x86_64/release/core
     }
-  } # End linux-clang
+  } # End clang
 
   linux-g++-64 {
     message(g++ x86_64)
 
-    QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
-
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/core -lcore
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/lib/zlib -lz
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/linux/gcc/x86_64/debug/test
+      DESTDIR = $$PWD/../../build/linux/gcc/x86_64/debug/core
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/core -lcore
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/lib/zlib -lz
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/test
+      DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/core
     }
-  } # End linux-g++-64
+  } # End g++ x86_64
 } # End linux
 
 darwin {
@@ -121,18 +117,18 @@ darwin {
 
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/iOS/debug/core -lcore
       LIBS += -L$$PWD/../../build/iOS/debug/lib/zlib -lz
       LIBS += -L$$PWD/../../build/iOS/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/iOS/debug/test
+      DESTDIR = $$PWD/../../build/iOS/debug/core
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/iOS/release/core -lcore
       LIBS += -L$$PWD/../../build/iOS/release/lib/zlib -lz
       LIBS += -L$$PWD/../../build/iOS/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/iOS/release/test
+      DESTDIR = $$PWD/../../build/iOS/release/core
     }
+
+    LIBS += -framework Foundation -framework CoreFoundation -framework UIKit
   } # End ios
 
   macos {
@@ -141,17 +137,15 @@ darwin {
 
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/core -lcore
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/lib/zlib -lz
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/macOS/clang/x86_64/debug/test
+      DESTDIR = $$PWD/../../build/macOS/clang/x86_64/debug/core
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/core -lcore
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/lib/zlib -lz
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/macOS/clang/x86_64/release/test
+      DESTDIR = $$PWD/../../build/macOS/clang/x86_64/release/core
     }
   } # End macos
 } # End darwin
@@ -166,37 +160,37 @@ win32 {
       message(Debug)
       LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/lib/zlib -lz
       LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/windows/mingw/x86/debug/test
+      DESTDIR = $$PWD/../../build/windows/mingw/x86/debug/core
     }
     release {
       message(Release)
       LIBS += -L$$PWD/../../build/windows/mingw/x86/release/lib/zlib -lz
       LIBS += -L$$PWD/../../build/windows/mingw/x86/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/windows/mingw/x86/release/test
+      DESTDIR = $$PWD/../../build/windows/mingw/x86/release/core
     }
   } # End win32-g++
 
   win32-msvc {
+    message(MSVC)
+
     LIBS += -ladvapi32 -luser32 -lws2_32
 
     QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
     contains(QT_ARCH, x86_64) {
-      message(MSVC x86_64)
+      message(x86_64)
 
       debug {
         message(Debug)
-        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/core -lcore
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/lib/zlib -lz
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/plugins/cryptography/botan -lbotan
-        DESTDIR = $$PWD/../../build/windows/msvc/x86_64/debug/test
+        DESTDIR = $$PWD/../../build/windows/msvc/x86_64/debug/core
       }
       release {
         message(Release)
-        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/core -lcore
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/lib/zlib -lz
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/plugins/cryptography/botan -lbotan
-        DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/test
+        DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/core
       }
     }
   } # End win32-msvc

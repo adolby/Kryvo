@@ -6,7 +6,7 @@ TARGET = botan
 
 TEMPLATE = lib
 
-CONFIG += c++14 plugin
+CONFIG += plugin static c++14
 
 # Qt Creator Debug/Release Differentiation
 # Ensure one "debug_and_release" in CONFIG, for clarity.
@@ -25,15 +25,12 @@ CONFIG(release, debug|release) {
   CONFIG += release
 }
 
-SOURCES += \
-  BotanProvider.cpp \
-  $$PWD/../../../app/Constants.cpp \
-  $$PWD/../../../app/DispatcherState.cpp
+SOURCES += BotanProvider.cpp
 
 HEADERS += \
   BotanProvider.hpp \
-  $$PWD/../../../app/Constants.hpp \
-  $$PWD/../../../app/DispatcherState.hpp
+  $$PWD/../../../core/Constants.hpp \
+  $$PWD/../../../core/DispatcherState.hpp
 
 # Platform-specific configuration
 linux {
@@ -53,11 +50,11 @@ linux {
 
     debug {
       message(Debug)
-      DESTDIR = $$PWD/../../../../build/android/debug/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/android/armv7/debug/plugins/cryptography/botan
     }
     release {
       message(Release)
-      DESTDIR = $$PWD/../../../../build/android/release/plugins/cryptography/botan
+      DESTDIR = $$PWD/../../../../build/android/armv7/release/plugins/cryptography/botan
     }
   } # End android
 
@@ -89,7 +86,7 @@ linux {
       message(Release)
       DESTDIR = $$PWD/../../../../build/linux/clang/x86_64/release/plugins/cryptography/botan
     }
-  } # End clang
+  } # End linux-clang
 
   linux-g++-64 {
     message(g++ x86_64)
@@ -119,7 +116,7 @@ linux {
       message(Release)
       DESTDIR = $$PWD/../../../../build/linux/gcc/x86_64/release/plugins/cryptography/botan
     }
-  } # End g++ x86_64
+  } # End linux-g++-64
 } # End linux
 
 darwin {

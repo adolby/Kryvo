@@ -22,7 +22,7 @@ wget -N https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.0.6/
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
-PATH=${qt_install_dir}/Qt/5.12.1/gcc_64/bin/:${qt_install_dir}/Qt/Tools/QtInstallerFramework/3.0/bin/:${PATH}
+PATH="${qt_install_dir}/Qt/5.12.1/gcc_64/bin/:${qt_install_dir}/Qt/Tools/QtInstallerFramework/3.0/bin/:${PATH}"
 
 # Get Botan
 # echo "Installing Botan..."
@@ -45,13 +45,15 @@ cd "${project_dir}"
 # Clean build directory
 rm -rf "${project_dir}/build/linux/"
 
-mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/"
-mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/moc"
-mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/qrc"
-mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/obj"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/moc"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/qrc"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/obj"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/quick/"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/lib/"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/lib/zlib/"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/test/"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/"
 
 # Build Kryvo
 echo "Building Kryvo..."
@@ -64,7 +66,7 @@ qmake CONFIG+=release -spec linux-g++-64
 make
 
 # Copy Qt dependencies for test app
-echo "Copy Qt dependencies to test app..."
+echo "Copying Qt dependencies to test app..."
 cd "${project_dir}/build/linux/gcc/x86_64/release/test/"
 cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
 cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
@@ -73,7 +75,7 @@ cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Core.so.5.12.1" "libQt5Core.so.
 cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Test.so.5.12.1" "libQt5Test.so.5"
 
 # Copy plugins for test app
-echo "Copy plugins for test app..."
+echo "Copying plugins for test app..."
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
 cd "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
 cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
@@ -91,14 +93,17 @@ echo "Running tests..."
 chmod +x tests
 ./tests
 
+# Copy plugins for app
+echo "Copy plugins to app..."
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/plugins/cryptography/botan/"
+cd "${project_dir}/build/linux/gcc/x86_64/release/widgets/plugins/cryptography/botan/"
+cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
+
 # Package Kryvo
 echo "Packaging..."
 
-# Copy plugins for app
-echo "Copy plugins to app..."
-mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/plugins/cryptography/botan/"
-cd "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/plugins/cryptography/botan/"
-cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
+echo "Copying app to packaging directory..."
+cp -r "${project_dir}/build/linux/gcc/x86_64/release/widgets/." "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/"
 
 cd "${project_dir}/build/linux/gcc/x86_64/release/Kryvo/"
 
