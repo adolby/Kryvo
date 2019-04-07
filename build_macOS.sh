@@ -71,7 +71,7 @@ macdeployqt tests.app
 echo "Copying plugins for test app..."
 mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/PlugIns/cryptography/botan/"
 cd "${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/PlugIns/cryptography/botan/"
-cp "${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib" libbotan.dylib
+# cp "${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib" libbotan.dylib
 
 # Copy test data
 echo "Copying test data archive..."
@@ -90,7 +90,7 @@ echo "Skipping tests..."
 echo "Copy plugins to app..."
 mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/Kryvo/Kryvo.app/Contents/PlugIns/cryptography/botan/"
 cd "${project_dir}/build/macOS/clang/x86_64/release/widgets/Kryvo.app/Contents/PlugIns/cryptography/botan/"
-cp "${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib" libbotan.dylib
+# cp "${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib" libbotan.dylib
 
 # Package Kryvo
 echo "Packaging..."

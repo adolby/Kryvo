@@ -17,7 +17,6 @@ windeployqt tests.exe
 echo "Copying plugins for test app..."
 mkdir "%project_dir\build\windows\msvc\x86_64\release\test\plugins\cryptography\botan\"
 cd "%project_dir%\build\windows\msvc\x86_64\release\test\plugins\cryptography\botan\"
-cp "%project_dir%\build\windows\msvc\x86_64\release\plugins\cryptography\botan\libbotan.dll" libbotan.dll
 
 echo "Copying test data archive..."
 cd "%project_dir%\build\windows\msvc\x86_64\release\test\"
@@ -32,7 +31,6 @@ tests.exe
 echo "Copy plugins to app..."
 mkdir "%project_dir%\build\windows\msvc\x86_64\release\widgets\plugins\cryptography\botan\"
 cd "%project_dir%\build\windows\msvc\x86_64\release\widgets\plugins\cryptography\botan\"
-cp "%project_dir%\build\windows\msvc\x86_64\release\plugins\cryptography\botan\libbotan.dll" libbotan.dll
 
 echo "Packaging..."
 

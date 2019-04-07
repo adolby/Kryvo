@@ -55,14 +55,22 @@ If you'd like to contribute to Kryvo, you can fork the project on GitHub and sub
 ## Building from source
 To build Kryvo, you'll need Qt 5.2 (or later), and a C++14 capable compiler.
 
+Development is performed in Qt Creator with qmake as the Makefile generator.
+
+### Plugins
 Kryvo uses encryption provider plugins to interface with encryption libraries.
 
-The Botan encryption provider plugin includes and builds the source files of Botan 2.7 (amalgamation) and zlib 1.2.11.
+Currently there is only the Botan plugin which is built staticly with the application to ensure it is always available. Future plugins can be built as static or dynamic libraries that are loaded at runtime. A build script will be required to copy dynamic plugins into the app build directory. The build_macOS.sh, build_linux.sh, and build_windows.cmd scripts will copy plugins and produce a working app build as output.
+
+### Botan
+The Botan encryption provider plugin includes and builds the source files of Botan 2.9 (amalgamation).
 
 Amalgamation configurations of Botan are included in the source tree to simplify the build setup.
 
+### Android
 Android requires a small patch that implements std::string to_string(), which is missing from the NDK STL version 10e. The patch, android_to_string.hpp, is included by botan_all.h. Both files are located at src/plugins/cryptography/botan/android/.
 
+### Updating Botan
 If you would like to update Botan, you'll need to produce a new amalgamation build. The configuration commands used to generate Botan amalgamation files follows for each platform:
 
 ### Android ARM armv7

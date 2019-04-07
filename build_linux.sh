@@ -78,7 +78,7 @@ cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Test.so.5.12.1" "libQt5Test.so.
 echo "Copying plugins for test app..."
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
 cd "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
-cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
+# cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
 
 # Copy test data
 echo "Copying test data archive..."
@@ -97,7 +97,7 @@ chmod +x tests
 echo "Copy plugins to app..."
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/plugins/cryptography/botan/"
 cd "${project_dir}/build/linux/gcc/x86_64/release/widgets/plugins/cryptography/botan/"
-cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
+# cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
 
 # Package Kryvo
 echo "Packaging..."
