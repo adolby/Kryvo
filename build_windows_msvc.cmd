@@ -54,8 +54,8 @@ mkdir "%project_dir%\Kryvo\themes\"
 copy "%project_dir%\resources\stylesheets\kryvo.qss" "Kryvo\themes\kryvo.qss"
 
 echo "Copying files for installer..."
-mkdir "%project_dir%\installer\windows\x86_64\packages\io.kryvo\data\"
-robocopy Kryvo\ "%project_dir%\installer\windows\x86_64\packages\io.kryvo\data\" /E
+mkdir "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data\"
+robocopy Kryvo\ "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data\" /E
 
 echo "Packaging portable archive..."
 7z.exe a kryvo_%TAG_NAME%_windows_x86_64_portable.zip Kryvo

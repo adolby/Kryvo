@@ -79,8 +79,8 @@ cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Test.so.5.12.1" "libQt5Test.so.
 
 # Copy plugins for test app
 echo "Copying plugins for test app..."
-mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
-cd "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
+# mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
+# cd "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
 # cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
 
 # Copy test data
@@ -143,8 +143,8 @@ mkdir themes
 cp "${project_dir}/resources/stylesheets/kryvo.qss" "themes/kryvo.qss"
 
 echo "Copying files for installer..."
-mkdir -p "${project_dir}/installer/linux/packages/io.kryvo/data/"
-cp -R * "${project_dir}/installer/linux/packages/io.kryvo/data/"
+mkdir -p "${project_dir}/installer/linux/packages/app.kryvo/data/"
+cp -R * "${project_dir}/installer/linux/packages/app.kryvo/data/"
 
 TAG_NAME="${TAG_NAME:-dev}"
 
