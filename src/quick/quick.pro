@@ -178,7 +178,6 @@ win32 {
       LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/core -lcore
       LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/lib/zlib -lz
       LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/plugins/cryptography/botan -lbotan
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/plugins/cryptography/botan -lbotan
       DESTDIR = $$PWD/../../build/windows/mingw/x86/debug/quick
     }
     release {

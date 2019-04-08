@@ -112,6 +112,7 @@ linux {
       message(Release)
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/core -lcore
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/lib/zlib -lz
+      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/plugins/cryptography/botan -lbotan
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/widgets
     }
   } # End linux-g++-64
@@ -165,14 +166,14 @@ win32 {
       message(Debug)
       LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/core -lcore
       LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/plugins/cryptography/botan -lbotan
+      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/plugins/cryptography/botan -lbotan
       DESTDIR = $$PWD/../../build/windows/mingw/x86/debug/widgets
     }
     release {
       message(Release)
       LIBS += -L$$PWD/../../build/windows/mingw/x86/release/core -lcore
       LIBS += -L$$PWD/../../build/windows/mingw/x86/release/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/plugins/cryptography/botan -lbotan
+      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/plugins/cryptography/botan -lbotan
       DESTDIR = $$PWD/../../build/windows/mingw/x86/release/widgets
     }
   } # End win32-g++
