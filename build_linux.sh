@@ -50,6 +50,9 @@ mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/moc"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/qrc"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/obj"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/quick/"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/quick/moc"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/quick/qrc"
+mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/quick/obj"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/lib/"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/lib/zlib/"
 mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/test/"
@@ -94,9 +97,9 @@ chmod +x tests
 ./tests
 
 # Copy plugins for app
-echo "Copy plugins to app..."
-mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/plugins/cryptography/botan/"
-cd "${project_dir}/build/linux/gcc/x86_64/release/widgets/plugins/cryptography/botan/"
+# echo "Copy plugins to app..."
+# mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/widgets/plugins/cryptography/botan/"
+# cd "${project_dir}/build/linux/gcc/x86_64/release/widgets/plugins/cryptography/botan/"
 # cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
 
 # Package Kryvo

@@ -48,6 +48,9 @@ mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/widgets/moc"
 mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/widgets/qrc"
 mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/widgets/obj"
 mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/quick/"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/quick/moc"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/quick/qrc"
+mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/quick/obj"
 mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/lib/"
 mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/lib/zlib/"
 mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/test/"
@@ -88,9 +91,9 @@ echo "Skipping tests..."
 # ./tests
 
 # Copy plugins to app
-echo "Copy plugins to app..."
-mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/Kryvo/Kryvo.app/Contents/PlugIns/cryptography/botan/"
-cd "${project_dir}/build/macOS/clang/x86_64/release/widgets/Kryvo.app/Contents/PlugIns/cryptography/botan/"
+# echo "Copy plugins to app..."
+# mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/widgets/Kryvo.app/Contents/PlugIns/cryptography/botan/"
+# cd "${project_dir}/build/macOS/clang/x86_64/release/widgets/Kryvo.app/Contents/PlugIns/cryptography/botan/"
 # cp "${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib" libbotan.dylib
 
 # Package Kryvo
