@@ -3,6 +3,7 @@
 set -o errexit -o nounset
 
 project_dir=$(pwd)
+qt_install_dir=/usr/local/opt/qt
 
 # Output macOS version
 sw_vers
@@ -19,7 +20,7 @@ brew install qt
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
-PATH="usr/local/opt/qt/bin/:${PATH}"
+PATH="${qt_install_dir}/bin/:${PATH}"
 
 # Get Botan
 # echo "Installing Botan..."
