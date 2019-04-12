@@ -38,37 +38,55 @@ HEADERS += \
 linux {
   message(Linux)
 
-  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-  QMAKE_LFLAGS += -fstack-protector
-
   android {
     message(Android)
 
-    QT += quick
-
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../../resources/android
 
-    debug {
-      message(Debug)
-      LIBS += -L$$PWD/../../build/android/armv7/debug/core -lcore
-      LIBS += -L$$PWD/../../build/android/armv7/debug/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/android/armv7/debug/quick
+    contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
+      message(armeabi-v7a)
+
+      debug {
+        message(Debug)
+        LIBS += -L$$PWD/../../build/android/armv7/debug/core -lcore
+        LIBS += -L$$PWD/../../build/android/armv7/debug/lib/zlib -lz
+        LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/botan -lbotan
+        DESTDIR = $$PWD/../../build/android/armv7/debug/quick
+      }
+      release {
+        message(Release)
+        LIBS += -L$$PWD/../../build/android/armv7/release/core -lcore
+        LIBS += -L$$PWD/../../build/android/armv7/release/lib/zlib -lz
+        LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/botan -lbotan
+        DESTDIR = $$PWD/../../build/android/armv7/release/quick
+      }
     }
-    release {
-      message(Release)
-      LIBS += -L$$PWD/../../build/android/armv7/release/core -lcore
-      LIBS += -L$$PWD/../../build/android/armv7/release/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/android/armv7/release/quick
+
+    contains(ANDROID_TARGET_ARCH, arm64-v8a) {
+      message(arm64-v8a)
+
+      debug {
+        message(Debug)
+        LIBS += -L$$PWD/../../build/android/armv8/debug/core -lcore
+        LIBS += -L$$PWD/../../build/android/armv8/debug/lib/zlib -lz
+        LIBS += -L$$PWD/../../build/android/armv8/debug/plugins/cryptography/botan -lbotan
+        DESTDIR = $$PWD/../../build/android/armv8/debug/quick
+      }
+      release {
+        message(Release)
+        LIBS += -L$$PWD/../../build/android/armv8/release/core -lcore
+        LIBS += -L$$PWD/../../build/android/armv8/release/lib/zlib -lz
+        LIBS += -L$$PWD/../../build/android/armv8/release/plugins/cryptography/botan -lbotan
+        DESTDIR = $$PWD/../../build/android/armv8/release/quick
+      }
     }
   } # End android
 
   linux-clang {
     message(clang)
 
-    QT += quick
-
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
     debug {
@@ -90,8 +108,8 @@ linux {
   linux-g++-64 {
     message(g++ x86_64)
 
-    QT += quick
-
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
     debug {
@@ -112,14 +130,11 @@ linux {
 } # End linux
 
 darwin {
-  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-  QMAKE_LFLAGS += -fstack-protector
-
   ios {
     message(iOS)
     message(clang)
 
-    QT += quick
+    CONFIG -= simulator
 
     debug {
       message(Debug)
@@ -143,7 +158,8 @@ darwin {
     message(macOS)
     message(clang)
 
-    QT += quick
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
 
     QMAKE_TARGET_BUNDLE_PREFIX = app.kryvo
     ICON = $$PWD/../../resources/icons/kryvo.icns
@@ -167,8 +183,6 @@ darwin {
 
 win32 {
   message(Windows)
-
-  QT += quick
 
   win32-g++ {
     message(g++)

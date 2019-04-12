@@ -1,21 +1,29 @@
+import QtQuick 2.0
 import QtQuick.Controls 2.12
+import QtQuick.Layouts 1.12
 
 ApplicationWindow {
+  property var currentPage: ui.currentPage
+
   visible: true
 
-  menuBar: MenuBar {
-      // ...
+  onCurrentPageChanged: {
+    if (currentPage.name) {
+      if (currentPage.properties) {
+        pageLoader.setSource(currentPage.name, currentPage.properties);
+      } else {
+        pageLoader.setSource(currentPage.name);
+      }
+    }
   }
 
-  header: ToolBar {
-      // ...
+  Component.onCompleted: {
+    ui.navigate("Encrypt.qml");
   }
 
-  footer: ToolBar {
-      // ...
-  }
+  Loader {
+    id: pageLoader
 
-  StackView {
-      anchors.fill: parent
+    anchors.fill: parent
   }
 }

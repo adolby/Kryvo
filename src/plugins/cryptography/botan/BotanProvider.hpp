@@ -7,9 +7,11 @@
 #include <QtGlobal>
 
 #if defined(Q_OS_ANDROID)
-#include "botan/android/botan_all.h"
+  #if defined(Q_PROCESSOR_ARM_V7)
+#include "botan/android/armv7/botan_all.h"
+  #endif
 #elif defined(Q_OS_IOS)
-#include "botan/iOS/botan_all.h"
+#include "botan/iOS/arm64/botan_all.h"
 #elif defined(Q_OS_MACOS)
 #include "botan/macOS/clang/x86_64/botan_all.h"
 #elif defined(Q_OS_LINUX)

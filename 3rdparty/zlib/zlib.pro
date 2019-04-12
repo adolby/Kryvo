@@ -105,12 +105,11 @@ linux {
 } # End Linux
 
 darwin {
-  QMAKE_CXXFLAGS += -fstack-protector
-  QMAKE_LFLAGS += -fstack-protector
-
   ios {
     message(iOS)
     message(clang)
+
+    CONFIG -= simulator
 
     debug {
       message(Debug)
@@ -125,6 +124,9 @@ darwin {
   macos {
     message(macOS)
     message(clang)
+
+    QMAKE_CXXFLAGS += -fstack-protector
+    QMAKE_LFLAGS += -fstack-protector
 
     debug {
       message(Debug)

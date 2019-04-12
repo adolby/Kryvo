@@ -36,31 +36,52 @@ HEADERS += \
 linux {
   message(Linux)
 
-  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-  QMAKE_LFLAGS += -fstack-protector
-
   android {
     message(Android)
 
-#    SOURCES += botan/android/botan_all.cpp
+    contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
+      message(armeabi-v7a)
 
-#    HEADERS += \
-#      botan/android/botan_all.h \
-#      botan/android/android_to_string.h
+      SOURCES += botan/android/armv7/botan_all.cpp
 
-    debug {
-      message(Debug)
-      DESTDIR = $$PWD/../../../../build/android/armv7/debug/plugins/cryptography/botan
+      HEADERS += \
+        botan/android/armv7/botan_all.h \
+        botan/android/armv7/botan_all_internal.h
+
+      debug {
+        message(Debug)
+        DESTDIR = $$PWD/../../../../build/android/armv7/debug/plugins/cryptography/botan
+      }
+      release {
+        message(Release)
+        DESTDIR = $$PWD/../../../../build/android/armv7/release/plugins/cryptography/botan
+      }
     }
-    release {
-      message(Release)
-      DESTDIR = $$PWD/../../../../build/android/armv7/release/plugins/cryptography/botan
+
+    contains(ANDROID_TARGET_ARCH, arm64-v8a) {
+      message(arm64-v8a)
+
+      SOURCES += botan/android/armv8/botan_all.cpp
+
+      HEADERS += \
+        botan/android/armv8/botan_all.h
+
+      debug {
+        message(Debug)
+        DESTDIR = $$PWD/../../../../build/android/armv8/debug/plugins/cryptography/botan
+      }
+      release {
+        message(Release)
+        DESTDIR = $$PWD/../../../../build/android/armv8/release/plugins/cryptography/botan
+      }
     }
   } # End android
 
   linux-clang {
     message(clang)
 
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
     SOURCES += \
@@ -91,6 +112,8 @@ linux {
   linux-g++-64 {
     message(g++ x86_64)
 
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
     SOURCES += \
@@ -120,18 +143,21 @@ linux {
 } # End linux
 
 darwin {
-  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-  QMAKE_LFLAGS += -fstack-protector
-
   LIBS += -framework Security
 
   ios {
     message(iOS)
     message(clang)
 
-#    SOURCES += botan/iOS/botan_all.cpp
+    CONFIG -= simulator
 
-#    HEADERS += botan/iOS/botan_all.h
+    SOURCES += \
+      botan/iOS/arm64/botan_all.cpp \
+      botan/iOS/arm64/botan_all_armv8crypto.cpp
+
+    HEADERS += \
+      botan/iOS/arm64/botan_all.h \
+      botan/iOS/arm64/botan_all_internal.h
 
     debug {
       message(Debug)
@@ -146,6 +172,9 @@ darwin {
   macos {
     message(macOS)
     message(clang)
+
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
 
     SOURCES += \
       botan/macOS/clang/x86_64/botan_all.cpp \

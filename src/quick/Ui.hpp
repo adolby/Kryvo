@@ -4,6 +4,7 @@
 #include "settings/Settings.hpp"
 #include "utility/pimpl.h"
 #include <QObject>
+#include <QVariantMap>
 #include <memory>
 
 namespace Kryvo {
@@ -16,7 +17,9 @@ class UiPrivate;
 class Ui : public QObject {
   Q_OBJECT
   Q_DISABLE_COPY(Ui)
+  Q_PROPERTY(QVariantMap currentPage READ currentPage NOTIFY pageChanged)
   DECLARE_PRIVATE(Ui)
+
   std::unique_ptr<UiPrivate> const d_ptr;
 
  public:
@@ -32,6 +35,10 @@ class Ui : public QObject {
    * \brief ~Ui Destroys the application's UI
    */
   ~Ui() override;
+
+  QVariantMap currentPage() const;
+  QVariantMap page(int index) const;
+  bool canNavigateBack() const;
 
  signals:
   /*!
@@ -83,11 +90,25 @@ class Ui : public QObject {
    */
   void stopFile(const QString& fileName);
 
+  void pageChanged(const QVariantMap& page);
+
  public slots:
+  void init();
+
+  void changePage(const QString& name, const QVariantMap& properties,
+                  int delayInMSecs = 0);
+
+  void navigate(const QString& name,
+                const QVariantMap& properties = QVariantMap());
+
+  void navigateBack();
+
+  void clearNavigationHistory();
+
   /*!
    * \brief addFiles Executed when the Add Files toolbar push button is clicked
    */
-  void addFiles( const QStringList& fileNames );
+  void addFiles(const QStringList& fileNames);
 
   /*!
    * \brief removeFiles Executed when the Remove All Files toolbar push
@@ -101,6 +122,8 @@ class Ui : public QObject {
    * from the password line edit, the file list from the file list model, and
    * the algorithm name from the settings panel.
    *
+   * \param outputPath String containing output path
+   * \param passphrase String containing passphrase
    * \param cryptDirection Boolean representing encrypt or decrypt
    */
   void processFiles(const QString& outputPath, const QString& passphrase,
@@ -174,9 +197,6 @@ class Ui : public QObject {
    * \param compress Boolean representing the new container mode
    */
   void updateContainerMode(bool container);
-
- protected:
-  Settings* settings = nullptr;
 };
 
 } // namespace Kryvo

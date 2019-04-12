@@ -52,28 +52,49 @@ HEADERS += \
 linux {
   message(Linux)
 
-  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-  QMAKE_LFLAGS += -fstack-protector
-
   android {
     message(Android)
 
-    debug {
-      message(Debug)
-      LIBS += -L$$PWD/../../build/android/armv7/debug/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/android/armv7/debug/core
+    contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
+      message(armeabi-v7a)
+
+      debug {
+        message(Debug)
+        LIBS += -L$$PWD/../../build/android/armv7/debug/lib/zlib -lz
+        LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/botan -lbotan
+        DESTDIR = $$PWD/../../build/android/armv7/debug/core
+      }
+      release {
+        message(Release)
+        LIBS += -L$$PWD/../../build/android/armv7/release/lib/zlib -lz
+        LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/botan -lbotan
+        DESTDIR = $$PWD/../../build/android/armv7/release/core
+      }
     }
-    release {
-      message(Release)
-      LIBS += -L$$PWD/../../build/android/armv7/release/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/android/armv7/release/core
+
+    contains(ANDROID_TARGET_ARCH, arm64-v8a) {
+      message(arm64-v8a)
+
+      debug {
+        message(Debug)
+        LIBS += -L$$PWD/../../build/android/armv8/debug/lib/zlib -lz
+        LIBS += -L$$PWD/../../build/android/armv8/debug/plugins/cryptography/botan -lbotan
+        DESTDIR = $$PWD/../../build/android/armv8/debug/core
+      }
+      release {
+        message(Release)
+        LIBS += -L$$PWD/../../build/android/armv8/release/lib/zlib -lz
+        LIBS += -L$$PWD/../../build/android/armv8/release/plugins/cryptography/botan -lbotan
+        DESTDIR = $$PWD/../../build/android/armv8/release/core
+      }
     }
   } # End android
 
   linux-clang {
     message(clang)
+
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
 
     debug {
       message(Debug)
@@ -92,6 +113,9 @@ linux {
   linux-g++-64 {
     message(g++ x86_64)
 
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
+
     debug {
       message(Debug)
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/lib/zlib -lz
@@ -108,12 +132,11 @@ linux {
 } # End linux
 
 darwin {
-  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-  QMAKE_LFLAGS += -fstack-protector
-
   ios {
     message(iOS)
     message(clang)
+
+    CONFIG -= simulator
 
     debug {
       message(Debug)
@@ -134,6 +157,9 @@ darwin {
   macos {
     message(macOS)
     message(clang)
+
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
 
     debug {
       message(Debug)
