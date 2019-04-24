@@ -5,6 +5,9 @@ import QtQuick.Layouts 1.12
 ApplicationWindow {
   property var currentPage: ui.currentPage
 
+  width: 800
+  height: 600
+
   visible: true
 
   onCurrentPageChanged: {

@@ -43,6 +43,15 @@ linux {
 
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../../resources/android
 
+    DISTFILES += \
+      ../../resources/android/AndroidManifest.xml \
+      ../../resources/android/build.gradle \
+      ../../resources/android/gradle/wrapper/gradle-wrapper.jar \
+      ../../resources/android/gradle/wrapper/gradle-wrapper.properties \
+      ../../resources/android/gradlew \
+      ../../resources/android/gradlew.bat \
+      ../../resources/android/res/values/libs.xml
+
     contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
       message(armeabi-v7a)
 

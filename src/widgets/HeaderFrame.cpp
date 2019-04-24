@@ -44,14 +44,14 @@ Kryvo::HeaderFrame::HeaderFrame(QWidget* parent)
 
   const QIcon addFilesIcon(QStringLiteral(":/images/addFilesIcon.png"));
   d->addFilesButton = new QPushButton(addFilesIcon,
-                                      tr(" Add files"),
+                                      tr(" Add file(s)"),
                                       buttonFrame);
   d->addFilesButton->setObjectName(QStringLiteral("addButton"));
   d->addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
   const QIcon clearFilesIcon{QStringLiteral(":/images/clearFilesIcon.png")};
   d->clearFilesButton = new QPushButton(clearFilesIcon,
-                                        tr(" Remove all files"),
+                                        tr(" Remove all"),
                                         buttonFrame);
   d->clearFilesButton->setObjectName(QStringLiteral("clearButton"));
   d->clearFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);

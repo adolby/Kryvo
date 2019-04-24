@@ -2,7 +2,7 @@ import QtQuick 2.0
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 
-Page {
+Page {  
   background: Rectangle {
     color: "#2c3e50"
   }
@@ -31,15 +31,6 @@ Page {
           color: "#2980b9"
         }
 
-        contentItem: Label {
-          text: pauseButton.text
-          font: pauseButton.font
-          color: "#ffffff"
-          horizontalAlignment: Text.AlignHCenter
-          verticalAlignment: Text.AlignVCenter
-          elide: Text.ElideRight
-        }
-
         onClicked: {
 
         }
@@ -58,15 +49,6 @@ Page {
           implicitHeight: 44
           radius: 3
           color: "#27ae60"
-        }
-
-        contentItem: Label {
-          text: addFilesButton.text
-          font: addFilesButton.font
-          color: "#ffffff"
-          horizontalAlignment: Text.AlignHCenter
-          verticalAlignment: Text.AlignVCenter
-          elide: Text.ElideRight
         }
 
         onClicked: {
@@ -89,15 +71,6 @@ Page {
           color: "#c0392b"
         }
 
-        contentItem: Label {
-          text: removeAllButton.text
-          font: removeAllButton.font
-          color: "#ffffff"
-          horizontalAlignment: Text.AlignHCenter
-          verticalAlignment: Text.AlignVCenter
-          elide: Text.ElideRight
-        }
-
         onClicked: {
 
         }
@@ -116,15 +89,6 @@ Page {
           implicitHeight: 44
           radius: 3
           color: "#7f8c8d"
-        }
-
-        contentItem: Label {
-          text: settingsButton.text
-          font: settingsButton.font
-          color: "#ffffff"
-          horizontalAlignment: Text.AlignHCenter
-          verticalAlignment: Text.AlignVCenter
-          elide: Text.ElideRight
         }
 
         onClicked: {
@@ -158,15 +122,6 @@ Page {
           color: "#2980b9"
         }
 
-        contentItem: Label {
-          text: encryptButton.text
-          font: encryptButton.font
-          color: "#ffffff"
-          horizontalAlignment: Text.AlignHCenter
-          verticalAlignment: Text.AlignVCenter
-          elide: Text.ElideRight
-        }
-
         onClicked: {
 //          ui.processFiles(, , true);
         }
@@ -185,15 +140,6 @@ Page {
           implicitHeight: 44
           radius: 3
           color: "#2980b9"
-        }
-
-        contentItem: Label {
-          text: decryptButton.text
-          font: decryptButton.font
-          color: "#ffffff"
-          horizontalAlignment: Text.AlignHCenter
-          verticalAlignment: Text.AlignVCenter
-          elide: Text.ElideRight
         }
 
         onClicked: {
@@ -219,24 +165,28 @@ Page {
     }
   }
 
-  contentItem: Item {
-    ColumnLayout {
-      ListView {
-        model: testFileModel
+  ColumnLayout {
+    anchors.fill: parent
 
-        delegate: Label {
-          text: fileName
-        }
+    ListView {
+      model: testFileModel
+
+      Layout.fillHeight: true
+      Layout.fillWidth: true
+      clip: true
+
+      delegate: Label {
+        text: fileName
+      }
+    }
+
+    RowLayout {
+      Label {
+        text: qsTr("Password")
       }
 
-      RowLayout {
-        Label {
-          text: qsTr("Password")
-        }
-
-        TextField {
-          echoMode: TextInput.Password
-        }
+      TextField {
+        echoMode: TextInput.Password
       }
     }
   }

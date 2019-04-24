@@ -1,4 +1,5 @@
 #include "Ui.hpp"
+#include <QCoreApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QFileInfo>
@@ -42,6 +43,7 @@ class Kryvo::UiPrivate {
                 "finishes.")};
 
   QQmlApplicationEngine engine;
+  QUrl mainUrl;
 
   QVariantMap currentPage;
   std::vector<QVariantMap> navigationHistory;
@@ -53,7 +55,9 @@ class Kryvo::UiPrivate {
   bool busyStatus{false};
 };
 
-Kryvo::UiPrivate::UiPrivate() = default;
+Kryvo::UiPrivate::UiPrivate()
+  : mainUrl(QStringLiteral("qrc:/qml/main.qml")) {
+}
 
 void Kryvo::UiPrivate::busy(const bool busy) {
   busyStatus = busy;
@@ -65,10 +69,20 @@ bool Kryvo::UiPrivate::isBusy() const {
 
 Kryvo::Ui::Ui(Settings* s, QObject* parent)
   : QObject(parent), d_ptr(std::make_unique<UiPrivate>()) {
-  Q_D(Ui);
-
   // Keep settings object
-  d->settings = s;
+  d_ptr->settings = s;
+
+  connect(&d_ptr->engine,
+          &QQmlApplicationEngine::objectCreated,
+          this,
+          [this](QObject* obj, const QUrl& objUrl) {
+            Q_D(Ui);
+
+            if (!obj && d->mainUrl == objUrl) {
+              QCoreApplication::exit(-1);
+            }
+          },
+          Qt::QueuedConnection);
 
   // Header button connections
 //  connect(headerFrame, &HeaderFrame::pause,
@@ -120,7 +134,7 @@ void Kryvo::Ui::init() {
     context->setContextProperty(QStringLiteral("ui"), this);
   }
 
-  d->engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
+  d->engine.load(d->mainUrl);
 }
 
 QVariantMap Kryvo::Ui::currentPage() const {
@@ -192,7 +206,7 @@ void Kryvo::Ui::navigateBack() {
 
     emit pageChanged(d->currentPage);
   } else {
-//    goToAndroidHomeScreen();
+    // Don't leave app on final back press
   }
 }
 

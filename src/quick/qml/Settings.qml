@@ -10,7 +10,6 @@ Page {
   footer: ToolBar {
     background: Rectangle {
       implicitHeight: 44
-      radius: 3
       color: "#2c3e50"
     }
 
@@ -25,16 +24,11 @@ Page {
         icon.width: 12
         icon.height: 12
         display: AbstractButton.TextBesideIcon
-        Material.accent: "#8e44ad"
 
-
-        contentItem: Label {
-          text: backButton.text
-          font: backButton.font
-          color: "#ffffff"
-          horizontalAlignment: Text.AlignHCenter
-          verticalAlignment: Text.AlignVCenter
-          elide: Text.ElideRight
+        background: Rectangle {
+          implicitHeight: 44
+          radius: 3
+          color: "#8e44ad"
         }
 
         onClicked: {
