@@ -123,7 +123,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   auto cipherFrame = new QFrame(cryptoSettingsFrame);
   cipherFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  auto cipherLabel = new QLabel(tr("Cipher:"), cipherFrame);
+  auto cipherLabel = new QLabel(tr("Cipher"), cipherFrame);
   cipherLabel->setObjectName(QStringLiteral("text"));
 
   d->cipherComboBox = new QComboBox(cipherFrame);
@@ -150,7 +150,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   const QString& keySizeSplitToolTip = splitToolTip(keySizeToolTip,
                                                     d->toolTipWidth);
 
-  auto keySizeLabel = new QLabel(tr("Key size (bits):"), keySizeFrame);
+  auto keySizeLabel = new QLabel(tr("Key size (bits)"), keySizeFrame);
   keySizeLabel->setObjectName(QStringLiteral("text"));
   keySizeLabel->setToolTip(keySizeSplitToolTip);
 
@@ -177,7 +177,7 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
                                   "operation.");
   const QString& modeSplitToolTip = splitToolTip(modeToolTip, d->toolTipWidth);
 
-  auto modeLabel = new QLabel(tr("Mode of operation:"), modeFrame);
+  auto modeLabel = new QLabel(tr("Mode of operation"), modeFrame);
   modeLabel->setObjectName(QStringLiteral("text"));
   modeLabel->setToolTip(modeSplitToolTip);
 
