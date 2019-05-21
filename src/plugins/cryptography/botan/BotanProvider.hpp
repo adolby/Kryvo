@@ -49,6 +49,7 @@ class BotanProviderPrivate;
 class BotanProvider : public QObject,
                       public CryptoProviderInterface {
   Q_OBJECT
+  Q_DISABLE_COPY(BotanProvider)
   Q_PLUGIN_METADATA(IID "app.kryvo.CryptoProviderInterface" FILE "botan.json")
   Q_INTERFACES(Kryvo::CryptoProviderInterface)
   DECLARE_PRIVATE(BotanProvider)

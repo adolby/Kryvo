@@ -15,6 +15,7 @@ class HeaderFramePrivate;
  */
 class HeaderFrame : public QFrame {
   Q_OBJECT
+  Q_DISABLE_COPY(HeaderFrame)
   DECLARE_PRIVATE(HeaderFrame)
   std::unique_ptr<HeaderFramePrivate> const d_ptr;
 
