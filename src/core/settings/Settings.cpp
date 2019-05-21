@@ -9,19 +9,15 @@
 #include <QStringBuilder>
 #include <QCoreApplication>
 
-QString addPathSeparator(const QString& inPath) {
-  const QString& cleanedPath = QDir::cleanPath(inPath);
+QString addPathSeparator(const QDir& inDir) {
+  QString outPath = inDir.absolutePath();
 
-  const QFileInfo cleanedPathInfo(cleanedPath);
-
-  QString outPath = cleanedPath;
-
-  if (cleanedPathInfo.isDir() && !cleanedPathInfo.isRoot()) {
-    outPath = cleanedPath % QStringLiteral("/");
+  if (!inDir.isRoot()) {
+    outPath = outPath % QStringLiteral("/");
   }
 
   return outPath;
-};
+}
 
 class Kryvo::SettingsPrivate {
   Q_DISABLE_COPY(SettingsPrivate)
@@ -328,10 +324,10 @@ bool Kryvo::Settings::containerMode() const {
 void Kryvo::Settings::outputPath(const QString& path) {
   Q_D(Settings);
 
-  const QFileInfo outputInfo(path);
+  const QDir outputDir(path);
 
-  if (outputInfo.exists() && outputInfo.isDir()) {
-    d->outputPath = addPathSeparator(outputInfo.absolutePath());
+  if (outputDir.exists()) {
+    d->outputPath = addPathSeparator(outputDir);
   } else {
     d->outputPath = Constants::kDocumentsPath;
   }
@@ -348,10 +344,10 @@ QString Kryvo::Settings::outputPath() const {
 void Kryvo::Settings::lastOpenPath(const QString& path) {
   Q_D(Settings);
 
-  const QFileInfo lastOpenInfo(path);
+  const QDir lastOpenDir(path);
 
-  if (lastOpenInfo.exists() && lastOpenInfo.isDir()) {
-    d->lastOpenPath = addPathSeparator(lastOpenInfo.absolutePath());
+  if (lastOpenDir.exists()) {
+    d->lastOpenPath = addPathSeparator(lastOpenDir);
   } else {
     d->lastOpenPath = Constants::kDocumentsPath;
   }
