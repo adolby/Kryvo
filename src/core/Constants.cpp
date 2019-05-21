@@ -1,6 +1,8 @@
 #include "Constants.hpp"
 #include <QStandardPaths>
 
+const QVersionNumber Kryvo::Constants::kVersion({1, 0, 0, 0});
+
 const QString Kryvo::Constants::kDot = QStringLiteral(".");
 const QString Kryvo::Constants::kEncryptedFileExtension = QStringLiteral("enc");
 const QString Kryvo::Constants::kCompressedFileExtension = QStringLiteral("gz");
@@ -82,8 +84,7 @@ QString Kryvo::Constants::uniqueFilePath(const QString& filePath) {
       }
 
       ++i;
-    }
-    else {
+    } else {
       foundUniqueFilePath = true;
     }
   }

@@ -1,6 +1,7 @@
 #ifndef KRYVO_CONSTANTS_HPP_
 #define KRYVO_CONSTANTS_HPP_
 
+#include <QVersionNumber>
 #include <QFileInfo>
 #include <QDir>
 #include <QObject>
@@ -12,6 +13,7 @@ namespace Kryvo {
 
 class Constants {
  public:
+  static const QVersionNumber kVersion;
   static const QString kDot;
   static const QString kEncryptedFileExtension;
   static const QString kCompressedFileExtension;
