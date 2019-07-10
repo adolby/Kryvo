@@ -169,6 +169,19 @@ QFrame#settingsSubFrame {
   border: none;
 }
 
+#outputButton {
+  color: white;
+  background-color: #7f8c8d;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  border: none;
+  border-radius: 5px;
+}
+
+#outputButton:pressed {
+  background-color: #95a5a6;
+}
+
 /*--------- Line edits ---------*/
 QLineEdit#outputLineEdit {
   font-size: 20px;
