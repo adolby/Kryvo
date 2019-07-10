@@ -182,6 +182,8 @@ class MainWindow : public QMainWindow {
    */
   void updateContainerMode(bool container);
 
+  void selectOutputDir();
+
  protected:
   /*!
    * \brief loadStyleSheet Attempts to load a Qt stylesheet from the local

@@ -72,7 +72,7 @@ class Settings {
   void cipher(const QString& cipherName);
 
   /*!
-   * \brief lastAlgorithm Returns the name of the last cipher
+   * \brief cipher Returns the name of the last cipher
    * \return String containing the cipher name
    */
   QString cipher() const;
@@ -153,16 +153,16 @@ class Settings {
   QString outputPath() const;
 
   /*!
-   * \brief lastOpenPath Sets the last opened path
+   * \brief inputPath Sets the input path
    * \param path String containing the path
    */
-  void lastOpenPath(const QString& path);
+  void inputPath(const QString& path);
 
   /*!
-   * \brief lastOpenPath Returns the name of the last opened path
+   * \brief inputPath Returns the name of the input path
    * \return String containing the path
    */
-  QString lastOpenPath() const;
+  QString inputPath() const;
 
   /*!
    * \brief styleSheetPath Returns the path to the application stylesheet

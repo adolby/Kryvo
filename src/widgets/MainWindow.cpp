@@ -93,6 +93,8 @@ Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
   outputFrame = new OutputFrame(contentFrame);
   outputFrame->setObjectName(QStringLiteral("outputFrame"));
   outputFrame->outputPath(settings->outputPath());
+  connect(outputFrame, &OutputFrame::selectOutputDir,
+          this, &MainWindow::selectOutputDir);
 
   // Password entry frame
   passwordFrame = new PasswordFrame(contentFrame);
@@ -177,7 +179,7 @@ void Kryvo::MainWindow::addFiles() {
   // Open a file dialog to get files
   const QStringList& fileNames =
     QFileDialog::getOpenFileNames(this, tr("Add Files"),
-                                  settings->lastOpenPath(),
+                                  settings->inputPath(),
                                   tr("Any files (*)"));
 
   if (!fileNames.isEmpty()) { // If files were selected, add them to the model
@@ -188,7 +190,7 @@ void Kryvo::MainWindow::addFiles() {
 
     // Save this directory for returning to later
     const QFileInfo lastFileInfo(fileNames.last());
-    settings->lastOpenPath(lastFileInfo.absolutePath());
+    settings->inputPath(lastFileInfo.absolutePath());
   }
 }
 
@@ -329,4 +331,23 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
   }
 
   return styleSheet;
+}
+
+void Kryvo::MainWindow::selectOutputDir() {
+  Q_ASSERT(settings);
+
+  // Open a directory select dialog to get the output directory
+  const QString& outputDir =
+    QFileDialog::getExistingDirectory(this, tr("Select Folder"),
+                                      settings->outputPath());
+
+  if (!outputDir.isEmpty()) { // Save this directory for returning to later
+    const QDir lastOutputPath(outputDir);
+
+    const QString& absoluteDir = lastOutputPath.absolutePath();
+
+    settings->outputPath(absoluteDir);
+
+    outputFrame->outputPath(absoluteDir);
+  }
 }

@@ -45,7 +45,7 @@ class Kryvo::SettingsPrivate {
   bool removeIntermediateFiles{true};
   bool containerMode{false};
   QString outputPath{Kryvo::Constants::kDocumentsPath};
-  QString lastOpenPath{Kryvo::Constants::kDocumentsPath};
+  QString inputPath{Kryvo::Constants::kDocumentsPath};
   QString styleSheetPath;
 };
 
@@ -104,8 +104,8 @@ void Kryvo::SettingsPrivate::importSettings() {
       settings[QStringLiteral("outputPath")].toString(
         Constants::kDocumentsPath);
 
-    const QString& lastOpenPath =
-      settings[QStringLiteral("lastOpenPath")].toString(
+    const QString& inputPath =
+      settings[QStringLiteral("inputPath")].toString(
         Constants::kDocumentsPath);
 
     const QJsonValue& styleObject = settings[QStringLiteral("styleSheetPath")];
@@ -121,7 +121,7 @@ void Kryvo::SettingsPrivate::importSettings() {
     removeIntermediateFiles = true;
     containerMode = true;
     outputPath = Constants::kDocumentsPath;
-    lastOpenPath = Constants::kDocumentsPath;
+    inputPath = Constants::kDocumentsPath;
     styleSheetPath = QStringLiteral("kryvo.qss");
   }
 }
@@ -168,10 +168,10 @@ void Kryvo::SettingsPrivate::exportSettings() const {
       outputPath.isEmpty() ?
       Constants::kDocumentsPath :
       outputPath;
-    settings[QStringLiteral("lastOpenPath")] =
-      lastOpenPath.isEmpty() ?
+    settings[QStringLiteral("inputPath")] =
+      inputPath.isEmpty() ?
       Constants::kDocumentsPath :
-      lastOpenPath;
+      inputPath;
     settings[QStringLiteral("styleSheetPath")] =
       styleSheetPath;
 
@@ -341,24 +341,24 @@ QString Kryvo::Settings::outputPath() const {
   return d->outputPath;
 }
 
-void Kryvo::Settings::lastOpenPath(const QString& path) {
+void Kryvo::Settings::inputPath(const QString& path) {
   Q_D(Settings);
 
-  const QDir lastOpenDir(path);
+  const QDir inputDir(path);
 
-  if (lastOpenDir.exists()) {
-    d->lastOpenPath = addPathSeparator(lastOpenDir);
+  if (inputDir.exists()) {
+    d->inputPath = addPathSeparator(inputDir);
   } else {
-    d->lastOpenPath = Constants::kDocumentsPath;
+    d->inputPath = Constants::kDocumentsPath;
   }
 
   d->exportSettings();
 }
 
-QString Kryvo::Settings::lastOpenPath() const {
+QString Kryvo::Settings::inputPath() const {
   Q_D(const Settings);
 
-  return d->lastOpenPath;
+  return d->inputPath;
 }
 
 QString Kryvo::Settings::styleSheetPath() const {
