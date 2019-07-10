@@ -23,6 +23,6 @@ class Plugin {
   QString m_name;
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_PLUGIN_HPP_
