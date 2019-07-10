@@ -36,8 +36,6 @@ SOURCES += \
 HEADERS += \
   FileOperations.hpp
 
-LIBS += -lz
-
 # Platform-specific configuration
 linux {
   message(Linux)

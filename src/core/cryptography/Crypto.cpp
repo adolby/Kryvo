@@ -79,7 +79,7 @@ Kryvo::Crypto::Crypto(DispatcherState* state, QObject* parent)
 
 Kryvo::Crypto::~Crypto() = default;
 
-void Kryvo::Crypto::receiveProvider(QObject* provider) {
+void Kryvo::Crypto::updateProvider(QObject* provider) {
   Q_D(Crypto);
 
   if (provider) {
@@ -127,8 +127,6 @@ bool Kryvo::Crypto::encrypt(const std::size_t id, const QString& passphrase,
                                         outputFilePath, cipher, inputKeySize,
                                         modeOfOperation, compress);
 
-  Q_ASSERT(encrypted);
-
   return encrypted;
 }
 
@@ -146,8 +144,6 @@ bool Kryvo::Crypto::decrypt(const std::size_t id, const QString& passphrase,
                                         outputPath, algorithmNameString,
                                         keySizeString, pbkdfSaltString,
                                         keySaltString, ivSaltString);
-
-  Q_ASSERT(decrypted);
 
   return decrypted;
 }

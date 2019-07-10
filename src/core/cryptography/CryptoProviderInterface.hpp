@@ -37,7 +37,8 @@ class CryptoProviderInterface {
   * \param message String containing the error message to display
   * \param filePath String containing the file path which encountered an error
   */
-  virtual void errorMessage(const QString& message, const QString& filePath) = 0;
+  virtual void errorMessage(const QString& message,
+                            const QString& filePath) = 0;
 
   virtual void init(DispatcherState* state) = 0;
 

@@ -62,7 +62,7 @@ Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* dispatcher)
                    Qt::QueuedConnection);
 
   QObject::connect(&pluginLoader, &PluginLoader::cryptoProviderChanged,
-                   &cryptographer, &Crypto::receiveProvider);
+                   &cryptographer, &Crypto::updateProvider);
 
   QObject::connect(&archiver, &Archiver::fileProgress,
                    q_ptr, &Dispatcher::updateFileProgress);

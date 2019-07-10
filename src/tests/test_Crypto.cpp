@@ -1,4 +1,5 @@
 #include "cryptography/Crypto.hpp"
+#include "PluginLoader.hpp"
 #include "FileOperations.hpp"
 #include "catch.hpp"
 #include <QFileInfo>
@@ -71,7 +72,14 @@ SCENARIO("Test encryption and decryption on various file types",
                               QStringLiteral("test3 (2).zip"));
 
   Kryvo::DispatcherState state;
+
+  Kryvo::PluginLoader pluginLoader;
+  pluginLoader.loadPlugins();
+  QObject* cryptoPlugin = pluginLoader.cryptoProvider();
+
   Kryvo::Crypto cryptographer(&state);
+
+  cryptographer.updateProvider(cryptoPlugin);
 
   for (const EncryptionTestData& etd : testDataVector) {
     GIVEN("Test file: " + etd.inputFilePath.toStdString()) {

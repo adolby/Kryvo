@@ -1,10 +1,12 @@
+include(../../../../defaults.pri)
+
 QT += core
 
 TARGET = openssl
 
 TEMPLATE = lib
 
-CONFIG += c++14 plugin
+CONFIG += plugin static c++14
 
 # Qt Creator Debug/Release Differentiation
 # Ensure one "debug_and_release" in CONFIG, for clarity.
@@ -23,26 +25,16 @@ CONFIG(release, debug|release) {
   CONFIG += release
 }
 
-SOURCES += \
-  OpenSslProvider.cpp \
-  $$PWD/../../../app/Constants.cpp \
-  $$PWD/../../../app/cryptography/CryptoState.cpp
+SOURCES += OpenSslProvider.cpp
 
 HEADERS += \
   OpenSslProvider.hpp \
-  $$PWD/../../../app/Constants.hpp \
-  $$PWD/../../../app/cryptography/CryptoState.hpp
-
-INCLUDEPATH += \
-  $$PWD/../../../app/ \
-  $$PWD/../../../lib/zlib/
+  $$PWD/../../../core/Constants.hpp \
+  $$PWD/../../../core/DispatcherState.hpp
 
 # Platform-specific configuration
 linux {
   message(Linux)
-
-  QMAKE_CXXFLAGS += -fstack-protector #-maes -mpclmul -mssse3 -mavx2
-  QMAKE_LFLAGS += -fstack-protector
 
   android {
     message(Android)

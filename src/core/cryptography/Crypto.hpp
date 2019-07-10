@@ -62,7 +62,7 @@ class Crypto : public QObject {
   void busyStatus(bool busyStatus);
 
  public slots:
-  void receiveProvider(QObject* provider);
+  void updateProvider(QObject* provider);
 
   /*!
    * \brief encrypt Executed when a signal is received for encryption with a

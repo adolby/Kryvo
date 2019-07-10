@@ -10,8 +10,6 @@
 #include <QVector>
 #include <QCoreApplication>
 
-#include <QDebug>
-
 Q_IMPORT_PLUGIN(BotanProvider)
 
 class Kryvo::PluginLoaderPrivate {
@@ -49,8 +47,6 @@ Kryvo::PluginLoaderPrivate::loadPluginFromFile(const QString& filePath) {
 
 void Kryvo::PluginLoaderPrivate::loadPlugins() {
   Q_Q(PluginLoader);
-
-  qDebug() << Q_FUNC_INFO << "Loading plugins...";
 
   const QVector<QStaticPlugin>& staticPlugins =
     QPluginLoader::staticPlugins();
@@ -121,8 +117,6 @@ Kryvo::PluginLoader::~PluginLoader() = default;
 
 void Kryvo::PluginLoader::loadPlugins() {
   Q_D(PluginLoader);
-
-  qDebug() << Q_FUNC_INFO << "Loading plugins...";
 
   d->loadPlugins();
 }
