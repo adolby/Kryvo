@@ -111,6 +111,8 @@ void Kryvo::FileListFrame::updateProgress(const QString& path,
   if (!items.empty()) {
     QStandardItem* item = items.first();
 
+    Q_ASSERT(item);
+
     if (item) {
       const int index = item->row();
 
@@ -172,6 +174,8 @@ void Kryvo::FileListFrame::addFileToModel(const QString& path) {
     for (int row = 0; row < rowCount; ++row) {
       const QStandardItem* testItem = d->fileListModel.item(row, 0);
 
+      Q_ASSERT(testItem);
+
       if (!testItem) {
           return;
       }
@@ -195,6 +199,8 @@ void Kryvo::FileListFrame::removeFileFromModel(const QModelIndex& index) {
   Q_D(FileListFrame);
 
   QStandardItem* testItem = d->fileListModel.item(index.row(), 0);
+
+  Q_ASSERT(testItem);
 
   if (!testItem) {
       return;
