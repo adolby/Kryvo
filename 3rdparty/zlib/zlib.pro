@@ -63,15 +63,32 @@ linux {
   android {
     message(Android)
 
-    debug {
-      message(Debug)
-      DESTDIR = $$PWD/../../build/android/armv7/debug/lib/zlib
+    contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
+      message(armeabi-v7a)
+
+      debug {
+        message(Debug)
+        DESTDIR = $$PWD/../../build/android/armv7/debug/lib/zlib
+      }
+      release {
+        message(Release)
+        DESTDIR = $$PWD/../../build/android/armv7/release/lib/zlib
+      }
     }
-    release {
-      message(Release)
-      DESTDIR = $$PWD/../../build/android/armv7/release/lib/zlib
+
+    contains(ANDROID_TARGET_ARCH, arm64-v8a) {
+      message(arm64-v8a)
+
+      debug {
+        message(Debug)
+        DESTDIR = $$PWD/../../build/android/armv8/debug/lib/zlib
+      }
+      release {
+        message(Release)
+        DESTDIR = $$PWD/../../build/android/armv8/release/lib/zlib
+      }
     }
-  } # End Android
+  } # End android
 
   linux-clang {
     message(clang)
@@ -101,8 +118,8 @@ linux {
       message(Release)
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/lib/zlib
     }
-  } # End g++ x86_64
-} # End Linux
+  } # End linux-g++-64
+} # End linux
 
 darwin {
   ios {

@@ -128,7 +128,7 @@ linux {
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/plugins/cryptography/botan -lbotan
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/core
     }
-  } # End g++ x86_64
+  } # End linux-g++-64
 } # End linux
 
 darwin {
@@ -184,15 +184,15 @@ win32 {
 
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/windows/mingw/x86/debug/core
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/debug/lib/zlib -lz
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/debug/plugins/cryptography/botan -lbotan
+      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/debug/core
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/windows/mingw/x86/release/core
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/release/lib/zlib -lz
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/release/plugins/cryptography/botan -lbotan
+      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/release/core
     }
   } # End win32-g++
 

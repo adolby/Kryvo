@@ -39,15 +39,32 @@ linux {
   android {
     message(Android)
 
-    debug {
-      message(Debug)
-      DESTDIR = $$PWD/../../../../build/android/debug/plugins/cryptography/openssl
+    contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
+      message(armeabi-v7a)
+
+      debug {
+        message(Debug)
+        DESTDIR = $$PWD/../../../../build/android/armv7/debug/plugins/cryptography/openssl
+      }
+      release {
+        message(Release)
+        DESTDIR = $$PWD/../../../../build/android/armv7/release/plugins/cryptography/openssl
+      }
     }
-    release {
-      message(Release)
-      DESTDIR = $$PWD/../../../../build/android/release/plugins/cryptography/openssl
+
+    contains(ANDROID_TARGET_ARCH, arm64-v8a) {
+      message(arm64-v8a)
+
+      debug {
+        message(Debug)
+        DESTDIR = $$PWD/../../../../build/android/armv8/debug/plugins/cryptography/openssl
+      }
+      release {
+        message(Release)
+        DESTDIR = $$PWD/../../../../build/android/armv8/release/plugins/cryptography/openssl
+      }
     }
-  } # End Android
+  } # End android
 
   linux-clang {
     message(clang)
@@ -62,10 +79,10 @@ linux {
       message(Release)
       DESTDIR = $$PWD/../../../../build/linux/clang/x86_64/release/plugins/cryptography/openssl
     }
-  } # End clang
+  } # End linux-clang
 
-  linux-g++ {
-    message(g++)
+  linux-g++-64 {
+    message(g++ x86_64)
 
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
@@ -77,10 +94,10 @@ linux {
       message(Release)
       DESTDIR = $$PWD/../../../../build/linux/gcc/x86_64/release/plugins/cryptography/openssl
     }
-  } # End g++
-} # End Linux
+  } # End linux-g++-64
+} # End linux
 
-mac {
+darwin {
 #  QMAKE_MAC_SDK = macosx10.13
 #  QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
 
@@ -101,7 +118,7 @@ mac {
       message(Release)
       DESTDIR = $$PWD/../../../../build/iOS/release/plugins/cryptography/openssl
     }
-  } # End iOS
+  } # End ios
 
   macx {
     message(macOS)
@@ -115,8 +132,8 @@ mac {
       message(Release)
       DESTDIR = $$PWD/../../../../build/macOS/clang/x86_64/release/plugins/cryptography/openssl
     }
-  } # End macOS
-} # End Mac
+  } # End macos
+} # End darwin
 
 win32 {
   message(Windows)

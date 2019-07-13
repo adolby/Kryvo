@@ -65,8 +65,6 @@ linux {
   android {
     message(Android)
 
-#    HEADERS += src/libs/botan/android/android_to_string.h
-
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../resources/android
 
     contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
@@ -203,17 +201,17 @@ win32 {
 
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/core -lcore
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/windows/mingw/x86/debug/widgets
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/debug/core -lcore
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/debug/lib/zlib -lz
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/debug/plugins/cryptography/botan -lbotan
+      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/debug/widgets
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/core -lcore
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/windows/mingw/x86/release/widgets
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/release/core -lcore
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/release/lib/zlib -lz
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/release/plugins/cryptography/botan -lbotan
+      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/release/widgets
     }
   } # End win32-g++
 
