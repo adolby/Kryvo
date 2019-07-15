@@ -100,11 +100,11 @@ void Kryvo::SettingsPrivate::importSettings() {
 
     containerMode = settings[QStringLiteral("containerMode")].toBool(true);
 
-    const QString& outputPath =
+    outputPath =
       settings[QStringLiteral("outputPath")].toString(
         Constants::kDocumentsPath);
 
-    const QString& inputPath =
+    inputPath =
       settings[QStringLiteral("inputPath")].toString(
         Constants::kDocumentsPath);
 
