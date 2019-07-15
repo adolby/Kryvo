@@ -45,12 +45,6 @@ class OutputFrame : public QFrame {
 
  signals:
   void selectOutputDir();
-
-  /*!
-   * \brief editingFinished Emitted when the line edit focus changes or the user
-   * indicates they are finished editing with the virtual keyboard
-   */
-  void editingFinished();
 };
 
 } // namespace Kryvo
