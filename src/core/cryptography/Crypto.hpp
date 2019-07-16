@@ -4,6 +4,7 @@
 #include "DispatcherState.hpp"
 #include "cryptography/CryptoProviderInterface.hpp"
 #include "utility/pimpl.h"
+#include <QFileInfo>
 #include <QObject>
 #include <QString>
 #include <memory>
@@ -38,7 +39,8 @@ class Crypto : public QObject {
    * \param percentProgress Integer representing the current progress as a
    * percent
    */
-  void fileProgress(std::size_t id, const QString& task, qint64 percentProgress);
+  void fileProgress(std::size_t id, const QString& task,
+                    qint64 percentProgress);
 
   /*!
    * \brief statusMessage Emitted when a message about the current cipher
@@ -50,10 +52,9 @@ class Crypto : public QObject {
   /*!
    * \brief errorMessage Emitted when an error occurs
    * \param message String containing the error message to display
-   * \param filePath String containing the file path which encountered an error
+   * \param fileInfo File that encountered an error
    */
-  void errorMessage(const QString& message,
-                    const QString& filePath = QString());
+  void errorMessage(const QString& message, const QFileInfo& fileInfo);
 
   /*!
    * \brief busyStatus Emitted when a cipher operation starts and ends
@@ -69,18 +70,17 @@ class Crypto : public QObject {
    * passphrase, a list of input file paths, and the algorithm name
    * \param id Pipeline ID
    * \param passphrase String representing the user-entered passphrase
-   * \param inputFilePath String containing the file path of the file to
-   * encrypt
-   * \param outputFilePath String containing output file path
+   * \param inputFileInfo File to encrypt
+   * \param outputFileInfo Encrypted file
    * \param cipher String representing name of the cipher
-   * \param keySize Key size in bits
+   * \param keySize Key size (in bits)
    * \param modeOfOperation String representing mode of operation
    * \param compress Boolean representing compression mode
    */
   bool encrypt(std::size_t id,
                const QString& passphrase,
-               const QString& inputFilePath,
-               const QString& outputFilePath,
+               const QFileInfo& inputFileInfo,
+               const QFileInfo& outputFileInfo,
                const QString& cipher,
                std::size_t keySize,
                const QString& modeOfOperation,
@@ -91,9 +91,8 @@ class Crypto : public QObject {
    * passphrase and an input file path
    * \param id Pipeline ID
    * \param passphrase String representing the user-entered passphrase
-   * \param inputFilePath String containing the file path of the file to
-   * decrypt
-   * \param outputFilePath String containing output file path
+   * \param inputFileInfo File to decrypt
+   * \param outputFileInfo Decrypted file
    * \param algorithmNameString Algorithm name
    * \param keySizeString Key size as a string
    * \param pbkdfSaltString PBKDF salt
@@ -102,8 +101,8 @@ class Crypto : public QObject {
    */
   bool decrypt(std::size_t id,
                const QString& passphrase,
-               const QString& inputFilePath,
-               const QString& outputFilePath,
+               const QFileInfo& inputFileInfo,
+               const QFileInfo& outputFileInfo,
                const QString& algorithmNameString,
                const QString& keySizeString,
                const QString& pbkdfSaltString,

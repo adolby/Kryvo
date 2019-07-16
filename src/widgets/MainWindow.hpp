@@ -47,16 +47,16 @@ class MainWindow : public QMainWindow {
    * \brief encrypt Emitted when the user provides all required data for
    * encryption and clicks the Encrypt push button
    * \param passphrase String representing the user supplied passphrase
-   * \param inputFilePath List of input file paths
-   * \param outputPath String containing output file path
+   * \param inputFiles Input files
+   * \param outputPath Output path
    * \param cipher String representing the current cipher
    * \param keySize Key size
    * \param modeOfOperation String representing mode of operation
    * \param compress Boolean representing compression mode
    */
   void encrypt(const QString& passphrase,
-               const QStringList& inputFilePaths,
-               const QString& outputPath,
+               const std::vector<QFileInfo>& inputFiles,
+               const QDir& outputPath,
                const QString& cipher,
                std::size_t keySize,
                const QString& modeOfOperation,
@@ -67,12 +67,12 @@ class MainWindow : public QMainWindow {
    * \brief decrypt Emitted when the user provides all required data for
    * decryption and clicks the Decrypt push button
    * \param passphrase String representing the user supplied passphrase
-   * \param inputFilePath List of input file paths
-   * \param outputFilePath String containing output file path in container mode
+   * \param inputFile Input files
+   * \param outputPath Output path
    */
   void decrypt(const QString& passphrase,
-               const QStringList& inputFilePath,
-               const QString& outputFilePath,
+               const std::vector<QFileInfo>& inputFiles,
+               const QDir& outputPath,
                bool removeIntermediateFiles);
 
   /*!
@@ -90,7 +90,7 @@ class MainWindow : public QMainWindow {
   /*!
    * \brief stopFile Emitted when the user clicks a remove file button
    */
-  void stopFile(const QString& fileName);
+  void stopFile(const QFileInfo& fileInfo);
 
  public slots:
   /*!
@@ -109,18 +109,18 @@ class MainWindow : public QMainWindow {
    * clicked. Starts the encryption or decryption operation using the passphrase
    * from the password line edit, the file list from the file list model, and
    * the algorithm name from the settings panel.
-   * \param cryptDirection Boolean representing encrypt or decrypt
+   * \param direction
    */
-  void processFiles(bool cryptDirection);
+  void processFiles(Kryvo::CryptDirection cryptDirection);
 
   /*!
    * \brief updateFileProgress Executed when the cipher operation progress is
    * updated. Updates the progress bar for the item at the specified index.
-   * \param filePath File path serving as the index to update the progress
+   * \param fileInfo File path serving as the index to update the progress
    * \param task Task operating on file
    * \param progressValue Integer representing the current progress in percent
    */
-  void updateFileProgress(const QString& filePath, const QString& task,
+  void updateFileProgress(const QFileInfo& fileInfo, const QString& task,
                           qint64 progressValue);
 
   /*!
@@ -133,9 +133,9 @@ class MainWindow : public QMainWindow {
   /*!
    * \brief updateError Executed when a cipher operation fails
    * \param message String containing the error message
-   * \param path String containing the error file name path
+   * \param fileInfo File info
    */
-  void updateError(const QString& message, const QString& fileName = QString());
+  void updateError(const QString& message, const QFileInfo& fileInfo);
 
   /*!
    * \brief updateBusyStatus Executed when the cipher operation updates its busy

@@ -3,6 +3,7 @@
 
 #include "utility/pimpl.h"
 #include <QObject>
+#include <QFileInfo>
 #include <QStringList>
 #include <QString>
 #include <functional>
@@ -14,7 +15,7 @@ namespace Kryvo {
 struct Pipeline {
   std::vector<std::function<void(std::size_t)>> stages;
   std::size_t stage = 0;
-  QString inputFilePath;
+  QFileInfo inputFilePath;
 };
 
 class DispatcherPrivate;
@@ -35,11 +36,11 @@ class Dispatcher : public QObject {
 
   /*!
    * \brief fileProgress Emitted when the cipher operation file progress changes
-   * \param path String containing path of the file to update progress on
+   * \param fileInfo File to update progress on
    * \param task String containing path name
    * \param progressValue Integer representing the current progress as a percent
    */
-  void fileProgress(const QString& filePath, const QString& task,
+  void fileProgress(const QFileInfo& fileInfo, const QString& task,
                     qint64 percentProgress);
 
   /*!
@@ -52,10 +53,9 @@ class Dispatcher : public QObject {
   /*!
    * \brief errorMessage Emitted when an error occurs
    * \param message String containing the error message to display
-   * \param filePath String containing the file path which encountered an error
+   * \param filePath File that encountered an error
    */
-  void errorMessage(const QString& message,
-                    const QString& filePath = QString());
+  void errorMessage(const QString& message, const QFileInfo& fileInfo);
 
   /*!
    * \brief busyStatus Emitted when a cipher operation starts and ends
@@ -64,17 +64,17 @@ class Dispatcher : public QObject {
   void busyStatus(bool busyStatus);
 
   void compressFile(std::size_t id,
-                    const QString& inputFilePath,
-                    const QString& outputPath);
+                    const QFileInfo& inputFileInfo,
+                    const QFileInfo& outputFileInfo);
 
   void decompressFile(std::size_t id,
-                      const QString& inputFilePath,
-                      const QString& outputFilePath);
+                      const QFileInfo& inputFileInfo,
+                      const QFileInfo& outputFileInfo);
 
   void encryptFile(std::size_t id,
                    const QString& passphrase,
-                   const QString& inputFilePath,
-                   const QString& outputPath,
+                   const QFileInfo& inputFileInfo,
+                   const QFileInfo& outputFileInfo,
                    const QString& cipher,
                    std::size_t inputKeySize,
                    const QString& modeOfOperation,
@@ -82,8 +82,8 @@ class Dispatcher : public QObject {
 
   void decryptFile(std::size_t id,
                    const QString& passphrase,
-                   const QString& inputFilePath,
-                   const QString& outputPath,
+                   const QFileInfo& inputFileInfo,
+                   const QFileInfo& outputFileInfo,
                    const QString& algorithmNameString,
                    const QString& keySizeString,
                    const QString& pbkdfSaltString,
@@ -95,17 +95,16 @@ class Dispatcher : public QObject {
    * \brief encrypt Executed when a signal is received for encryption with a
    * passphrase, a list of input file paths, and the algorithm name
    * \param passphrase String representing the user-entered passphrase
-   * \param inputFilePaths List of strings containing the file paths of the
-   * files to encrypt
-   * \param outputPath String containing output file path
+   * \param inputFiles List of files to encrypt
+   * \param outputPath Output path
    * \param cipher String representing name of the cipher
    * \param inputKeySize Key size in bits
    * \param modeOfOperation String representing mode of operation
    * \param compress Boolean representing compression mode
    */
   void encrypt(const QString& passphrase,
-               const QStringList& inputFilePaths,
-               const QString& outputPath,
+               const std::vector<QFileInfo>& inputFiles,
+               const QDir& outputPath,
                const QString& cipher,
                std::size_t inputKeySize,
                const QString& modeOfOperation,
@@ -116,13 +115,12 @@ class Dispatcher : public QObject {
    * \brief decrypt Executed when a signal is received for decryption with a
    * passphrase and a list of input file paths
    * \param passphrase String representing the user-entered passphrase
-   * \param inputFilePaths List of strings containing the file paths of
-   * the files to decrypt
-   * \param outputPath String containing output path
+   * \param inputFiles List of files to decrypt
+   * \param outputPath Output path
    */
   void decrypt(const QString& passphrase,
-               const QStringList& inputFilePaths,
-               const QString& outputPath,
+               const std::vector<QFileInfo>& inputFiles,
+               const QDir& outputPath,
                bool removeIntermediateFiles);
 
   /*!
@@ -151,7 +149,7 @@ class Dispatcher : public QObject {
    * file path in the encrypt/decrypt process.
    * \param filePath String containing a file path
    */
-  void stop(const QString& filePath);
+  void stop(const QFileInfo& filePath);
 
   void processPipeline(std::size_t id);
 

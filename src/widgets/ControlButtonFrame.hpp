@@ -1,6 +1,7 @@
 #ifndef KRYVO_WIDGETS_CONTROLBUTTONFRAME_HPP_
 #define KRYVO_WIDGETS_CONTROLBUTTONFRAME_HPP_
 
+#include "Constants.hpp"
 #include "utility/pimpl.h"
 #include <QFrame>
 #include <memory>
@@ -38,10 +39,9 @@ class ControlButtonFrame : public QFrame {
   /*!
    * \brief processFiles Emitted when the encrypt or decrypt push buttons are
    * clicked.
-   * \param cryptDirection Boolean representing encrypt (true) or
-   * decrypt (false)
+   * \param direction
    */
-  void processFiles(bool cryptDirection);
+  void processFiles(Kryvo::CryptDirection direction);
 
  private slots:
   /*!

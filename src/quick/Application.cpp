@@ -19,6 +19,9 @@ class Kryvo::ApplicationPrivate {
 
 Kryvo::ApplicationPrivate::ApplicationPrivate() {
   qRegisterMetaType<std::size_t>("std::size_t");
+  qRegisterMetaType<QFileInfo>("QFileInfo");
+  qRegisterMetaType<std::vector<QFileInfo>>("std::vector<QFileInfo>");
+  qRegisterMetaType<QDir>("QDir");
 
   // Connect GUI encrypt/decrypt actions
   QObject::connect(&gui, &Ui::encrypt,

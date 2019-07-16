@@ -4,7 +4,8 @@
 #include "DispatcherState.hpp"
 #include "utility/pimpl.h"
 #include <QObject>
-#include <QStringList>
+#include <QFileInfo>
+#include <vector>
 #include <memory>
 
 namespace Kryvo {
@@ -46,21 +47,20 @@ class Archiver : public QObject {
   /*!
    * \brief errorMessage Emitted when an error occurs
    * \param message String containing the error message to display
-   * \param filePath String containing the file path which encountered an error
+   * \param fileInfo File that encountered an error
    */
-  void errorMessage(const QString& message,
-                    const QString& filePath = QString());
+  void errorMessage(const QString& message, const QFileInfo& fileInfo);
 
  public slots:
-  void compress(std::size_t id, const QString& inputFilePath,
-                const QString& outputFilePath);
+  void compress(std::size_t id, const QFileInfo& inputFileInfo,
+                const QFileInfo& outputFileInfo);
 
-  void decompress(std::size_t id, const QString& inputFilePath,
-                  const QString& outputFilePath);
+  void decompress(std::size_t id, const QFileInfo& inputFileInfo,
+                  const QFileInfo& outputFileInfo);
 
-  void archive(const QStringList& filePaths);
+  void archive(const std::vector<QFileInfo>& inputFiles);
 
-  void extract(const QString& archiveFilePath);
+  void extract(const QFileInfo& archiveFileInfo);
 };
 
 } // namespace Kryvo

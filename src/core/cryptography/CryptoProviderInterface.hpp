@@ -3,6 +3,7 @@
 
 #include "DispatcherState.hpp"
 #include <QObject>
+#include <QFileInfo>
 #include <QString>
 #include <QtPlugin>
 
@@ -35,19 +36,19 @@ class CryptoProviderInterface {
  /*!
   * \brief errorMessage Emitted when an error occurs
   * \param message String containing the error message to display
-  * \param filePath String containing the file path which encountered an error
+  * \param fileInfo File that encountered an error
   */
   virtual void errorMessage(const QString& message,
-                            const QString& filePath) = 0;
+                            const QFileInfo& fileInfo) = 0;
 
   virtual void init(DispatcherState* state) = 0;
 
- /*!
+  /*!
   * \brief encrypt Encrypt a file
   * \param id ID representing file to encrypt
   * \param passphrase String representing the user-entered passphrase
-  * \param inFilePaths String containing the file path of the file to encrypt
-  * \param outputPath String containing output file path
+  * \param inputFileInfo File to encrypt
+  * \param outputFileInfo Encrypted file
   * \param cipher String representing name of the cipher
   * \param keySize Key size in bits
   * \param modeOfOperation String representing mode of operation
@@ -55,8 +56,8 @@ class CryptoProviderInterface {
   */
   virtual bool encrypt(std::size_t id,
                        const QString& passphrase,
-                       const QString& inFilePath,
-                       const QString& outputPath,
+                       const QFileInfo& inputFileInfo,
+                       const QFileInfo& outputFileInfo,
                        const QString& cipher,
                        std::size_t keySize,
                        const QString& modeOfOperation,
@@ -67,13 +68,13 @@ class CryptoProviderInterface {
    * the file header.
    * \param id ID representing file to decrypt
    * \param passphrase String representing the user-entered passphrase
-   * \param inFilePath String containing the file path of the file to decrypt
-   * \param outFilePath String containing output file path
+   * \param inputFileInfo File to decrypt
+   * \param outputFileInfo Decrypted file
    */
   virtual bool decrypt(std::size_t id,
                        const QString& passphrase,
-                       const QString& inFilePath,
-                       const QString& outFilePath,
+                       const QFileInfo& inputFileInfo,
+                       const QFileInfo& outputFileInfo,
                        const QString& algorithmNameString,
                        const QString& keySizeString,
                        const QString& pbkdfSaltString,

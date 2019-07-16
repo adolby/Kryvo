@@ -4,6 +4,7 @@
 #include "utility/pimpl.h"
 #include <QFrame>
 #include <QStandardItem>
+#include <QFileInfo>
 #include <memory>
 
 namespace Kryvo {
@@ -56,21 +57,22 @@ class FileListFrame : public QFrame {
    * \param task Task operating on file
    * \param percent Integer representing progress as a percentage
    */
-  void updateProgress(const QString& path, const QString& task, qint64 percent);
+  void updateProgress(const QFileInfo& info, const QString& task,
+                      qint64 percent);
 
  signals:
   /*!
    * \brief stopFile Emitted when the user clicks a remove file button
    */
-  void stopFile(const QString& fileName);
+  void stopFile(const QFileInfo& fileInfo);
 
  public slots:
   /*!
    * \brief addFileToModel Adds a file to the model that represents the list
    * to be encrypted/decrypted
-   * \param path String representing the path to a file
+   * \param fileInfo File
    */
-  void addFileToModel(const QString& path);
+  void addFileToModel(const QFileInfo& fileInfo);
 
   /*!
    * \brief removeFileFromModel Removes the file name at the input index in the

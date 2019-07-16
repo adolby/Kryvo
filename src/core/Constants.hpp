@@ -7,9 +7,14 @@
 #include <QObject>
 #include <QStringList>
 #include <QString>
-#include <QStringBuilder>
 
 namespace Kryvo {
+Q_NAMESPACE
+
+enum class CryptDirection {
+  Encrypt,
+  Decrypt
+}; Q_ENUM_NS(CryptDirection)
 
 class Constants {
  public:

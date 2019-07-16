@@ -1,5 +1,6 @@
 #include "Constants.hpp"
 #include <QStandardPaths>
+#include <QStringBuilder>
 
 const QVersionNumber Kryvo::Constants::kVersion({1, 0, 0, 0});
 

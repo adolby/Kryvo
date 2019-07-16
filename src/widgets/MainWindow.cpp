@@ -185,7 +185,7 @@ void Kryvo::MainWindow::addFiles() {
   if (!fileNames.isEmpty()) { // If files were selected, add them to the model
     for (const QString& fileName : fileNames) {
       const QFileInfo fileInfo(fileName);
-      fileListFrame->addFileToModel(fileInfo.absoluteFilePath());
+      fileListFrame->addFileToModel(fileInfo);
     }
 
     // Save this directory for returning to later
@@ -203,38 +203,42 @@ void Kryvo::MainWindow::removeFiles() {
   fileListFrame->clear();
 }
 
-void Kryvo::MainWindow::processFiles(const bool cryptDirection) {
+void Kryvo::MainWindow::processFiles(
+  const Kryvo::CryptDirection direction) {
   Q_D(MainWindow);
   Q_ASSERT(settings);
   Q_ASSERT(passwordFrame);
   Q_ASSERT(fileListFrame);
 
   if (!d->isBusy()) {
-    const QString& outputPath = outputFrame->outputPath();
     const QString& passphrase = passwordFrame->password();
 
     if (!passphrase.isEmpty()) {
       const int rowCount = fileListFrame->rowCount();
 
       if (rowCount > 0) {
-        QStringList fileList;
+        std::vector<QFileInfo> files;
 
         for (int row = 0; row < rowCount; ++row) {
           auto item = fileListFrame->item(row);
-          fileList.append(item->data().toString());
+          const QFileInfo fileInfo(item->data().toString());
+          files.push_back(fileInfo);
         }
 
-        if (cryptDirection) {
+        const QString& outputPath = outputFrame->outputPath();
+        const QDir outputDir(outputPath);
+
+        if (Kryvo::CryptDirection::Encrypt == direction) {
           emit encrypt(passphrase,
-                       fileList,
-                       outputPath,
+                       files,
+                       outputDir,
                        settings->cipher(),
                        settings->keySize(),
                        settings->modeOfOperation(),
                        settings->compressionMode(),
                        settings->removeIntermediateFiles());
         } else {
-          emit decrypt(passphrase, fileList, outputPath,
+          emit decrypt(passphrase, files, outputDir,
                        settings->removeIntermediateFiles());
         }
       }
@@ -247,12 +251,12 @@ void Kryvo::MainWindow::processFiles(const bool cryptDirection) {
   }
 }
 
-void Kryvo::MainWindow::updateFileProgress(const QString& filePath,
+void Kryvo::MainWindow::updateFileProgress(const QFileInfo& fileInfo,
                                            const QString& task,
                                            const qint64 progressValue) {
   Q_ASSERT(fileListFrame);
 
-  fileListFrame->updateProgress(filePath, task, progressValue);
+  fileListFrame->updateProgress(fileInfo, task, progressValue);
 }
 
 void Kryvo::MainWindow::updateStatusMessage(const QString& message) {
@@ -262,14 +266,14 @@ void Kryvo::MainWindow::updateStatusMessage(const QString& message) {
 }
 
 void Kryvo::MainWindow::updateError(const QString& message,
-                                    const QString& fileName) {
+                                    const QFileInfo& fileInfo) {
   if (message.contains(QStringLiteral("%1"))) {
-    updateStatusMessage(message.arg(fileName));
+    updateStatusMessage(message.arg(fileInfo.absoluteFilePath()));
   } else {
     updateStatusMessage(message);
   }
 
-  updateFileProgress(fileName, QString(), 0);
+  updateFileProgress(fileInfo.absoluteFilePath(), QString(), 0);
 }
 
 void Kryvo::MainWindow::updateBusyStatus(const bool busy) {
@@ -342,12 +346,8 @@ void Kryvo::MainWindow::selectOutputDir() {
                                       settings->outputPath());
 
   if (!outputDir.isEmpty()) { // Save this directory for returning to later
-    const QDir lastOutputPath(outputDir);
+    settings->outputPath(outputDir);
 
-    const QString& absoluteDir = lastOutputPath.absolutePath();
-
-    settings->outputPath(absoluteDir);
-
-    outputFrame->outputPath(absoluteDir);
+    outputFrame->outputPath(outputDir);
   }
 }

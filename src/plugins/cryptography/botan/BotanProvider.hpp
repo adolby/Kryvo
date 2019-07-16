@@ -1,5 +1,5 @@
-#ifndef KRYVO_CRYPTOGRAPHY_BOTANPROVIDER_HPP_
-#define KRYVO_CRYPTOGRAPHY_BOTANPROVIDER_HPP_
+#ifndef KRYVO_PLUGINS_CRYPTOGRAPHY_BOTANPROVIDER_HPP_
+#define KRYVO_PLUGINS_CRYPTOGRAPHY_BOTANPROVIDER_HPP_
 
 #include "cryptography/CryptoProviderInterface.hpp"
 #include "utility/pimpl.h"
@@ -29,15 +29,13 @@
     #endif
   #else
     #if defined(__GNUC__) || defined(__GNUG__)
-#include "botan/windows/mingw/x86/botan_all.h"
+#include "botan/windows/mingw/x86_32/botan_all.h"
     #elif defined(_MSC_VER)
-#include "botan/windows/msvc/x86/botan_all.h"
+#include "botan/windows/msvc/x86_32/botan_all.h"
     #endif
   #endif
 #endif
 
-#include <QSaveFile>
-#include <QFile>
 #include <QObject>
 #include <QString>
 #include <memory>
@@ -83,43 +81,50 @@ class BotanProvider : public QObject,
   /*!
    * \brief errorMessage Emitted when an error occurs
    * \param message String containing the error message to display
-   * \param filePath String containing the file path which encountered an error
+   * \param fileInfo File that encountered an error
    */
-  void errorMessage(const QString& message, const QString& filePath) override;
+  void errorMessage(const QString& message, const QFileInfo& fileInfo) override;
 
  public:
   void init(DispatcherState* state) override;
 
- /*!
-  * \brief encrypt Encrypt a file
-  * \param passphrase String representing the user-entered passphrase
-  * \param inFilePath String containing the file path of the file to encrypt
-  * \param outputPath String containing output file path
-  * \param cipher String representing name of the cipher
-  * \param inputKeySize Key size in bits
-  * \param modeOfOperation String representing mode of operation
-  * \param compress Boolean representing compression mode
-  */
-  bool encrypt(std::size_t id,
-               const QString& passphrase,
-               const QString& inFilePath,
-               const QString& outputPath,
-               const QString& cipher,
-               std::size_t keySize,
-               const QString& modeOfOperation,
-               bool compress) override;
+  /*!
+   * \brief encrypt Encrypt a file
+   * \param id ID representing file to encrypt
+   * \param passphrase String representing the user-entered passphrase
+   * \param inputFileInfo File to encrypt
+   * \param outputFileInfo Encrypted file
+   * \param cipher String representing name of the cipher
+   * \param keySize Key size in bits
+   * \param modeOfOperation String representing mode of operation
+   * \param compress Boolean representing compression mode
+   */
+   bool encrypt(std::size_t id,
+                const QString& passphrase,
+                const QFileInfo& inputFileInfo,
+                const QFileInfo& outputFileInfo,
+                const QString& cipher,
+                std::size_t keySize,
+                const QString& modeOfOperation,
+                bool compress) override;
 
   /*!
    * \brief decrypt Decrypt a file. The algorithm is determined from
    * the file header.
+   * \param id
    * \param passphrase String representing the user-entered passphrase
-   * \param inFilePath Strings containing the file path of the file to decrypt
-   * \param outFilePath String containing output file path
+   * \param inputFileInfo File to decrypt
+   * \param outputFileInfo Output file path
+   * \param algorithmNameString
+   * \param keySizeString
+   * \param pbkdfSaltString
+   * \param keySaltString
+   * \param ivSaltString
    */
   bool decrypt(std::size_t id,
                const QString& passphrase,
-               const QString& inFilePath,
-               const QString& outFilePath,
+               const QFileInfo& inputFileInfo,
+               const QFileInfo& outputFileInfo,
                const QString& algorithmNameString,
                const QString& keySizeString,
                const QString& pbkdfSaltString,
@@ -135,4 +140,4 @@ class BotanProvider : public QObject,
 
 } // namespace Kryvo
 
-#endif // KRYVO_CRYPTOGRAPHY_BOTANPROVIDER_HPP_
+#endif // KRYVO_PLUGINS_CRYPTOGRAPHY_BOTANPROVIDER_HPP_

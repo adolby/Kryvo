@@ -96,17 +96,13 @@ void Kryvo::FileListFrame::clear() {
   d->fileListView->setColumnWidth(3, this->width() * 0.04);
 }
 
-void Kryvo::FileListFrame::updateProgress(const QString& path,
+void Kryvo::FileListFrame::updateProgress(const QFileInfo& info,
                                           const QString& task,
                                           const qint64 percent) {
   Q_D(FileListFrame);
 
-  if (path.isEmpty()) {
-    return;
-  }
-
   const QList<QStandardItem*>& items =
-    d->fileListModel.findItems(path, Qt::MatchExactly, 0);
+    d->fileListModel.findItems(info.absoluteFilePath(), Qt::MatchExactly, 0);
 
   if (!items.empty()) {
     QStandardItem* item = items.first();
@@ -129,21 +125,20 @@ void Kryvo::FileListFrame::updateProgress(const QString& path,
   }
 }
 
-void Kryvo::FileListFrame::addFileToModel(const QString& path) {
+void Kryvo::FileListFrame::addFileToModel(const QFileInfo& fileInfo) {
   Q_D(FileListFrame);
-
-  const QFileInfo fileInfo(path);
 
   if (fileInfo.exists() && fileInfo.isFile()) {
     // If the file exists, add it to the model
-    auto pathItem = new QStandardItem(path);
+    auto pathItem = new QStandardItem(fileInfo.absoluteFilePath());
     pathItem->setDragEnabled(false);
     pathItem->setDropEnabled(false);
     pathItem->setEditable(false);
     pathItem->setSelectable(false);
-    pathItem->setToolTip(path);
+    pathItem->setToolTip(fileInfo.absoluteFilePath());
 
-    const QVariant& pathVariant = QVariant::fromValue(path);
+    const QVariant& pathVariant =
+      QVariant::fromValue(fileInfo.absoluteFilePath());
     pathItem->setData(pathVariant);
 
     auto taskItem = new QStandardItem();
@@ -209,7 +204,7 @@ void Kryvo::FileListFrame::removeFileFromModel(const QModelIndex& index) {
   const QVariant& data = testItem->data();
 
   // Signal that this file shouldn't be encrypted or decrypted
-  emit stopFile(data.toString());
+  emit stopFile(QFileInfo(data.toString()));
 
   // Remove row from model
   d->fileListModel.removeRow(index.row());

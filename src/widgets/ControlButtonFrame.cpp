@@ -60,9 +60,9 @@ void Kryvo::ControlButtonFrame::setIconSize(const QSize& iconSize) {
 }
 
 void Kryvo::ControlButtonFrame::encryptFiles() {
-  emit processFiles(true);
+  emit processFiles(Kryvo::CryptDirection::Encrypt);
 }
 
 void Kryvo::ControlButtonFrame::decryptFiles() {
-  emit processFiles(false);
+  emit processFiles(Kryvo::CryptDirection::Decrypt);
 }

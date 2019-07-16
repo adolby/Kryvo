@@ -10,12 +10,14 @@ class Kryvo::CryptoPrivate {
   explicit CryptoPrivate(Crypto* crypto, DispatcherState* ds);
 
   bool encryptFile(std::size_t id, const QString& passphrase,
-                   const QString& inputFilePath, const QString& outputPath,
+                   const QFileInfo& inputFileInfo,
+                   const QFileInfo& outputFileInfo,
                    const QString& cipher, std::size_t inputKeySize,
                    const QString& modeOfOperation, bool compress);
 
   bool decryptFile(std::size_t id, const QString& passphrase,
-                   const QString& inputFilePath, const QString& outputPath,
+                   const QFileInfo& inputFileInfo,
+                   const QFileInfo& outputFileInfo,
                    const QString& algorithmNameString,
                    const QString& keySizeString, const QString& pbkdfSaltString,
                    const QString& keySaltString, const QString& ivSaltString);
@@ -33,8 +35,8 @@ Kryvo::CryptoPrivate::CryptoPrivate(Crypto* crypto, DispatcherState* ds)
 
 bool Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
                                        const QString& passphrase,
-                                       const QString& inputFilePath,
-                                       const QString& outputFilePath,
+                                       const QFileInfo& inputFileInfo,
+                                       const QFileInfo& outputFileInfo,
                                        const QString& cipher,
                                        const std::size_t keySize,
                                        const QString& modeOfOperation,
@@ -43,18 +45,18 @@ bool Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
 
   if (!provider) {
     emit q->fileFailed(id);
-    emit q->errorMessage(Constants::messages[11]);
+    emit q->errorMessage(Constants::messages[11], QFileInfo());
     return false;
   }
 
-  return provider->encrypt(id, passphrase, inputFilePath, outputFilePath,
+  return provider->encrypt(id, passphrase, inputFileInfo, outputFileInfo,
                            cipher, keySize, modeOfOperation, compress);
 }
 
 bool Kryvo::CryptoPrivate::decryptFile(const std::size_t id,
                                        const QString& passphrase,
-                                       const QString& inputFilePath,
-                                       const QString& outputFilePath,
+                                       const QFileInfo& inputFileInfo,
+                                       const QFileInfo& outputFileInfo,
                                        const QString& algorithmNameString,
                                        const QString& keySizeString,
                                        const QString& pbkdfSaltString,
@@ -63,12 +65,12 @@ bool Kryvo::CryptoPrivate::decryptFile(const std::size_t id,
   Q_Q(Crypto);
 
   if (!provider) {
-    emit q->errorMessage(Constants::messages[11]);
+    emit q->errorMessage(Constants::messages[11], QFileInfo());
     emit q->fileFailed(id);
     return false;
   }
 
-  return provider->decrypt(id, passphrase, inputFilePath, outputFilePath,
+  return provider->decrypt(id, passphrase, inputFileInfo, outputFileInfo,
                            algorithmNameString, keySizeString, pbkdfSaltString,
                            keySaltString, ivSaltString);
 }
@@ -105,8 +107,8 @@ void Kryvo::Crypto::updateProvider(QObject* provider) {
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
-    QObject::connect(provider, SIGNAL(errorMessage(QString,QString)),
-                     this, SIGNAL(errorMessage(QString,QString)),
+    QObject::connect(provider, SIGNAL(errorMessage(QString,QFileInfo)),
+                     this, SIGNAL(errorMessage(QString,QFileInfo)),
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
@@ -117,22 +119,22 @@ void Kryvo::Crypto::updateProvider(QObject* provider) {
 }
 
 bool Kryvo::Crypto::encrypt(const std::size_t id, const QString& passphrase,
-                            const QString& inputFilePath,
-                            const QString& outputFilePath,
+                            const QFileInfo& inputFileInfo,
+                            const QFileInfo& outputFileInfo,
                             const QString& cipher, std::size_t inputKeySize,
                             const QString& modeOfOperation, bool compress) {
   Q_D(Crypto);
 
-  const bool encrypted = d->encryptFile(id, passphrase, inputFilePath,
-                                        outputFilePath, cipher, inputKeySize,
+  const bool encrypted = d->encryptFile(id, passphrase, inputFileInfo,
+                                        outputFileInfo, cipher, inputKeySize,
                                         modeOfOperation, compress);
 
   return encrypted;
 }
 
 bool Kryvo::Crypto::decrypt(const std::size_t id, const QString& passphrase,
-                            const QString& inputFilePath,
-                            const QString& outputPath,
+                            const QFileInfo& inputFileInfo,
+                            const QFileInfo& outputFileInfo,
                             const QString& algorithmNameString,
                             const QString& keySizeString,
                             const QString& pbkdfSaltString,
@@ -140,8 +142,8 @@ bool Kryvo::Crypto::decrypt(const std::size_t id, const QString& passphrase,
                             const QString& ivSaltString) {
   Q_D(Crypto);
 
-  const bool decrypted = d->decryptFile(id, passphrase, inputFilePath,
-                                        outputPath, algorithmNameString,
+  const bool decrypted = d->decryptFile(id, passphrase, inputFileInfo,
+                                        outputFileInfo, algorithmNameString,
                                         keySizeString, pbkdfSaltString,
                                         keySaltString, ivSaltString);
 
