@@ -28,11 +28,15 @@ CONFIG(release, debug|release) {
 SOURCES += \
   main.cpp \
   Application.cpp \
-  Ui.cpp
+  Ui.cpp \
+  FileListModel.cpp \
+  FileItem.cpp
 
 HEADERS += \
   Application.hpp \
-  Ui.hpp
+  Ui.hpp \
+  FileListModel.hpp \
+  FileItem.hpp
 
 # Platform-specific configuration
 linux {
@@ -198,17 +202,17 @@ win32 {
 
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/core -lcore
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/windows/mingw/x86/debug/quick
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/debug/core -lcore
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/debug/lib/zlib -lz
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/debug/plugins/cryptography/botan -lbotan
+      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/debug/quick
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/core -lcore
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/windows/mingw/x86/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/windows/mingw/x86/release/quick
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/release/core -lcore
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/release/lib/zlib -lz
+      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/release/plugins/cryptography/botan -lbotan
+      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/release/quick
     }
   } # End win32-g++
 
