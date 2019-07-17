@@ -96,19 +96,19 @@ void Kryvo::Crypto::updateProvider(QObject* provider) {
                                                      Qt::UniqueConnection));
 
     QObject::connect(provider,
-                     SIGNAL(fileProgress(std::size_t,QString,qint64)),
+                     SIGNAL(fileProgress(std::size_t,const QString&,qint64)),
                      this,
-                     SIGNAL(fileProgress(std::size_t,QString,qint64)),
+                     SIGNAL(fileProgress(std::size_t,const QString&,qint64)),
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
-    QObject::connect(provider, SIGNAL(statusMessage(QString)),
-                     this, SIGNAL(statusMessage(QString)),
+    QObject::connect(provider, SIGNAL(statusMessage(const QString&)),
+                     this, SIGNAL(statusMessage(const QString&)),
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
-    QObject::connect(provider, SIGNAL(errorMessage(QString,QFileInfo)),
-                     this, SIGNAL(errorMessage(QString,QFileInfo)),
+    QObject::connect(provider, SIGNAL(errorMessage(const QString&,const QFileInfo&)),
+                     this, SIGNAL(errorMessage(const QString&,const QFileInfo&)),
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
