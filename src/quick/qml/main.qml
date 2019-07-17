@@ -1,8 +1,11 @@
-import QtQuick 2.0
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick 2.9
+import QtQuick.Controls 2.2
+import QtQuick.Layouts 1.3
+import QtQuick.Controls.Material 2.2
 
 ApplicationWindow {
+  id: window
+
   property var currentPage: ui.currentPage
 
   width: 800

@@ -1,95 +1,46 @@
-import QtQuick 2.0
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick 2.9
+import QtQuick.Controls 2.2
+import QtQuick.Dialogs 1.3
+import QtQuick.Layouts 1.13
+import QtQuick.Controls.Material 2.2
 
-Page {  
-  background: Rectangle {
-    color: "#2c3e50"
-  }
+Page {
+  id: page
 
   header: ToolBar {
-    background: Rectangle {
-      implicitHeight: 44
-      color: "#2c3e50"
-    }
+    implicitHeight: 44
 
     RowLayout {
       anchors.fill: parent
 
-      ToolButton {
-        id: pauseButton
-
-        text: qsTr("Pause")
-        icon.source: "qrc:/images/pauseIcon.png"
-        icon.width: 12
-        icon.height: 12
-        display: AbstractButton.TextBesideIcon
-
-        background: Rectangle {
-          implicitHeight: 44
-          radius: 3
-          color: "#2980b9"
-        }
-
-        onClicked: {
-
-        }
+      Item {
+        implicitHeight: 44
+        implicitWidth: 44
       }
 
-      ToolButton {
-        id: addFilesButton
-
-        text: qsTr("Add file(s)")
-        icon.source: "qrc:/images/addFilesIcon.png"
-        icon.width: 12
-        icon.height: 12
-        display: AbstractButton.TextBesideIcon
-
-        background: Rectangle {
-          implicitHeight: 44
-          radius: 3
-          color: "#27ae60"
-        }
-
-        onClicked: {
-          // Add files
-        }
+      Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
       }
 
-      ToolButton {
-        id: removeAllButton
+      Label {
+        text: qsTr("Kryvo")
+        font.pixelSize: 18
+      }
 
-        text: qsTr("Remove all")
-        icon.source: "qrc:/images/clearFilesIcon.png"
-        icon.width: 12
-        icon.height: 12
-        display: AbstractButton.TextBesideIcon
-
-        background: Rectangle {
-          implicitHeight: 44
-          radius: 3
-          color: "#c0392b"
-        }
-
-        onClicked: {
-
-        }
+      Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
       }
 
       ToolButton {
         id: settingsButton
 
-        text: qsTr("Settings")
-        icon.source: "qrc:/images/settingsIcon.png"
-        icon.width: 12
-        icon.height: 12
-        display: AbstractButton.TextBesideIcon
+        implicitHeight: 44
 
-        background: Rectangle {
-          implicitHeight: 44
-          radius: 3
-          color: "#7f8c8d"
-        }
+        icon.source: "qrc:/images/settingsIcon.png"
+        icon.width: 30
+        icon.height: 30
 
         onClicked: {
           ui.navigate("Settings.qml");
@@ -99,69 +50,116 @@ Page {
   }
 
   footer: ToolBar {
-    background: Rectangle {
-      implicitHeight: 44
-      color: "#2c3e50"
-    }
+    implicitHeight: 44
+
+    Material.primary: Material.Gray
 
     RowLayout {
-      anchors.fill: parent
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+
+      anchors.leftMargin: 5
+      anchors.rightMargin: 5
 
       ToolButton {
         id: encryptButton
 
-        text: qsTr("Encrypt")
-        icon.source: "qrc:/images/lockIcon.png"
-        icon.width: 12
-        icon.height: 12
-        display: AbstractButton.TextBesideIcon
+        implicitHeight: 44
 
-        background: Rectangle {
-          implicitHeight: 44
-          radius: 3
-          color: "#2980b9"
-        }
+        icon.source: "qrc:/images/lockIcon.png"
+        icon.width: 30
+        icon.height: 30
+
+        Material.primary: Material.Blue
 
         onClicked: {
-//          ui.processFiles(, , true);
+          ui.encryptFiles(passphraseTextField.text);
         }
+      }
+
+      Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
       }
 
       ToolButton {
         id: decryptButton
 
-        text: qsTr("Decrypt")
-        icon.source: "qrc:/images/unlockIcon.png"
-        icon.width: 12
-        icon.height: 12
-        display: AbstractButton.TextBesideIcon
+        implicitHeight: 44
 
-        background: Rectangle {
-          implicitHeight: 44
-          radius: 3
-          color: "#2980b9"
-        }
+        icon.source: "qrc:/images/unlockIcon.png"
+        icon.width: 30
+        icon.height: 30
 
         onClicked: {
-//          ui.processFiles(, , false);
+          ui.decryptFiles(passphraseTextField.text);
         }
       }
-    }
-  }
 
-  ListModel {
-    id: testFileModel
+      Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+      }
 
-    ListElement {
-      fileName: "C:\test.exe"
-    }
+      ToolButton {
+        id: pauseButton
 
-    ListElement {
-      fileName: "C:\test2.png"
-    }
+        implicitHeight: 44
+        checkable: true
 
-    ListElement {
-      fileName: "C:\test3.dll"
+        icon.source: checked ?
+                     "qrc:/images/resumeIcon.png" :
+                     "qrc:/images/pauseIcon.png"
+        icon.width: 30
+        icon.height: 30
+
+        Material.accent: Material.theme == Material.Dark ? "#FFFFFF" : "#000000"
+
+        onClicked: {
+          ui.pauseProcessing(checked);
+        }
+      }
+
+      Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+      }
+
+      ToolButton {
+        id: removeAllButton
+
+        implicitHeight: 44
+
+        icon.source: "qrc:/images/clearFilesIcon.png"
+        icon.width: 30
+        icon.height: 30
+
+        onClicked: {
+          ui.removeFiles();
+        }
+      }
+
+      Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+      }
+
+      ToolButton {
+        id: addFilesButton
+
+        implicitHeight: 44
+
+        icon.source: "qrc:/images/addFilesIcon.png"
+        icon.width: 30
+        icon.height: 30
+
+        onClicked: {
+//          ui.navigate("SelectFile.qml");
+          inputFileDialog.visible = true;
+        }
+      }
     }
   }
 
@@ -169,25 +167,144 @@ Page {
     anchors.fill: parent
 
     ListView {
-      model: testFileModel
+      property alias windowWidth: page.width
+
+      model: inputFiles
+      clip: true
 
       Layout.fillHeight: true
       Layout.fillWidth: true
-      clip: true
+      Layout.leftMargin: 8
+      Layout.rightMargin: 8
 
-      delegate: Label {
-        text: fileName
+      delegate: RowLayout {
+        id: row
+        spacing: 6
+
+        property var item: model.modelData ? model.modelData : model
+
+        Label {
+          text: item.fileName
+          elide: Text.ElideLeft
+          font.pixelSize: 18
+          Layout.preferredWidth: {
+            row.ListView.view.windowWidth * 2 / 3 - 9 > 0 ?
+            row.ListView.view.windowWidth * 2 / 3 - 9 :
+            9
+          }
+        }
+
+        Label {
+          text: item.task
+          elide: Text.ElideRight
+          font.pixelSize: 18
+          Layout.preferredWidth: {
+            row.ListView.view.windowWidth / 6 - 9 > 0 ?
+            row.ListView.view.windowWidth / 6 - 9 :
+            9
+          }
+        }
+
+        ProgressBar {
+          from: 0
+          to: 100
+          value: item.progress
+          Layout.preferredWidth: {
+            row.ListView.view.windowWidth / 6 - 9 > 0 ?
+            row.ListView.view.windowWidth / 6 - 9 :
+            9
+          }
+        }
       }
     }
 
     RowLayout {
+      spacing: 10
+
+      Layout.leftMargin: 10
+      Layout.rightMargin: 10
+
       Label {
-        text: qsTr("Password")
+        text: qsTr("Output path")
+        font.pixelSize: 18
+        Material.primary: "#2C3E50"
       }
 
       TextField {
-        echoMode: TextInput.Password
+        id: outputTextField
+        text: ui.outputPathString
+        readOnly: true
+
+        font.pixelSize: 18
+        Layout.fillWidth: true
+        Material.background: "#2C3E50"
+
+        onPressed: {
+          outputFileDialog.folder = Qt.resolvedUrl(ui.outputPath);
+
+          outputFileDialog.open();
+        }
       }
+    }
+
+    RowLayout {
+      spacing: 10
+
+      Layout.leftMargin: 10
+      Layout.rightMargin: 10
+
+      Label {
+        text: qsTr("Password")
+        font.pixelSize: 18
+        Material.primary: "#2C3E50"
+      }
+
+      TextField {
+        id: passphraseTextField
+        echoMode: TextInput.Password
+        font.pixelSize: 18
+        Layout.fillWidth: true
+        Material.background: "#2C3E50"
+      }
+    }
+
+    Item {
+      Layout.bottomMargin: 10
+    }
+  }
+
+  FileDialog {
+    id: inputFileDialog
+    title: qsTr("Please choose files")
+    selectExisting: true
+    selectMultiple: true
+    selectFolder: false
+
+    onAccepted: {
+      ui.addFiles(inputFileDialog.fileUrls);
+
+      close();
+    }
+
+    onRejected: {
+      close();
+    }
+  }
+
+  FileDialog {
+    id: outputFileDialog
+    title: qsTr("Please choose an output directory")
+    selectExisting: true
+    selectFolder: true
+    selectMultiple: false
+
+    onAccepted: {
+      ui.updateOutputPath(folder);
+      close();
+    }
+
+    onRejected: {
+      close();
     }
   }
 }
