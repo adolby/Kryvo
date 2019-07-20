@@ -2,7 +2,7 @@ image: Visual Studio 2017
 
 environment:
   matrix:
-  - QTPATH: C:\Qt\5.12.1\msvc2017_64
+  - QTPATH: C:\Qt\5.12.2\msvc2017_64
     PLATFORM: amd64
     COMPILER: msvc
     VSVER: 15

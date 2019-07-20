@@ -7,30 +7,30 @@ set PATH=%QTPATH%\bin\;C:\Qt\QtIFW-3.0.1\bin\;%PATH%
 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 
 echo "Building Kryvo..."
-%QTPATH%\bin\qmake.exe -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
+qmake.exe -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
 nmake.exe
 
-echo "Copying Qt dependencies to test app..."
-cd "%project_dir%\build\windows\msvc\x86_64\release\test\"
-windeployqt tests.exe
+REM echo "Copying Qt dependencies to test app..."
+REM cd "%project_dir%\build\windows\msvc\x86_64\release\test\"
+REM windeployqt tests.exe
 
-echo "Copying plugins for test app..."
-mkdir "%project_dir\build\windows\msvc\x86_64\release\test\plugins\cryptography\botan\"
-cd "%project_dir%\build\windows\msvc\x86_64\release\test\plugins\cryptography\botan\"
+REM echo "Copying plugins for test app..."
+REM mkdir "%project_dir\build\windows\msvc\x86_64\release\test\plugins\cryptography\botan\"
+REM cd "%project_dir%\build\windows\msvc\x86_64\release\test\plugins\cryptography\botan\"
 
-echo "Copying test data archive..."
-cd "%project_dir%\build\windows\msvc\x86_64\release\test\"
-copy "%project_dir%\src\tests\data\test-data.zip" test-data.zip
+REM echo "Copying test data archive..."
+REM cd "%project_dir%\build\windows\msvc\x86_64\release\test\"
+REM copy "%project_dir%\src\tests\data\test-data.zip" test-data.zip
 
-echo "Extracting test data..."
-7z.exe e -aoa test-data.zip
+REM echo "Extracting test data..."
+REM 7z.exe e -aoa test-data.zip
 
-echo "Running tests..."
-tests.exe
+REM echo "Running tests..."
+REM tests.exe
 
-echo "Copy plugins to app..."
-mkdir "%project_dir%\build\windows\msvc\x86_64\release\widgets\plugins\cryptography\botan\"
-cd "%project_dir%\build\windows\msvc\x86_64\release\widgets\plugins\cryptography\botan\"
+REM echo "Copy plugins to app..."
+REM mkdir "%project_dir%\build\windows\msvc\x86_64\release\widgets\plugins\cryptography\botan\"
+REM cd "%project_dir%\build\windows\msvc\x86_64\release\widgets\plugins\cryptography\botan\"
 
 echo "Packaging..."
 
