@@ -7,8 +7,8 @@ set PATH=%QTPATH%\bin\;C:\Qt\QtIFW-3.0.1\bin\;%PATH%
 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 
 echo "Building Kryvo..."
-qmake -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
-nmake
+%QTPATH%\bin\qmake.exe -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
+nmake.exe
 
 echo "Copying Qt dependencies to test app..."
 cd "%project_dir%\build\windows\msvc\x86_64\release\test\"
