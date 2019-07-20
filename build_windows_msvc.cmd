@@ -35,7 +35,7 @@ REM cd "%project_dir%\build\windows\msvc\x86_64\release\widgets\plugins\cryptogr
 echo "Packaging..."
 
 echo "Copying app to packaging directory..."
-robocopy "%project_dir%\build\windows\msvc\x86_64\release\widgets\" "%project_dir%\build\windows\msvc\x86_64\release\Kryvo\" /E
+robocopy "%project_dir%\build\windows\msvc\x86_64\release\widgets" "%project_dir%\build\windows\msvc\x86_64\release\Kryvo" /E
 
 cd "%project_dir%\build\windows\msvc\x86_64\release\"
 windeployqt Kryvo\Kryvo.exe
@@ -55,7 +55,7 @@ copy "%project_dir%\resources\stylesheets\kryvo.qss" "Kryvo\themes\kryvo.qss"
 
 echo "Copying files for installer..."
 mkdir "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data\"
-robocopy Kryvo\ "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data\" /E
+robocopy Kryvo\ "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data" /E
 
 echo "Packaging portable archive..."
 7z.exe a -aoa kryvo_%TAG_NAME%_windows_x86_64_portable.zip Kryvo
