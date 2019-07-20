@@ -3,7 +3,11 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
+#include <QtGlobal>
+
+#if !defined(Q_OS_WIN)
 #include "unistd.h"
+#endif
 
 #include "gzguts.h"
 
