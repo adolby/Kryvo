@@ -72,9 +72,9 @@ cd "${project_dir}/build/macOS/clang/x86_64/release/test/"
 macdeployqt tests.app
 
 # Copy plugins to test app
-echo "Copying plugins for test app..."
-mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/PlugIns/cryptography/botan/"
-cd "${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/PlugIns/cryptography/botan/"
+# echo "Copying plugins for test app..."
+# mkdir -p "${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/PlugIns/cryptography/botan/"
+# cd "${project_dir}/build/macOS/clang/x86_64/release/test/tests.app/Contents/PlugIns/cryptography/botan/"
 # cp "${project_dir}/build/macOS/clang/x86_64/release/plugins/cryptography/botan/libbotan.dylib" libbotan.dylib
 
 # Copy test data

@@ -23,7 +23,7 @@ cd "%project_dir%\build\windows\msvc\x86_64\release\test\"
 copy "%project_dir%\src\tests\data\test-data.zip" test-data.zip
 
 echo "Extracting test data..."
-7z.exe e test-data.zip
+7z.exe e -aoa test-data.zip
 
 echo "Running tests..."
 tests.exe
@@ -58,7 +58,7 @@ mkdir "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data\"
 robocopy Kryvo\ "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data\" /E
 
 echo "Packaging portable archive..."
-7z.exe a kryvo_%TAG_NAME%_windows_x86_64_portable.zip Kryvo
+7z.exe a -aoa kryvo_%TAG_NAME%_windows_x86_64_portable.zip Kryvo
 
 echo "Creating installer..."
 cd "%project_dir%\installer\windows\x86_64\"

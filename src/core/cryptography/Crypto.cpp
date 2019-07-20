@@ -107,8 +107,10 @@ void Kryvo::Crypto::updateProvider(QObject* provider) {
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
-    QObject::connect(provider, SIGNAL(errorMessage(const QString&,const QFileInfo&)),
-                     this, SIGNAL(errorMessage(const QString&,const QFileInfo&)),
+    QObject::connect(provider,
+                     SIGNAL(errorMessage(const QString&,const QFileInfo&)),
+                     this,
+                     SIGNAL(errorMessage(const QString&,const QFileInfo&)),
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 

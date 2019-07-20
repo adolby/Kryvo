@@ -4,7 +4,7 @@
     <Version>1.0.0</Version>
     <Title>Kryvo File Encryptor</Title>
     <Publisher>The Kryvo Project</Publisher>
-    <ProductUrl>https://github.com/adolby/Kryvo/</ProductUrl>
+    <ProductUrl>https://kryvo.app</ProductUrl>
     <InstallerWindowIcon>kryvo</InstallerWindowIcon>
     <Logo>logo.png</Logo>
     <StartMenuDir>Kryvo</StartMenuDir>
