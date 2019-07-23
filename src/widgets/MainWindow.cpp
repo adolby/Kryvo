@@ -262,7 +262,7 @@ void Kryvo::MainWindow::updateFileProgress(const QFileInfo& fileInfo,
 void Kryvo::MainWindow::updateStatusMessage(const QString& message) {
   Q_ASSERT(messageFrame);
 
-  messageFrame->appendText(message);
+  messageFrame->appendMessage(message);
 }
 
 void Kryvo::MainWindow::updateError(const QString& message,

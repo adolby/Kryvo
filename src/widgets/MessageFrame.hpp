@@ -30,10 +30,10 @@ class MessageFrame : public QFrame {
   ~MessageFrame();
 
   /*!
-   * \brief appendText Appends text to the message frame
+   * \brief appendText Appends a message to the message frame
    * \param message Message string
    */
-  void appendText(const QString& message);
+  void appendMessage(const QString& message);
 
  public slots:
   /*!

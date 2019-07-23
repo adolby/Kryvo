@@ -7,10 +7,10 @@
 Kryvo::DesktopMainWindow::DesktopMainWindow(Settings* s,
                                             QWidget* parent)
   : MainWindow(s, parent) {
-  messageFrame->appendText(tr("To begin, click the Add Files button or drag "
-                              "and drop files. Next, enter a file path for the "
-                              "output files. Enter a password. Finally, click "
-                              "the Encrypt or Decrypt button."));
+  messageFrame->appendMessage(tr("To begin, click the Add Files button or drag "
+                                 "and drop files. Next, enter a file path for "
+                                 "the output files. Enter a password. Finally, "
+                                 "click the Encrypt or Decrypt button."));
 
   // Adjust stretch of file list view
   contentLayout->setStretch(1, 200);
