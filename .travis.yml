@@ -24,10 +24,22 @@ matrix:
       language: android
       env: SPEC=android-armv7
       dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - p7zip-full
     - os: android
       language: android
       env: SPEC=android-arm64-v8a
       dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - p7zip-full
 
 android:
   jdk:
