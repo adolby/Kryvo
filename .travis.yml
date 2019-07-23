@@ -26,7 +26,7 @@ matrix:
       dist: trusty
     - os: android
       language: android
-      env: SPEC=android-armv8
+      env: SPEC=android-arm64-v8a
       dist: trusty
 
 android:
@@ -49,7 +49,9 @@ script:
   - if [[ "${SPEC}" == "linux-g++-64" ]]; then chmod +x build_linux.sh ; fi
   - if [[ "${SPEC}" == "linux-g++-64" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_linux.sh ; fi
   - if [[ "${SPEC}" == "android-armv7" ]]; then chmod +x build_android_armv7.sh ; fi
-  - if [[ "${SPEC}" == "android-armv8" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_android_armv8.sh ; fi
+  - if [[ "${SPEC}" == "android-armv7" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_android_armv7.sh ; fi
+  - if [[ "${SPEC}" == "android-arm64-v8a" ]]; then chmod +x build_android_arm64_v8a.sh ; fi
+  - if [[ "${SPEC}" == "android-arm64-v8a" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_android_arm64_v8a.sh ; fi
 
 deploy:
   - provider: releases
