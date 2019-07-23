@@ -45,7 +45,7 @@ class Kryvo::UiPrivate {
   Settings* settings = nullptr;
 
   // Messages to display to user
-  const QStringList messages{
+  const QStringList errorMessages{
     QObject::tr("A password is required to encrypt or decrypt "
                 "files. Please enter one to continue."),
     QObject::tr("Encryption/decryption is already in progress. "
@@ -56,6 +56,10 @@ class Kryvo::UiPrivate {
   QUrl mainPageUrl;
 
   FileListModel fileListModel;
+
+  QString statusMessage;
+  std::vector<QString> statusMessages;
+  std::vector<QString>::const_iterator statusMessageIterator;
 
   QVariantMap currentPage;
   std::vector<QVariantMap> navigationHistory;
@@ -187,6 +191,11 @@ bool Kryvo::Ui::removeIntermediateFiles() const {
 bool Kryvo::Ui::containerMode() const {
   Q_D(const Ui);
   return d->settings->containerMode();
+}
+
+QString Kryvo::Ui::statusMessage() const {
+  Q_D(const Ui);
+  return d->statusMessage;
 }
 
 void Kryvo::Ui::changePage(const QString& name, const QVariantMap& properties,
@@ -327,11 +336,11 @@ void Kryvo::Ui::processFiles(const QString& passphrase,
                        d->settings->removeIntermediateFiles());
         }
     } else { // Inform user that a password is required to encrypt or decrypt
-      updateStatusMessage(d->messages[0]);
+      appendStatusMessage(d->errorMessages.at(0));
     }
   } else {
     // Inform user that encryption/decryption is already in progress
-    updateStatusMessage(d->messages[1]);
+    appendStatusMessage(d->errorMessages.at(1));
   }
 }
 
@@ -352,15 +361,22 @@ void Kryvo::Ui::updateFileProgress(const QFileInfo& fileInfo,
   d->fileListModel.updateRow(fileInfo.absoluteFilePath(), task, progressValue);
 }
 
-void Kryvo::Ui::updateStatusMessage(const QString& message) {
-  // TODO Set property for status message
+void Kryvo::Ui::appendStatusMessage(const QString& message) {
+  Q_D(Ui);
+
+  d->statusMessages.push_back(message);
+  d->statusMessageIterator = std::prev(d->statusMessages.end(), 1);
+
+  d->statusMessage = *d->statusMessageIterator;
+  emit statusMessageChanged(d->statusMessage);
 }
 
-void Kryvo::Ui::updateError(const QString& message, const QFileInfo& fileInfo) {
+void Kryvo::Ui::appendErrorMessage(const QString& message,
+                                   const QFileInfo& fileInfo) {
   if (message.contains(QStringLiteral("%1"))) {
-    updateStatusMessage(message.arg(fileInfo.absoluteFilePath()));
+    appendStatusMessage(message.arg(fileInfo.absoluteFilePath()));
   } else {
-    updateStatusMessage(message);
+    appendStatusMessage(message);
   }
 
   updateFileProgress(fileInfo.absoluteFilePath(), QString(), 0);
@@ -436,5 +452,30 @@ void Kryvo::Ui::updateOutputPath(const QUrl& url) {
   if (outputPath != d->settings->outputPath()) {
     d->settings->outputPath(outputPath);
     emit outputPathChanged(url);
+  }
+}
+
+void Kryvo::Ui::navigateMessageLeft() {
+  Q_D(Ui);
+
+  if (d->statusMessageIterator != d->statusMessages.begin()) {
+    d->statusMessageIterator = std::prev(d->statusMessageIterator, 1);
+
+    d->statusMessage = *d->statusMessageIterator;
+    emit statusMessageChanged(d->statusMessage);
+  }
+}
+
+void Kryvo::Ui::navigateMessageRight() {
+  Q_D(Ui);
+
+  const auto end = d->statusMessages.end();
+
+  if (d->statusMessageIterator != std::prev(end, 1) &&
+      d->statusMessageIterator != end) {
+    d->statusMessageIterator = std::next(d->statusMessageIterator, 1);
+
+    d->statusMessage = *d->statusMessageIterator;
+    emit statusMessageChanged(d->statusMessage);
   }
 }

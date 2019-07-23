@@ -34,6 +34,8 @@ class Ui : public QObject {
   Q_PROPERTY(bool removeIntermediateFiles READ removeIntermediateFiles
              NOTIFY removeIntermediateFilesChanged)
   Q_PROPERTY(bool containerMode READ containerMode NOTIFY containerModeChanged)
+  Q_PROPERTY(QString statusMessage READ statusMessage
+             NOTIFY statusMessageChanged)
 
   DECLARE_PRIVATE(Ui)
 
@@ -41,15 +43,14 @@ class Ui : public QObject {
 
  public:
   /*!
-   * \brief Ui Constructs the application's UI
+   * \brief Ui Constructs the application UI
    * \param settings Application settings
    * \param parent Parent of this UI object
    */
-  explicit Ui(Settings* s = nullptr,
-              QObject* parent = nullptr);
+  explicit Ui(Settings* s = nullptr, QObject* parent = nullptr);
 
   /*!
-   * \brief ~Ui Destroys the application's UI
+   * \brief ~Ui Destroys the application UI
    */
   ~Ui() override;
 
@@ -57,6 +58,7 @@ class Ui : public QObject {
   QVariantMap currentPage() const;
   QVariantMap page(int index) const;
   bool canNavigateBack() const;
+
 
   // Encrypt/decrypt data
   QUrl inputPath() const;
@@ -70,6 +72,9 @@ class Ui : public QObject {
   bool compressionMode() const;
   bool removeIntermediateFiles() const;
   bool containerMode() const;
+
+  // Message navigation data
+  QString statusMessage() const;
 
  signals:
   /*!
@@ -130,6 +135,7 @@ class Ui : public QObject {
   void containerModeChanged(bool contianerMode);
   void inputPathChanged(const QUrl& url);
   void outputPathChanged(const QUrl& url);
+  void statusMessageChanged(const QString& message);
 
  public slots:
   void init();
@@ -189,18 +195,18 @@ class Ui : public QObject {
                           qint64 progressValue);
 
   /*!
-   * \brief updateStatusMessage Executed when a message should be displayed to
-   * the user. Updates the message text edit text to the message.
+   * \brief appendStatusMessage Executed when a message should be displayed to
+   * the user. Updates the current message and adds to the message list.
    * \param message String containing the message
    */
-  void updateStatusMessage(const QString& message);
+  void appendStatusMessage(const QString& message);
 
-  /*!
-   * \brief updateError Executed when a cipher operation fails
+  /*
+   * \brief appendErrorMessage Executed when an error occurs
    * \param message String containing the error message
    * \param path String containing the error file name path
    */
-  void updateError(const QString& message, const QFileInfo& fileName);
+  void appendErrorMessage(const QString& message, const QFileInfo& fileName);
 
   /*!
    * \brief updateBusyStatus Executed when the cipher operation updates its busy
@@ -241,13 +247,17 @@ class Ui : public QObject {
   void updateRemoveIntermediateFiles(bool removeIntermediate);
 
   /*!
-   * \brief updateContainerMode Executed when the container mode is updated
-   * by the user in the settings frame
+   * \brief updateContainerMode Executed when the container mode is updated by
+   * the user in the settings frame
    * \param compress Boolean representing the new container mode
    */
   void updateContainerMode(bool container);
 
   void updateOutputPath(const QUrl& url);
+
+  void navigateMessageLeft();
+
+  void navigateMessageRight();
 };
 
 } // namespace Kryvo

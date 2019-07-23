@@ -50,11 +50,11 @@ Kryvo::ApplicationPrivate::ApplicationPrivate() {
 
   // Update status message
   QObject::connect(&dispatcher, &Dispatcher::statusMessage,
-                   &gui, &Ui::updateStatusMessage);
+                   &gui, &Ui::appendStatusMessage);
 
   // Update error message
   QObject::connect(&dispatcher, &Dispatcher::errorMessage,
-                   &gui, &Ui::updateError);
+                   &gui, &Ui::appendErrorMessage);
 
   // Update operation in progress status
   QObject::connect(&dispatcher, &Dispatcher::busyStatus,

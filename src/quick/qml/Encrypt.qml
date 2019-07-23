@@ -219,6 +219,54 @@ Page {
     }
 
     RowLayout {
+      ToolButton {
+        id: leftButton
+
+        implicitHeight: 44
+
+        icon.source: "qrc:/images/leftArrowIcon.png"
+        icon.width: 30
+        icon.height: 30
+
+        onClicked: {
+            ui.navigateMessageLeft();
+        }
+      }
+
+      Item {
+        Layout.fillWidth: true
+      }
+
+      Label {
+        text: ui.statusMessage
+        wrapMode: Text.Wrap
+        font.pixelSize: 18
+        Material.primary: "#2C3E50"
+        Layout.preferredWidth: 0.9 * page.width -
+                               leftButton.implicitWidth -
+                               rightButton.implicitWidth
+      }
+
+      Item {
+        Layout.fillWidth: true
+      }
+
+      ToolButton {
+        id: rightButton
+
+        implicitHeight: 44
+
+        icon.source: "qrc:/images/rightArrowIcon.png"
+        icon.width: 30
+        icon.height: 30
+
+        onClicked: {
+            ui.navigateMessageRight();
+        }
+      }
+    }
+
+    RowLayout {
       spacing: 10
 
       Layout.leftMargin: 10
@@ -282,7 +330,6 @@ Page {
 
     onAccepted: {
       ui.addFiles(inputFileDialog.fileUrls);
-
       close();
     }
 
