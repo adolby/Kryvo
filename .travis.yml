@@ -7,9 +7,11 @@ matrix:
   include:
     - os: osx
       compiler: clang
+      env: SPEC=macx-clang
       osx_image: xcode10
     - os: linux
       compiler: gcc
+      env: SPEC=linux-g++-64
       addons:
         apt:
           sources:
@@ -18,18 +20,36 @@ matrix:
             - g++-7
             - chrpath
             - p7zip-full
+    - os: android
+      language: android
+      env: SPEC=android-armv7
+      dist: trusty
+    - os: android
+      language: android
+      env: SPEC=android-armv8
+      dist: trusty
+
+android:
+  jdk:
+    - oraclejdk8
+  components:
+    - android-29
+    - build-tools-28.0.3
+    - platform-tools
 
 install:
-  - mkdir -p latest-gcc-symlinks
-  - ln -s /usr/bin/g++-7 latest-gcc-symlinks/g++
-  - ln -s /usr/bin/gcc-7 latest-gcc-symlinks/gcc
-  - export PATH=$PWD/latest-gcc-symlinks:$PATH
+  - if [[ "${SPEC}" == "linux-g++-64" ]]; then mkdir -p latest-gcc-symlinks ; fi
+  - if [[ "${SPEC}" == "linux-g++-64" ]]; then ln -s /usr/bin/g++-7 latest-gcc-symlinks/g++ ; fi
+  - if [[ "${SPEC}" == "linux-g++-64" ]]; then ln -s /usr/bin/gcc-7 latest-gcc-symlinks/gcc ; fi
+  - if [[ "${SPEC}" == "linux-g++-64" ]]; then export PATH=$PWD/latest-gcc-symlinks:$PATH ; fi
 
 script:
-  - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then chmod +x build_macOS.sh ; fi
-  - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_macOS.sh ; fi
-  - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then chmod +x build_linux.sh ; fi
-  - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_linux.sh ; fi
+  - if [[ "${SPEC}" == "macx-clang" ]]; then chmod +x build_macOS.sh ; fi
+  - if [[ "${SPEC}" == "macx-clang" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_macOS.sh ; fi
+  - if [[ "${SPEC}" == "linux-g++-64" ]]; then chmod +x build_linux.sh ; fi
+  - if [[ "${SPEC}" == "linux-g++-64" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_linux.sh ; fi
+  - if [[ "${SPEC}" == "android-armv7" ]]; then chmod +x build_android_armv7.sh ; fi
+  - if [[ "${SPEC}" == "android-armv8" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_android_armv8.sh ; fi
 
 deploy:
   - provider: releases
@@ -41,7 +61,7 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-      condition: $TRAVIS_OS_NAME = osx
+      condition: $SPEC = macx-clang
   - provider: releases
     api_key:
       secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
@@ -52,7 +72,27 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-      condition: $TRAVIS_OS_NAME = linux
+      condition: $SPEC = linux-g++-64
+  - provider: releases
+    api_key:
+      secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
+    file:
+      - build/android/armv7/release/kryvo_${TRAVIS_TAG}_android_armv7.apk
+    overwrite: true
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $SPEC = android-armv7
+  - provider: releases
+    api_key:
+      secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
+    file:
+      - build/android/armv8/release/kryvo_${TRAVIS_TAG}_android_armv8.apk
+    overwrite: true
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $SPEC = android-armv8
 
 notifications:
   email:
