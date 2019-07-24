@@ -81,11 +81,11 @@ linux {
 
       debug {
         message(Debug)
-        DESTDIR = $$PWD/../../build/android/armv8/debug/lib/zlib
+        DESTDIR = $$PWD/../../build/android/arm64_v8a/debug/lib/zlib
       }
       release {
         message(Release)
-        DESTDIR = $$PWD/../../build/android/armv8/release/lib/zlib
+        DESTDIR = $$PWD/../../build/android/arm64_v8a/release/lib/zlib
       }
     }
   } # End android

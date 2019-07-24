@@ -61,18 +61,18 @@ linux {
     contains(ANDROID_TARGET_ARCH, arm64-v8a) {
       message(arm64-v8a)
 
-      SOURCES += botan/android/armv8/botan_all.cpp
+      SOURCES += botan/android/arm64_v8a/botan_all.cpp
 
       HEADERS += \
-        botan/android/armv8/botan_all.h
+        botan/android/arm64_v8a/botan_all.h
 
       debug {
         message(Debug)
-        DESTDIR = $$PWD/../../../../build/android/armv8/debug/plugins/cryptography/botan
+        DESTDIR = $$PWD/../../../../build/android/arm64_v8a/debug/plugins/cryptography/botan
       }
       release {
         message(Release)
-        DESTDIR = $$PWD/../../../../build/android/armv8/release/plugins/cryptography/botan
+        DESTDIR = $$PWD/../../../../build/android/arm64_v8a/release/plugins/cryptography/botan
       }
     }
   } # End android

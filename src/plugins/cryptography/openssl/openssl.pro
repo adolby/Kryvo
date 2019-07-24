@@ -57,11 +57,11 @@ linux {
 
       debug {
         message(Debug)
-        DESTDIR = $$PWD/../../../../build/android/armv8/debug/plugins/cryptography/openssl
+        DESTDIR = $$PWD/../../../../build/android/arm64_v8a/debug/plugins/cryptography/openssl
       }
       release {
         message(Release)
-        DESTDIR = $$PWD/../../../../build/android/armv8/release/plugins/cryptography/openssl
+        DESTDIR = $$PWD/../../../../build/android/arm64_v8a/release/plugins/cryptography/openssl
       }
     }
   } # End android

@@ -91,17 +91,17 @@ linux {
 
       debug {
         message(Debug)
-        LIBS += -L$$PWD/../../build/android/armv8/debug/core -lcore
-        LIBS += -L$$PWD/../../build/android/armv8/debug/lib/zlib -lz
-        LIBS += -L$$PWD/../../build/android/armv8/debug/plugins/cryptography/botan -lbotan
-        DESTDIR = $$PWD/../../build/android/armv8/debug/widgets
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/core -lcore
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/lib/zlib -lz
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/plugins/cryptography/botan -lbotan
+        DESTDIR = $$PWD/../../build/android/arm64_v8a/debug/widgets
       }
       release {
         message(Release)
-        LIBS += -L$$PWD/../../build/android/armv8/release/core -lcore
-        LIBS += -L$$PWD/../../build/android/armv8/release/lib/zlib -lz
-        LIBS += -L$$PWD/../../build/android/armv8/release/plugins/cryptography/botan -lbotan
-        DESTDIR = $$PWD/../../build/android/armv8/release/widgets
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/core -lcore
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/lib/zlib -lz
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/plugins/cryptography/botan -lbotan
+        DESTDIR = $$PWD/../../build/android/arm64_v8a/release/widgets
       }
     }
   } # End android

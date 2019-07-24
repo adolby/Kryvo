@@ -9,16 +9,16 @@ qt_install_dir=~
 echo "Installing Qt..."
 cd "${qt_install_dir}"
 echo "Downloading Qt files..."
-wget -N https://github.com/adolby/qt-more-builds/releases/download/5.12.4/qt-opensource-5.12.4-android-armv7.7z
+wget -N https://github.com/adolby/qt-more-builds/releases/download/5.12.4/qt-opensource-5.12.4-android-armv7.zip
 echo "Extracting Qt files..."
-7z x qt-opensource-5.12.4-android-armv7.7z -aos
+unzip -qq qt-opensource-5.12.4-android-armv7.zip
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
 PATH="${qt_install_dir}/Qt/5.12.4/android_armv7/bin/:${PATH}"
 
 wget -N https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip
-unzip android-ndk-r19c-linux-x86_64.zip > /dev/null
+unzip -qq android-ndk-r19c-linux-x86_64.zip
 
 ANDROID_NDK_ROOT=`pwd`/android-ndk-r19c
 ANDROID_SDK_ROOT=/usr/local/android-sdk
@@ -27,7 +27,7 @@ PATH=`pwd`/android-ndk-r19c:${PATH}
 # Get Botan
 # echo "Installing Botan..."
 # wget https://github.com/randombit/botan/archive/1.11.32.zip
-# 7z x 1.11.32.zip &>/dev/null
+# unzip 1.11.32.zip &>/dev/null
 # chmod -R +x /usr/local/botan-1.11.32/
 # cd /usr/local/botan-1.11.32/
 # ./configure.py --cc=clang --amalgamation --disable-shared --with-zlib
@@ -65,7 +65,7 @@ if [ -f "${project_dir}/Makefile" ]; then
   make distclean
 fi
 
-qmake CONFIG+=release -spec android-armv7
+qmake CONFIG+=release -spec android-clang
 make
 
 # Copy plugins for test app
@@ -80,7 +80,7 @@ make
 # cp "${project_dir}/src/tests/data/test-data.zip" test-data.zip
 
 # echo "Extracting test data..."
-# 7z e test-data.zip -aos &> /dev/null
+# unzip test-data.zip -aos &> /dev/null
 
 # Run tests
 # echo "Running tests..."
@@ -97,9 +97,11 @@ make
 echo "Packaging..."
 
 echo "Copying app dependencies..."
-androiddeployqt --output "${project_dir}/build/android/armv7/release/Kryvo/"
+androiddeployqt --input "${project_dir}/build/android/armv7/release/Kryvo/android-libKryvo.so-deployment-settings.json" --output "${project_dir}/build/android/armv7/release/Kryvo/android-build" --android-platform android-28 --gradle
 
 TAG_NAME="${TAG_NAME:-dev}"
+
+mv "${project_dir}/build/android/armv7/release/Kryvo/android-build/build/outputs/apk/debug/android-build-debug.apk" "${project_dir}/build/android/armv7/release/Kryvo/kryvo_${TAG_NAME}_android_armv7.apk"
 
 echo "Done!"
 

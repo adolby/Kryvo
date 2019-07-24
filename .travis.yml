@@ -24,22 +24,10 @@ matrix:
       language: android
       env: SPEC=android-armv7
       dist: trusty
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - p7zip-full
     - os: android
       language: android
       env: SPEC=android-arm64-v8a
       dist: trusty
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - p7zip-full
 
 android:
   jdk:
@@ -101,12 +89,12 @@ deploy:
     api_key:
       secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
     file:
-      - build/android/armv8/release/kryvo_${TRAVIS_TAG}_android_armv8.apk
+      - build/android/arm64_v8a/release/kryvo_${TRAVIS_TAG}_android_arm64_v8a.apk
     overwrite: true
     skip_cleanup: true
     on:
       tags: true
-      condition: $SPEC = android-armv8
+      condition: $SPEC = android-arm64-v8a
 
 notifications:
   email:
