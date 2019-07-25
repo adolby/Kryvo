@@ -24,18 +24,24 @@ matrix:
       language: android
       env: SPEC=android-armv7
       dist: trusty
+      android:
+        jdk:
+          - oraclejdk8
+        components:
+          - android-29
+          - build-tools-28.0.3
+          - platform-tools
     - os: android
       language: android
       env: SPEC=android-arm64-v8a
       dist: trusty
-
-android:
-  jdk:
-    - oraclejdk8
-  components:
-    - android-29
-    - build-tools-28.0.3
-    - platform-tools
+      android:
+        jdk:
+          - oraclejdk8
+        components:
+          - android-29
+          - build-tools-28.0.3
+          - platform-tools
 
 install:
   - if [[ "${SPEC}" == "linux-g++-64" ]]; then mkdir -p latest-gcc-symlinks ; fi

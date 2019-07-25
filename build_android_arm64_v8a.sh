@@ -9,7 +9,7 @@ qt_install_dir=~
 echo "Installing Qt..."
 cd "${qt_install_dir}"
 echo "Downloading Qt files..."
-wget -N https://github.com/adolby/qt-more-builds/releases/download/5.12.4/qt-opensource-5.12.4-android-arm64a_v8a.zip
+wget -N https://github.com/adolby/qt-more-builds/releases/download/5.12.4/qt-opensource-5.12.4-android-arm64_v8a.zip
 echo "Extracting Qt files..."
 unzip -qq qt-opensource-5.12.4-android-arm64_v8a.zip
 
