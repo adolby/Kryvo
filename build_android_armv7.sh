@@ -29,7 +29,8 @@ ANDROID_NDK_ROOT=~/android-ndk-r19c
 ANDROID_SDK_ROOT=/usr/local/android-sdk
 PATH=~/android-ndk-r19c:${PATH}
 
-echo ${ANDROID_NDK_ROOT}
+cd android-ndk-r19c
+ls -l
 
 # Get Botan
 # echo "Installing Botan..."
