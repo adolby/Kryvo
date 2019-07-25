@@ -27,7 +27,7 @@ unzip -qq android-ndk-r19c-linux-x86_64.zip
 
 ANDROID_NDK_ROOT=~/android-ndk-r19c
 ANDROID_SDK_ROOT=/usr/local/android-sdk
-PATH=~/android-ndk-r19c:${PATH}
+PATH=${ANDROID_NDK_ROOT}:${PATH}
 
 # Get Botan
 # echo "Installing Botan..."
