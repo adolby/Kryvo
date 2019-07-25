@@ -11,18 +11,18 @@ qt_install_dir=~
 echo "Installing Qt..."
 cd "${qt_install_dir}"
 echo "Downloading Qt files..."
-wget -N https://github.com/adolby/qt-more-builds/releases/download/5.12.1/qt-opensource-5.12.1-linux-x86_64.7z
+wget -N https://github.com/adolby/qt-more-builds/releases/download/5.12.4/qt-opensource-5.12.4-linux-gcc-x86_64.zip
 echo "Extracting Qt files..."
-7z x qt-opensource-5.12.1-linux-x86_64.7z -aos &> /dev/null
+7z x qt-opensource-5.12.4-linux-gcc-x86_64.zip -aos &> /dev/null
 
 # Install Qt Installer Framework
 echo "Installing Qt Installer Framework..."
-wget -N https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.0.6/qt-installer-framework-opensource-3.0.6-linux.7z
-7z x qt-installer-framework-opensource-3.0.6-linux.7z -aos &> /dev/null
+wget -N https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.1.0/qt-installer-framework-opensource-3.1.0-linux.zip
+7z x qt-installer-framework-opensource-3.1.0-linux.zip -aos &> /dev/null
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
-PATH="${qt_install_dir}/Qt/5.12.1/gcc_64/bin/:${qt_install_dir}/Qt/Tools/QtInstallerFramework/3.0/bin/:${PATH}"
+PATH="${qt_install_dir}/Qt/5.12.4/gcc_64/bin/:${qt_install_dir}/Qt/Tools/QtInstallerFramework/3.1/bin/:${PATH}"
 
 # Get Botan
 # echo "Installing Botan..."
@@ -71,14 +71,14 @@ make
 # Copy Qt dependencies for test app
 echo "Copying Qt dependencies to test app..."
 cd "${project_dir}/build/linux/gcc/x86_64/release/test/"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Core.so.5.12.1" "libQt5Core.so.5"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Test.so.5.12.1" "libQt5Test.so.5"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Core.so.5.12.4" "libQt5Core.so.5"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Test.so.5.12.4" "libQt5Test.so.5"
 
 # Copy plugins for test app
-echo "Copying plugins for test app..."
+# echo "Copying plugins for test app..."
 # mkdir -p "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
 # cd "${project_dir}/build/linux/gcc/x86_64/release/test/plugins/cryptography/botan/"
 # cp "${project_dir}/build/linux/gcc/x86_64/release/plugins/cryptography/botan/libbotan.so" libbotan.so
@@ -116,20 +116,20 @@ rm -rf qrc
 
 echo "Copying Qt dependencies..."
 
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
 
 mkdir platforms
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
 
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Core.so.5.12.1" "libQt5Core.so.5"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Gui.so.5.12.1" "libQt5Gui.so.5"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Svg.so.5.12.1" "libQt5Svg.so.5"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5DBus.so.5.12.1" "libQt5DBus.so.5"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5XcbQpa.so.5.12.1" "libQt5XcbQpa.so.5"
-cp "${qt_install_dir}/Qt/5.12.1/gcc_64/lib/libQt5Widgets.so.5.12.1" "libQt5Widgets.so.5"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Core.so.5.12.4" "libQt5Core.so.5"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Gui.so.5.12.4" "libQt5Gui.so.5"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Svg.so.5.12.4" "libQt5Svg.so.5"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5DBus.so.5.12.4" "libQt5DBus.so.5"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5XcbQpa.so.5.12.4" "libQt5XcbQpa.so.5"
+cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Widgets.so.5.12.4" "libQt5Widgets.so.5"
 
 chrpath -r \$ORIGIN/.. platforms/libqxcb.so
 chrpath -r \$ORIGIN/.. platforms/libqminimal.so
