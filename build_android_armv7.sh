@@ -20,9 +20,9 @@ PATH="${qt_install_dir}/Qt/5.12.4/android_armv7/bin/:${PATH}"
 wget -N https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip
 unzip -qq android-ndk-r19c-linux-x86_64.zip
 
-ANDROID_NDK_ROOT=`pwd`/android-ndk-r19c
+ANDROID_NDK_ROOT=~/android-ndk-r19c
 ANDROID_SDK_ROOT=/usr/local/android-sdk
-PATH=`pwd`/android-ndk-r19c:${PATH}
+PATH=~/android-ndk-r19c:${PATH}
 
 # Get Botan
 # echo "Installing Botan..."
