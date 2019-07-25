@@ -4,6 +4,7 @@ set -o errexit -o nounset
 
 project_dir=$(pwd)
 qt_install_dir=~
+ndk_install_dir=~
 
 # Get Qt
 echo "Installing Qt..."
@@ -17,12 +18,18 @@ unzip -qq qt-opensource-5.12.4-android-armv7.zip
 echo "Adding Qt binaries to path..."
 PATH="${qt_install_dir}/Qt/5.12.4/android_armv7/bin/:${PATH}"
 
+# Check qmake version
+qmake --version
+
+cd "${ndk_install_dir}"
 wget -N https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip
 unzip -qq android-ndk-r19c-linux-x86_64.zip
 
 ANDROID_NDK_ROOT=~/android-ndk-r19c
 ANDROID_SDK_ROOT=/usr/local/android-sdk
 PATH=~/android-ndk-r19c:${PATH}
+
+echo ${ANDROID_NDK_ROOT}
 
 # Get Botan
 # echo "Installing Botan..."

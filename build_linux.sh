@@ -24,6 +24,9 @@ wget -N https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.1.0/
 echo "Adding Qt binaries to path..."
 PATH="${qt_install_dir}/Qt/5.12.4/gcc_64/bin/:${qt_install_dir}/Qt/Tools/QtInstallerFramework/3.1/bin/:${PATH}"
 
+# Check qmake version
+qmake --version
+
 # Get Botan
 # echo "Installing Botan..."
 # wget https://github.com/randombit/botan/archive/1.11.32.zip
