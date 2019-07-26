@@ -25,8 +25,8 @@ cd "${ndk_install_dir}"
 wget -N https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip
 unzip -qq android-ndk-r19c-linux-x86_64.zip
 
-ANDROID_NDK_ROOT=~/android-ndk-r19c
-ANDROID_SDK_ROOT=/usr/local/android-sdk
+export ANDROID_NDK_ROOT=~/android-ndk-r19c
+export ANDROID_SDK_ROOT=/usr/local/android-sdk
 PATH=${ANDROID_NDK_ROOT}:${PATH}
 
 # Get Botan
