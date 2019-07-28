@@ -27,6 +27,7 @@ unzip -qq android-ndk-r19c-linux-x86_64.zip
 
 export ANDROID_NDK_ROOT=~/android-ndk-r19c
 export ANDROID_SDK_ROOT=/usr/local/android-sdk
+export ANDROID_NDK_PLATFORM=android-21
 PATH=${ANDROID_NDK_ROOT}:${PATH}
 
 # Get Botan

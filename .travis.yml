@@ -23,7 +23,7 @@ matrix:
     - os: android
       language: android
       env: SPEC=android-armv7
-      dist: trusty
+      dist: xenial
       android:
         jdk:
           - oraclejdk8
@@ -34,7 +34,7 @@ matrix:
     - os: android
       language: android
       env: SPEC=android-arm64-v8a
-      dist: trusty
+      dist: xenial
       android:
         jdk:
           - oraclejdk8
