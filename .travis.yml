@@ -15,6 +15,9 @@ matrix:
       compiler: clang
       env: SPEC=macx-clang
       osx_image: xcode10
+      script:
+        - chmod +x build_macOS.sh
+        - TAG_NAME=${TRAVIS_TAG} ./build_macOS.sh
     - os: linux
       language: cpp
       compiler: gcc
@@ -27,6 +30,14 @@ matrix:
             - g++-7
             - chrpath
             - p7zip-full
+      install:
+        - mkdir -p latest-gcc-symlinks
+        - ln -s /usr/bin/g++-7 latest-gcc-symlinks/g++
+        - ln -s /usr/bin/gcc-7 latest-gcc-symlinks/gcc
+        - export PATH=$PWD/latest-gcc-symlinks:$PATH
+      script:
+        - chmod +x build_linux.sh
+        - TAG_NAME=${TRAVIS_TAG} ./build_linux.sh
     - language: android
       env: SPEC=android-armv7
       dist: trusty
@@ -39,6 +50,13 @@ matrix:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
           - $HOME/.android/build-cache
+      install:
+        - touch $HOME/.android/repositories.cfg
+        - yes | sdkmanager "platforms;android-28
+        - yes | sdkmanager "build-tools;28.0.3"
+      script:
+        - chmod +x build_android_armv7.sh
+        - TAG_NAME=${TRAVIS_TAG} ./build_android_armv7.sh
     - language: android
       env: SPEC=android-arm64-v8a
       dist: trusty
@@ -51,30 +69,13 @@ matrix:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
           - $HOME/.android/build-cache
-
-before_install:
-  - if [[ "${SPEC}" == "android-armv7" ]]; then touch $HOME/.android/repositories.cfg ; fi
-  - if [[ "${SPEC}" == "android-armv7" ]]; then yes | sdkmanager "platforms;android-28" ; fi
-  - if [[ "${SPEC}" == "android-armv7" ]]; then yes | sdkmanager "build-tools;28.0.3" ; fi
-  - if [[ "${SPEC}" == "android-arm64-v8a" ]]; then touch $HOME/.android/repositories.cfg ; fi
-  - if [[ "${SPEC}" == "android-arm64-v8a" ]]; then yes | sdkmanager "platforms;android-28" ; fi
-  - if [[ "${SPEC}" == "android-arm64-v8a" ]]; then yes | sdkmanager "build-tools;28.0.3" ; fi
-
-install:
-  - if [[ "${SPEC}" == "linux-g++-64" ]]; then mkdir -p latest-gcc-symlinks ; fi
-  - if [[ "${SPEC}" == "linux-g++-64" ]]; then ln -s /usr/bin/g++-7 latest-gcc-symlinks/g++ ; fi
-  - if [[ "${SPEC}" == "linux-g++-64" ]]; then ln -s /usr/bin/gcc-7 latest-gcc-symlinks/gcc ; fi
-  - if [[ "${SPEC}" == "linux-g++-64" ]]; then export PATH=$PWD/latest-gcc-symlinks:$PATH ; fi
-
-script:
-  - if [[ "${SPEC}" == "macx-clang" ]]; then chmod +x build_macOS.sh ; fi
-  - if [[ "${SPEC}" == "macx-clang" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_macOS.sh ; fi
-  - if [[ "${SPEC}" == "linux-g++-64" ]]; then chmod +x build_linux.sh ; fi
-  - if [[ "${SPEC}" == "linux-g++-64" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_linux.sh ; fi
-  - if [[ "${SPEC}" == "android-armv7" ]]; then chmod +x build_android_armv7.sh ; fi
-  - if [[ "${SPEC}" == "android-armv7" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_android_armv7.sh ; fi
-  - if [[ "${SPEC}" == "android-arm64-v8a" ]]; then chmod +x build_android_arm64_v8a.sh ; fi
-  - if [[ "${SPEC}" == "android-arm64-v8a" ]]; then TAG_NAME=${TRAVIS_TAG} ./build_android_arm64_v8a.sh ; fi
+      install:
+        - touch $HOME/.android/repositories.cfg
+        - yes | sdkmanager "platforms;android-28
+        - yes | sdkmanager "build-tools;28.0.3"
+      script:
+        - chmod +x build_android_arm64_v8a.sh
+        - TAG_NAME=${TRAVIS_TAG} ./build_android_arm64_v8a.sh
 
 deploy:
   - provider: releases
