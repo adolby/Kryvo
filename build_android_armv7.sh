@@ -62,7 +62,6 @@ mkdir -p "${project_dir}/build/android/armv7/release/quick/obj"
 mkdir -p "${project_dir}/build/android/armv7/release/lib/"
 mkdir -p "${project_dir}/build/android/armv7/release/lib/zlib/"
 mkdir -p "${project_dir}/build/android/armv7/release/test/"
-mkdir -p "${project_dir}/build/android/armv7/release/Kryvo/"
 
 # Build Kryvo
 echo "Building Kryvo..."
@@ -93,23 +92,17 @@ make
 # chmod +x tests
 # ./tests
 
-# Copy plugins for app
-# echo "Copy plugins to app..."
-# mkdir -p "${project_dir}/build/android/armv7/release/widgets/plugins/cryptography/botan/"
-# cd "${project_dir}/build/android/armv7/release/widgets/plugins/cryptography/botan/"
-# cp "${project_dir}/build/android/armv7/release/plugins/cryptography/botan/libbotan.so" libbotan.so
-
 # Package Kryvo
 echo "Packaging..."
 
-make install INSTALL_ROOT="${project_dir}/build/android/armv7/release/Kryvo/android-build/"
+make install INSTALL_ROOT="${project_dir}/build/android/armv7/release/android-build/"
 
 echo "Copying app dependencies..."
-androiddeployqt --input "${project_dir}/src/quick/android-libKryvo.so-deployment-settings.json" --output "${project_dir}/build/android/armv7/release/Kryvo/android-build" --android-platform android-28 --gradle
+androiddeployqt --input "${project_dir}/src/quick/android-libKryvo.so-deployment-settings.json" --output "${project_dir}/build/android/armv7/release/android-build" --android-platform android-28 --gradle
 
 TAG_NAME="${TAG_NAME:-dev}"
 
-mv "${project_dir}/build/android/armv7/release/Kryvo/android-build/build/outputs/apk/debug/android-build-debug.apk" "${project_dir}/build/android/armv7/release/Kryvo/kryvo_${TAG_NAME}_android_armv7.apk"
+mv "${project_dir}/build/android/armv7/release/android-build/build/outputs/apk/debug/android-build-debug.apk" "${project_dir}/build/android/armv7/release/kryvo_${TAG_NAME}_android_armv7.apk"
 
 echo "Done!"
 
