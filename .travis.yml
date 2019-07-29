@@ -32,7 +32,8 @@ matrix:
       dist: trusty
       android:
         jdk: oraclejdk8
-        components: platform-tools
+        components:
+          - platform-tools
       cache:
         directories:
           - $HOME/.gradle/caches/
@@ -43,7 +44,8 @@ matrix:
       dist: trusty
       android:
         jdk: oraclejdk8
-        components: platform-tools
+        components:
+          - platform-tools
       cache:
         directories:
           - $HOME/.gradle/caches/
