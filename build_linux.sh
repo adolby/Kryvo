@@ -17,8 +17,8 @@ echo "Extracting Qt files..."
 
 # Install Qt Installer Framework
 echo "Installing Qt Installer Framework..."
-wget -N https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.1.0/qt-installer-framework-opensource-3.1.0-linux.zip
-7z x qt-installer-framework-opensource-3.1.0-linux.zip -aos &> /dev/null
+wget -N https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.1/qt-installer-framework-opensource-3.1-linux.zip
+7z x qt-installer-framework-opensource-3.1-linux.zip -aos &> /dev/null
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
