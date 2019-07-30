@@ -40,6 +40,7 @@ matrix:
             - g++-7
             - chrpath
             - p7zip-full
+            - libgl1-mesa-dev
       install:
         - mkdir -p latest-gcc-symlinks
         - ln -s /usr/bin/g++-7 latest-gcc-symlinks/g++
