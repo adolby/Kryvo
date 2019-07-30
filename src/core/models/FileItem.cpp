@@ -1,4 +1,4 @@
-#include "FileItem.hpp"
+#include "models/FileItem.hpp"
 
 Kryvo::FileItem::FileItem(const QString& fileName)
   : mFileName(fileName) {

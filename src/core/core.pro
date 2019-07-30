@@ -33,7 +33,9 @@ SOURCES += \
   PluginLoader.cpp \
   archive/Archiver.cpp \
   cryptography/Crypto.cpp \
-  settings/Settings.cpp
+  settings/Settings.cpp \
+  models/FileListModel.cpp \
+  models/FileItem.cpp
 
 HEADERS += \
   Constants.hpp \
@@ -45,6 +47,8 @@ HEADERS += \
   cryptography/Crypto.hpp \
   cryptography/CryptoProviderInterface.hpp \
   settings/Settings.hpp \
+  models/FileListModel.hpp \
+  models/FileItem.hpp \
   utility/Thread.hpp \
   utility/pimpl.h
 

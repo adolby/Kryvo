@@ -1,5 +1,5 @@
-#ifndef KRYVO_FILELISTMODEL_HPP_
-#define KRYVO_FILELISTMODEL_HPP_
+#ifndef KRYVO_MODELS_FILELISTMODEL_HPP_
+#define KRYVO_MODELS_FILELISTMODEL_HPP_
 
 #include "FileItem.hpp"
 #include "utility/pimpl.h"
@@ -51,4 +51,4 @@ class FileListModel : public QAbstractListModel {
 
 } // namespace Kryvo
 
-#endif // KRYVO_FILELISTMODEL_HPP_
+#endif // KRYVO_MODELS_FILELISTMODEL_HPP_

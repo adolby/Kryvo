@@ -28,15 +28,11 @@ CONFIG(release, debug|release) {
 SOURCES += \
   main.cpp \
   Application.cpp \
-  Ui.cpp \
-  FileListModel.cpp \
-  FileItem.cpp
+  Ui.cpp
 
 HEADERS += \
   Application.hpp \
-  Ui.hpp \
-  FileListModel.hpp \
-  FileItem.hpp
+  Ui.hpp
 
 # Platform-specific configuration
 linux {

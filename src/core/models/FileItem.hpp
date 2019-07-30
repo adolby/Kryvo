@@ -1,5 +1,5 @@
-#ifndef KRYVO_FILEITEM_HPP_
-#define KRYVO_FILEITEM_HPP_
+#ifndef KRYVO_MODELS_FILEITEM_HPP_
+#define KRYVO_MODELS_FILEITEM_HPP_
 
 #include <QString>
 
@@ -28,4 +28,4 @@ inline bool operator== (const FileItem& item1, const FileItem& item2) {
 
 } // namespace Kryvo
 
-#endif // KRYVO_FILEITEM_HPP_
+#endif // KRYVO_MODELS_FILEITEM_HPP_

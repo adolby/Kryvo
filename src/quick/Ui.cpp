@@ -1,5 +1,5 @@
 #include "Ui.hpp"
-#include "FileListModel.hpp"
+#include "models/FileListModel.hpp"
 #include <QCoreApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>

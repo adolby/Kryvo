@@ -1,4 +1,4 @@
-#include "FileListModel.hpp"
+#include "models/FileListModel.hpp"
 
 class Kryvo::FileListModelPrivate {
   Q_DISABLE_COPY(FileListModelPrivate)
