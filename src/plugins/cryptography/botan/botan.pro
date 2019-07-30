@@ -64,7 +64,8 @@ linux {
       SOURCES += botan/android/arm64_v8a/botan_all.cpp
 
       HEADERS += \
-        botan/android/arm64_v8a/botan_all.h
+        botan/android/arm64_v8a/botan_all.h \
+        botan/android/arm64_v8a/botan_all_internal.h
 
       debug {
         message(Debug)
