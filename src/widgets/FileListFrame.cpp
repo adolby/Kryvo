@@ -23,7 +23,7 @@ class Kryvo::FileListFramePrivate {
   void addFileToModel(const QString& filePath);
 
   QStandardItemModel fileListModel;
-  QTableView* fileListView{nullptr};
+  QTableView fileListView;
 };
 
 Kryvo::FileListFramePrivate::FileListFramePrivate() = default;
@@ -37,26 +37,26 @@ Kryvo::FileListFrame::FileListFrame(QWidget* parent)
                                   tr("Remove")};
   d->fileListModel.setHorizontalHeaderLabels(headerList);
 
-  d->fileListView = new QTableView(this);
-  d->fileListView->setModel(&d->fileListModel);
-  d->fileListView->setShowGrid(false);
-  d->fileListView->verticalHeader()->hide();
-  d->fileListView->horizontalHeader()->hide();
-  d->fileListView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  d->fileListView->setFrameShape(QFrame::NoFrame);
+  d->fileListView.setParent(this);
+  d->fileListView.setModel(&d->fileListModel);
+  d->fileListView.setShowGrid(false);
+  d->fileListView.verticalHeader()->hide();
+  d->fileListView.horizontalHeader()->hide();
+  d->fileListView.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  d->fileListView.setFrameShape(QFrame::NoFrame);
 
-  QHeaderView* header = d->fileListView->horizontalHeader();
+  QHeaderView* header = d->fileListView.horizontalHeader();
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(130);
   header->setSectionResizeMode(QHeaderView::Fixed);
 
   // Custom delegate paints progress bar and file close button for each file
   auto delegate = new FileListDelegate(this);
-  d->fileListView->setItemDelegate(delegate);
-  d->fileListView->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+  d->fileListView.setItemDelegate(delegate);
+  d->fileListView.setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 
   auto fileListLayout = new QVBoxLayout(this);
-  fileListLayout->addWidget(d->fileListView);
+  fileListLayout->addWidget(&d->fileListView);
   fileListLayout->setContentsMargins(0, 0, 0, 0);
 
   connect(delegate, &FileListDelegate::removeRow,
@@ -87,13 +87,13 @@ void Kryvo::FileListFrame::clear() {
                                    tr("Remove")};
   d->fileListModel.setHorizontalHeaderLabels(headerList);
 
-  QHeaderView* header = d->fileListView->horizontalHeader();
+  QHeaderView* header = d->fileListView.horizontalHeader();
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(130);
-  d->fileListView->setColumnWidth(0, this->width() * 0.6);
-  d->fileListView->setColumnWidth(1, this->width() * 0.15);
-  d->fileListView->setColumnWidth(2, this->width() * 0.2);
-  d->fileListView->setColumnWidth(3, this->width() * 0.04);
+  d->fileListView.setColumnWidth(0, this->width() * 0.6);
+  d->fileListView.setColumnWidth(1, this->width() * 0.15);
+  d->fileListView.setColumnWidth(2, this->width() * 0.2);
+  d->fileListView.setColumnWidth(3, this->width() * 0.04);
 }
 
 void Kryvo::FileListFrame::updateProgress(const QFileInfo& info,
@@ -213,12 +213,11 @@ void Kryvo::FileListFrame::removeFileFromModel(const QModelIndex& index) {
 void Kryvo::FileListFrame::resizeEvent(QResizeEvent* event) {
   Q_D(FileListFrame);
   Q_UNUSED(event);
-  Q_ASSERT(d->fileListView);
 
   const int width = this->width();
 
-  d->fileListView->setColumnWidth(0, static_cast<int>(width * 0.6));
-  d->fileListView->setColumnWidth(1, static_cast<int>(width * 0.15));
-  d->fileListView->setColumnWidth(2, static_cast<int>(width * 0.2));
-  d->fileListView->setColumnWidth(3, static_cast<int>(width * 0.04));
+  d->fileListView.setColumnWidth(0, static_cast<int>(width * 0.6));
+  d->fileListView.setColumnWidth(1, static_cast<int>(width * 0.15));
+  d->fileListView.setColumnWidth(2, static_cast<int>(width * 0.2));
+  d->fileListView.setColumnWidth(3, static_cast<int>(width * 0.04));
 }
