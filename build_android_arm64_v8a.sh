@@ -98,7 +98,7 @@ echo "Packaging..."
 make install INSTALL_ROOT="${project_dir}/build/android/arm64_v8a/release/android-build/"
 
 echo "Copying app dependencies..."
-androiddeployqt --input "${project_dir}/src/quick/android-libKryvo.so-deployment-settings.json" --output "${project_dir}/build/android/arm64_v8a/release/android-build" --gradle --release
+androiddeployqt --input "${project_dir}/src/quick/android-libKryvo.so-deployment-settings.json" --output "${project_dir}/build/android/arm64_v8a/release/android-build" --gradle --release --verbose
 
 TAG_NAME="${TAG_NAME:-dev}"
 
