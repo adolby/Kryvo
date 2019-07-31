@@ -5,7 +5,7 @@
 set -o errexit -o nounset
 
 project_dir=$(pwd)
-qt_install_dir=~
+qt_install_dir=${HOME}
 
 # Get Qt
 echo "Installing Qt..."

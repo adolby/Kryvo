@@ -3,8 +3,8 @@
 set -o errexit -o nounset
 
 project_dir=$(pwd)
-qt_install_dir=~
-ndk_install_dir=~
+qt_install_dir=${HOME}
+ndk_install_dir=${HOME}
 
 # Get Qt
 echo "Installing Qt..."
@@ -98,7 +98,7 @@ echo "Packaging..."
 make install INSTALL_ROOT="${project_dir}/build/android/armv7/release/android-build/"
 
 echo "Copying app dependencies..."
-androiddeployqt --input "${project_dir}/src/quick/android-libKryvo.so-deployment-settings.json" --output "${project_dir}/build/android/armv7/release/android-build" --android-platform android-28 --gradle
+androiddeployqt --input "${project_dir}/src/quick/android-libKryvo.so-deployment-settings.json" --output "${project_dir}/build/android/armv7/release/android-build" --gradle --release
 
 TAG_NAME="${TAG_NAME:-dev}"
 
