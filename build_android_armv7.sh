@@ -102,7 +102,7 @@ androiddeployqt --input "${project_dir}/src/quick/android-libKryvo.so-deployment
 
 TAG_NAME="${TAG_NAME:-dev}"
 
-mv "${project_dir}/build/android/armv7/release/android-build/build/outputs/apk/debug/android-build-debug.apk" "${project_dir}/build/android/armv7/release/kryvo_${TAG_NAME}_android_armv7.apk"
+mv "${project_dir}/build/android/armv7/release/android-build/build/outputs/apk/release/android-build-release-unsigned.apk" "${project_dir}/build/android/armv7/release/kryvo_${TAG_NAME}_android_armv7.apk"
 
 echo "Done!"
 
