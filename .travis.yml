@@ -17,9 +17,12 @@ matrix:
       osx_image: xcode10
       cache:
         directories:
-          - $HOME/Library/Caches/Homebrew
+          - ${HOME}/Library/Caches/Homebrew
       before_cache:
         - brew cleanup
+      install:
+        - brew install ccache
+        - export PATH="/usr/local/opt/ccache/libexec:${PATH}"
       script:
         - chmod +x build_macOS.sh
         - TAG_NAME=${TRAVIS_TAG} ./build_macOS.sh
@@ -74,11 +77,11 @@ matrix:
           - platform-tools
       cache:
         directories:
-          - $HOME/.gradle/caches/
-          - $HOME/.gradle/wrapper/
-          - $HOME/.android/build-cache
+          - ${HOME}/.gradle/caches/
+          - ${HOME}/.gradle/wrapper/
+          - ${HOME}/.android/build-cache
       install:
-        - touch $HOME/.android/repositories.cfg
+        - touch ${HOME}/.android/repositories.cfg
         - yes | sdkmanager "platforms;android-28"
         - yes | sdkmanager "build-tools;28.0.3"
       script:
@@ -103,11 +106,11 @@ matrix:
           - platform-tools
       cache:
         directories:
-          - $HOME/.gradle/caches/
-          - $HOME/.gradle/wrapper/
-          - $HOME/.android/build-cache
+          - ${HOME}/.gradle/caches/
+          - ${HOME}/.gradle/wrapper/
+          - ${HOME}/.android/build-cache
       install:
-        - touch $HOME/.android/repositories.cfg
+        - touch ${HOME}/.android/repositories.cfg
         - yes | sdkmanager "platforms;android-28"
         - yes | sdkmanager "build-tools;28.0.3"
       script:
