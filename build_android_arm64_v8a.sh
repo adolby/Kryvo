@@ -25,7 +25,7 @@ cd "${ndk_install_dir}"
 wget -N https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip
 unzip -qq android-ndk-r19c-linux-x86_64.zip
 
-export ANDROID_NDK_ROOT=~/android-ndk-r19c
+export ANDROID_NDK_ROOT=${ndk_install_dir}/android-ndk-r19c
 export ANDROID_SDK_ROOT=/usr/local/android-sdk
 export ANDROID_NDK_PLATFORM=android-21
 PATH=${ANDROID_NDK_ROOT}:${PATH}
