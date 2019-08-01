@@ -70,7 +70,7 @@ if [ -f "${project_dir}/Makefile" ]; then
   make distclean
 fi
 
-qmake -spec android-clang CONFIG+=release CONFIG+=qtquickcompiler 
+qmake -spec android-clang CONFIG+=release CONFIG+=qtquickcompiler
 make
 
 # Copy plugins for test app
@@ -98,7 +98,7 @@ echo "Packaging..."
 make install INSTALL_ROOT="${project_dir}/build/android/arm64_v8a/release/android-build/"
 
 echo "Copying app dependencies..."
-androiddeployqt --input "${project_dir}/src/quick/android-libKryvo.so-deployment-settings.json" --output "${project_dir}/build/android/arm64_v8a/release/android-build" --gradle --release --sign "${project_dir}/resources/android/android_release.keystore" ${keystore_alias} --storepass ${keystore_password} --verbose
+androiddeployqt --input "${project_dir}/src/quick/android-libKryvo.so-deployment-settings.json" --output "${project_dir}/build/android/arm64_v8a/release/android-build" --gradle --release --sign "${project_dir}/resources/android/android_release.keystore" ${keystore_alias} --storepass ${keystore_password}
 
 TAG_NAME="${TAG_NAME:-dev}"
 
