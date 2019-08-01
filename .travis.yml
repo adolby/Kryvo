@@ -1,128 +1,134 @@
 git:
   depth: 1
-
 notifications:
   email:
     recipients:
-      - andrewdolby@gmail.com
+    - andrewdolby@gmail.com
     on_success: change
     on_failure: change
-
 matrix:
   include:
-    - os: osx
-      language: cpp
-      compiler: clang
-      env: SPEC=macx-clang
-      osx_image: xcode10
-      cache:
-        directories:
-          - ${HOME}/Library/Caches/Homebrew
-      before_cache:
-        - brew cleanup
-      install:
-        - brew install ccache
-        - export PATH="/usr/local/opt/ccache/libexec:${PATH}"
-      script:
-        - chmod +x build_macOS.sh
-        - TAG_NAME=${TRAVIS_TAG} ./build_macOS.sh
-      deploy:
-        - provider: releases
-          api_key:
-            secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
-          file:
-            - build/macOS/clang/x86_64/release/kryvo_${TRAVIS_TAG}_macos.zip
-          overwrite: true
-          skip_cleanup: true
-          on:
-            tags: true
-    - os: linux
-      language: cpp
-      compiler: gcc
-      env: SPEC=linux-g++-64
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-            - chrpath
-            - p7zip-full
-            - libgl1-mesa-dev
-      install:
-        - mkdir -p latest-gcc-symlinks
-        - ln -s /usr/bin/g++-7 latest-gcc-symlinks/g++
-        - ln -s /usr/bin/gcc-7 latest-gcc-symlinks/gcc
-        - export PATH=$PWD/latest-gcc-symlinks:$PATH
-      script:
-        - chmod +x build_linux.sh
-        - TAG_NAME=${TRAVIS_TAG} ./build_linux.sh
-      deploy:
-        - provider: releases
-          api_key:
-            secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
-          file:
-            - build/linux/gcc/x86_64/release/kryvo_${TRAVIS_TAG}_linux_x86_64_portable.zip
-            - installer/linux/kryvo_${TRAVIS_TAG}_linux_x86_64_installer
-          overwrite: true
-          skip_cleanup: true
-          on:
-            tags: true
-    - language: android
-      env: SPEC=android-armv7
-      dist: trusty
-      android:
-        jdk: oraclejdk8
-        components:
-          - platform-tools
-      cache:
-        directories:
-          - ${HOME}/.gradle/caches/
-          - ${HOME}/.gradle/wrapper/
-          - ${HOME}/.android/build-cache
-      install:
-        - touch ${HOME}/.android/repositories.cfg
-        - yes | sdkmanager "platforms;android-28"
-        - yes | sdkmanager "build-tools;28.0.3"
-      script:
-        - chmod +x build_android_armv7.sh
-        - TAG_NAME=${TRAVIS_TAG} ./build_android_armv7.sh
-      deploy:
-        - provider: releases
-          api_key:
-            secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
-          file:
-            - build/android/armv7/release/kryvo_${TRAVIS_TAG}_android_armv7.apk
-          overwrite: true
-          skip_cleanup: true
-          on:
-            tags: true
-    - language: android
-      env: SPEC=android-arm64-v8a
-      dist: trusty
-      android:
-        jdk: oraclejdk8
-        components:
-          - platform-tools
-      cache:
-        directories:
-          - ${HOME}/.gradle/caches/
-          - ${HOME}/.gradle/wrapper/
-          - ${HOME}/.android/build-cache
-      install:
-        - touch ${HOME}/.android/repositories.cfg
-        - yes | sdkmanager "platforms;android-28"
-        - yes | sdkmanager "build-tools;28.0.3"
-      script:
-        - chmod +x build_android_arm64_v8a.sh
-        - TAG_NAME=${TRAVIS_TAG} ./build_android_arm64_v8a.sh
-      deploy:
-        - provider: releases
-          api_key:
-            secure: "A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo="
-          file:
-            - build/android/arm64_v8a/release/kryvo_${TRAVIS_TAG}_android_arm64_v8a.apk
-          overwrite: true
-          skip_cleanup: true
-          on:
-            tags: true
+  - os: osx
+    language: cpp
+    compiler: clang
+    env: SPEC=macx-clang
+    osx_image: xcode10
+    cache:
+      directories:
+      - "${HOME}/Library/Caches/Homebrew"
+    before_cache:
+    - brew cleanup
+    install:
+    - brew install ccache
+    - export PATH="/usr/local/opt/ccache/libexec:${PATH}"
+    script:
+    - chmod +x build_macOS.sh
+    - TAG_NAME=${TRAVIS_TAG} ./build_macOS.sh
+    deploy:
+    - provider: releases
+      api_key:
+        secure: A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo=
+      file:
+      - build/macOS/clang/x86_64/release/kryvo_${TRAVIS_TAG}_macos.zip
+      overwrite: true
+      skip_cleanup: true
+      on:
+        tags: true
+  - os: linux
+    language: cpp
+    compiler: gcc
+    env: SPEC=linux-g++-64
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-7
+        - chrpath
+        - p7zip-full
+        - libgl1-mesa-dev
+    install:
+    - mkdir -p latest-gcc-symlinks
+    - ln -s /usr/bin/g++-7 latest-gcc-symlinks/g++
+    - ln -s /usr/bin/gcc-7 latest-gcc-symlinks/gcc
+    - export PATH=$PWD/latest-gcc-symlinks:$PATH
+    script:
+    - chmod +x build_linux.sh
+    - TAG_NAME=${TRAVIS_TAG} ./build_linux.sh
+    deploy:
+    - provider: releases
+      api_key:
+        secure: A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo=
+      file:
+      - build/linux/gcc/x86_64/release/kryvo_${TRAVIS_TAG}_linux_x86_64_portable.zip
+      - installer/linux/kryvo_${TRAVIS_TAG}_linux_x86_64_installer
+      overwrite: true
+      skip_cleanup: true
+      on:
+        tags: true
+  - language: android
+    env: SPEC=android-armv7
+    dist: trusty
+    android:
+      jdk: oraclejdk8
+      components:
+      - platform-tools
+    cache:
+      directories:
+      - "${HOME}/.gradle/caches/"
+      - "${HOME}/.gradle/wrapper/"
+      - "${HOME}/.android/build-cache"
+    before_install:
+    - openssl aes-256-cbc -K $encrypted_f22c5921bb84_key -iv $encrypted_f22c5921bb84_iv
+      -in resources/android/android_release.keystore.enc -out resources/android/android_release.keystore
+      -d
+    install:
+    - touch ${HOME}/.android/repositories.cfg
+    - yes | sdkmanager "platforms;android-28"
+    - yes | sdkmanager "build-tools;28.0.3"
+    script:
+    - chmod +x build_android_armv7.sh
+    - TAG_NAME=${TRAVIS_TAG} ./build_android_armv7.sh
+    deploy:
+    - provider: releases
+      api_key:
+        secure: A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo=
+      file:
+      - build/android/armv7/release/kryvo_${TRAVIS_TAG}_android_armv7.apk
+      overwrite: true
+      skip_cleanup: true
+      on:
+        tags: true
+  - language: android
+    env: SPEC=android-arm64-v8a
+    dist: trusty
+    android:
+      jdk: oraclejdk8
+      components:
+      - platform-tools
+    cache:
+      directories:
+      - "${HOME}/.gradle/caches/"
+      - "${HOME}/.gradle/wrapper/"
+      - "${HOME}/.android/build-cache"
+    before_install:
+    - openssl aes-256-cbc -K $encrypted_f22c5921bb84_key -iv $encrypted_f22c5921bb84_iv
+      -in resources/android/android_release.keystore.enc -out resources/android/android_release.keystore
+      -d
+    install:
+    - touch ${HOME}/.android/repositories.cfg
+    - yes | sdkmanager "platforms;android-28"
+    - yes | sdkmanager "build-tools;28.0.3"
+    script:
+    - chmod +x build_android_arm64_v8a.sh
+    - TAG_NAME=${TRAVIS_TAG} ./build_android_arm64_v8a.sh
+    deploy:
+    - provider: releases
+      api_key:
+        secure: A+TbKzHk6ZIxWGJSpb7stM36Nx44G/BRfeNLDO2SpQMkZE19NZ9W2Uappb5ivB52Xh637pR/z2rWHwWqSKcAsM2hLCOpI3oAtZJQdFhOBPMoMTgiN9MZ6skaqbTimRXfOIbyGfewxuNiQDmQI9QK1rM3b1thnd81rBTAWprzDIo=
+      file:
+      - build/android/arm64_v8a/release/kryvo_${TRAVIS_TAG}_android_arm64_v8a.apk
+      overwrite: true
+      skip_cleanup: true
+      on:
+        tags: true
