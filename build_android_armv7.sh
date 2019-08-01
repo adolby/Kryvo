@@ -10,9 +10,9 @@ ndk_install_dir=${HOME}
 echo "Installing Qt..."
 cd "${qt_install_dir}"
 echo "Downloading Qt files..."
-wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/5.12.4/qt-opensource-5.12.4-android-armv7.zip
+wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/5.12.4/qt-opensource-5.12.4-android-armv7.zip &> /dev/null
 echo "Extracting Qt files..."
-unzip -qq qt-opensource-5.12.4-android-armv7.zip
+unzip -qq qt-opensource-5.12.4-android-armv7.zip &> /dev/null
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
@@ -22,8 +22,8 @@ PATH="${qt_install_dir}/Qt/5.12.4/android_armv7/bin/:${PATH}"
 qmake --version
 
 cd "${ndk_install_dir}"
-wget --timestamping --quiet https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip
-unzip -qq android-ndk-r19c-linux-x86_64.zip
+wget --timestamping --quiet https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip &> /dev/null
+unzip -qq android-ndk-r19c-linux-x86_64.zip &> /dev/null
 
 export ANDROID_NDK_ROOT=${ndk_install_dir}/android-ndk-r19c
 export ANDROID_SDK_ROOT=/usr/local/android-sdk
@@ -70,7 +70,7 @@ if [ -f "${project_dir}/Makefile" ]; then
   make distclean
 fi
 
-qmake CONFIG+=release -spec android-clang
+qmake -spec android-clang CONFIG+=release
 make
 
 # Copy plugins for test app

@@ -11,13 +11,13 @@ qt_install_dir=${HOME}
 echo "Installing Qt..."
 cd "${qt_install_dir}"
 echo "Downloading Qt files..."
-wget -N https://github.com/adolby/qt-more-builds/releases/download/5.12.4/qt-opensource-5.12.4-linux-gcc-x86_64.zip
+wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/5.12.4/qt-opensource-5.12.4-linux-gcc-x86_64.zip &> /dev/null
 echo "Extracting Qt files..."
 7z x qt-opensource-5.12.4-linux-gcc-x86_64.zip -aos &> /dev/null
 
 # Install Qt Installer Framework
 echo "Installing Qt Installer Framework..."
-wget -N https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.1/qt-installer-framework-opensource-3.1-linux.zip
+wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.1/qt-installer-framework-opensource-3.1-linux.zip &> /dev/null
 7z x qt-installer-framework-opensource-3.1-linux.zip -aos &> /dev/null
 
 # Add Qt binaries to path
@@ -68,7 +68,7 @@ if [ -f "${project_dir}/Makefile" ]; then
   make distclean
 fi
 
-qmake CONFIG+=release -spec linux-g++-64
+qmake -spec linux-g++-64 CONFIG+=release 
 make
 
 # Copy Qt dependencies for test app
