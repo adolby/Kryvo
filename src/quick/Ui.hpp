@@ -20,7 +20,6 @@ class Ui : public QObject {
   Q_OBJECT
   Q_DISABLE_COPY(Ui)
 
-  Q_PROPERTY(QVariantMap currentPage READ currentPage NOTIFY pageChanged)
   Q_PROPERTY(QUrl inputPath READ inputPath NOTIFY inputPathChanged)
   Q_PROPERTY(QUrl outputPath READ outputPath NOTIFY outputPathChanged)
   Q_PROPERTY(QString outputPathString READ outputPathString
@@ -58,7 +57,6 @@ class Ui : public QObject {
   QVariantMap currentPage() const;
   QVariantMap page(int index) const;
   bool canNavigateBack() const;
-
 
   // Encrypt/decrypt data
   QUrl inputPath() const;
@@ -126,7 +124,10 @@ class Ui : public QObject {
    */
   void stopFile(const QFileInfo& fileInfo);
 
-  void pageChanged(const QVariantMap& page);
+  void quitApp();
+
+  void pushPage(const QVariantMap& page);
+  void popPage();
   void cipherChanged(const QString& cipher);
   void keySizeChanged(const QString& keySize);
   void modeOfOperationChanged(const QString& modeOfOperation);

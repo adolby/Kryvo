@@ -4,6 +4,7 @@
 #include "utility/pimpl.h"
 #include <QObject>
 #include <QMetaType>
+#include <QGuiApplication>
 #include <memory>
 
 Q_DECLARE_METATYPE(std::size_t);
@@ -16,7 +17,7 @@ class ApplicationPrivate;
  * \brief The Application class controls the functionality of the
  * application.
  */
-class Application : public QObject {
+class Application : public QGuiApplication {
   Q_OBJECT
   Q_DISABLE_COPY(Application)
   DECLARE_PRIVATE(Application)
@@ -24,19 +25,19 @@ class Application : public QObject {
 
  public:
   /*!
-   * \brief Application Constructs the application. Connects the GUI to the
-   * cryptography object. Moves the cryptography object to a work thread. Starts
-   * the thread and shows the GUI main window.
-   * \param parent Parent object
+   * \brief Application Constructs the application.
    */
-  explicit Application(QObject* parent = nullptr);
+  explicit Application(int& argc, char** argv);
 
   /*!
-   * \brief ~Application Destroys the application. Aborts the current threaded
-   * operation and then quits the thread. If the thread doesn't respond, it will
-   * be terminated so the application can exit.
+   * \brief ~Application Destroys the application.
    */
   ~Application() override;
+
+  bool notify(QObject* receiver, QEvent* event) override;
+
+ signals:
+  void back();
 };
 
 } // namespace Kryvo

@@ -212,7 +212,7 @@ void Kryvo::Ui::changePage(const QString& name, const QVariantMap& properties,
 
     d->currentPage = page;
 
-    emit pageChanged(d->currentPage);
+    emit pushPage(d->currentPage);
   };
 
   if (delayInMSecs > 0) {
@@ -238,9 +238,9 @@ void Kryvo::Ui::navigateBack() {
 
     d->currentPage = page(d->navigationHistory.size() - 1);
 
-    emit pageChanged(d->currentPage);
+    emit popPage();
   } else {
-    // Don't leave app on final back press
+    emit quitApp();
   }
 }
 

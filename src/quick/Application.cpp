@@ -1,4 +1,4 @@
-#include "Application.hpp"
+﻿#include "Application.hpp"
 #include "Ui.hpp"
 #include "settings/Settings.hpp"
 #include "Dispatcher.hpp"
@@ -7,9 +7,12 @@
 
 class Kryvo::ApplicationPrivate {
   Q_DISABLE_COPY(ApplicationPrivate)
+  Q_DECLARE_PUBLIC(Application)
 
  public:
-  ApplicationPrivate();
+  ApplicationPrivate(Application* app);
+
+  Application* const q_ptr{nullptr};
 
   Dispatcher dispatcher;
   Thread dispatcherThread;
@@ -17,11 +20,16 @@ class Kryvo::ApplicationPrivate {
   Ui gui{&settings};
 };
 
-Kryvo::ApplicationPrivate::ApplicationPrivate() {
+Kryvo::ApplicationPrivate::ApplicationPrivate(Application* app)
+  : q_ptr(app) {
   qRegisterMetaType<std::size_t>("std::size_t");
   qRegisterMetaType<QFileInfo>("QFileInfo");
   qRegisterMetaType<std::vector<QFileInfo>>("std::vector<QFileInfo>");
   qRegisterMetaType<QDir>("QDir");
+
+  QObject::connect(q_ptr, &Application::back, &gui, &Ui::navigateBack);
+
+  QObject::connect(&gui, &Ui::quitApp, q_ptr, &Application::quit);
 
   // Connect GUI encrypt/decrypt actions
   QObject::connect(&gui, &Ui::encrypt,
@@ -65,8 +73,9 @@ Kryvo::ApplicationPrivate::ApplicationPrivate() {
   dispatcherThread.start();
 }
 
-Kryvo::Application::Application(QObject* parent)
-  : QObject(parent), d_ptr(std::make_unique<ApplicationPrivate>()) {
+Kryvo::Application::Application(int& argc, char** argv)
+  : QGuiApplication(argc, argv),
+    d_ptr(std::make_unique<ApplicationPrivate>(this)) {
 }
 
 Kryvo::Application::~Application() {
@@ -74,4 +83,17 @@ Kryvo::Application::~Application() {
 
   // Abort current threaded operations
   d->dispatcher.abort();
+}
+
+bool Kryvo::Application::notify(QObject* receiver, QEvent* event) {
+#if defined(Q_OS_ANDROID)
+  if (QEvent::Close == event->type()) {
+    emit back();
+    return false;
+  } else {
+    return QGuiApplication::notify(receiver, event);
+  }
+#else
+  return QGuiApplication::notify(receiver, event);
+#endif
 }
