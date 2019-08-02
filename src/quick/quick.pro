@@ -41,16 +41,16 @@ linux {
   android {
     message(Android)
 
-    ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../../resources/android
+    ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../../resources/android/package
 
     DISTFILES += \
-      ../../resources/android/AndroidManifest.xml \
-      ../../resources/android/build.gradle \
-      ../../resources/android/gradle/wrapper/gradle-wrapper.jar \
-      ../../resources/android/gradle/wrapper/gradle-wrapper.properties \
-      ../../resources/android/gradlew \
-      ../../resources/android/gradlew.bat \
-      ../../resources/android/res/values/libs.xml
+      ../../resources/android/package/AndroidManifest.xml \
+      ../../resources/android/package/build.gradle \
+      ../../resources/android/package/gradle/wrapper/gradle-wrapper.jar \
+      ../../resources/android/package/gradle/wrapper/gradle-wrapper.properties \
+      ../../resources/android/package/gradlew \
+      ../../resources/android/package/gradlew.bat \
+      ../../resources/android/package/res/values/libs.xml
 
     contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
       message(armeabi-v7a)
