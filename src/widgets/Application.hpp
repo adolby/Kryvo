@@ -4,6 +4,7 @@
 #include "utility/pimpl.h"
 #include <QObject>
 #include <QMetaType>
+#include <QApplication>
 #include <memory>
 
 Q_DECLARE_METATYPE(std::size_t);
@@ -16,7 +17,7 @@ class ApplicationPrivate;
  * \brief The Application class controls the functionality of the
  * application.
  */
-class Application : public QObject {
+class Application : public QApplication {
   Q_OBJECT
   Q_DISABLE_COPY(Application)
   DECLARE_PRIVATE(Application)
@@ -27,9 +28,8 @@ class Application : public QObject {
    * \brief Application Constructs the application. Connects the GUI to the
    * cryptography object. Moves the cryptography object to a work thread. Starts
    * the thread and shows the GUI main window.
-   * \param parent Parent object
    */
-  explicit Application(QObject* parent = nullptr);
+  explicit Application(int& argc, char** argv);
 
   /*!
    * \brief ~Application Destroys the application. Aborts the current threaded

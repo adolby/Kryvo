@@ -68,8 +68,8 @@ Kryvo::ApplicationPrivate::ApplicationPrivate() {
   gui.show();
 }
 
-Kryvo::Application::Application(QObject* parent)
-  : QObject(parent), d_ptr(std::make_unique<ApplicationPrivate>()) {
+Kryvo::Application::Application(int& argc, char** argv)
+  : QApplication(argc, argv), d_ptr(std::make_unique<ApplicationPrivate>()) {
 }
 
 Kryvo::Application::~Application() {

@@ -12,16 +12,14 @@ int main(int argc, char* argv[]) {
   QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 
-  QApplication app(argc, argv);
+  Kryvo::Application app(argc, argv);
 
   QCoreApplication::setOrganizationName(
     QStringLiteral("The Kryvo Project"));
   QCoreApplication::setOrganizationDomain(QStringLiteral("kryvo.io"));
   QCoreApplication::setApplicationName(QStringLiteral("Kryvo"));
 
-  Kryvo::Application kryvo;
-
-  const int retval = QApplication::exec();
+  const int retval = Kryvo::Application::exec();
 
   return retval;
 }
