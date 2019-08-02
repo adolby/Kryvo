@@ -13,7 +13,7 @@ class Kryvo::DispatcherPrivate {
   Q_DECLARE_PUBLIC(Dispatcher)
 
  public:
-  explicit DispatcherPrivate(Dispatcher* q);
+  explicit DispatcherPrivate(Dispatcher* disp);
 
   void init();
 
@@ -53,8 +53,8 @@ class Kryvo::DispatcherPrivate {
   std::vector<Pipeline> pipelines;
 };
 
-Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* dispatcher)
-  : q_ptr(dispatcher), archiver(&state), cryptographer(&state) {
+Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* disp)
+  : q_ptr(disp), archiver(&state), cryptographer(&state) {
   archiver.moveToThread(&archiverThread);
   cryptographer.moveToThread(&cryptographerThread);
 
