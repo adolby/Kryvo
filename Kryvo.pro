@@ -21,4 +21,5 @@ CONFIG(release, debug|release) {
   CONFIG += release
 }
 
+message(Kryvo)
 message(Qt $${QT_VERSION})
