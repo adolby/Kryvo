@@ -103,7 +103,7 @@ Kryvo::Ui::Ui(Settings* s, QObject* parent)
             }
 
 #if defined(Q_OS_ANDROID)
-            QtAndroid::hideSplashScreen( 100 );
+            QtAndroid::hideSplashScreen(100);
 #endif
           },
           Qt::QueuedConnection);
