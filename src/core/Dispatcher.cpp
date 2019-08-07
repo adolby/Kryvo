@@ -357,17 +357,37 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
 
     const QByteArray& headerString = readLine(&inFile);
 
-    if (headerString != QByteArrayLiteral("-------- ENCRYPTED FILE --------")) {
+    if (headerString != QByteArrayLiteral("-------- Encrypted File --------")) {
       emit q->errorMessage(Constants::messages[7], inFilePath);
     }
 
-    const QString& algorithmNameString = readLine(&inFile);
-    const QString& keySizeString = readLine(&inFile);
-    const QString& compressString = readLine(&inFile);
+    const QString& fileVersionString = readLine(&inFile);
 
-    const QString& pbkdfSaltString = readLine(&inFile);
-    const QString& keySaltString = readLine(&inFile);
-    const QString& ivSaltString = readLine(&inFile);
+    bool conversionOk = false;
+
+    const int fileVersion = fileVersionString.toInt(&conversionOk);
+
+    QString algorithmNameString;
+    QString keySizeString;
+    QString compressString;
+
+    QString pbkdfSaltString;
+    QString keySaltString;
+    QString ivSaltString;
+
+    if (1 == fileVersion) {
+        const QString& providerString = readLine(&inFile);
+
+        if (QStringLiteral("Botan") == providerString) {
+          algorithmNameString = readLine(&inFile);
+          keySizeString = readLine(&inFile);
+          compressString = readLine(&inFile);
+
+          pbkdfSaltString = readLine(&inFile);
+          keySaltString = readLine(&inFile);
+          ivSaltString = readLine(&inFile);
+        }
+    }
 
     const QByteArray& footerString = readLine(&inFile);
 

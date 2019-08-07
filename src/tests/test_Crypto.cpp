@@ -127,7 +127,7 @@ SCENARIO("Test encryption and decryption on various file types",
         const QByteArray& headerString = readLine(&inFile);
 
         if (headerString !=
-            QByteArrayLiteral("-------- ENCRYPTED FILE --------")) {
+            QByteArrayLiteral("-------- Encrypted File --------")) {
           const QString& headerError = QStringLiteral("Header error in %1");
 
           FAIL(headerError.arg(etd.encryptedFilePath).toStdString());

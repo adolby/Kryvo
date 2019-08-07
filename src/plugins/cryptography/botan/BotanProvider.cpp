@@ -343,11 +343,15 @@ bool Kryvo::BotanProviderPrivate::encryptFile(const std::size_t id,
   }
 
   const QByteArray& headerText =
-    QByteArrayLiteral("-------- ENCRYPTED FILE --------");
+    QByteArrayLiteral("-------- Encrypted File --------");
 
   const QByteArray& newLine = QByteArrayLiteral("\n");
 
   outFile.write(headerText);
+  outFile.write(newLine);
+  outFile.write(QByteArray::number(Constants::kFileVersion));
+  outFile.write(newLine);
+  outFile.write(QByteArrayLiteral("Botan"));
   outFile.write(newLine);
   outFile.write(algorithmName.toUtf8());
   outFile.write(newLine);

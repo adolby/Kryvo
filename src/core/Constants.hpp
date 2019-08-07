@@ -19,6 +19,7 @@ enum class CryptDirection {
 class Constants {
  public:
   static const QVersionNumber kVersion;
+  static constexpr int kFileVersion = 1;
   static const QString kDot;
   static const QString kEncryptedFileExtension;
   static const QString kCompressedFileExtension;
