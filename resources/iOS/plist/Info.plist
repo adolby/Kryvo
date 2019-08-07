@@ -18,10 +18,16 @@
 			<array>
 				<string>AppIcon29x29.png</string>
 				<string>AppIcon29x29@2x.png</string>
+				<string>AppIcon29x29@3x.png</string>
+				<string>AppIcon40x40.png</string>
 				<string>AppIcon40x40@2x.png</string>
+				<string>AppIcon40x40@3x.png</string>
 				<string>AppIcon57x57.png</string>
 				<string>AppIcon57x57@2x.png</string>
 				<string>AppIcon60x60@2x.png</string>
+				<string>AppIcon60x60@3x.png</string>
+				<string>iTunesArtwork</string>
+				<string>iTunesArtwork@2x</string>
 			</array>
 		</dict>
 	</dict>
@@ -33,10 +39,14 @@
 			<array>
 				<string>AppIcon29x29.png</string>
 				<string>AppIcon29x29@2x.png</string>
+				<string>AppIcon29x29@3x.png</string>
+				<string>AppIcon40x40.png</string>
 				<string>AppIcon40x40@2x.png</string>
+				<string>AppIcon40x40@3x.png</string>
 				<string>AppIcon57x57.png</string>
 				<string>AppIcon57x57@2x.png</string>
 				<string>AppIcon60x60@2x.png</string>
+				<string>AppIcon60x60@3x.png</string>
 				<string>AppIcon29x29~ipad.png</string>
 				<string>AppIcon29x29@2x~ipad.png</string>
 				<string>AppIcon40x40~ipad.png</string>
@@ -47,11 +57,14 @@
 				<string>AppIcon72x72@2x~ipad.png</string>
 				<string>AppIcon76x76~ipad.png</string>
 				<string>AppIcon76x76@2x~ipad.png</string>
+				<string>AppIcon83.5x83.5@2x~ipad.png</string>
+				<string>iTunesArtwork</string>
+				<string>iTunesArtwork@2x</string>
 			</array>
 		</dict>
 	</dict>
 	<key>CFBundleIdentifier</key>
-	<string>${PRODUCT_BUNDLE_IDENTIFIER}</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleName</key>
 	<string>${PRODUCT_NAME}</string>
 	<key>CFBundlePackageType</key>
@@ -64,14 +77,14 @@
 	<string>${QMAKE_FULL_VERSION}</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>UIFileSharingEnabled</key>
-	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>MinimumOSVersion</key>
 	<string>${IPHONEOS_DEPLOYMENT_TARGET}</string>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+	<string>Launch</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

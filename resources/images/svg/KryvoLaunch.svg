@@ -12,10 +12,10 @@
    id="svg2989"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="KryvoMobile.svg"
-   inkscape:export-xdpi="1152"
-   inkscape:export-ydpi="1152"
-   inkscape:export-filename="/Users/andrew/Kryvo/resources/iOS/icon/iTunesArtwork@2x.png">
+   sodipodi:docname="KryvoLaunch.svg"
+   inkscape:export-xdpi="81"
+   inkscape:export-ydpi="81"
+   inkscape:export-filename="/Users/andrew/Kryvo/resources/android/package/res/drawable-hdpi/launchIcon.png">
   <defs
      id="defs2991" />
   <sodipodi:namedview
@@ -23,11 +23,11 @@
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="1"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6568545"
-     inkscape:cx="19.326505"
-     inkscape:cy="37.942727"
+     inkscape:cx="-30.170967"
+     inkscape:cy="-138.83396"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -48,7 +48,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>

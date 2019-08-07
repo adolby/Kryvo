@@ -41,6 +41,8 @@ linux {
   android {
     message(Android)
 
+    QT += androidextras
+
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../../resources/android/package
 
     DISTFILES += \
@@ -50,7 +52,14 @@ linux {
       ../../resources/android/package/gradle/wrapper/gradle-wrapper.properties \
       ../../resources/android/package/gradlew \
       ../../resources/android/package/gradlew.bat \
-      ../../resources/android/package/res/values/libs.xml
+      ../../resources/android/package/res/values/libs.xml \
+      ../../resources/android/package/res/drawable-mdpi/icon.png \
+      ../../resources/android/package/res/drawable-hdpi/icon.png \
+      ../../resources/android/package/res/drawable-xhdpi/icon.png \
+      ../../resources/android/package/res/drawable-xxhdpi/icon.png \
+      ../../resources/android/package/res/drawable-xxxhdpi/icon.png \
+      ../../resources/android/package/res/drawable/splash.xml \
+      ../../resources/android/package/res/drawable/launch_icon.png
 
     contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
       message(armeabi-v7a)
@@ -161,6 +170,17 @@ darwin {
     }
 
     LIBS += -framework Foundation -framework CoreFoundation -framework UIKit
+
+    QMAKE_INFO_PLIST = $$PWD/../../resources/ios/plist/Info.plist
+
+    ios_icon.files = $$files($$PWD/../../resources/ios/icon/AppIcon*.png)
+    QMAKE_BUNDLE_DATA += ios_icon
+
+    launch.files = $$PWD/../../resources/ios/launch/Launch.xib $$PWD/../../resources/ios/launch/LaunchIcon.png
+    QMAKE_BUNDLE_DATA += launch
+
+    QMAKE_FULL_VERSION = 1.0.0
+    QMAKE_SHORT_VERSION = 1.0
   } # End ios
 
   macos {

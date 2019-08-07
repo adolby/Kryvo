@@ -14,6 +14,10 @@
 #include <QStringBuilder>
 #include <QString>
 
+#if defined(Q_OS_ANDROID)
+#include <QtAndroid>
+#endif
+
 QString qmlUrlToPath(const QUrl& url) {
   QString pathString;
 
@@ -97,6 +101,10 @@ Kryvo::Ui::Ui(Settings* s, QObject* parent)
             if (!obj && objUrl == d->mainPageUrl) {
               QCoreApplication::exit(-1);
             }
+
+#if defined(Q_OS_ANDROID)
+            QtAndroid::hideSplashScreen( 100 );
+#endif
           },
           Qt::QueuedConnection);
 
