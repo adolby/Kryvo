@@ -70,7 +70,7 @@ if [ -f "${project_dir}/Makefile" ]; then
   make distclean
 fi
 
-qmake -spec android-clang CONFIG+=release
+qmake -spec android-clang CONFIG+=release CONFIG+=qtquickcompiler
 make
 
 # Copy plugins for test app
