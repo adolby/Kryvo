@@ -10,25 +10,6 @@ Page {
     RowLayout {
       anchors.fill: parent
 
-      Label {
-        text: qsTr("Settings")
-
-        font.pixelSize: 18
-        Layout.alignment: Qt.AlignCenter
-      }
-    }
-  }
-
-  footer: ToolBar {
-    implicitHeight: 44
-
-    RowLayout {
-      anchors.fill: parent
-
-      Item {
-        Layout.fillWidth: true
-      }
-
       ToolButton {
         id: backButton
 
@@ -39,10 +20,30 @@ Page {
         icon.height: 30
 
         onClicked: {
-          ui.navigate("Encrypt.qml");
+          ui.navigateBack();
         }
 
         Layout.rightMargin: 5
+      }
+
+      Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+      }
+
+      Label {
+        text: qsTr("Settings")
+        font.pixelSize: 18
+      }
+
+      Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+      }
+
+      Item {
+        implicitHeight: 44
+        implicitWidth: 44
       }
     }
   }
@@ -157,14 +158,20 @@ Page {
         Label {
           id: compressFilesLabel
           font.pixelSize: 18
-          text: qsTr("Compress files before encryption")
+          text: qsTr("Compression format")
         }
 
-        Switch {
-          checked: ui.compressionMode
+        ComboBox {
+          model: ["gzip", "None"]
 
-          onCheckedChanged: {
-            ui.updateCompressionMode(checked);
+          enabled: false
+
+          onActivated: {
+            ui.updateCompressionFormat(currentText);
+          }
+
+          Component.onCompleted: {
+            currentIndex = find(ui.compressionFormat);
           }
         }
       }
