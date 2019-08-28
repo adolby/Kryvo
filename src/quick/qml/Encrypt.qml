@@ -156,8 +156,13 @@ Page {
         icon.height: 30
 
         onClicked: {
-//          ui.navigate("SelectFile.qml");
-          inputFileDialog.visible = true;
+          if (Qt.platform.os === "android" || Qt.platform.os === "ios") {
+            ui.navigate("FileSelector.qml",
+                        {"folder": Qt.resolvedUrl(ui.inputPath),
+                         "selectFolder": false});
+          } else {
+            inputFileDialog.open();
+          }
         }
       }
     }
@@ -288,9 +293,14 @@ Page {
         Material.background: "#2C3E50"
 
         onPressed: {
-          outputFileDialog.folder = Qt.resolvedUrl(ui.outputPath);
-
-          outputFileDialog.open();
+          if (Qt.platform.os === "android" || Qt.platform.os == "ios") {
+            ui.navigate("FileSelector.qml",
+                        {"folder": Qt.resolvedUrl(ui.outputPath),
+                         "selectFolder": true});
+          } else {
+            outputFileDialog.folder = Qt.resolvedUrl(ui.outputPath);
+            outputFileDialog.open();
+          }
         }
       }
     }
@@ -324,6 +334,7 @@ Page {
   FileDialog {
     id: inputFileDialog
     title: qsTr("Please choose files")
+    folder: ui.inputPath
     selectExisting: true
     selectMultiple: true
     selectFolder: false

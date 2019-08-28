@@ -206,6 +206,14 @@ QString Kryvo::Ui::statusMessage() const {
   return d->statusMessage;
 }
 
+void Kryvo::Ui::changePage(const QString& name) {
+  changePage(name, QVariantMap(), 0);
+}
+
+void Kryvo::Ui::changePage(const QString& name, const QVariantMap& properties) {
+  changePage(name, properties, 0);
+}
+
 void Kryvo::Ui::changePage(const QString& name, const QVariantMap& properties,
                            const int delayInMSecs) {
   const auto changeThePage = [this, name, properties]() {
@@ -256,6 +264,14 @@ void Kryvo::Ui::clearNavigationHistory() {
   Q_D(Ui);
 
   d->navigationHistory.clear();
+}
+
+void Kryvo::Ui::addFile(const QUrl& fileUrl) {
+    const QList<QUrl> fileUrlList = {
+      fileUrl
+    };
+
+  addFiles(fileUrlList);
 }
 
 void Kryvo::Ui::addFiles(const QList<QUrl>& fileUrls) {

@@ -141,8 +141,12 @@ class Ui : public QObject {
  public slots:
   void init();
 
+  void changePage(const QString& name);
+
+  void changePage(const QString& name, const QVariantMap& properties);
+
   void changePage(const QString& name, const QVariantMap& properties,
-                  int delayInMSecs = 0);
+                  int delayInMSecs);
 
   void navigate(const QString& name,
                 const QVariantMap& properties = QVariantMap());
@@ -150,6 +154,8 @@ class Ui : public QObject {
   void navigateBack();
 
   void clearNavigationHistory();
+
+  void addFile(const QUrl& fileUrl);
 
   /*!
    * \brief addFiles Executed when the Add Files toolbar button is clicked

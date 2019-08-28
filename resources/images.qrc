@@ -16,5 +16,8 @@
         <file>images/settingsIcon@2x.png</file>
         <file>images/kryvo.png</file>
         <file>images/kryvo@2x.png</file>
+        <file>images/dirclosed-128.png</file>
+        <file>images/file-128.png</file>
+        <file>images/up-128.png</file>
     </qresource>
 </RCC>
