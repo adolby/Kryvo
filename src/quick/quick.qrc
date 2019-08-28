@@ -4,5 +4,6 @@
         <file>qml/Encrypt.qml</file>
         <file>qml/Settings.qml</file>
         <file>qtquickcontrols2.conf</file>
+        <file>qml/FileSelector.qml</file>
     </qresource>
 </RCC>
