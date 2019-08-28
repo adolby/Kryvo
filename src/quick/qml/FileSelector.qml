@@ -139,7 +139,7 @@ Page {
         }
 
         ToolButton {
-          id: doneButton
+          id: selectButton
 
           visible: fileSelector.selectFolder
 
