@@ -115,10 +115,11 @@ Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
 
   slidingStackedWidget->addWidget(contentFrame);
 
-  settingsFrame = new SettingsFrame(settings->cipher(),
+  settingsFrame = new SettingsFrame(settings->cryptoProvider(),
+                                    settings->compressionFormat(),
+                                    settings->cipher(),
                                     settings->keySize(),
                                     settings->modeOfOperation(),
-                                    settings->compressionMode(),
                                     settings->removeIntermediateFiles(),
                                     settings->containerMode(),
                                     slidingStackedWidget);
@@ -152,8 +153,8 @@ Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
   connect(settingsFrame, &SettingsFrame::updateModeOfOperation,
           this, &MainWindow::updateModeOfOperation);
 
-  connect(settingsFrame, &SettingsFrame::updateCompressionMode,
-          this, &MainWindow::updateCompressionMode);
+  connect(settingsFrame, &SettingsFrame::updateCompressionFormat,
+          this, &MainWindow::updateCompressionFormat);
 
   connect(settingsFrame, &SettingsFrame::updateRemoveIntermediateFiles,
           this, &MainWindow::updateRemoveIntermediateFiles);
@@ -229,13 +230,14 @@ void Kryvo::MainWindow::processFiles(
         const QDir outputDir(outputPath);
 
         if (Kryvo::CryptDirection::Encrypt == direction) {
-          emit encrypt(passphrase,
+          emit encrypt(settings->cryptoProvider(),
+                       settings->compressionFormat(),
+                       passphrase,
                        files,
                        outputDir,
                        settings->cipher(),
                        settings->keySize(),
                        settings->modeOfOperation(),
-                       settings->compressionMode(),
                        settings->removeIntermediateFiles());
         } else {
           emit decrypt(passphrase, files, outputDir,
@@ -293,8 +295,8 @@ void Kryvo::MainWindow::updateModeOfOperation(const QString& mode) {
   settings->modeOfOperation(mode);
 }
 
-void Kryvo::MainWindow::updateCompressionMode(const bool compress) {
-  settings->compressionMode(compress);
+void Kryvo::MainWindow::updateCompressionFormat(const QString& format) {
+  settings->compressionFormat(format);
 }
 
 void Kryvo::MainWindow::updateRemoveIntermediateFiles(

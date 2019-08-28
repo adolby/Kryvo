@@ -303,7 +303,7 @@ bool Kryvo::ArchiverPrivate::compressFile(const std::size_t id,
   Q_ASSERT(state);
 
   if (!state) {
-    emit q->errorMessage(Constants::messages[0], QFileInfo());
+    emit q->errorMessage(Constants::kMessages[0], QFileInfo());
     emit q->fileFailed(id);
     return false;
   }
@@ -315,7 +315,7 @@ bool Kryvo::ArchiverPrivate::compressFile(const std::size_t id,
 
   if (!inputFileInfo.exists() || !inputFileInfo.isFile() ||
       !inputFileInfo.isReadable()) {
-    emit q->errorMessage(Constants::messages[9],
+    emit q->errorMessage(Constants::kMessages[9],
                          inputFileInfo.absoluteFilePath());
     emit q->fileFailed(id);
     return false;
@@ -339,7 +339,7 @@ bool Kryvo::ArchiverPrivate::compressFile(const std::size_t id,
                                   Z_DEFAULT_COMPRESSION);
 
   if (ret != Z_OK) {
-    emit q->errorMessage(Constants::messages[9], inputFileInfo);
+    emit q->errorMessage(Constants::kMessages[9], inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -366,7 +366,7 @@ bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
   Q_ASSERT(state);
 
   if (!state) {
-    emit q->errorMessage(Constants::messages[0], QFileInfo());
+    emit q->errorMessage(Constants::kMessages[0], QFileInfo());
     emit q->fileFailed(id);
     return false;
   }
@@ -378,7 +378,7 @@ bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
 
   if (!inputFileInfo.exists() || !inputFileInfo.isFile() ||
       !inputFileInfo.isReadable()) {
-    emit q->errorMessage(Constants::messages[10], inputFileInfo);
+    emit q->errorMessage(Constants::kMessages[10], inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -400,7 +400,7 @@ bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
   const int ret = gzipInflateFile(id, &inputFile, &outputFile);
 
   if (ret != Z_OK) {
-    emit q->errorMessage(Constants::messages[10], inputFileInfo);
+    emit q->errorMessage(Constants::kMessages[10], inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }

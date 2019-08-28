@@ -100,13 +100,13 @@ class BotanProvider : public QObject,
    * \param compress Boolean representing compression mode
    */
    bool encrypt(std::size_t id,
+                const QString& compressionFormat,
                 const QString& passphrase,
                 const QFileInfo& inputFileInfo,
                 const QFileInfo& outputFileInfo,
                 const QString& cipher,
                 std::size_t keySize,
-                const QString& modeOfOperation,
-                bool compress) override;
+                const QString& modeOfOperation) override;
 
   /*!
    * \brief decrypt Decrypt a file. The algorithm is determined from

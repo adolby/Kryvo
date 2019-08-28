@@ -63,7 +63,7 @@ class Crypto : public QObject {
   void busyStatus(bool busyStatus);
 
  public slots:
-  void updateProvider(QObject* provider);
+  void updateProviders(const QHash<QString, QObject*>& loadedProviders);
 
   /*!
    * \brief encrypt Executed when a signal is received for encryption with a
@@ -75,16 +75,16 @@ class Crypto : public QObject {
    * \param cipher String representing name of the cipher
    * \param keySize Key size (in bits)
    * \param modeOfOperation String representing mode of operation
-   * \param compress Boolean representing compression mode
    */
   bool encrypt(std::size_t id,
+               const QString& cryptoProvider,
+               const QString& compressionFormat,
                const QString& passphrase,
                const QFileInfo& inputFileInfo,
                const QFileInfo& outputFileInfo,
                const QString& cipher,
                std::size_t keySize,
-               const QString& modeOfOperation,
-               bool compress);
+               const QString& modeOfOperation);
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
@@ -100,6 +100,7 @@ class Crypto : public QObject {
    * \param ivSaltString Initialization vector salt
    */
   bool decrypt(std::size_t id,
+               const QString& cryptoProvider,
                const QString& passphrase,
                const QFileInfo& inputFileInfo,
                const QFileInfo& outputFileInfo,

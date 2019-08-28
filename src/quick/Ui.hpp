@@ -28,8 +28,8 @@ class Ui : public QObject {
   Q_PROPERTY(QString keySize READ keySize NOTIFY keySizeChanged)
   Q_PROPERTY(QString modeOfOperation READ modeOfOperation
              NOTIFY modeOfOperationChanged)
-  Q_PROPERTY(bool compressionMode READ compressionMode
-             NOTIFY compressionModeChanged)
+  Q_PROPERTY(QString compressionFormat READ compressionFormat
+             NOTIFY compressionFormatChanged)
   Q_PROPERTY(bool removeIntermediateFiles READ removeIntermediateFiles
              NOTIFY removeIntermediateFilesChanged)
   Q_PROPERTY(bool containerMode READ containerMode NOTIFY containerModeChanged)
@@ -67,7 +67,7 @@ class Ui : public QObject {
   QString cipher() const;
   QString keySize() const;
   QString modeOfOperation() const;
-  bool compressionMode() const;
+  QString compressionFormat() const;
   bool removeIntermediateFiles() const;
   bool containerMode() const;
 
@@ -84,15 +84,15 @@ class Ui : public QObject {
    * \param cipher String representing the current cipher
    * \param keySize Key size
    * \param modeOfOperation String representing mode of operation
-   * \param compress Boolean representing compression mode
    */
-  void encrypt(const QString& passphrase,
+  void encrypt(const QString& cryptoProvider,
+               const QString& compressionFormat,
+               const QString& passphrase,
                const std::vector<QFileInfo>& inputFiles,
                const QDir& outputPath,
                const QString& cipher,
                std::size_t keySize,
                const QString& modeOfOperation,
-               bool compress,
                bool removeIntermediateFiles);
 
   /*!
@@ -131,7 +131,7 @@ class Ui : public QObject {
   void cipherChanged(const QString& cipher);
   void keySizeChanged(const QString& keySize);
   void modeOfOperationChanged(const QString& modeOfOperation);
-  void compressionModeChanged(bool compressionMode);
+  void compressionFormatChanged(const QString& format);
   void removeIntermediateFilesChanged(bool removeIntermediateFiles);
   void containerModeChanged(bool contianerMode);
   void inputPathChanged(const QUrl& url);
@@ -245,11 +245,11 @@ class Ui : public QObject {
   void updateModeOfOperation(const QString& mode);
 
   /*!
-   * \brief updateCompressionMode Executed when the compression mode is updated
-   * by the user in the settings frame
-   * \param compress Boolean representing the new compression mode
+   * \brief updateCompressionFormat Executed when the compression format is
+   * updated by the user in the settings frame
+   * \param format String representing the new compression format
    */
-  void updateCompressionMode(bool compress);
+  void updateCompressionFormat(const QString& format);
 
   void updateRemoveIntermediateFiles(bool removeIntermediate);
 

@@ -72,15 +72,17 @@ class Dispatcher : public QObject {
                       const QFileInfo& outputFileInfo);
 
   void encryptFile(std::size_t id,
+                   const QString& cryptoProvider,
+                   const QString& compressionFormat,
                    const QString& passphrase,
                    const QFileInfo& inputFileInfo,
                    const QFileInfo& outputFileInfo,
                    const QString& cipher,
                    std::size_t inputKeySize,
-                   const QString& modeOfOperation,
-                   bool compress);
+                   const QString& modeOfOperation);
 
   void decryptFile(std::size_t id,
+                   const QString& cryptoProvider,
                    const QString& passphrase,
                    const QFileInfo& inputFileInfo,
                    const QFileInfo& outputFileInfo,
@@ -100,15 +102,15 @@ class Dispatcher : public QObject {
    * \param cipher String representing name of the cipher
    * \param inputKeySize Key size in bits
    * \param modeOfOperation String representing mode of operation
-   * \param compress Boolean representing compression mode
    */
-  void encrypt(const QString& passphrase,
+  void encrypt(const QString& cryptoProvider,
+               const QString& compressionFormat,
+               const QString& passphrase,
                const std::vector<QFileInfo>& inputFiles,
                const QDir& outputPath,
                const QString& cipher,
                std::size_t inputKeySize,
                const QString& modeOfOperation,
-               bool compress,
                bool removeIntermediateFiles);
 
   /*!

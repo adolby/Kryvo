@@ -41,6 +41,7 @@ HEADERS += \
   Constants.hpp \
   Dispatcher.hpp \
   DispatcherState.hpp \
+  FileUtility.h \
   Plugin.hpp \
   PluginLoader.hpp \
   archive/Archiver.hpp \

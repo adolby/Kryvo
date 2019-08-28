@@ -4,6 +4,7 @@
 #include "utility/pimpl.h"
 #include <QObject>
 #include <QString>
+#include <QHash>
 #include <memory>
 
 namespace Kryvo {
@@ -21,11 +22,11 @@ class PluginLoader : public QObject {
   ~PluginLoader() override;
 
  signals:
-  void cryptoProviderChanged(QObject* plugin);
+  void cryptoProvidersChanged(const QHash<QString, QObject*>& providers);
 
  public slots:
   void loadPlugins();
-  QObject* cryptoProvider() const;
+  QHash<QString, QObject*> cryptoProviders() const;
 };
 
 } // namespace Kryvo

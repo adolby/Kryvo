@@ -27,7 +27,7 @@ class Constants {
   static const QStringList kDefaultPaths;
   static const QString kDocumentsPath;
 
-  static const QStringList messages;
+  static const QStringList kMessages;
 
   /*!
    * \brief removeExtension Attempts to return the file path string input

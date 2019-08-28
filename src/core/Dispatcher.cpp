@@ -3,8 +3,10 @@
 #include "PluginLoader.hpp"
 #include "archive/Archiver.hpp"
 #include "cryptography/Crypto.hpp"
+#include "FileUtility.h"
 #include "Constants.hpp"
 #include "utility/Thread.hpp"
+#include <QSaveFile>
 #include <QTimer>
 #include <QStringBuilder>
 
@@ -25,13 +27,14 @@ class Kryvo::DispatcherPrivate {
 
   void abortPipeline(std::size_t id);
 
-  void encrypt(const QString& passphrase,
-               const std::vector<QFileInfo>& inputFilePaths,
+  void encrypt(const QString& cryptoProvider,
+               const QString& compressionFormat,
+               const QString& passphrase,
+               const std::vector<QFileInfo>& inputFiles,
                const QDir& outputPath,
                const QString& cipher,
                std::size_t inputKeySize,
                const QString& modeOfOperation,
-               bool compress,
                bool removeIntermediateFiles);
 
   void decrypt(const QString& passphrase,
@@ -62,8 +65,8 @@ Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* disp)
                    q_ptr, &Dispatcher::processPipeline,
                    Qt::QueuedConnection);
 
-  QObject::connect(&pluginLoader, &PluginLoader::cryptoProviderChanged,
-                   &cryptographer, &Crypto::updateProvider);
+  QObject::connect(&pluginLoader, &PluginLoader::cryptoProvidersChanged,
+                   &cryptographer, &Crypto::updateProviders);
 
   QObject::connect(&archiver, &Archiver::fileProgress,
                    q_ptr, &Dispatcher::updateFileProgress);
@@ -212,13 +215,14 @@ void Kryvo::DispatcherPrivate::abortPipeline(const std::size_t id) {
   }
 }
 
-void Kryvo::DispatcherPrivate::encrypt(const QString& passphrase,
+void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
+                                       const QString& compressionFormat,
+                                       const QString& passphrase,
                                        const std::vector<QFileInfo>& inputFiles,
                                        const QDir& outputPath,
                                        const QString& cipher,
                                        const std::size_t inputKeySize,
                                        const QString& modeOfOperation,
-                                       const bool compress,
                                        const bool removeIntermediateFiles) {
   Q_Q(Dispatcher);
 
@@ -257,7 +261,7 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& passphrase,
 
     id = id + 1;
 
-    if (compress) {
+    if (QStringLiteral("gzip") == compressionFormat) {
       const QString& compressedFilePath =
         QString(outPath % QStringLiteral("/") % inputFile.fileName() %
                 Kryvo::Constants::kDot %
@@ -276,11 +280,13 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& passphrase,
                 Kryvo::Constants::kEncryptedFileExtension);
 
       auto encryptFunction =
-        [this, q, passphrase, compressedFilePath, encryptedFilePath, cipher,
-         keySize, modeOfOperation, compress](std::size_t id) {
-          emit q->encryptFile(id, passphrase, QFileInfo(compressedFilePath),
+        [this, q, cryptoProvider, compressionFormat, passphrase,
+         compressedFilePath, encryptedFilePath, cipher, keySize,
+         modeOfOperation](std::size_t id) {
+          emit q->encryptFile(id, cryptoProvider, compressionFormat,
+                              passphrase, QFileInfo(compressedFilePath),
                               QFileInfo(encryptedFilePath), cipher, keySize,
-                              modeOfOperation, compress);
+                              modeOfOperation);
         };
 
       pipeline.stages.push_back(encryptFunction);
@@ -301,11 +307,12 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& passphrase,
                 Kryvo::Constants::kEncryptedFileExtension);
 
       auto encryptFunction =
-        [this, q, passphrase, inFilePath, encryptedFilePath, cipher, keySize,
-         modeOfOperation, compress](std::size_t id) {
-          emit q->encryptFile(id, passphrase, QFileInfo(inFilePath),
+        [this, q, cryptoProvider, compressionFormat, passphrase, inFilePath,
+         encryptedFilePath, cipher, keySize, modeOfOperation](std::size_t id) {
+          emit q->encryptFile(id, cryptoProvider, compressionFormat,
+                              passphrase, QFileInfo(inFilePath),
                               QFileInfo(encryptedFilePath), cipher, keySize,
-                              modeOfOperation, compress);
+                              modeOfOperation);
         };
 
       pipeline.stages.push_back(encryptFunction);
@@ -340,61 +347,37 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
     const bool inFileOpen = inFile.open(QIODevice::ReadOnly);
 
     if (!inFileOpen) {
-      emit q->errorMessage(Constants::messages[5], inFilePath);
+      emit q->errorMessage(Constants::kMessages[5], inFilePath);
     }
 
-    // Read metadata from file
+    const QMap<QString, QString>& headers = readHeader(&inFile);
 
-    // Read line but skip \n
-    auto readLine = [](QFile* file) {
-      if (file) {
-        QByteArray line = file->readLine();
-        return line.replace(QByteArrayLiteral("\n"), QByteArrayLiteral(""));
-      }
-
-      return QByteArray();
-    };
-
-    const QByteArray& headerString = readLine(&inFile);
-
-    if (headerString != QByteArrayLiteral("-------- Encrypted File --------")) {
-      emit q->errorMessage(Constants::messages[7], inFilePath);
+    if (!headers.contains(
+          QByteArrayLiteral("---------- Encrypted File ----------"))) {
+      emit q->errorMessage(Kryvo::Constants::kMessages[7], inFilePath);
     }
 
-    const QString& fileVersionString = readLine(&inFile);
+    const QString& versionString = headers.value(QStringLiteral("Version"));
 
     bool conversionOk = false;
 
-    const int fileVersion = fileVersionString.toInt(&conversionOk);
+    const int fileVersion = versionString.toInt(&conversionOk);
 
-    QString algorithmNameString;
-    QString keySizeString;
-    QString compressString;
+    const QString& cryptoProvider =
+      headers.value(QStringLiteral("Cryptography provider"));
 
-    QString pbkdfSaltString;
-    QString keySaltString;
-    QString ivSaltString;
+    const QString& compressionFormat =
+      headers.value(QStringLiteral("Compression format"));
 
-    if (1 == fileVersion) {
-        const QString& providerString = readLine(&inFile);
+    const QString& algorithmNameString =
+      headers.value(QStringLiteral("Algorithm name"));
 
-        if (QStringLiteral("Botan") == providerString) {
-          algorithmNameString = readLine(&inFile);
-          keySizeString = readLine(&inFile);
-          compressString = readLine(&inFile);
+    const QString& keySizeString =
+      headers.value(QStringLiteral("Key size"));
 
-          pbkdfSaltString = readLine(&inFile);
-          keySaltString = readLine(&inFile);
-          ivSaltString = readLine(&inFile);
-        }
-    }
-
-    const QByteArray& footerString = readLine(&inFile);
-
-    if (footerString !=
-        QByteArrayLiteral("---------------------------------")) {
-      emit q->errorMessage(Constants::messages[7], inFilePath);
-    }
+    const QString& pbkdfSaltString = headers.value(QStringLiteral("PBKDF salt"));
+    const QString& keySaltString = headers.value(QStringLiteral("Key salt"));
+    const QString& ivSaltString = headers.value(QStringLiteral("IV salt"));
 
     // Create output path if it doesn't exist
     if (!outputPath.exists()) {
@@ -424,10 +407,10 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
       Constants::uniqueFilePath(decryptedFilePath);
 
     auto decryptFunction =
-      [this, q, passphrase, inFilePath, uniqueDecryptedFilePath,
+      [this, q, cryptoProvider, passphrase, inFilePath, uniqueDecryptedFilePath,
        algorithmNameString, keySizeString, pbkdfSaltString, keySaltString,
        ivSaltString](std::size_t id) {
-        emit q->decryptFile(id, passphrase, inFilePath,
+        emit q->decryptFile(id, cryptoProvider, passphrase, inFilePath,
                             uniqueDecryptedFilePath, algorithmNameString,
                             keySizeString, pbkdfSaltString, keySaltString,
                             ivSaltString);
@@ -435,7 +418,7 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
 
     pipeline.stages.push_back(decryptFunction);
 
-    if (QByteArrayLiteral("Gzip Compressed") == compressString) {
+    if (QByteArrayLiteral("gzip") == compressionFormat) {
       // Remove the gz extension if at the end of the file path
       const QString& decompressedFilePath =
         Constants::removeExtension(uniqueDecryptedFilePath,
@@ -479,18 +462,20 @@ Kryvo::Dispatcher::Dispatcher(QObject* parent)
 
 Kryvo::Dispatcher::~Dispatcher() = default;
 
-void Kryvo::Dispatcher::encrypt(const QString& passphrase,
+void Kryvo::Dispatcher::encrypt(const QString& cryptoProvider,
+                                const QString& compressionFormat,
+                                const QString& passphrase,
                                 const std::vector<QFileInfo>& inputFiles,
                                 const QDir& outputPath,
                                 const QString& cipher,
                                 const std::size_t inputKeySize,
                                 const QString& modeOfOperation,
-                                const bool compress,
                                 const bool removeIntermediateFiles) {
   Q_D(Dispatcher);
 
-  d->encrypt(passphrase, inputFiles, outputPath, cipher, inputKeySize,
-             modeOfOperation, compress, removeIntermediateFiles);
+  d->encrypt(cryptoProvider, compressionFormat, passphrase, inputFiles,
+             outputPath, cipher, inputKeySize, modeOfOperation,
+             removeIntermediateFiles);
 }
 
 void Kryvo::Dispatcher::decrypt(const QString& passphrase,

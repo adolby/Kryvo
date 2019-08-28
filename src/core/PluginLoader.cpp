@@ -25,9 +25,7 @@ class Kryvo::PluginLoaderPrivate {
 
   PluginLoader* const q_ptr{nullptr};
 
-  QHash<QString, Plugin> loadedCryptoProviders;
-
-  Plugin cryptoProvider;
+  QHash<QString, QObject*> loadedCryptoProviders;
 };
 
 Kryvo::PluginLoaderPrivate::PluginLoaderPrivate(PluginLoader* loader)
@@ -58,11 +56,7 @@ void Kryvo::PluginLoaderPrivate::loadPlugins() {
     QObject* instance = plugin.instance();
 
     if (instance) {
-      loadedCryptoProviders.insert(pluginName, plugin);
-
-      if (pluginName == QStringLiteral("BOTAN")) {
-        cryptoProvider = plugin;
-      }
+      loadedCryptoProviders.insert(pluginName, instance);
     }
   }
 
@@ -94,19 +88,15 @@ void Kryvo::PluginLoaderPrivate::loadPlugins() {
       const QString& pluginName = plugin.name();
 
       if (plugin.instance()) {
-        loadedCryptoProviders.insert(pluginName, plugin);
-
-        if (pluginName == QStringLiteral("BOTAN")) {
-          cryptoProvider = plugin;
-        }
+        loadedCryptoProviders.insert(pluginName, plugin.instance());
       }
     }
   }
 
-  Q_ASSERT_X(cryptoProvider.instance(), "loadProviders",
+  Q_ASSERT_X(loadedCryptoProviders.size() > 0, "loadProviders",
              "At least one provider plugin is required");
 
-  emit q->cryptoProviderChanged(cryptoProvider.instance());
+  emit q->cryptoProvidersChanged(loadedCryptoProviders);
 }
 
 Kryvo::PluginLoader::PluginLoader(QObject* parent)
@@ -121,8 +111,8 @@ void Kryvo::PluginLoader::loadPlugins() {
   d->loadPlugins();
 }
 
-QObject* Kryvo::PluginLoader::cryptoProvider() const {
+QHash<QString, QObject*> Kryvo::PluginLoader::cryptoProviders() const {
   Q_D(const PluginLoader);
 
-  return d->cryptoProvider.instance();
+  return d->loadedCryptoProviders;
 }

@@ -186,9 +186,9 @@ QString Kryvo::Ui::modeOfOperation() const {
   return d->settings->modeOfOperation();
 }
 
-bool Kryvo::Ui::compressionMode() const {
+QString Kryvo::Ui::compressionFormat() const {
   Q_D(const Ui);
-  return d->settings->compressionMode();
+  return d->settings->compressionFormat();
 }
 
 bool Kryvo::Ui::removeIntermediateFiles() const {
@@ -298,7 +298,7 @@ void Kryvo::Ui::addFiles(const QList<QUrl>& fileUrls) {
 
     const QDir inputDir(inputPath);
 
-    if (inputDir != d->settings->inputPath()) {
+    if (inputDir != QDir(d->settings->inputPath())) {
       d->settings->inputPath(inputDir.absolutePath());
 
       emit inputPathChanged(lastInputUrl);
@@ -347,13 +347,14 @@ void Kryvo::Ui::processFiles(const QString& passphrase,
         }
 
         if (Kryvo::CryptDirection::Encrypt == cryptDirection) {
-          emit encrypt(passphrase,
+          emit encrypt(d->settings->cryptoProvider(),
+                       d->settings->compressionFormat(),
+                       passphrase,
                        files,
                        d->settings->outputPath(),
                        d->settings->cipher(),
                        d->settings->keySize(),
                        d->settings->modeOfOperation(),
-                       d->settings->compressionMode(),
                        d->settings->removeIntermediateFiles());
         } else if (Kryvo::CryptDirection::Decrypt == cryptDirection) {
           emit decrypt(passphrase, files, d->settings->outputPath(),
@@ -362,8 +363,7 @@ void Kryvo::Ui::processFiles(const QString& passphrase,
     } else { // Inform user that a password is required to encrypt or decrypt
       appendStatusMessage(d->errorMessages.at(0));
     }
-  } else {
-    // Inform user that encryption/decryption is already in progress
+  } else { // Inform user that encryption/decryption is already in progress
     appendStatusMessage(d->errorMessages.at(1));
   }
 }
@@ -441,12 +441,12 @@ void Kryvo::Ui::updateModeOfOperation(const QString& mode) {
   }
 }
 
-void Kryvo::Ui::updateCompressionMode(const bool compress) {
+void Kryvo::Ui::updateCompressionFormat(const QString& format) {
   Q_D(Ui);
 
-  if (compress != d->settings->compressionMode()) {
-    d->settings->compressionMode(compress);
-    emit compressionModeChanged(d->settings->compressionMode());
+  if (format != d->settings->compressionFormat()) {
+    d->settings->compressionFormat(format);
+    emit compressionFormatChanged(d->settings->compressionFormat());
   }
 }
 

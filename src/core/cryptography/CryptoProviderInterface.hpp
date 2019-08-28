@@ -52,16 +52,15 @@ class CryptoProviderInterface {
   * \param cipher String representing name of the cipher
   * \param keySize Key size in bits
   * \param modeOfOperation String representing mode of operation
-  * \param compress Boolean representing compression mode
   */
   virtual bool encrypt(std::size_t id,
+                       const QString& compressionFormat,
                        const QString& passphrase,
                        const QFileInfo& inputFileInfo,
                        const QFileInfo& outputFileInfo,
                        const QString& cipher,
                        std::size_t keySize,
-                       const QString& modeOfOperation,
-                       bool compress) = 0;
+                       const QString& modeOfOperation) = 0;
 
   /*!
    * \brief decrypt Decrypt a file. The algorithm is determined from

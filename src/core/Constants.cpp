@@ -14,7 +14,7 @@ const QStringList Kryvo::Constants::kDefaultPaths =
 const QString Kryvo::Constants::kDocumentsPath = QString(kDefaultPaths.first() %
                                                          QStringLiteral("/"));
 
-const QStringList Kryvo::Constants::messages {
+const QStringList Kryvo::Constants::kMessages {
   QObject::tr("Unknown error: Please contact andrewdolby@gmail.com."), // 0
   QObject::tr("File %1 encrypted."), // 1
   QObject::tr("File %1 decrypted."), // 2

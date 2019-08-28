@@ -68,9 +68,9 @@ class Kryvo::SettingsFramePrivate {
   QComboBox* cipherComboBox{nullptr};
   QComboBox* keySizeComboBox{nullptr};
   QComboBox* modeComboBox{nullptr};
+  QComboBox* compressionComboBox{nullptr};
 
   // File settings
-  QCheckBox* compressionCheckBox{nullptr};
   QCheckBox* containerCheckBox{nullptr};
   QCheckBox* removeIntermediateFilesCheckBox{nullptr};
 
@@ -79,10 +79,11 @@ class Kryvo::SettingsFramePrivate {
 
 Kryvo::SettingsFramePrivate::SettingsFramePrivate() = default;
 
-Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
+Kryvo::SettingsFrame::SettingsFrame(const QString& cryptoProvider,
+                                    const QString& compressionFormat,
+                                    const QString& cipher,
                                     const std::size_t keySize,
                                     const QString& mode,
-                                    const bool compressionMode,
                                     const bool removeIntermediateFiles,
                                     const bool containerMode,
                                     QWidget* parent)
@@ -208,13 +209,19 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   auto compressionFrame = new QFrame(fileSettingsFrame);
   compressionFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  d->compressionCheckBox = new QCheckBox(tr("Compress files before encryption"),
-                                         compressionFrame);
-  d->compressionCheckBox->setObjectName(QStringLiteral("settingsCheckBox"));
-  d->compressionCheckBox->setChecked(compressionMode);
+  QLabel* compressionLabel = new QLabel(compressionFrame);
+  compressionLabel->setObjectName(QStringLiteral("text"));
+  compressionLabel->setText(QStringLiteral("Compress files before encryption"));
+
+  d->compressionComboBox = new QComboBox(compressionFrame);
+  d->compressionComboBox->setObjectName(QStringLiteral("settingsComboBox"));
+  d->compressionComboBox->addItem(QStringLiteral("gzip"));
+  d->compressionComboBox->addItem(QStringLiteral("None"));
+  d->compressionComboBox->setCurrentIndex(0);
 
   auto compressionLayout = new QHBoxLayout(compressionFrame);
-  compressionLayout->addWidget(d->compressionCheckBox);
+  compressionLayout->addWidget(compressionLabel);
+  compressionLayout->addWidget(d->compressionComboBox);
 
   auto removeIntermediateFilesFrame = new QFrame(fileSettingsFrame);
   removeIntermediateFilesFrame->setSizePolicy(QSizePolicy::Maximum,
@@ -282,8 +289,8 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cipher,
   connect(d->modeComboBox, indexChangedSignal,
           this, &SettingsFrame::changeModeOfOperation);
 
-  connect(d->compressionCheckBox, &QCheckBox::stateChanged,
-          this, &SettingsFrame::changeCompressionMode);
+  connect(d->compressionComboBox, indexChangedSignal,
+          this, &SettingsFrame::changeCompressionFormat);
 
   connect(d->removeIntermediateFilesCheckBox, &QCheckBox::stateChanged,
           this, &SettingsFrame::changeRemoveIntermediateFiles);
@@ -330,11 +337,11 @@ void Kryvo::SettingsFrame::changeModeOfOperation() {
   emit updateModeOfOperation(d->modeComboBox->currentText());
 }
 
-void Kryvo::SettingsFrame::changeCompressionMode() {
+void Kryvo::SettingsFrame::changeCompressionFormat() {
   Q_D(SettingsFrame);
-  Q_ASSERT(d->compressionCheckBox);
+  Q_ASSERT(d->compressionComboBox);
 
-  emit updateCompressionMode(d->compressionCheckBox->isChecked());
+  emit updateCompressionFormat(d->compressionComboBox->currentText());
 }
 
 void Kryvo::SettingsFrame::changeRemoveIntermediateFiles() {

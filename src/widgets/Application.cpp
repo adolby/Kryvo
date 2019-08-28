@@ -4,7 +4,10 @@
 #include "settings/Settings.hpp"
 #include "Dispatcher.hpp"
 #include "utility/Thread.hpp"
-#include <memory>
+#include <QFileInfo>
+#include <QDir>
+#include <QHash>
+#include <QString>
 
 class Kryvo::ApplicationPrivate {
   Q_DISABLE_COPY(ApplicationPrivate)
@@ -23,6 +26,7 @@ Kryvo::ApplicationPrivate::ApplicationPrivate() {
   qRegisterMetaType<QFileInfo>("QFileInfo");
   qRegisterMetaType<std::vector<QFileInfo>>("std::vector<QFileInfo>");
   qRegisterMetaType<QDir>("QDir");
+  qRegisterMetaType<QHash<QString, QString>>("QHash<QString, QObject*>");
 
   // Connect GUI encrypt/decrypt actions
   QObject::connect(&gui, &MainWindow::encrypt,

@@ -38,10 +38,11 @@ class Kryvo::SettingsPrivate {
   QPoint position;
   bool maximized{false};
   QSize size;
+  QString cryptoProvider;
+  QString compressionFormat;
   QString cipher;
   std::size_t keySize{128};
   QString modeOfOperation;
-  bool compressionMode{true};
   bool removeIntermediateFiles{true};
   bool containerMode{false};
   QString outputPath{Kryvo::Constants::kDocumentsPath};
@@ -84,6 +85,12 @@ void Kryvo::SettingsPrivate::importSettings() {
                    sizeObject[QStringLiteral("height")].toInt(600));
     }
 
+    cryptoProvider =
+      settings[QStringLiteral("cryptoProvider")].toString(QStringLiteral("Botan"));
+
+    compressionFormat =
+      settings[QStringLiteral("compressionFormat")].toString(QStringLiteral("gzip"));
+
     cipher = settings[QStringLiteral("cipher")].toString(QStringLiteral("AES"));
 
     keySize =
@@ -92,8 +99,6 @@ void Kryvo::SettingsPrivate::importSettings() {
     const QJsonValue& modeOfOperationObject =
       settings[QStringLiteral("modeOfOperation")];
     modeOfOperation = modeOfOperationObject.toString(QStringLiteral("GCM"));
-
-    compressionMode = settings[QStringLiteral("compressionMode")].toBool(true);
 
     removeIntermediateFiles =
       settings[QStringLiteral("removeIntermediateFiles")].toBool(true);
@@ -114,10 +119,11 @@ void Kryvo::SettingsPrivate::importSettings() {
     position = QPoint(100, 100);
     maximized = false;
     size = QSize(800, 600);
+    cryptoProvider = QStringLiteral("Botan");
+    compressionFormat = QStringLiteral("gzip");
     cipher = QStringLiteral("AES");
     keySize = std::size_t(128);
     modeOfOperation = QStringLiteral("GCM");
-    compressionMode = true;
     removeIntermediateFiles = true;
     containerMode = true;
     outputPath = Constants::kDocumentsPath;
@@ -156,10 +162,11 @@ void Kryvo::SettingsPrivate::exportSettings() const {
       settings[QStringLiteral("size")] = sizeObject;
     }
 
+    settings[QStringLiteral("cryptoProvider")] = cryptoProvider;
+    settings[QStringLiteral("compressionFormat")] = compressionFormat;
     settings[QStringLiteral("cipher")] = cipher;
     settings[QStringLiteral("keySize")] = static_cast<int>(keySize);
     settings[QStringLiteral("modeOfOperation")] = modeOfOperation;
-    settings[QStringLiteral("compressionMode")] = compressionMode;
     settings[QStringLiteral("removeIntermediateFiles")] =
       removeIntermediateFiles;
     settings[QStringLiteral("containerMode")] = containerMode;
@@ -237,6 +244,34 @@ QSize Kryvo::Settings::size() const {
   return d->size;
 }
 
+void Kryvo::Settings::cryptoProvider(const QString& provider) {
+  Q_D(Settings);
+
+  d->cryptoProvider = provider;
+
+  d->exportSettings();
+}
+
+QString Kryvo::Settings::cryptoProvider() const {
+  Q_D(const Settings);
+
+  return d->cryptoProvider;
+}
+
+void Kryvo::Settings::compressionFormat(const QString& format) {
+  Q_D(Settings);
+
+  d->compressionFormat = format;
+
+  d->exportSettings();
+}
+
+QString Kryvo::Settings::compressionFormat() const {
+  Q_D(const Settings);
+
+  return d->compressionFormat;
+}
+
 void Kryvo::Settings::cipher(const QString& cipherName) {
   Q_D(Settings);
 
@@ -277,20 +312,6 @@ QString Kryvo::Settings::modeOfOperation() const {
   Q_D(const Settings);
 
   return d->modeOfOperation;
-}
-
-void Kryvo::Settings::compressionMode(const bool compress) {
-  Q_D(Settings);
-
-  d->compressionMode = compress;
-
-  d->exportSettings();
-}
-
-bool Kryvo::Settings::compressionMode() const {
-  Q_D(const Settings);
-
-  return d->compressionMode;
 }
 
 void Kryvo::Settings::removeIntermediateFiles(const bool removeIntermediate) {

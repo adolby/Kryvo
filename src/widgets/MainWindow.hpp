@@ -54,13 +54,14 @@ class MainWindow : public QMainWindow {
    * \param modeOfOperation String representing mode of operation
    * \param compress Boolean representing compression mode
    */
-  void encrypt(const QString& passphrase,
+  void encrypt(const QString& cryptoProvider,
+               const QString& compressionFormat,
+               const QString& passphrase,
                const std::vector<QFileInfo>& inputFiles,
                const QDir& outputPath,
                const QString& cipher,
                std::size_t keySize,
                const QString& modeOfOperation,
-               bool compress,
                bool removeIntermediateFiles);
 
   /*!
@@ -167,11 +168,11 @@ class MainWindow : public QMainWindow {
   void updateModeOfOperation(const QString& mode);
 
   /*!
-   * \brief updateCompressionMode Executed when the compression mode is updated
-   * by the user in the settings frame
-   * \param compress Boolean representing the new compression mode
+   * \brief updateCompressionFormat Executed when the compression format is
+   * updated by the user in the settings frame
+   * \param format String representing the new compression format
    */
-  void updateCompressionMode(bool compress);
+  void updateCompressionFormat(const QString& format);
 
   void updateRemoveIntermediateFiles(bool removeIntermediate);
 

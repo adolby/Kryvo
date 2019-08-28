@@ -65,6 +65,22 @@ class Settings {
    */
   QSize size() const;
 
+  void cryptoProvider(const QString& provider);
+
+  QString cryptoProvider() const;
+
+  /*!
+   * \brief compressionFormat Sets the compression format
+   * \param format String representing the compression format
+   */
+  void compressionFormat(const QString& format);
+
+  /*!
+   * \brief compressionFormat Returns the compression format
+   * \return String representing the compression format
+   */
+  QString compressionFormat() const;
+
   /*!
    * \brief cipher Sets the cipher for later storage
    * \param cipherName String containing the cipher name
@@ -100,18 +116,6 @@ class Settings {
    * \return String containing the mode of operation
    */
   QString modeOfOperation() const;
-
-  /*!
-   * \brief compressionMode Sets the compression mode
-   * \param compress Boolean representing the compression mode
-   */
-  void compressionMode(bool compress);
-
-  /*!
-   * \brief compressionMode Returns the compression mode
-   * \return Boolean representing the compression mode
-   */
-  bool compressionMode() const;
 
   /*!
    * \brief removeIntermediateFiles Sets the remove intermediate files
