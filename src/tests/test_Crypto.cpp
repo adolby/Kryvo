@@ -129,46 +129,47 @@ SCENARIO("Test encryption and decryption on various file types",
             etd.encryptedFilePath.absoluteFilePath()).toStdString());
         }
 
-        const QMap<QString, QString>& headers = Kryvo::readHeader(&inFile);
+        const QHash<QByteArray, QByteArray>& headers =
+          Kryvo::readHeader(&inFile);
 
-        if (!headers.contains(
-              QByteArrayLiteral("---------- Encrypted File ----------"))) {
+        if (!headers.contains(QByteArrayLiteral("Version"))) {
           const QString& headerError = QStringLiteral("Header error in %1");
           FAIL(headerError.arg(
             etd.encryptedFilePath.absoluteFilePath()).toStdString());
         }
 
-        const QString& versionString = headers.value(QStringLiteral("Version"));
+        const QString& versionString =
+          headers.value(QByteArrayLiteral("Version"));
 
         bool conversionOk = false;
 
         const int fileVersion = versionString.toInt(&conversionOk);
 
-        const QString& cryptoProvider =
-          headers.value(QStringLiteral("Cryptography provider"));
+        const QByteArray& cryptoProvider =
+          headers.value(QByteArrayLiteral("Cryptography provider"));
 
-        const QString& compressionFormat =
-          headers.value(QStringLiteral("Compression format"));
+        const QByteArray& compressionFormat =
+          headers.value(QByteArrayLiteral("Compression format"));
 
-        const QString& algorithmNameString =
-          headers.value(QStringLiteral("Algorithm name"));
+        const QByteArray& algorithmName =
+          headers.value(QByteArrayLiteral("Algorithm name"));
 
-        const QString& keySizeString =
-          headers.value(QStringLiteral("Key size"));
+        const QByteArray& keySize =
+          headers.value(QByteArrayLiteral("Key size"));
 
-        const QString& pbkdfSaltString =
-          headers.value(QStringLiteral("PBKDF salt"));
-        const QString& keySaltString =
-          headers.value(QStringLiteral("Key salt"));
-        const QString& ivSaltString = headers.value(QStringLiteral("IV salt"));
+        const QByteArray& pbkdfSalt =
+          headers.value(QByteArrayLiteral("PBKDF salt"));
+        const QByteArray& keySalt =
+          headers.value(QByteArrayLiteral("Key salt"));
+        const QByteArray& ivSalt = headers.value(QByteArrayLiteral("IV salt"));
 
         inFile.close();
 
         const bool decrypted =
           cryptographer.decrypt(id, etd.cryptoProvider, etd.passphrase,
                                 etd.encryptedFilePath, etd.decryptedFilePath,
-                                algorithmNameString, keySizeString,
-                                pbkdfSaltString, keySaltString, ivSaltString);
+                                algorithmName, keySize, pbkdfSalt, keySalt,
+                                ivSalt);
 
         REQUIRE(decrypted);
 

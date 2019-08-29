@@ -74,11 +74,11 @@ class CryptoProviderInterface {
                        const QString& passphrase,
                        const QFileInfo& inputFileInfo,
                        const QFileInfo& outputFileInfo,
-                       const QString& algorithmNameString,
-                       const QString& keySizeString,
-                       const QString& pbkdfSaltString,
-                       const QString& keySaltString,
-                       const QString& ivSaltString) = 0;
+                       const QByteArray& algorithmNameByteArray,
+                       const QByteArray& keySizeByteArray,
+                       const QByteArray& pbkdfSaltByteArray,
+                       const QByteArray& keySaltByteArray,
+                       const QByteArray& ivSaltByteArray) = 0;
 
   /*!
    * \brief qObject Provide a constant cost QObject conversion

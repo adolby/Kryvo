@@ -86,11 +86,11 @@ class Dispatcher : public QObject {
                    const QString& passphrase,
                    const QFileInfo& inputFileInfo,
                    const QFileInfo& outputFileInfo,
-                   const QString& algorithmNameString,
-                   const QString& keySizeString,
-                   const QString& pbkdfSaltString,
-                   const QString& keySaltString,
-                   const QString& ivSaltString);
+                   const QByteArray& algorithmNameByteArray,
+                   const QByteArray& keySizeByteArray,
+                   const QByteArray& pbkdfSaltByteArray,
+                   const QByteArray& keySaltByteArray,
+                   const QByteArray& ivSaltByteArray);
 
  public slots:
   /*!

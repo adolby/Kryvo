@@ -350,34 +350,34 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
       emit q->errorMessage(Constants::kMessages[5], inFilePath);
     }
 
-    const QMap<QString, QString>& headers = readHeader(&inFile);
+    const QHash<QByteArray, QByteArray>& headers = readHeader(&inFile);
 
-    if (!headers.contains(
-          QByteArrayLiteral("---------- Encrypted File ----------"))) {
+    if (!headers.contains(QByteArrayLiteral("Version"))) {
       emit q->errorMessage(Kryvo::Constants::kMessages[7], inFilePath);
     }
 
-    const QString& versionString = headers.value(QStringLiteral("Version"));
+    const QString& versionString =
+      QString(headers.value(QByteArrayLiteral("Version")));
 
     bool conversionOk = false;
 
     const int fileVersion = versionString.toInt(&conversionOk);
 
-    const QString& cryptoProvider =
-      headers.value(QStringLiteral("Cryptography provider"));
+    const QByteArray& cryptoProvider =
+      headers.value(QByteArrayLiteral("Cryptography provider"));
 
-    const QString& compressionFormat =
-      headers.value(QStringLiteral("Compression format"));
+    const QByteArray& compressionFormat =
+      headers.value(QByteArrayLiteral("Compression format"));
 
-    const QString& algorithmNameString =
-      headers.value(QStringLiteral("Algorithm name"));
+    const QByteArray& algorithmName =
+      headers.value(QByteArrayLiteral("Algorithm name"));
 
-    const QString& keySizeString =
-      headers.value(QStringLiteral("Key size"));
+    const QByteArray& keySize = headers.value(QByteArrayLiteral("Key size"));
 
-    const QString& pbkdfSaltString = headers.value(QStringLiteral("PBKDF salt"));
-    const QString& keySaltString = headers.value(QStringLiteral("Key salt"));
-    const QString& ivSaltString = headers.value(QStringLiteral("IV salt"));
+    const QByteArray& pbkdfSalt =
+      headers.value(QByteArrayLiteral("PBKDF salt"));
+    const QByteArray& keySalt = headers.value(QByteArrayLiteral("Key salt"));
+    const QByteArray& ivSalt = headers.value(QByteArrayLiteral("IV salt"));
 
     // Create output path if it doesn't exist
     if (!outputPath.exists()) {
@@ -408,12 +408,11 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
 
     auto decryptFunction =
       [this, q, cryptoProvider, passphrase, inFilePath, uniqueDecryptedFilePath,
-       algorithmNameString, keySizeString, pbkdfSaltString, keySaltString,
-       ivSaltString](std::size_t id) {
+       algorithmName, keySize, pbkdfSalt, keySalt,
+       ivSalt](std::size_t id) {
         emit q->decryptFile(id, cryptoProvider, passphrase, inFilePath,
-                            uniqueDecryptedFilePath, algorithmNameString,
-                            keySizeString, pbkdfSaltString, keySaltString,
-                            ivSaltString);
+                            uniqueDecryptedFilePath, algorithmName,
+                            keySize, pbkdfSalt, keySalt, ivSalt);
       };
 
     pipeline.stages.push_back(decryptFunction);

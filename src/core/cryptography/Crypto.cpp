@@ -1,7 +1,6 @@
 #include "cryptography/Crypto.hpp"
 #include "Constants.hpp"
 #include <QDir>
-#include <QDebug>
 
 class Kryvo::CryptoPrivate {
   Q_DISABLE_COPY(CryptoPrivate)
@@ -19,9 +18,11 @@ class Kryvo::CryptoPrivate {
   bool decryptFile(std::size_t id, const QString& cryptoProvider,
                    const QString& passphrase, const QFileInfo& inputFileInfo,
                    const QFileInfo& outputFileInfo,
-                   const QString& algorithmNameString,
-                   const QString& keySizeString, const QString& pbkdfSaltString,
-                   const QString& keySaltString, const QString& ivSaltString);
+                   const QByteArray& algorithmNameByteArray,
+                   const QByteArray& keySizeByteArray,
+                   const QByteArray& pbkdfSaltByteArray,
+                   const QByteArray& keySaltByteArray,
+                   const QByteArray& ivSaltByteArray);
 
   Crypto* const q_ptr{nullptr};
 
@@ -53,8 +54,6 @@ bool Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
     return false;
   }
 
-  qDebug() << Q_FUNC_INFO << inputFileInfo << outputFileInfo << "PROVIDER LOADED?";
-
   return provider->encrypt(id, compressionFormat, passphrase, inputFileInfo,
                            outputFileInfo, cipher, keySize, modeOfOperation);
 }
@@ -64,11 +63,11 @@ bool Kryvo::CryptoPrivate::decryptFile(const std::size_t id,
                                        const QString& passphrase,
                                        const QFileInfo& inputFileInfo,
                                        const QFileInfo& outputFileInfo,
-                                       const QString& algorithmNameString,
-                                       const QString& keySizeString,
-                                       const QString& pbkdfSaltString,
-                                       const QString& keySaltString,
-                                       const QString& ivSaltString) {
+                                       const QByteArray& algorithmNameByteArray,
+                                       const QByteArray& keySizeByteArray,
+                                       const QByteArray& pbkdfSaltByteArray,
+                                       const QByteArray& keySaltByteArray,
+                                       const QByteArray& ivSaltByteArray) {
   Q_Q(Crypto);
 
   CryptoProviderInterface* provider = providers.value(cryptoProvider);
@@ -80,8 +79,9 @@ bool Kryvo::CryptoPrivate::decryptFile(const std::size_t id,
   }
 
   return provider->decrypt(id, passphrase, inputFileInfo, outputFileInfo,
-                           algorithmNameString, keySizeString, pbkdfSaltString,
-                           keySaltString, ivSaltString);
+                           algorithmNameByteArray, keySizeByteArray,
+                           pbkdfSaltByteArray, keySaltByteArray,
+                           ivSaltByteArray);
 }
 
 Kryvo::Crypto::Crypto(DispatcherState* state, QObject* parent)
@@ -162,18 +162,18 @@ bool Kryvo::Crypto::decrypt(const std::size_t id, const QString& cryptoProvider,
                             const QString& passphrase,
                             const QFileInfo& inputFileInfo,
                             const QFileInfo& outputFileInfo,
-                            const QString& algorithmNameString,
-                            const QString& keySizeString,
-                            const QString& pbkdfSaltString,
-                            const QString& keySaltString,
-                            const QString& ivSaltString) {
+                            const QByteArray& algorithmNameByteArray,
+                            const QByteArray& keySizeByteArray,
+                            const QByteArray& pbkdfSaltByteArray,
+                            const QByteArray& keySaltByteArray,
+                            const QByteArray& ivSaltByteArray) {
   Q_D(Crypto);
 
   const bool decrypted = d->decryptFile(id, cryptoProvider, passphrase,
                                         inputFileInfo, outputFileInfo,
-                                        algorithmNameString, keySizeString,
-                                        pbkdfSaltString, keySaltString,
-                                        ivSaltString);
+                                        algorithmNameByteArray,
+                                        keySizeByteArray, pbkdfSaltByteArray,
+                                        keySaltByteArray, ivSaltByteArray);
 
   return decrypted;
 }

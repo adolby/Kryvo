@@ -5,13 +5,12 @@
 #include <QFile>
 #include <QString>
 #include <QByteArray>
-#include <QMap>
-#include <QDebug>
+#include <QHash>
 
 namespace Kryvo {
 
-QMap<QString, QString> readHeader(QFile* file) {
-  QMap<QString, QString> headerData;
+inline QHash<QByteArray, QByteArray> readHeader(QFile* file) {
+  QHash<QByteArray, QByteArray> headerData;
 
   // Read metadata from file
 
@@ -25,34 +24,29 @@ QMap<QString, QString> readHeader(QFile* file) {
     return QByteArray();
   };
 
-  int fileVersion = -1;
+  if (file->atEnd()) {
+    return headerData;
+  }
 
-  QString algorithmNameString;
-  QString keySizeString;
-  QString compressString;
-
-  QString pbkdfSaltString;
-  QString keySaltString;
-  QString ivSaltString;
-
+  // Read start header line
   const QByteArray& headerString = readLine(file);
 
-  while (file->canReadLine()) {
+  while (!file->atEnd()) {
     const QByteArray& line = readLine(file);
 
     if (QByteArrayLiteral("------------------------------------") == line) {
+      // Read end header line
       break;
     }
 
-    const QString& lineString = QString(line);
+    const QList<QByteArray>& keyValuePair = line.split(':');
 
-    const QList<QString>& keyValuePair = lineString.split(QStringLiteral(": "));
+    if (keyValuePair.size() < 2) {
+      break;
+    }
 
-    const QString& key = keyValuePair.at(0);
-    const QString& value = keyValuePair.at(1);
-
-    qDebug() << Q_FUNC_INFO << "Reading header: Key:" << key << "Value:" <<
-        value;
+    const QByteArray& key = keyValuePair.at(0);
+    const QByteArray& value = keyValuePair.at(1).trimmed();
 
     headerData.insert(key, value);
   }
@@ -60,8 +54,11 @@ QMap<QString, QString> readHeader(QFile* file) {
   return headerData;
 }
 
-void writeHeader(QSaveFile* file,
-                 const QMap<QByteArray, QByteArray>& headerData) {
+inline void writeHeader(QSaveFile* file,
+                        const QHash<QByteArray, QByteArray>& headerData) {
+  file->write(QByteArrayLiteral("---------- Encrypted File ----------"));
+  file->write(QByteArrayLiteral("\n"));
+
   auto end = headerData.cend();
   for (auto it = headerData.cbegin(); it != end; ++it) {
     const QByteArray& key = it.key();
@@ -76,6 +73,9 @@ void writeHeader(QSaveFile* file,
     file->write(headerEntry);
     file->write(QByteArrayLiteral("\n"));
   }
+
+  file->write(QByteArrayLiteral("------------------------------------"));
+  file->write(QByteArrayLiteral("\n"));
 }
 
 } // namespace Kryvo

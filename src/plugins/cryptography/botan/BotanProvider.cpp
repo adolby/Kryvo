@@ -1,6 +1,7 @@
 ﻿#include "BotanProvider.hpp"
 #include "DispatcherState.hpp"
 #include "Constants.hpp"
+#include "FileUtility.h"
 #include <QSaveFile>
 #include <QFile>
 #include <QFileInfo>
@@ -8,8 +9,7 @@
 #include <QStringBuilder>
 #include <QString>
 #include <string>
-#include <QMap>
-#include <QDebug>
+#include <QHash>
 #include <stdexcept>
 
 class Kryvo::BotanProviderPrivate {
@@ -34,11 +34,11 @@ class Kryvo::BotanProviderPrivate {
                const QString& passphrase,
                const QFileInfo& inputFileInfo,
                const QFileInfo& outputFileInfo,
-               const QString& algorithmNameString,
-               const QString& keySizeString,
-               const QString& pbkdfSaltString,
-               const QString& keySaltString,
-               const QString& ivSaltString);
+               const QByteArray& algorithmNameByteArray,
+               const QByteArray& keySizeByteArray,
+               const QByteArray& pbkdfByteArray,
+               const QByteArray& keySaltByteArray,
+               const QByteArray& ivSaltByteArray);
 
   bool encryptFile(std::size_t id,
                    const QString& compressionFormat,
@@ -52,11 +52,11 @@ class Kryvo::BotanProviderPrivate {
                    const QString& passphrase,
                    const QFileInfo& inputFileInfo,
                    const QFileInfo& outputFileInfo,
-                   const QString& algorithmNameString,
-                   const QString& keySizeString,
-                   const QString& pbkdfSaltString,
-                   const QString& keySaltString,
-                   const QString& ivSaltString);
+                   const QByteArray& algorithmNameByteArray,
+                   const QByteArray& keySizeByteArray,
+                   const QByteArray& pbkdfSaltByteArray,
+                   const QByteArray& keySaltByteArray,
+                   const QByteArray& ivSaltByteArray);
 
   bool executeCipher(std::size_t id, const Kryvo::CryptDirection direction,
                      QFile* inFile, QSaveFile* outFile, Botan::Pipe* pipe);
@@ -90,8 +90,6 @@ bool Kryvo::BotanProviderPrivate::encrypt(const std::size_t id,
   Q_Q(BotanProvider);
   Q_ASSERT(state);
 
-  qDebug() << Q_FUNC_INFO << inputFileInfo << outputFileInfo;
-
   if (!state) {
     emit q->errorMessage(Constants::kMessages[0], QFileInfo());
     emit q->fileFailed(id);
@@ -101,7 +99,6 @@ bool Kryvo::BotanProviderPrivate::encrypt(const std::size_t id,
   if (state->isAborted() || state->isStopped(id)) {
     emit q->errorMessage(Kryvo::Constants::kMessages[3], inputFileInfo);
     emit q->fileFailed(id);
-
     return false;
   }
 
@@ -160,15 +157,12 @@ bool Kryvo::BotanProviderPrivate::encrypt(const std::size_t id,
   return success;
 }
 
-bool Kryvo::BotanProviderPrivate::decrypt(const std::size_t id,
-                                          const QString& passphrase,
-                                          const QFileInfo& inputFileInfo,
-                                          const QFileInfo& outputFileInfo,
-                                          const QString& algorithmNameString,
-                                          const QString& keySizeString,
-                                          const QString& pbkdfSaltString,
-                                          const QString& keySaltString,
-                                          const QString& ivSaltString) {
+bool Kryvo::BotanProviderPrivate::decrypt(
+  const std::size_t id, const QString& passphrase,
+  const QFileInfo& inputFileInfo, const QFileInfo& outputFileInfo,
+  const QByteArray& algorithmNameByteArray, const QByteArray& keySizeByteArray,
+  const QByteArray& pbkdfSaltByteArray, const QByteArray& keySaltByteArray,
+  const QByteArray& ivSaltByteArray) {
   Q_Q(BotanProvider);
   Q_ASSERT(state);
 
@@ -181,7 +175,6 @@ bool Kryvo::BotanProviderPrivate::decrypt(const std::size_t id,
   if (state->isAborted() || state->isStopped(id)) {
     emit q->errorMessage(Kryvo::Constants::kMessages[4], inputFileInfo);
     emit q->fileFailed(id);
-
     return false;
   }
 
@@ -189,8 +182,9 @@ bool Kryvo::BotanProviderPrivate::decrypt(const std::size_t id,
 
   try {
     success = decryptFile(id, passphrase, inputFileInfo, outputFileInfo,
-                          algorithmNameString, keySizeString,
-                          pbkdfSaltString, keySaltString, ivSaltString);
+                          algorithmNameByteArray, keySizeByteArray,
+                          pbkdfSaltByteArray, keySaltByteArray,
+                          ivSaltByteArray);
   }
   catch (const Botan::Stream_IO_Error&) {
     emit q->errorMessage(Constants::kMessages[7], inputFileInfo);
@@ -344,7 +338,7 @@ bool Kryvo::BotanProviderPrivate::encryptFile(
     return false;
   }
 
-  QMap<QByteArray, QByteArray> headerData;
+  QHash<QByteArray, QByteArray> headerData;
 
   headerData.insert(QByteArrayLiteral("Version"),
                     QByteArray::number(Constants::kFileVersion));
@@ -361,25 +355,27 @@ bool Kryvo::BotanProviderPrivate::encryptFile(
                     algorithmName.toUtf8());
 
   headerData.insert(QByteArrayLiteral("Key size"),
-                    QString::number(keySize).toUtf8());
+                    QByteArray::number(static_cast<uint>(keySize)));
 
   const std::string& pbkdfSaltString =
     Botan::base64_encode(&pbkdfSalt[0], pbkdfSalt.size());
 
   headerData.insert(QByteArrayLiteral("PBKDF salt"),
-                    QByteArray::fromStdString(pbkdfSaltString));
+                    QString::fromStdString(pbkdfSaltString).toUtf8());
 
   const std::string& keySaltString =
     Botan::base64_encode(&keySalt[0], keySalt.size());
 
   headerData.insert(QByteArrayLiteral("Key salt"),
-                    QByteArray::fromStdString(keySaltString));
+                    QString::fromStdString(keySaltString).toUtf8());
 
   const std::string& ivSaltString =
     Botan::base64_encode(&ivSalt[0], ivSalt.size());
 
   headerData.insert(QByteArrayLiteral("IV salt"),
-                    QByteArray::fromStdString(ivSaltString));
+                    QString::fromStdString(ivSaltString).toUtf8());
+
+  writeHeader(&outFile, headerData);
 
   Botan::Pipe pipe;
 
@@ -416,15 +412,12 @@ bool Kryvo::BotanProviderPrivate::encryptFile(
   return success;
 }
 
-bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
-                                              const QString& passphrase,
-                                              const QFileInfo& inputFileInfo,
-                                              const QFileInfo& outputFileInfo,
-                                              const QString& algorithmNameString,
-                                              const QString& keySizeString,
-                                              const QString& pbkdfSaltString,
-                                              const QString& keySaltString,
-                                              const QString& ivSaltString) {
+bool Kryvo::BotanProviderPrivate::decryptFile(
+  const std::size_t id, const QString& passphrase,
+  const QFileInfo& inputFileInfo, const QFileInfo& outputFileInfo,
+  const QByteArray& algorithmNameByteArray, const QByteArray& keySizeByteArray,
+  const QByteArray& pbkdfSaltByteArray, const QByteArray& keySaltByteArray,
+  const QByteArray& ivSaltByteArray) {
   Q_Q(BotanProvider);
   Q_ASSERT(state);
 
@@ -456,9 +449,7 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
     return false;
   }
 
-  for (int i = 0; i < 8; ++i) { // Skip header as it was already read
-    inFile.readLine();
-  }
+  readHeader(&inFile);
 
   QSaveFile outFile(outputFileInfo.absoluteFilePath());
 
@@ -480,7 +471,7 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
 
   // Create the PBKDF key
   const Botan::secure_vector<Botan::byte>& pbkdfSalt =
-    Botan::base64_decode(pbkdfSaltString.toStdString());
+    Botan::base64_decode(pbkdfSaltByteArray.toStdString());
 
   const std::size_t pbkdfKeySize = 256;
 
@@ -495,11 +486,11 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
 
   // Key salt
   const Botan::secure_vector<Botan::byte>& keySalt =
-    Botan::base64_decode(keySaltString.toStdString());
+    Botan::base64_decode(keySaltByteArray.toStdString());
 
   bool keySizeIntOk = false;
 
-  const int keySizeInt = keySizeString.toInt(&keySizeIntOk);
+  const int keySizeInt = keySizeByteArray.toInt(&keySizeIntOk);
 
   if (!keySizeIntOk) {
     outFile.cancelWriting();
@@ -524,7 +515,7 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
                                           kKeyLabel.size()));
 
   const Botan::secure_vector<Botan::byte>& ivSalt =
-    Botan::base64_decode(ivSaltString.toStdString());
+    Botan::base64_decode(ivSaltByteArray.toStdString());
   const std::size_t ivSize = 256;
   const auto* ivLabelVector =
     reinterpret_cast<const Botan::byte*>(kIVLabel.data());
@@ -538,8 +529,8 @@ bool Kryvo::BotanProviderPrivate::decryptFile(const std::size_t id,
 
   Botan::Pipe pipe;
 
-  pipe.append_filter(Botan::get_cipher(algorithmNameString.toStdString(), key,
-                                       iv, Botan::DECRYPTION));
+  pipe.append_filter(Botan::get_cipher(algorithmNameByteArray.toStdString(),
+                                       key, iv, Botan::DECRYPTION));
 
   const bool success = executeCipher(id, Kryvo::CryptDirection::Decrypt,
                                      &inFile, &outFile, &pipe);
@@ -695,8 +686,6 @@ bool Kryvo::BotanProvider::encrypt(const std::size_t id,
                                    const QString& modeOfOperation) {
   Q_D(BotanProvider);
 
-  qDebug() << Q_FUNC_INFO << inputFileInfo << outputFileInfo << "PROVIDER?";
-
   return d->encrypt(id, compressionFormat, passphrase, inputFileInfo,
                     outputFileInfo, cipher, keySize, modeOfOperation);
 }
@@ -705,16 +694,16 @@ bool Kryvo::BotanProvider::decrypt(const std::size_t id,
                                    const QString& passphrase,
                                    const QFileInfo& inputFileInfo,
                                    const QFileInfo& outputFileInfo,
-                                   const QString& algorithmNameString,
-                                   const QString& keySizeString,
-                                   const QString& pbkdfSaltString,
-                                   const QString& keySaltString,
-                                   const QString& ivSaltString) {
+                                   const QByteArray& algorithmNameByteArray,
+                                   const QByteArray& keySizeByteArray,
+                                   const QByteArray& pbkdfSaltByteArray,
+                                   const QByteArray& keySaltByteArray,
+                                   const QByteArray& ivSaltByteArray) {
   Q_D(BotanProvider);
 
   return d->decrypt(id, passphrase, inputFileInfo, outputFileInfo,
-                    algorithmNameString, keySizeString, pbkdfSaltString,
-                    keySaltString, ivSaltString);
+                    algorithmNameByteArray, keySizeByteArray,
+                    pbkdfSaltByteArray, keySaltByteArray, ivSaltByteArray);
 }
 
 QObject* Kryvo::BotanProvider::qObject() {
