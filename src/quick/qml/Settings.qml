@@ -164,8 +164,6 @@ Page {
         ComboBox {
           model: ["gzip", "None"]
 
-          enabled: false
-
           onActivated: {
             ui.updateCompressionFormat(currentText);
           }
