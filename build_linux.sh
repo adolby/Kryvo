@@ -68,7 +68,7 @@ if [ -f "${project_dir}/Makefile" ]; then
   make distclean
 fi
 
-qmake -spec linux-g++-64 CONFIG+=release 
+qmake -spec linux-g++-64 CONFIG+=release
 make
 
 # Copy Qt dependencies for test app
