@@ -1,6 +1,7 @@
 #ifndef KRYVO_PLUGINLOADER_HPP_
 #define KRYVO_PLUGINLOADER_HPP_
 
+#include "Plugin.hpp"
 #include "utility/pimpl.h"
 #include <QObject>
 #include <QString>
@@ -22,11 +23,11 @@ class PluginLoader : public QObject {
   ~PluginLoader() override;
 
  signals:
-  void cryptoProvidersChanged(const QHash<QString, QObject*>& providers);
+  void cryptoProvidersChanged(const QHash<QString, Plugin>& providers);
 
  public slots:
   void loadPlugins();
-  QHash<QString, QObject*> cryptoProviders() const;
+  QHash<QString, Plugin> cryptoProviders() const;
 };
 
 } // namespace Kryvo

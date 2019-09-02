@@ -1,3 +1,5 @@
 {
-  "Keys": ["Botan"]
+  "Name": "Botan",
+  "Version": "1.0",
+  "Category": "Crypto"
 }

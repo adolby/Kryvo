@@ -1,5 +1,4 @@
 #include "PluginLoader.hpp"
-#include "Plugin.hpp"
 #include "cryptography/CryptoProviderInterface.hpp"
 #include <QPluginLoader>
 #include <QStaticPlugin>
@@ -25,7 +24,7 @@ class Kryvo::PluginLoaderPrivate {
 
   PluginLoader* const q_ptr{nullptr};
 
-  QHash<QString, QObject*> loadedCryptoProviders;
+  QHash<QString, Plugin> loadedCryptoProviders;
 };
 
 Kryvo::PluginLoaderPrivate::PluginLoaderPrivate(PluginLoader* loader)
@@ -53,45 +52,52 @@ void Kryvo::PluginLoaderPrivate::loadPlugins() {
     const Plugin plugin(staticPlugin);
 
     const QString& pluginName = plugin.name();
-    QObject* instance = plugin.instance();
 
-    if (instance) {
-      loadedCryptoProviders.insert(pluginName, instance);
-    }
-  }
-
-  QDir pluginsDir(QCoreApplication::applicationDirPath());
-
-#if defined(Q_OS_MACOS)
-  pluginsDir.cdUp();
-  pluginsDir.cd(QStringLiteral("PlugIns/cryptography/"));
-#endif
-
-  pluginsDir.cd(QStringLiteral("plugins/cryptography/"));
-
-  pluginsDir.setFilter(QDir::Files);
-
-  QDirIterator it(pluginsDir, QDirIterator::Subdirectories);
-
-  while (it.hasNext()) {
-    it.next();
-
-    const QFileInfo& fileInfo = it.fileInfo();
-
-    const QString& filePath = fileInfo.absoluteFilePath();
-
-    const bool isLibrary = QLibrary::isLibrary(filePath);
-
-    if (isLibrary) {
-      const Plugin& plugin = loadPluginFromFile(filePath);
-
-      const QString& pluginName = plugin.name();
-
-      if (plugin.instance()) {
-        loadedCryptoProviders.insert(pluginName, plugin.instance());
+    if (plugin.instance()) {
+      if (QStringLiteral("Crypto") == plugin.category()) {
+        loadedCryptoProviders.insert(pluginName, plugin);
       }
     }
   }
+
+#if !defined(Q_OS_IOS)
+#if defined(Q_OS_ANDROID)
+  QDir pluginsDir(QCoreApplication::applicationDirPath());
+#elif defined(Q_OS_MACOS)
+  QDir pluginsDir(QCoreApplication::applicationDirPath());
+  pluginsDir.cdUp();
+  pluginsDir.cd(QStringLiteral("PlugIns/cryptography/"));
+#else
+  QDir pluginsDir(QCoreApplication::applicationDirPath() +
+                  QStringLiteral("plugins/cryptography/"));
+#endif
+
+  if (pluginsDir.exists()) {
+    pluginsDir.setFilter(QDir::Files);
+
+    QDirIterator it(pluginsDir, QDirIterator::Subdirectories);
+
+    while (it.hasNext()) {
+      it.next();
+
+      const QFileInfo& fileInfo = it.fileInfo();
+
+      const QString& filePath = fileInfo.absoluteFilePath();
+
+      const bool isLibrary = QLibrary::isLibrary(filePath);
+
+      if (isLibrary) {
+        const Plugin& plugin = loadPluginFromFile(filePath);
+
+        if (plugin.instance()) {
+          if (QStringLiteral("Crypto") == plugin.category()) {
+            loadedCryptoProviders.insert(plugin.name(), plugin);
+          }
+        }
+      }
+    }
+  }
+#endif
 
   Q_ASSERT_X(loadedCryptoProviders.size() > 0, "loadProviders",
              "At least one provider plugin is required");
@@ -111,7 +117,7 @@ void Kryvo::PluginLoader::loadPlugins() {
   d->loadPlugins();
 }
 
-QHash<QString, QObject*> Kryvo::PluginLoader::cryptoProviders() const {
+QHash<QString, Kryvo::Plugin> Kryvo::PluginLoader::cryptoProviders() const {
   Q_D(const PluginLoader);
 
   return d->loadedCryptoProviders;

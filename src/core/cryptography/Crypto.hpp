@@ -3,6 +3,7 @@
 
 #include "DispatcherState.hpp"
 #include "cryptography/CryptoProviderInterface.hpp"
+#include "Plugin.hpp"
 #include "utility/pimpl.h"
 #include <QFileInfo>
 #include <QObject>
@@ -63,7 +64,7 @@ class Crypto : public QObject {
   void busyStatus(bool busyStatus);
 
  public slots:
-  void updateProviders(const QHash<QString, QObject*>& loadedProviders);
+  void updateProviders(const QHash<QString, Plugin>& loadedProviders);
 
   /*!
    * \brief encrypt Executed when a signal is received for encryption with a

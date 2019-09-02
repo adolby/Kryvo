@@ -2,6 +2,7 @@
 #include "Ui.hpp"
 #include "settings/Settings.hpp"
 #include "Dispatcher.hpp"
+#include "Plugin.hpp"
 #include "utility/Thread.hpp"
 #include <QFileInfo>
 #include <QDir>
@@ -29,7 +30,7 @@ Kryvo::ApplicationPrivate::ApplicationPrivate(Application* app)
   qRegisterMetaType<QFileInfo>("QFileInfo");
   qRegisterMetaType<std::vector<QFileInfo>>("std::vector<QFileInfo>");
   qRegisterMetaType<QDir>("QDir");
-  qRegisterMetaType<QHash<QString, QString>>("QHash<QString, QObject*>");
+  qRegisterMetaType<QHash<QString, Plugin>>("QHash<QString, Plugin>");
 
   QObject::connect(q_ptr, &Application::back, &gui, &Ui::navigateBack);
 

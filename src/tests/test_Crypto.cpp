@@ -1,5 +1,6 @@
 #include "cryptography/Crypto.hpp"
 #include "PluginLoader.hpp"
+#include "Plugin.hpp"
 #include "FileUtility.h"
 #include "FileOperations.hpp"
 #include "catch.hpp"
@@ -88,7 +89,8 @@ SCENARIO("Test encryption and decryption on various file types",
   Kryvo::PluginLoader pluginLoader;
   pluginLoader.loadPlugins();
 
-  QHash<QString, QObject*> providers = pluginLoader.cryptoProviders();
+  const QHash<QString, Kryvo::Plugin>& providers =
+      pluginLoader.cryptoProviders();
 
   Kryvo::Crypto cryptographer(&state);
 

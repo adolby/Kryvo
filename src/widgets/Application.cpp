@@ -3,6 +3,7 @@
 #include "DesktopMainWindow.hpp"
 #include "settings/Settings.hpp"
 #include "Dispatcher.hpp"
+#include "Plugin.hpp"
 #include "utility/Thread.hpp"
 #include <QFileInfo>
 #include <QDir>
@@ -26,7 +27,7 @@ Kryvo::ApplicationPrivate::ApplicationPrivate() {
   qRegisterMetaType<QFileInfo>("QFileInfo");
   qRegisterMetaType<std::vector<QFileInfo>>("std::vector<QFileInfo>");
   qRegisterMetaType<QDir>("QDir");
-  qRegisterMetaType<QHash<QString, QString>>("QHash<QString, QObject*>");
+  qRegisterMetaType<QHash<QString, Plugin>>("QHash<QString, Plugin>");
 
   // Connect GUI encrypt/decrypt actions
   QObject::connect(&gui, &MainWindow::encrypt,

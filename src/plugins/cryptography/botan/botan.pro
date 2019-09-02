@@ -32,6 +32,8 @@ HEADERS += \
   $$PWD/../../../core/Constants.hpp \
   $$PWD/../../../core/DispatcherState.hpp
 
+OTHER_FILES += botan.json
+
 # Platform-specific configuration
 linux {
   message(Linux)

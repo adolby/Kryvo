@@ -16,11 +16,13 @@ class Plugin {
   QObject* instance() const;
   QJsonObject metaData() const;
   QString name() const;
+  QString category() const;
 
  private:
   QObject* m_instance = nullptr;
   QJsonObject m_metaData;
   QString m_name;
+  QString m_category;
 };
 
 } // namespace Kryvo

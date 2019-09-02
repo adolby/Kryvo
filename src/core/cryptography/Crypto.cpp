@@ -91,7 +91,7 @@ Kryvo::Crypto::Crypto(DispatcherState* state, QObject* parent)
 Kryvo::Crypto::~Crypto() = default;
 
 void Kryvo::Crypto::updateProviders(
-  const QHash<QString, QObject*>& loadedProviders) {
+  const QHash<QString, Plugin>& loadedProviders) {
   Q_D(Crypto);
 
   d->providers.clear();
@@ -101,7 +101,9 @@ void Kryvo::Crypto::updateProviders(
   for (auto providerIterator = loadedProviders.cbegin();
        providerIterator != end;
        ++providerIterator) {
-    QObject* provider = providerIterator.value();
+    const Plugin& providerPlugin = providerIterator.value();
+
+    QObject* provider = providerPlugin.instance();
 
     QObject::connect(provider, SIGNAL(fileCompleted(std::size_t)),
                      this, SIGNAL(fileCompleted(std::size_t)),

@@ -6,35 +6,48 @@
 
 namespace Kryvo {
 
-QString pluginNameFromMetaData(const QJsonObject& metaData) {
-  const QJsonValue& metaDataValue =
-    metaData.value(QStringLiteral("MetaData"));
+QString pluginAttributeFromMetaData(const QJsonObject& metaData,
+                                    const QString& attributeName) {
+  if (attributeName.isEmpty()) {
+    return QString();
+  }
+
+  const QJsonValue& metaDataValue = metaData.value(QStringLiteral("MetaData"));
 
   const QJsonObject& metaDataObject = metaDataValue.toObject();
 
-  const QJsonValue& keys = metaDataObject.value(QStringLiteral("Keys"));
+  if (metaDataObject.isEmpty()) {
+    return QString();
+  }
 
-  const QJsonArray& keysArray = keys.toArray();
+  const QJsonValue& value = metaDataObject.value(attributeName);
 
-  const QJsonValue& pluginNameValue = keysArray.first();
+  if (value.isUndefined()) {
+    return QString();
+  }
 
-  const QString& pluginName = pluginNameValue.toString();
+  const QString& attribute = value.toString();
 
-  return pluginName;
+  return attribute;
 }
 
-}
+} // namespace Kryvo
 
 Kryvo::Plugin::Plugin() = default;
 
 Kryvo::Plugin::Plugin(QObject* instance, const QJsonObject& metaData)
   : m_instance(instance), m_metaData(metaData),
-    m_name(pluginNameFromMetaData(metaData)) {
+    m_name(pluginAttributeFromMetaData(metaData, QStringLiteral("Name"))),
+    m_category(pluginAttributeFromMetaData(metaData,
+                                           QStringLiteral("Category"))) {
 }
 
 Kryvo::Plugin::Plugin(const QStaticPlugin& staticPlugin)
   : m_instance(staticPlugin.instance()), m_metaData(staticPlugin.metaData()),
-    m_name(pluginNameFromMetaData(staticPlugin.metaData())) {
+    m_name(pluginAttributeFromMetaData(staticPlugin.metaData(),
+                                       QStringLiteral("Name"))),
+    m_category(pluginAttributeFromMetaData(staticPlugin.metaData(),
+                                           QStringLiteral("Category"))) {
 }
 
 QObject* Kryvo::Plugin::instance() const {
@@ -47,4 +60,8 @@ QJsonObject Kryvo::Plugin::metaData() const {
 
 QString Kryvo::Plugin::name() const {
   return m_name;
+}
+
+QString Kryvo::Plugin::category() const {
+  return m_category;
 }
