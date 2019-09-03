@@ -67,9 +67,6 @@ The Botan encryption provider plugin includes and builds the source files of Bot
 
 Amalgamation configurations of Botan are included in the source tree to simplify the build setup.
 
-### Android
-Android requires a small patch that implements std::string to_string(), which is missing from the NDK STL version 10e. The patch, android_to_string.hpp, is included by botan_all.h. Both files are located at src/plugins/cryptography/botan/android/.
-
 ### Updating Botan
 If you would like to update Botan, you'll need to produce a new amalgamation build. The configuration commands used to generate Botan amalgamation files follows for each platform:
 
