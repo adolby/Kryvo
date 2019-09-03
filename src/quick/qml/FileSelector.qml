@@ -16,6 +16,7 @@ Page {
       anchors.fill: parent
 
       ToolButton {
+        id: backButton
         implicitHeight: 44
 
         icon.source: "qrc:/images/backIcon.png"
@@ -29,22 +30,31 @@ Page {
 
       Item {
         Layout.fillWidth: true
-        Layout.fillHeight: true
+
+        Label {
+          text: fileSelector.folder
+          elide: Text.ElideLeft
+          font.pixelSize: 18
+          width: parent.width
+          anchors.centerIn: parent
+        }
       }
 
-      Label {
-        text: fileSelector.folder
-        font.pixelSize: 18
-      }
-
-      Item {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-      }
-
-      Item {
+      ToolButton {
+        id: upButton
         implicitHeight: 44
-        implicitWidth: 44
+
+        icon.source: "qrc:/images/up-128.png"
+        icon.width: 30
+        icon.height: 30
+
+        Layout.rightMargin: 5
+
+        onClicked: {
+          if (folderModel.parentFolder.toString() !== "") {
+            fileSelector.folder = folderModel.parentFolder;
+          }
+        }
       }
     }
   }
@@ -102,7 +112,7 @@ Page {
   }
 
   Component {
-    id: fileToolBar
+    id: selectToolBar
 
     ToolBar {
       width: parent.width
@@ -113,35 +123,10 @@ Page {
 
         Item {
           Layout.fillWidth: true
-          Layout.fillHeight: true
-        }
-
-        ToolButton {
-          id: upButton
-          implicitHeight: 44
-
-          icon.source: "qrc:/images/up-128.png"
-          icon.width: 30
-          icon.height: 30
-
-          onClicked: {
-            if (folderModel.parentFolder.toString() !== "") {
-              folder = folderModel.parentFolder;
-            }
-          }
-
-          Layout.rightMargin: 5
-        }
-
-        Item {
-          Layout.fillWidth: true
-          Layout.fillHeight: true
         }
 
         ToolButton {
           id: selectButton
-
-          visible: fileSelector.selectFolder
 
           implicitHeight: 44
 
@@ -154,10 +139,7 @@ Page {
         }
 
         Item {
-          visible: fileSelector.selectFolder
-
           Layout.fillWidth: true
-          Layout.fillHeight: true
         }
       }
     }
@@ -167,7 +149,7 @@ Page {
     id: folderView
     model: folderModel
     delegate: fileRowDelegate
-    footer: fileToolBar
+    footer: fileSelector.selectFolder ? selectToolBar : null
     footerPositioning: ListView.OverlayFooter
     anchors.fill: parent
   }

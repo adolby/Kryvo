@@ -20,7 +20,6 @@ Page {
 
       Item {
         Layout.fillWidth: true
-        Layout.fillHeight: true
       }
 
       Label {
@@ -30,7 +29,6 @@ Page {
 
       Item {
         Layout.fillWidth: true
-        Layout.fillHeight: true
       }
 
       ToolButton {
@@ -81,7 +79,6 @@ Page {
 
       Item {
         Layout.fillWidth: true
-        Layout.fillHeight: true
       }
 
       ToolButton {
@@ -100,7 +97,6 @@ Page {
 
       Item {
         Layout.fillWidth: true
-        Layout.fillHeight: true
       }
 
       ToolButton {
@@ -124,7 +120,6 @@ Page {
 
       Item {
         Layout.fillWidth: true
-        Layout.fillHeight: true
       }
 
       ToolButton {
@@ -143,7 +138,6 @@ Page {
 
       Item {
         Layout.fillWidth: true
-        Layout.fillHeight: true
       }
 
       ToolButton {
@@ -193,8 +187,8 @@ Page {
           elide: Text.ElideLeft
           font.pixelSize: 18
           Layout.preferredWidth: {
-            row.ListView.view.windowWidth * 2 / 3 - 9 > 0 ?
-            row.ListView.view.windowWidth * 2 / 3 - 9 :
+            row.ListView.view.windowWidth / 2 - 9 > 0 ?
+            row.ListView.view.windowWidth / 2 - 9 :
             9
           }
         }
@@ -204,8 +198,8 @@ Page {
           elide: Text.ElideRight
           font.pixelSize: 18
           Layout.preferredWidth: {
-            row.ListView.view.windowWidth / 6 - 9 > 0 ?
-            row.ListView.view.windowWidth / 6 - 9 :
+            row.ListView.view.windowWidth * 3 / 8 - 9 > 0 ?
+            row.ListView.view.windowWidth * 3 / 8 - 9 :
             9
           }
         }
@@ -215,8 +209,8 @@ Page {
           to: 100
           value: item.progress
           Layout.preferredWidth: {
-            row.ListView.view.windowWidth / 6 - 9 > 0 ?
-            row.ListView.view.windowWidth / 6 - 9 :
+            row.ListView.view.windowWidth / 8 - 9 > 0 ?
+            row.ListView.view.windowWidth / 8 - 9 :
             9
           }
         }
@@ -240,20 +234,15 @@ Page {
 
       Item {
         Layout.fillWidth: true
-      }
 
-      Label {
-        text: ui.statusMessage
-        wrapMode: Text.Wrap
-        font.pixelSize: 18
-        Material.primary: "#2C3E50"
-        Layout.preferredWidth: 0.9 * page.width -
-                               leftButton.implicitWidth -
-                               rightButton.implicitWidth
-      }
-
-      Item {
-        Layout.fillWidth: true
+        Label {
+          text: ui.statusMessage
+          elide: Text.ElideLeft
+          font.pixelSize: 18
+          width: parent.width
+          anchors.centerIn: parent
+          Material.primary: "#2C3E50"
+        }
       }
 
       ToolButton {

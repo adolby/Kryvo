@@ -28,7 +28,6 @@ Page {
 
       Item {
         Layout.fillWidth: true
-        Layout.fillHeight: true
       }
 
       Label {
@@ -38,7 +37,6 @@ Page {
 
       Item {
         Layout.fillWidth: true
-        Layout.fillHeight: true
       }
 
       Item {
