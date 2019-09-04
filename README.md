@@ -2,7 +2,7 @@
 
 Kryvo is an open-source file encryptor.
 
-[![Build Status](https://travis-ci.org/adolby/Kryvo.svg?branch=master)](https://travis-ci.org/adolby/Kryvo) [![Build status](https://ci.appveyor.com/api/projects/status/tefc4ijnl7el4tko/branch/master?svg=true)](https://ci.appveyor.com/project/adolby/kryvo/branch/master)
+[![Build Status](https://travis-ci.com/adolby/Kryvo.svg?branch=master)](https://travis-ci.com/adolby/Kryvo) [![Build status](https://ci.appveyor.com/api/projects/status/tefc4ijnl7el4tko/branch/master?svg=true)](https://ci.appveyor.com/project/adolby/kryvo/branch/master)
 
 ## Getting Started
 
