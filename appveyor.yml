@@ -26,8 +26,6 @@ deploy:
     tag: $(appveyor_repo_tag_name)
     release: $(appveyor_repo_tag_name)
     description: $(appveyor_repo_tag_name)
-    auth_token:
-      secure: bOwrg0z7hv/7CnAQD2q+sf74q2vH40mWJLZYc8EzYvqkrXk9KYnd23rVCJ3Fsrqs
     artifact: portable, installer
     draft: false
     prerelease: false
