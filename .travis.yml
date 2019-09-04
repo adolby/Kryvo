@@ -122,6 +122,8 @@ matrix:
     - TAG_NAME=${TRAVIS_TAG} ./build_android_arm64_v8a.sh
     deploy:
       provider: releases
+      api_key:
+        secure: "NMzuiqT/FHNn0djNLjl7wLoSshatkLrIXgSvX/28rNyRg19n8tycVpcWNEqJLAa2Kho7+8qLZcQFb30Dwqv6T6X0+7euGvxrGlu9J9GBRhog4Px6HeWMUq9oi62I5vrlypnOshMnHyLZum+8EmPTlRTjFHVtO/bBlRv9cxiK+Gd1oeIXnL8jBaPmg+197V2J1AtoU88WiBIFPTXf6cIl5cGJbNhXO5QwrYKRghhgm+MaihMRpgSlH7B8at0v9PfsBi11CSEm11c0g3YP3DAYOyQ4QAi19pQsVAbDJL84IOsds9IOzDIl4tHtQHMIkGPebtV5nSuq3XqjCWFh51o2GFb8znkPajS4VSJUY69MpzHtE2JwY6d2Fd9KNh9n+4kgSHuJABCWJ+rr5d1mbQyR/s9eapK/L5y289tWk6r2Eh1wzYwEq/NrV1n3hLNj0N1Xm3y+IqNfs9nZy3CgVkXajh2NmV+o7dcFGGAoMYwjVBfLKcakHp1S2rJJYDstYXeDSJaCQjYqjADOptcylI/ml0u6InWXkEAUfBrchAsBG0dMQ3zZ25LmatWEC2WbCc2QSIvQEMoAOHTxvn/BEUA33ihXUjvibNc/l1mrXEM5gcqwqOc3jJzvVlQ4VQpPvjfwwb2t3h8OIoPg9UKmnNyryosJLrfhRurHaswn4dWWdFM="
       file: build/android/arm64_v8a/release/kryvo_${TRAVIS_TAG}_android_arm64_v8a.apk
       overwrite: true
       skip_cleanup: true
