@@ -27,8 +27,8 @@ matrix:
     deploy:
       provider: releases
       api_key:
-        secure: SfuhgMmXaVquAOx37oV/+zRFYkRLkJMK8InPjei/qX8v59YGUPEfw8JKrap+/pOePHgfxKiKyfuSv4eVI+kVk7EDfH0p+vFniElF2x7YEHwFCz/pXAOMWoWGkvKzzEMoBFdaaCsxCeSk9hGSsMS3eblpB1UNelZxcRgUtZDZWjeL6Uwi09Z3RXqJXvMRt0Gu5IrAJ/9cLS4RA7MEl5izLud83zvd0UP2memGfkYnT3wCpVpQmVdxwV8W9ufnF1AlKsetw+1x65fRdL5kQc7JtUmCsq+UA3VxJSAhZOZYKbc2LkaUBTE7nTHuyRWprWQ9Oile7tCsY9kzW78rksG8HULnzBFceQQafo3jO/zsAJEh0RIDIB8F+I3kF+6/WaQxRe5AirTq1YXTR9RH5hOK9jJSJ/zRYQ+jRw6F3kM5Y5fQlWLghbuFzBZ+WQZToPbu7P3ug1HAhOAJCHcGd0K6g4BBLIbUOevenD0bEqg5uFYJ4aEii3WbYLYK+9iSWt3GQIIi71IzHbAEy00sUVHYtMuPcvBuA3sk+phrtXIVg1j8H8uROyZV6/zhozDeNmeZVbCxbgfiqZda0kuZrW+FFNpTXhaySc106hNQyjHdIJuxqwiSM1wqRDEC7sj3xN6T4FWApZ3zZMMZ7VOg4L7RogqDj+73DQcpk3ulrkEEvCM=
-      file: 'build/macOS/clang/x86_64/release/kryvo_${TRAVIS_TAG}_macos.zip'
+        secure: v40QFUGWWSkB1mg5PuVGrBqS//L5w8ESKmn9esF52K7hljhdORf0DR6MFLEN4hFUaRXDyE/ZTSga+4DnQoPE4y/fWVb+pQUhDbGWL4fylfjggGf1+kPCMSoO6anjv96BgKzZjvxXPMHZsmZzFpnCrQO1p1Io6lfiTZb8ZpisQPIv0v+tkNTq9BRne+fgZCldHAstRhlzV8HEWpPO5SQhiibXyZ2GGx5f/A00tRaCTajiIwRtcpgdwBQ3FBZhm0xbG2trpazOdT3ztIYqz7PlCRqN/MH1S+g4nnlg+5dpdA6aTQk4v37Zx8Srv3G1BnfUY0O4z+UzfWD8B6osP1Bnz9y9smA17Qn6nvg+jI0sb401U2mxv5OcWi1qbcgSVWTE6SQ3Mw2r9x2XBe+DMk/0c4pVYjV+5WgZtqekkZ+rWJ5tw0C8gUzeZYXRPeWZHa9Nnx9nIVtRkxqBubHbMMqaZ/lr6FwDLJ+jECct3SMmwbiIKFDFWGrSr7poMekIdAtMzNatQOSRztQ1t3jhAlPYBWKCewtiL6SvLPV06eq3pObcJjaqV4i8iv/W6xXAEE+nzOzYG7EeYE/gvY4+7VlxuXRep5cSbCY1/+i+gmeKBTYL5LlQ9e+nQgawyT4FrbIXGtciWj+VhtHqjZsKQY1YnA2AafKjqF3TOczahhjh2bo=
+      file: build/macOS/clang/x86_64/release/kryvo_${TRAVIS_TAG}_macos.zip
       overwrite: true
       skip_cleanup: true
       on:
@@ -57,10 +57,10 @@ matrix:
     deploy:
       provider: releases
       api_key:
-        secure: SfuhgMmXaVquAOx37oV/+zRFYkRLkJMK8InPjei/qX8v59YGUPEfw8JKrap+/pOePHgfxKiKyfuSv4eVI+kVk7EDfH0p+vFniElF2x7YEHwFCz/pXAOMWoWGkvKzzEMoBFdaaCsxCeSk9hGSsMS3eblpB1UNelZxcRgUtZDZWjeL6Uwi09Z3RXqJXvMRt0Gu5IrAJ/9cLS4RA7MEl5izLud83zvd0UP2memGfkYnT3wCpVpQmVdxwV8W9ufnF1AlKsetw+1x65fRdL5kQc7JtUmCsq+UA3VxJSAhZOZYKbc2LkaUBTE7nTHuyRWprWQ9Oile7tCsY9kzW78rksG8HULnzBFceQQafo3jO/zsAJEh0RIDIB8F+I3kF+6/WaQxRe5AirTq1YXTR9RH5hOK9jJSJ/zRYQ+jRw6F3kM5Y5fQlWLghbuFzBZ+WQZToPbu7P3ug1HAhOAJCHcGd0K6g4BBLIbUOevenD0bEqg5uFYJ4aEii3WbYLYK+9iSWt3GQIIi71IzHbAEy00sUVHYtMuPcvBuA3sk+phrtXIVg1j8H8uROyZV6/zhozDeNmeZVbCxbgfiqZda0kuZrW+FFNpTXhaySc106hNQyjHdIJuxqwiSM1wqRDEC7sj3xN6T4FWApZ3zZMMZ7VOg4L7RogqDj+73DQcpk3ulrkEEvCM=
+        secure: v40QFUGWWSkB1mg5PuVGrBqS//L5w8ESKmn9esF52K7hljhdORf0DR6MFLEN4hFUaRXDyE/ZTSga+4DnQoPE4y/fWVb+pQUhDbGWL4fylfjggGf1+kPCMSoO6anjv96BgKzZjvxXPMHZsmZzFpnCrQO1p1Io6lfiTZb8ZpisQPIv0v+tkNTq9BRne+fgZCldHAstRhlzV8HEWpPO5SQhiibXyZ2GGx5f/A00tRaCTajiIwRtcpgdwBQ3FBZhm0xbG2trpazOdT3ztIYqz7PlCRqN/MH1S+g4nnlg+5dpdA6aTQk4v37Zx8Srv3G1BnfUY0O4z+UzfWD8B6osP1Bnz9y9smA17Qn6nvg+jI0sb401U2mxv5OcWi1qbcgSVWTE6SQ3Mw2r9x2XBe+DMk/0c4pVYjV+5WgZtqekkZ+rWJ5tw0C8gUzeZYXRPeWZHa9Nnx9nIVtRkxqBubHbMMqaZ/lr6FwDLJ+jECct3SMmwbiIKFDFWGrSr7poMekIdAtMzNatQOSRztQ1t3jhAlPYBWKCewtiL6SvLPV06eq3pObcJjaqV4i8iv/W6xXAEE+nzOzYG7EeYE/gvY4+7VlxuXRep5cSbCY1/+i+gmeKBTYL5LlQ9e+nQgawyT4FrbIXGtciWj+VhtHqjZsKQY1YnA2AafKjqF3TOczahhjh2bo=
       file:
-      - 'build/linux/gcc/x86_64/release/kryvo_${TRAVIS_TAG}_linux_x86_64_portable.zip'
-      - 'installer/linux/kryvo_${TRAVIS_TAG}_linux_x86_64_installer'
+      - build/linux/gcc/x86_64/release/kryvo_${TRAVIS_TAG}_linux_x86_64_portable.zip
+      - installer/linux/kryvo_${TRAVIS_TAG}_linux_x86_64_installer
       overwrite: true
       skip_cleanup: true
       on:
@@ -91,8 +91,8 @@ matrix:
     deploy:
       provider: releases
       api_key:
-        secure: SfuhgMmXaVquAOx37oV/+zRFYkRLkJMK8InPjei/qX8v59YGUPEfw8JKrap+/pOePHgfxKiKyfuSv4eVI+kVk7EDfH0p+vFniElF2x7YEHwFCz/pXAOMWoWGkvKzzEMoBFdaaCsxCeSk9hGSsMS3eblpB1UNelZxcRgUtZDZWjeL6Uwi09Z3RXqJXvMRt0Gu5IrAJ/9cLS4RA7MEl5izLud83zvd0UP2memGfkYnT3wCpVpQmVdxwV8W9ufnF1AlKsetw+1x65fRdL5kQc7JtUmCsq+UA3VxJSAhZOZYKbc2LkaUBTE7nTHuyRWprWQ9Oile7tCsY9kzW78rksG8HULnzBFceQQafo3jO/zsAJEh0RIDIB8F+I3kF+6/WaQxRe5AirTq1YXTR9RH5hOK9jJSJ/zRYQ+jRw6F3kM5Y5fQlWLghbuFzBZ+WQZToPbu7P3ug1HAhOAJCHcGd0K6g4BBLIbUOevenD0bEqg5uFYJ4aEii3WbYLYK+9iSWt3GQIIi71IzHbAEy00sUVHYtMuPcvBuA3sk+phrtXIVg1j8H8uROyZV6/zhozDeNmeZVbCxbgfiqZda0kuZrW+FFNpTXhaySc106hNQyjHdIJuxqwiSM1wqRDEC7sj3xN6T4FWApZ3zZMMZ7VOg4L7RogqDj+73DQcpk3ulrkEEvCM=
-      file: 'build/android/armv7/release/kryvo_${TRAVIS_TAG}_android_armv7.apk'
+        secure: v40QFUGWWSkB1mg5PuVGrBqS//L5w8ESKmn9esF52K7hljhdORf0DR6MFLEN4hFUaRXDyE/ZTSga+4DnQoPE4y/fWVb+pQUhDbGWL4fylfjggGf1+kPCMSoO6anjv96BgKzZjvxXPMHZsmZzFpnCrQO1p1Io6lfiTZb8ZpisQPIv0v+tkNTq9BRne+fgZCldHAstRhlzV8HEWpPO5SQhiibXyZ2GGx5f/A00tRaCTajiIwRtcpgdwBQ3FBZhm0xbG2trpazOdT3ztIYqz7PlCRqN/MH1S+g4nnlg+5dpdA6aTQk4v37Zx8Srv3G1BnfUY0O4z+UzfWD8B6osP1Bnz9y9smA17Qn6nvg+jI0sb401U2mxv5OcWi1qbcgSVWTE6SQ3Mw2r9x2XBe+DMk/0c4pVYjV+5WgZtqekkZ+rWJ5tw0C8gUzeZYXRPeWZHa9Nnx9nIVtRkxqBubHbMMqaZ/lr6FwDLJ+jECct3SMmwbiIKFDFWGrSr7poMekIdAtMzNatQOSRztQ1t3jhAlPYBWKCewtiL6SvLPV06eq3pObcJjaqV4i8iv/W6xXAEE+nzOzYG7EeYE/gvY4+7VlxuXRep5cSbCY1/+i+gmeKBTYL5LlQ9e+nQgawyT4FrbIXGtciWj+VhtHqjZsKQY1YnA2AafKjqF3TOczahhjh2bo=
+      file: build/android/armv7/release/kryvo_${TRAVIS_TAG}_android_armv7.apk
       overwrite: true
       skip_cleanup: true
       on:
@@ -123,8 +123,8 @@ matrix:
     deploy:
       provider: releases
       api_key:
-        secure: SfuhgMmXaVquAOx37oV/+zRFYkRLkJMK8InPjei/qX8v59YGUPEfw8JKrap+/pOePHgfxKiKyfuSv4eVI+kVk7EDfH0p+vFniElF2x7YEHwFCz/pXAOMWoWGkvKzzEMoBFdaaCsxCeSk9hGSsMS3eblpB1UNelZxcRgUtZDZWjeL6Uwi09Z3RXqJXvMRt0Gu5IrAJ/9cLS4RA7MEl5izLud83zvd0UP2memGfkYnT3wCpVpQmVdxwV8W9ufnF1AlKsetw+1x65fRdL5kQc7JtUmCsq+UA3VxJSAhZOZYKbc2LkaUBTE7nTHuyRWprWQ9Oile7tCsY9kzW78rksG8HULnzBFceQQafo3jO/zsAJEh0RIDIB8F+I3kF+6/WaQxRe5AirTq1YXTR9RH5hOK9jJSJ/zRYQ+jRw6F3kM5Y5fQlWLghbuFzBZ+WQZToPbu7P3ug1HAhOAJCHcGd0K6g4BBLIbUOevenD0bEqg5uFYJ4aEii3WbYLYK+9iSWt3GQIIi71IzHbAEy00sUVHYtMuPcvBuA3sk+phrtXIVg1j8H8uROyZV6/zhozDeNmeZVbCxbgfiqZda0kuZrW+FFNpTXhaySc106hNQyjHdIJuxqwiSM1wqRDEC7sj3xN6T4FWApZ3zZMMZ7VOg4L7RogqDj+73DQcpk3ulrkEEvCM=
-      file: 'build/android/arm64_v8a/release/kryvo_${TRAVIS_TAG}_android_arm64_v8a.apk'
+        secure: v40QFUGWWSkB1mg5PuVGrBqS//L5w8ESKmn9esF52K7hljhdORf0DR6MFLEN4hFUaRXDyE/ZTSga+4DnQoPE4y/fWVb+pQUhDbGWL4fylfjggGf1+kPCMSoO6anjv96BgKzZjvxXPMHZsmZzFpnCrQO1p1Io6lfiTZb8ZpisQPIv0v+tkNTq9BRne+fgZCldHAstRhlzV8HEWpPO5SQhiibXyZ2GGx5f/A00tRaCTajiIwRtcpgdwBQ3FBZhm0xbG2trpazOdT3ztIYqz7PlCRqN/MH1S+g4nnlg+5dpdA6aTQk4v37Zx8Srv3G1BnfUY0O4z+UzfWD8B6osP1Bnz9y9smA17Qn6nvg+jI0sb401U2mxv5OcWi1qbcgSVWTE6SQ3Mw2r9x2XBe+DMk/0c4pVYjV+5WgZtqekkZ+rWJ5tw0C8gUzeZYXRPeWZHa9Nnx9nIVtRkxqBubHbMMqaZ/lr6FwDLJ+jECct3SMmwbiIKFDFWGrSr7poMekIdAtMzNatQOSRztQ1t3jhAlPYBWKCewtiL6SvLPV06eq3pObcJjaqV4i8iv/W6xXAEE+nzOzYG7EeYE/gvY4+7VlxuXRep5cSbCY1/+i+gmeKBTYL5LlQ9e+nQgawyT4FrbIXGtciWj+VhtHqjZsKQY1YnA2AafKjqF3TOczahhjh2bo=
+      file: build/android/arm64_v8a/release/kryvo_${TRAVIS_TAG}_android_arm64_v8a.apk
       overwrite: true
       skip_cleanup: true
       on:
