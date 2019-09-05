@@ -27,7 +27,7 @@ matrix:
     deploy:
       provider: releases
       api_key:
-        secure: "h/Wge0Llq1DCgIX1YKTDJ/DpxrDOiu7gU0rBzvKlSqxQ7iJSshhvyBGcaGxjS//7MQDfeQ+fQQol5BaZ1FCyZVZDzfgEsvHQA8Tu2GA80ErzdZWWJ0FZ6p8WUhyuzJ7nrnjWXHAxpmc+cOxM7S6qyFy/tDZ32n72Sh3PQb6ZmEs="
+        secure: Up/pPCFDt32GiRNsBak0mjxUslto6+OjJkUUni5nOg4LDw9fErDlyToCUD6R/ZKfrgQ6iQAL81Bo99+GPDgiRhUh/AdTMyguKtpVGeXCe/qKoO+hUj3B+Qk8iHIUva8zybJPIyLkKwUB/ghTSk/XQgn7/vofg1UtOU6TOvaRiNY=
       file: build/macOS/clang/x86_64/release/kryvo_${TRAVIS_TAG}_macos.zip
       overwrite: true
       skip_cleanup: true
@@ -57,7 +57,7 @@ matrix:
     deploy:
       provider: releases
       api_key:
-        secure: "h/Wge0Llq1DCgIX1YKTDJ/DpxrDOiu7gU0rBzvKlSqxQ7iJSshhvyBGcaGxjS//7MQDfeQ+fQQol5BaZ1FCyZVZDzfgEsvHQA8Tu2GA80ErzdZWWJ0FZ6p8WUhyuzJ7nrnjWXHAxpmc+cOxM7S6qyFy/tDZ32n72Sh3PQb6ZmEs="
+        secure: Up/pPCFDt32GiRNsBak0mjxUslto6+OjJkUUni5nOg4LDw9fErDlyToCUD6R/ZKfrgQ6iQAL81Bo99+GPDgiRhUh/AdTMyguKtpVGeXCe/qKoO+hUj3B+Qk8iHIUva8zybJPIyLkKwUB/ghTSk/XQgn7/vofg1UtOU6TOvaRiNY=
       file:
       - build/linux/gcc/x86_64/release/kryvo_${TRAVIS_TAG}_linux_x86_64_portable.zip
       - installer/linux/kryvo_${TRAVIS_TAG}_linux_x86_64_installer
@@ -91,7 +91,7 @@ matrix:
     deploy:
       provider: releases
       api_key:
-        secure: "h/Wge0Llq1DCgIX1YKTDJ/DpxrDOiu7gU0rBzvKlSqxQ7iJSshhvyBGcaGxjS//7MQDfeQ+fQQol5BaZ1FCyZVZDzfgEsvHQA8Tu2GA80ErzdZWWJ0FZ6p8WUhyuzJ7nrnjWXHAxpmc+cOxM7S6qyFy/tDZ32n72Sh3PQb6ZmEs="
+        secure: Up/pPCFDt32GiRNsBak0mjxUslto6+OjJkUUni5nOg4LDw9fErDlyToCUD6R/ZKfrgQ6iQAL81Bo99+GPDgiRhUh/AdTMyguKtpVGeXCe/qKoO+hUj3B+Qk8iHIUva8zybJPIyLkKwUB/ghTSk/XQgn7/vofg1UtOU6TOvaRiNY=
       file: build/android/armv7/release/kryvo_${TRAVIS_TAG}_android_armv7.apk
       overwrite: true
       skip_cleanup: true
@@ -123,7 +123,7 @@ matrix:
     deploy:
       provider: releases
       api_key:
-        secure: "h/Wge0Llq1DCgIX1YKTDJ/DpxrDOiu7gU0rBzvKlSqxQ7iJSshhvyBGcaGxjS//7MQDfeQ+fQQol5BaZ1FCyZVZDzfgEsvHQA8Tu2GA80ErzdZWWJ0FZ6p8WUhyuzJ7nrnjWXHAxpmc+cOxM7S6qyFy/tDZ32n72Sh3PQb6ZmEs="
+        secure: Up/pPCFDt32GiRNsBak0mjxUslto6+OjJkUUni5nOg4LDw9fErDlyToCUD6R/ZKfrgQ6iQAL81Bo99+GPDgiRhUh/AdTMyguKtpVGeXCe/qKoO+hUj3B+Qk8iHIUva8zybJPIyLkKwUB/ghTSk/XQgn7/vofg1UtOU6TOvaRiNY=
       file: build/android/arm64_v8a/release/kryvo_${TRAVIS_TAG}_android_arm64_v8a.apk
       overwrite: true
       skip_cleanup: true
