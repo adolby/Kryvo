@@ -36,7 +36,7 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
     }
     case 1: {
       QStyleOptionViewItem elidedOption = option;
-      elidedOption.textElideMode = Qt::ElideLeft;
+      elidedOption.textElideMode = Qt::ElideRight;
 
       QStyledItemDelegate::paint(painter, elidedOption, index);
 
@@ -49,7 +49,8 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
 
 #if defined(Q_OS_MACOS)
       QStyleOptionViewItem elidedOption = option;
-      elidedOption.text = QStringLiteral("%1%").arg(progressAbsolute);
+      elidedOption.text = QStringLiteral("%1").arg(progressAbsolute) +
+                          QStringLiteral("%");
       elidedOption.textElideMode = Qt::ElideLeft;
 
       QStyledItemDelegate::paint(painter, elidedOption, index);
