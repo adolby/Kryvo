@@ -131,7 +131,9 @@ cp "${project_dir}/Qt License" "Qt License"
 echo "Packaging zip archive..."
 7z a "kryvo_${TAG_NAME}_macos.zip" "Kryvo_${TAG_NAME}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
 
-ls -la
+cd "${project_dir}/build/macOS/clang/x86_64/release/"
+
+cp "Kryvo/kryvo_${TAG_NAME}_macos.zip" "kryvo_${TAG_NAME}_macos.zip"
 
 echo "Done!"
 
