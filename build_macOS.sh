@@ -3,7 +3,7 @@
 set -o errexit -o nounset
 
 project_dir=$(pwd)
-qt_install_dir=/usr/local/opt/qt
+qt_install_dir=${HOME}
 
 # Output macOS version
 sw_vers
@@ -12,15 +12,20 @@ sw_vers
 echo "Updating platform..."
 brew update
 brew install p7zip
+brew install wget
 npm install -g appdmg
 
 # Get Qt
 echo "Installing Qt..."
-brew install qt
+cd "${qt_install_dir}"
+echo "Downloading Qt files..."
+wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/qt-5.9.8/qt-opensource-5.9.8-macos-clang.zip &> /dev/null
+echo "Extracting Qt files..."
+7z x qt-opensource-5.9.8-macos-clang.zip -aos &> /dev/null
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
-PATH="${qt_install_dir}/bin/:${PATH}"
+PATH="${qt_install_dir}/Qt/5.9.8/clang_64/bin/:${PATH}"
 
 # Get Botan
 # echo "Installing Botan..."
@@ -126,6 +131,8 @@ cp "${project_dir}/Qt License" "Qt License"
 
 echo "Packaging zip archive..."
 7z a kryvo_${TAG_NAME}_macos.zip "Kryvo_${TAG_NAME}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
+
+ls -la
 
 echo "Done!"
 
