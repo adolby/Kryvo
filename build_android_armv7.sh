@@ -10,7 +10,7 @@ ndk_install_dir=${HOME}
 echo "Installing Qt..."
 cd "${qt_install_dir}"
 echo "Downloading Qt files..."
-wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/5.12.4/qt-opensource-5.12.4-android-armv7.zip &> /dev/null
+wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/qt-5.12.4/qt-opensource-5.12.4-android-armv7.zip &> /dev/null
 echo "Extracting Qt files..."
 unzip -qq qt-opensource-5.12.4-android-armv7.zip &> /dev/null
 
