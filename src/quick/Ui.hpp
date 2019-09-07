@@ -35,6 +35,7 @@ class Ui : public QObject {
   Q_PROPERTY(bool containerMode READ containerMode NOTIFY containerModeChanged)
   Q_PROPERTY(QString statusMessage READ statusMessage
              NOTIFY statusMessageChanged)
+  Q_PROPERTY(QString password READ password NOTIFY passwordChanged)
 
   DECLARE_PRIVATE(Ui)
 
@@ -62,6 +63,7 @@ class Ui : public QObject {
   QUrl inputPath() const;
   QUrl outputPath() const;
   QString outputPathString() const;
+  QString password() const;
 
   // Settings data
   QString cipher() const;
@@ -137,6 +139,7 @@ class Ui : public QObject {
   void inputPathChanged(const QUrl& url);
   void outputPathChanged(const QUrl& url);
   void statusMessageChanged(const QString& message);
+  void passwordChanged(const QString& password);
 
  public slots:
   void init();
@@ -265,6 +268,8 @@ class Ui : public QObject {
   void navigateMessageLeft();
 
   void navigateMessageRight();
+
+  void updatePassword(const QString& password);
 };
 
 } // namespace Kryvo

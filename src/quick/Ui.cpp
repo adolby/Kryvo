@@ -68,6 +68,8 @@ class Kryvo::UiPrivate {
   QVariantMap currentPage;
   std::vector<QVariantMap> navigationHistory;
 
+  QString password;
+
  private:
   // The busy status, when set to true, indicates that the cryptography object
   // is currently executing a cipher operation. The status allows the GUI to
@@ -169,6 +171,11 @@ QString Kryvo::Ui::outputPathString() const {
   Q_D(const Ui);
   const QDir& outputDir = d->settings->outputPath();
   return outputDir.absolutePath();
+}
+
+QString Kryvo::Ui::password() const {
+  Q_D(const Ui);
+  return d->password;
 }
 
 QString Kryvo::Ui::cipher() const {
@@ -501,5 +508,14 @@ void Kryvo::Ui::navigateMessageRight() {
 
     d->statusMessage = *d->statusMessageIterator;
     emit statusMessageChanged(d->statusMessage);
+  }
+}
+
+void Kryvo::Ui::updatePassword(const QString& password) {
+  Q_D(Ui);
+
+  if (d->password != password) {
+    d->password = password;
+    emit passwordChanged(d->password);
   }
 }

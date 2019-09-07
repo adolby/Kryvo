@@ -308,10 +308,15 @@ Page {
 
       TextField {
         id: passphraseTextField
+        text: ui.password
         echoMode: TextInput.Password
         font.pixelSize: 18
         Layout.fillWidth: true
         Material.background: "#2C3E50"
+
+        onTextChanged: {
+          ui.updatePassword(text);
+        }
       }
     }
 
