@@ -129,7 +129,7 @@ cp "${project_dir}/Qt License" "Qt License"
 # cp "${project_dir}/resources/stylesheets/kryvo.qss" "themes/kryvo.qss"
 
 echo "Packaging zip archive..."
-7z a kryvo_${TAG_NAME}_macos.zip "Kryvo_${TAG_NAME}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
+7z a "kryvo_${TAG_NAME}_macos.zip" "Kryvo_${TAG_NAME}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
 
 ls -la
 
