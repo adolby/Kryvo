@@ -12,7 +12,6 @@ sw_vers
 echo "Updating platform..."
 brew update
 brew install p7zip
-brew install wget
 npm install -g appdmg
 
 # Get Qt
