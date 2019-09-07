@@ -47,14 +47,6 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
       const int progress = progressVariant.toInt();
       const int progressAbsolute = progress < 0 ? 0 : progress;
 
-#if defined(Q_OS_MACOS)
-      QStyleOptionViewItem elidedOption = option;
-      elidedOption.text = QStringLiteral("%1").arg(progressAbsolute) +
-                          QStringLiteral("%");
-      elidedOption.textElideMode = Qt::ElideLeft;
-
-      QStyledItemDelegate::paint(painter, elidedOption, index);
-#else
       // Set up a QStyleOptionProgressBar to mimic the environment of a progress
       // bar
       QStyleOptionProgressBar progressBarOption;
@@ -78,7 +70,7 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
       QApplication::style()->drawControl(QStyle::CE_ProgressBar,
                                          &progressBarOption,
                                          painter);
-#endif
+
       break;
     }
     case 3: {
