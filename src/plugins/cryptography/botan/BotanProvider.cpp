@@ -58,7 +58,7 @@ class Kryvo::BotanProviderPrivate {
                    const QByteArray& keySaltByteArray,
                    const QByteArray& ivSaltByteArray);
 
-  bool executeCipher(std::size_t id, const Kryvo::CryptDirection direction,
+  bool executeCipher(std::size_t id, Kryvo::CryptDirection direction,
                      QFile* inFile, QSaveFile* outFile, Botan::Pipe* pipe);
 
   BotanProvider* const q_ptr{nullptr};
