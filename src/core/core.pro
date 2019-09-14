@@ -49,8 +49,12 @@ HEADERS += \
   Scheduler.hpp \
   Pipe.hpp \
   archive/Archiver.hpp \
+  archive/CompressFileConfig.hpp \
+  archive/DecompressFileConfig.hpp \
   cryptography/Crypto.hpp \
   cryptography/CryptoProvider.hpp \
+  cryptography/DecryptFileConfig.hpp \
+  cryptography/EncryptFileConfig.hpp \
   settings/Settings.hpp \
   models/FileListModel.hpp \
   models/FileItem.hpp \

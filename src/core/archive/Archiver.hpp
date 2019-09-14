@@ -1,6 +1,8 @@
 #ifndef KRYVO_ARCHIVE_ARCHIVER_HPP_
 #define KRYVO_ARCHIVE_ARCHIVER_HPP_
 
+#include "archive/CompressFileConfig.hpp"
+#include "archive/DecompressFileConfig.hpp"
 #include "Pipe.hpp"
 #include "SchedulerState.hpp"
 #include "utility/pimpl.h"
@@ -24,18 +26,15 @@ class Archiver : public Pipe {
 
   ~Archiver() override;
 
-  bool compressFile(std::size_t id, const QFileInfo& inputFileInfo,
-                    const QFileInfo& outputFileInfo);
+  bool compressFile(std::size_t id, const Kryvo::CompressFileConfig& config);
 
-  bool decompressFile(std::size_t id, const QFileInfo& inputFileInfo,
-                      const QFileInfo& outputFileInfo);
+  bool decompressFile(std::size_t id,
+                      const Kryvo::DecompressFileConfig& config);
 
  public slots:
-  void compress(std::size_t id, const QFileInfo& inputFileInfo,
-                const QFileInfo& outputFileInfo);
+  void compress(std::size_t id, const Kryvo::CompressFileConfig& config);
 
-  void decompress(std::size_t id, const QFileInfo& inputFileInfo,
-                  const QFileInfo& outputFileInfo);
+  void decompress(std::size_t id, const Kryvo::DecompressFileConfig& config);
 
 //  void archive(const std::vector<QFileInfo>& inputFiles);
 

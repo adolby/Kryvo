@@ -1,5 +1,9 @@
 ﻿#include "Application.hpp"
 #include "Ui.hpp"
+#include "cryptography/EncryptFileConfig.hpp"
+#include "cryptography/DecryptFileConfig.hpp"
+#include "archive/CompressFileConfig.hpp"
+#include "archive/DecompressFileConfig.hpp"
 #include "settings/Settings.hpp"
 #include "Scheduler.hpp"
 #include "Plugin.hpp"
@@ -62,6 +66,10 @@ ApplicationPrivate::ApplicationPrivate(Application* app)
   qRegisterMetaType<std::vector<QFileInfo>>("std::vector<QFileInfo>");
   qRegisterMetaType<QDir>("QDir");
   qRegisterMetaType<QHash<QString, Plugin>>("QHash<QString, Plugin>");
+  qRegisterMetaType<Kryvo::EncryptFileConfig>("Kryvo::EncryptFileConfig");
+  qRegisterMetaType<Kryvo::DecryptFileConfig>("Kryvo::DecryptFileConfig");
+  qRegisterMetaType<Kryvo::CompressFileConfig>("Kryvo::CompressFileConfig");
+  qRegisterMetaType<Kryvo::DecompressFileConfig>("Kryvo::DecompressFileConfig");
 
   QObject::connect(q_ptr, &Application::back, &gui, &Ui::navigateBack);
 

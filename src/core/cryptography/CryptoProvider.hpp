@@ -1,6 +1,8 @@
 #ifndef KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDER_HPP_
 #define KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDER_HPP_
 
+#include "cryptography/EncryptFileConfig.hpp"
+#include "cryptography/DecryptFileConfig.hpp"
 #include "SchedulerState.hpp"
 #include <QObject>
 #include <QFileInfo>
@@ -24,7 +26,7 @@ class CryptoProvider {
   * \param percent Integer representing the current progress as a percent
   */
   virtual void fileProgress(std::size_t id, const QString& task,
-                           qint64 percentProgress) = 0;
+                            qint64 percentProgress) = 0;
 
  /*!
   * \brief statusMessage Emitted when a message about the current cipher
@@ -45,36 +47,18 @@ class CryptoProvider {
 
   /*!
   * \brief encrypt Encrypt a file
-  * \param id ID representing file to encrypt
-  * \param compressionFormat String representing compression format
-  * \param passphrase String representing the user-entered passphrase
-  * \param inputFileInfo File to encrypt
-  * \param outputFileInfo Encrypted file
-  * \param cipher String representing name of the cipher
-  * \param keySize Key size in bits
-  * \param modeOfOperation String representing mode of operation
+  * \param config Encrypt file config
   */
   virtual bool encrypt(std::size_t id,
-                       const QString& compressionFormat,
-                       const QString& passphrase,
-                       const QFileInfo& inputFileInfo,
-                       const QFileInfo& outputFileInfo,
-                       const QString& cipher,
-                       std::size_t keySize,
-                       const QString& modeOfOperation) = 0;
+                       const Kryvo::EncryptFileConfig& config) = 0;
 
   /*!
    * \brief decrypt Decrypt a file. The algorithm is determined from
    * the file header.
-   * \param id ID representing file to decrypt
-   * \param passphrase String representing the user-entered passphrase
-   * \param inputFileInfo File to decrypt
-   * \param outputFileInfo Decrypted file
+   * \param config Decrypt file config
    */
   virtual bool decrypt(std::size_t id,
-                       const QString& passphrase,
-                       const QFileInfo& inputFileInfo,
-                       const QFileInfo& outputFileInfo) = 0;
+                       const Kryvo::DecryptFileConfig& config) = 0;
 
   /*!
    * \brief qObject Provide a constant cost QObject conversion

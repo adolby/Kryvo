@@ -1,6 +1,8 @@
 #include "Application.hpp"
 #include "MainWindow.hpp"
 #include "DesktopMainWindow.hpp"
+#include "cryptography/EncryptFileConfig.hpp"
+#include "cryptography/DecryptFileConfig.hpp"
 #include "settings/Settings.hpp"
 #include "Scheduler.hpp"
 #include "Plugin.hpp"
@@ -30,6 +32,8 @@ ApplicationPrivate::ApplicationPrivate() {
   qRegisterMetaType<std::vector<QFileInfo>>("std::vector<QFileInfo>");
   qRegisterMetaType<QDir>("QDir");
   qRegisterMetaType<QHash<QString, Plugin>>("QHash<QString, Plugin>");
+  qRegisterMetaType<Kryvo::EncryptFileConfig>("Kryvo::EncryptFileConfig");
+  qRegisterMetaType<Kryvo::DecryptFileConfig>("Kryvo::DecryptFileConfig");
 
   // Connect GUI encrypt/decrypt actions
   QObject::connect(&gui, &MainWindow::encrypt,

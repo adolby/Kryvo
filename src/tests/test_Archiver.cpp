@@ -39,13 +39,17 @@ SCENARIO("testCompressDecompressText") {
     WHEN("Compressing and decompressing file") {
       const std::size_t id = 0;
 
-      const bool compressed =
-        archiver.compressFile(id, QFileInfo(inputFilePath),
-                              QFileInfo(compressedFilePath));
+      Kryvo::CompressFileConfig compressConfig;
+      compressConfig.inputFileInfo = QFileInfo(inputFilePath);
+      compressConfig.outputFileInfo = QFileInfo(compressedFilePath);
 
-      const bool decompressed =
-        archiver.decompressFile(id, QFileInfo(compressedFilePath),
-                                QFileInfo(decompressedFilePath));
+      const bool compressed = archiver.compressFile(id, compressConfig);
+
+      Kryvo::DecompressFileConfig decompressConfig;
+      decompressConfig.inputFileInfo = QFileInfo(compressedFilePath);
+      decompressConfig.outputFileInfo = QFileInfo(decompressedFilePath);
+
+      const bool decompressed = archiver.decompressFile(id, decompressConfig);
 
       // Compare initial file with decompressed file
       const bool equivalentTest =
