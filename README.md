@@ -1,6 +1,6 @@
 # Kryvo
 
-Kryvo is an open-source file encryptor.
+Kryvo is a cross-platform open source file encryptor.
 
 [![Build Status](https://travis-ci.com/adolby/Kryvo.svg?branch=master)](https://travis-ci.com/adolby/Kryvo) [![Build status](https://ci.appveyor.com/api/projects/status/9idpva2lb6w4pwpe/branch/master?svg=true)](https://ci.appveyor.com/project/adolby/kryvo/branch/master)
 
@@ -26,7 +26,7 @@ Files are encrypted/decrypted one-to-one, meaning that encryption of a "file.txt
 
 ## Theming
 
-Kryvo supports user theming. To create your own theme, start with the kryvo.qss file in the themes directory as your template. The kryvo.qss file is a stylesheet file that has syntax very similar to CSS.
+Kryvo supports user theming on desktop platforms. To create your own theme, start with the kryvo.qss file in the themes directory as your template. The kryvo.qss file is a stylesheet file that has syntax very similar to CSS.
 
 Colors, fonts, and many other attributes can be styled. Save your stylesheet file inside of the themes folder. To apply your theme to Kryvo, edit the settings.ini file located in the same directory as kryvo.exe. Change the value styleSheetPath to your newly created stylesheet file.
 
@@ -52,7 +52,7 @@ Qt source code is available at https://code.qt.io.
 
 If you'd like to contribute to Kryvo, you can fork the project on GitHub and submit a pull request.
 
-## Building from source
+### Building from source
 To build Kryvo, you'll need Qt 5.2 (or later), and a C++14 capable compiler.
 
 Development is performed in Qt Creator with qmake as the Makefile generator.
@@ -60,7 +60,7 @@ Development is performed in Qt Creator with qmake as the Makefile generator.
 ### Plugins
 Kryvo uses encryption provider plugins to interface with encryption libraries.
 
-Currently there is only the Botan plugin which is built staticly with the application to ensure it is always available. Future plugins can be built as static or dynamic libraries that are loaded at runtime. A build script will be required to copy dynamic plugins into the app build directory. The build_macOS.sh, build_linux.sh, and build_windows.cmd scripts will copy plugins and produce a working app build as output.
+Currently there is only the Botan plugin which is built with the project to ensure it is always available. Future plugins can be built as static or dynamic libraries that are loaded at runtime. A build script will be required to copy dynamic plugins into the app build directory. The build_macOS.sh, build_linux.sh, and build_windows.cmd scripts will copy plugins and produce a working app build as output.
 
 ### Botan
 The Botan encryption provider plugin includes and builds the source files of Botan 2.9 (amalgamation).
