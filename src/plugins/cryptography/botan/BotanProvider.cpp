@@ -55,7 +55,6 @@ class Kryvo::BotanProviderPrivate {
 
   DispatcherState* state{nullptr};
 
-  const std::string kKDFHash{"KDF2(SHA-3(512))"};
   const std::string kKeyLabel{"user secret"};
   const std::string kIVLabel{"initialization vector"};
   const std::size_t kPbkdfIterations{200000};
@@ -239,11 +238,11 @@ bool Kryvo::BotanProviderPrivate::encryptFile(
   rng.randomize(&pbkdfSalt[0], pbkdfSalt.size());
 
   // Set up the key derive functions
-  const std::size_t macSize = 512;
+  const std::size_t hashSize = 512;
 
   // PKCS5_PBKDF2 takes ownership of the new HMAC and the HMAC takes ownership
   // of the SHA3 hash function object (both via unique_ptr)
-  Botan::PKCS5_PBKDF2 pbkdf(new Botan::HMAC(new Botan::SHA_3(macSize)));
+  Botan::PKCS5_PBKDF2 pbkdf(new Botan::HMAC(new Botan::SHA_3(hashSize)));
 
   // Create the PBKDF key
   const std::size_t pbkdfKeySize = 256;
@@ -255,7 +254,9 @@ bool Kryvo::BotanProviderPrivate::encryptFile(
                      pbkdfSalt.size(), kPbkdfIterations).bits_of();
 
   // Create the key and IV
-  std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kKDFHash));
+  const QByteArray& kdfHash = QByteArrayLiteral("KDF2(SHA-3(512))");
+
+  std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdfHash.toStdString()));
 
   // Set up key salt size
   const std::size_t keySaltSize = 64;
@@ -467,20 +468,20 @@ bool Kryvo::BotanProviderPrivate::decryptFile(
   const QByteArray& ivSaltByteArray =
     header.value(QByteArrayLiteral("IV salt"));
 
-  const QByteArray& macFunctionByteArray =
+  const QByteArray& hashFunctionByteArray =
     header.value(QByteArrayLiteral("Hash function"));
 
-  const QByteArray& macSizeByteArray =
+  const QByteArray& hashSizeByteArray =
     header.value(QByteArrayLiteral("Hash output size"));
 
-  const std::size_t macSize =
-    static_cast<std::size_t>(macSizeByteArray.toInt());
+  const std::size_t hashSize =
+    static_cast<std::size_t>(hashSizeByteArray.toInt());
 
   // Set up the key derive functions
 
   // PKCS5_PBKDF2 takes ownership of the new HMAC and the HMAC takes ownership
   // of the SHA3 hash function object (via unique_ptr)
-  Botan::PKCS5_PBKDF2 pbkdf(new Botan::HMAC(new Botan::SHA_3(macSize)));
+  Botan::PKCS5_PBKDF2 pbkdf(new Botan::HMAC(new Botan::SHA_3(hashSize)));
 
   // Create the PBKDF key
   const Botan::secure_vector<Botan::byte>& pbkdfSalt =
@@ -495,7 +496,13 @@ bool Kryvo::BotanProviderPrivate::decryptFile(
                      pbkdfSalt.size(), kPbkdfIterations).bits_of();
 
   // Create the key and IV
-  std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kKDFHash));
+  const QByteArray& kdfHash = QByteArrayLiteral("KDF2(") +
+                              hashFunctionByteArray +
+                              QByteArrayLiteral("(") +
+                              hashSizeByteArray +
+                              QByteArrayLiteral("))");
+
+  std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdfHash.toStdString()));
 
   // Key salt
   const Botan::secure_vector<Botan::byte>& keySalt =
