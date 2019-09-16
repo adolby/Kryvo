@@ -350,34 +350,17 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
       emit q->errorMessage(Constants::kMessages[5], inFilePath);
     }
 
-    const QHash<QByteArray, QByteArray>& headers = readHeader(&inFile);
+    const QHash<QByteArray, QByteArray>& header = readHeader(&inFile);
 
-    if (!headers.contains(QByteArrayLiteral("Version"))) {
+    if (!header.contains(QByteArrayLiteral("Version"))) {
       emit q->errorMessage(Kryvo::Constants::kMessages[7], inFilePath);
     }
 
-    const QString& versionString =
-      QString(headers.value(QByteArrayLiteral("Version")));
-
-    bool conversionOk = false;
-
-    const int fileVersion = versionString.toInt(&conversionOk);
-
     const QByteArray& cryptoProvider =
-      headers.value(QByteArrayLiteral("Cryptography provider"));
+      header.value(QByteArrayLiteral("Cryptography provider"));
 
     const QByteArray& compressionFormat =
-      headers.value(QByteArrayLiteral("Compression format"));
-
-    const QByteArray& algorithmName =
-      headers.value(QByteArrayLiteral("Algorithm name"));
-
-    const QByteArray& keySize = headers.value(QByteArrayLiteral("Key size"));
-
-    const QByteArray& pbkdfSalt =
-      headers.value(QByteArrayLiteral("PBKDF salt"));
-    const QByteArray& keySalt = headers.value(QByteArrayLiteral("Key salt"));
-    const QByteArray& ivSalt = headers.value(QByteArrayLiteral("IV salt"));
+      header.value(QByteArrayLiteral("Compression format"));
 
     // Create output path if it doesn't exist
     if (!outputPath.exists()) {
@@ -408,11 +391,9 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
 
     auto decryptFunction =
       [this, q, cryptoProvider, passphrase, inFilePath, uniqueDecryptedFilePath,
-       algorithmName, keySize, pbkdfSalt, keySalt,
-       ivSalt](std::size_t id) {
+       header](std::size_t id) {
         emit q->decryptFile(id, cryptoProvider, passphrase, inFilePath,
-                            uniqueDecryptedFilePath, algorithmName,
-                            keySize, pbkdfSalt, keySalt, ivSalt);
+                            uniqueDecryptedFilePath);
       };
 
     pipeline.stages.push_back(decryptFunction);

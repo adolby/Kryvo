@@ -94,22 +94,12 @@ class Crypto : public QObject {
    * \param passphrase String representing the user-entered passphrase
    * \param inputFileInfo File to decrypt
    * \param outputFileInfo Decrypted file
-   * \param algorithmNameByteArray Algorithm name
-   * \param keySizeByteArray Key size as a string
-   * \param pbkdfSaltByteArray PBKDF salt
-   * \param keySaltByteArray Key salt
-   * \param ivSaltByteArray Initialization vector salt
    */
   bool decrypt(std::size_t id,
                const QString& cryptoProvider,
                const QString& passphrase,
                const QFileInfo& inputFileInfo,
-               const QFileInfo& outputFileInfo,
-               const QByteArray& algorithmNameByteArray,
-               const QByteArray& keySizeByteArray,
-               const QByteArray& pbkdfSaltByteArray,
-               const QByteArray& keySaltByteArray,
-               const QByteArray& ivSaltByteArray);
+               const QFileInfo& outputFileInfo);
 };
 
 } // namespace Kryvo

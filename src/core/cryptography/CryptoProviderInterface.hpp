@@ -46,6 +46,7 @@ class CryptoProviderInterface {
   /*!
   * \brief encrypt Encrypt a file
   * \param id ID representing file to encrypt
+  * \param compressionFormat String representing compression format
   * \param passphrase String representing the user-entered passphrase
   * \param inputFileInfo File to encrypt
   * \param outputFileInfo Encrypted file
@@ -73,12 +74,7 @@ class CryptoProviderInterface {
   virtual bool decrypt(std::size_t id,
                        const QString& passphrase,
                        const QFileInfo& inputFileInfo,
-                       const QFileInfo& outputFileInfo,
-                       const QByteArray& algorithmNameByteArray,
-                       const QByteArray& keySizeByteArray,
-                       const QByteArray& pbkdfSaltByteArray,
-                       const QByteArray& keySaltByteArray,
-                       const QByteArray& ivSaltByteArray) = 0;
+                       const QFileInfo& outputFileInfo) = 0;
 
   /*!
    * \brief qObject Provide a constant cost QObject conversion

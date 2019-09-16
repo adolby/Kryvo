@@ -115,21 +115,11 @@ class BotanProvider : public QObject,
    * \param passphrase String representing the user-entered passphrase
    * \param inputFileInfo File to decrypt
    * \param outputFileInfo Output file path
-   * \param algorithmNameByteArray
-   * \param keySizeByteArray
-   * \param pbkdfSaltByteArray
-   * \param keySaltByteArray
-   * \param ivSaltByteArray
    */
   bool decrypt(std::size_t id,
                const QString& passphrase,
                const QFileInfo& inputFileInfo,
-               const QFileInfo& outputFileInfo,
-               const QByteArray& algorithmNameByteArray,
-               const QByteArray& keySizeByteArray,
-               const QByteArray& pbkdfSaltByteArray,
-               const QByteArray& keySaltByteArray,
-               const QByteArray& ivSaltByteArray) override;
+               const QFileInfo& outputFileInfo) override;
 
   /*!
    * \brief qObject Provide a constant cost QObject conversion

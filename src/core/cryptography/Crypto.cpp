@@ -17,12 +17,7 @@ class Kryvo::CryptoPrivate {
 
   bool decryptFile(std::size_t id, const QString& cryptoProvider,
                    const QString& passphrase, const QFileInfo& inputFileInfo,
-                   const QFileInfo& outputFileInfo,
-                   const QByteArray& algorithmNameByteArray,
-                   const QByteArray& keySizeByteArray,
-                   const QByteArray& pbkdfSaltByteArray,
-                   const QByteArray& keySaltByteArray,
-                   const QByteArray& ivSaltByteArray);
+                   const QFileInfo& outputFileInfo);
 
   Crypto* const q_ptr{nullptr};
 
@@ -58,16 +53,10 @@ bool Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
                            outputFileInfo, cipher, keySize, modeOfOperation);
 }
 
-bool Kryvo::CryptoPrivate::decryptFile(const std::size_t id,
-                                       const QString& cryptoProvider,
-                                       const QString& passphrase,
-                                       const QFileInfo& inputFileInfo,
-                                       const QFileInfo& outputFileInfo,
-                                       const QByteArray& algorithmNameByteArray,
-                                       const QByteArray& keySizeByteArray,
-                                       const QByteArray& pbkdfSaltByteArray,
-                                       const QByteArray& keySaltByteArray,
-                                       const QByteArray& ivSaltByteArray) {
+bool Kryvo::CryptoPrivate::decryptFile(
+  const std::size_t id, const QString& cryptoProvider,
+  const QString& passphrase, const QFileInfo& inputFileInfo,
+  const QFileInfo& outputFileInfo) {
   Q_Q(Crypto);
 
   CryptoProviderInterface* provider = providers.value(cryptoProvider);
@@ -78,10 +67,7 @@ bool Kryvo::CryptoPrivate::decryptFile(const std::size_t id,
     return false;
   }
 
-  return provider->decrypt(id, passphrase, inputFileInfo, outputFileInfo,
-                           algorithmNameByteArray, keySizeByteArray,
-                           pbkdfSaltByteArray, keySaltByteArray,
-                           ivSaltByteArray);
+  return provider->decrypt(id, passphrase, inputFileInfo, outputFileInfo);
 }
 
 Kryvo::Crypto::Crypto(DispatcherState* state, QObject* parent)
@@ -163,19 +149,11 @@ bool Kryvo::Crypto::encrypt(const std::size_t id, const QString& cryptoProvider,
 bool Kryvo::Crypto::decrypt(const std::size_t id, const QString& cryptoProvider,
                             const QString& passphrase,
                             const QFileInfo& inputFileInfo,
-                            const QFileInfo& outputFileInfo,
-                            const QByteArray& algorithmNameByteArray,
-                            const QByteArray& keySizeByteArray,
-                            const QByteArray& pbkdfSaltByteArray,
-                            const QByteArray& keySaltByteArray,
-                            const QByteArray& ivSaltByteArray) {
+                            const QFileInfo& outputFileInfo) {
   Q_D(Crypto);
 
   const bool decrypted = d->decryptFile(id, cryptoProvider, passphrase,
-                                        inputFileInfo, outputFileInfo,
-                                        algorithmNameByteArray,
-                                        keySizeByteArray, pbkdfSaltByteArray,
-                                        keySaltByteArray, ivSaltByteArray);
+                                        inputFileInfo, outputFileInfo);
 
   return decrypted;
 }

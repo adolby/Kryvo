@@ -140,38 +140,11 @@ SCENARIO("Test encryption and decryption on various file types",
             etd.encryptedFilePath.absoluteFilePath()).toStdString());
         }
 
-        const QString& versionString =
-          headers.value(QByteArrayLiteral("Version"));
-
-        bool conversionOk = false;
-
-        const int fileVersion = versionString.toInt(&conversionOk);
-
-        const QByteArray& cryptoProvider =
-          headers.value(QByteArrayLiteral("Cryptography provider"));
-
-        const QByteArray& compressionFormat =
-          headers.value(QByteArrayLiteral("Compression format"));
-
-        const QByteArray& algorithmName =
-          headers.value(QByteArrayLiteral("Algorithm name"));
-
-        const QByteArray& keySize =
-          headers.value(QByteArrayLiteral("Key size"));
-
-        const QByteArray& pbkdfSalt =
-          headers.value(QByteArrayLiteral("PBKDF salt"));
-        const QByteArray& keySalt =
-          headers.value(QByteArrayLiteral("Key salt"));
-        const QByteArray& ivSalt = headers.value(QByteArrayLiteral("IV salt"));
-
         inFile.close();
 
         const bool decrypted =
           cryptographer.decrypt(id, etd.cryptoProvider, etd.passphrase,
-                                etd.encryptedFilePath, etd.decryptedFilePath,
-                                algorithmName, keySize, pbkdfSalt, keySalt,
-                                ivSalt);
+                                etd.encryptedFilePath, etd.decryptedFilePath);
 
         REQUIRE(decrypted);
 
