@@ -55,7 +55,7 @@ class Kryvo::BotanProviderPrivate {
 
   DispatcherState* state{nullptr};
 
-  const std::string kKDFHash{"KDF2(SHA-3(512)"};
+  const std::string kKDFHash{"KDF2(SHA-3(512))"};
   const std::string kKeyLabel{"user secret"};
   const std::string kIVLabel{"initialization vector"};
   const std::size_t kPbkdfIterations{200000};
