@@ -108,29 +108,24 @@ bool Kryvo::BotanProviderPrivate::encrypt(const std::size_t id,
   try {
     success = encryptFile(id, compressionFormat, passphrase, inputFileInfo,
                           outputFileInfo, algorithm, keySize);
-  }
-  catch (const Botan::Stream_IO_Error&) {
+  } catch (const Botan::Stream_IO_Error&) {
     emit q->errorMessage(Kryvo::Constants::kMessages[8], inputFileInfo);
     emit q->fileFailed(id);
     return false;
-  }
-  catch (const Botan::Invalid_Argument&) {
+  } catch (const Botan::Invalid_Argument&) {
     emit q->errorMessage(Kryvo::Constants::kMessages[8], inputFileInfo);
     emit q->fileFailed(id);
     return false;
-  }
-  catch (const Botan::Exception& e) {
+  } catch (const Botan::Exception& e) {
     emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
                          inputFileInfo);
     emit q->fileFailed(id);
     return false;
-  }
-  catch (const std::invalid_argument&) {
+  } catch (const std::invalid_argument&) {
     emit q->errorMessage(Kryvo::Constants::kMessages[8], inputFileInfo);
     emit q->fileFailed(id);
     return false;
-  }
-  catch (const std::exception& e) {
+  } catch (const std::exception& e) {
     emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
                          inputFileInfo);
     emit q->fileFailed(id);
@@ -169,34 +164,28 @@ bool Kryvo::BotanProviderPrivate::decrypt(
 
   try {
     success = decryptFile(id, passphrase, inputFileInfo, outputFileInfo);
-  }
-  catch (const Botan::Stream_IO_Error&) {
+  } catch (const Botan::Stream_IO_Error&) {
     emit q->errorMessage(Constants::kMessages[7], inputFileInfo);
     emit q->fileFailed(id);
     return false;
-  }
-  catch (const Botan::Invalid_Argument&) {
+  } catch (const Botan::Invalid_Argument&) {
     emit q->errorMessage(Constants::kMessages[7], inputFileInfo);
     emit q->fileFailed(id);
     return false;
-  }
-  catch (const Botan::Lookup_Error&) {
+  } catch (const Botan::Lookup_Error&) {
     emit q->errorMessage(Constants::kMessages[7], inputFileInfo);
     emit q->fileFailed(id);
     return false;
-  }
-  catch (const Botan::Exception& e) {
+  } catch (const Botan::Exception& e) {
     emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
                          inputFileInfo);
     emit q->fileFailed(id);
     return false;
-  }
-  catch (const std::invalid_argument&) {
+  } catch (const std::invalid_argument&) {
     emit q->errorMessage(Constants::kMessages[7], inputFileInfo);
     emit q->fileFailed(id);
     return false;
-  }
-  catch (const std::exception& e) {
+  } catch (const std::exception& e) {
     emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
                          inputFileInfo);
     emit q->fileFailed(id);
