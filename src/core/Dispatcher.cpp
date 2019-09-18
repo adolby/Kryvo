@@ -384,12 +384,10 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
 
     // Remove the .enc extensions if at the end of the file path
     const QString& decryptedFilePath =
-      Constants::removeExtension(outputFilePath,
-                                 Constants::kEncryptedFileExtension);
+      removeExtension(outputFilePath, Constants::kEncryptedFileExtension);
 
     // Create a unique file name for the file in this directory
-    const QString& uniqueDecryptedFilePath =
-      Constants::uniqueFilePath(decryptedFilePath);
+    const QString& uniqueDecryptedFilePath = uniqueFilePath(decryptedFilePath);
 
     auto decryptFunction =
       [this, q, cryptoProvider, passphrase, inFilePath, uniqueDecryptedFilePath,
@@ -403,12 +401,12 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
     if (QByteArrayLiteral("gzip") == compressionFormat) {
       // Remove the gz extension if at the end of the file path
       const QString& decompressedFilePath =
-        Constants::removeExtension(uniqueDecryptedFilePath,
-                                   Constants::kCompressedFileExtension);
+        removeExtension(uniqueDecryptedFilePath,
+                        Constants::kCompressedFileExtension);
 
       // Create a unique file name for the file in this directory
       const QString& uniqueDecompressedFilePath =
-        Constants::uniqueFilePath(decompressedFilePath);
+        uniqueFilePath(decompressedFilePath);
 
       auto decompressFunction =
         [this, q, uniqueDecryptedFilePath,

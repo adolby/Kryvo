@@ -48,8 +48,11 @@ class Kryvo::BotanProviderPrivate {
                    const QFileInfo& inputFileInfo,
                    const QFileInfo& outputFileInfo);
 
-  bool executeCipher(std::size_t id, Kryvo::CryptDirection direction,
-                     QFile* inFile, QSaveFile* outFile, Botan::Pipe* pipe);
+  bool executeCipher(std::size_t id,
+                     Kryvo::CryptDirection direction,
+                     QFile* inFile,
+                     QSaveFile* outFile,
+                     Botan::Pipe* pipe);
 
   BotanProvider* const q_ptr{nullptr};
 
@@ -595,8 +598,8 @@ bool Kryvo::BotanProviderPrivate::decryptFile(
 }
 
 bool Kryvo::BotanProviderPrivate::executeCipher(
-  const std::size_t id, const Kryvo::CryptDirection direction,
-  QFile* inFile, QSaveFile* outFile, Botan::Pipe* pipe) {
+  const std::size_t id, const Kryvo::CryptDirection direction, QFile* inFile,
+  QSaveFile* outFile, Botan::Pipe* pipe) {
   Q_Q(BotanProvider);
   Q_ASSERT(state);
   Q_ASSERT(inFile);
