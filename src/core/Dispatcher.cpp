@@ -150,28 +150,24 @@ void Kryvo::DispatcherPrivate::dispatch() {
 
 void Kryvo::DispatcherPrivate::processPipeline(const std::size_t id) {
   Q_Q(Dispatcher);
+  Q_ASSERT(id < pipelines.size());
 
-  if (id >= pipelines.size()) {
-    const bool complete = isComplete();
-
-    if (complete) {
-      state.busy(false);
-      emit q->busyStatus(state.isBusy());
-    }
-
+  if (id >= pipelines.size()) { // Safety check
+    state.busy(false);
+    emit q->busyStatus(state.isBusy());
+    emit q->errorMessage(Constants::kMessages[0], QFileInfo());
     return;
   }
-
-  Pipeline pipeline = pipelines.at(id);
 
   const bool complete = isComplete();
 
   if (complete) {
     state.busy(false);
     emit q->busyStatus(state.isBusy());
-
     return;
   }
+
+  Pipeline pipeline = pipelines.at(id);
 
   if (pipeline.stage >= pipeline.stages.size()) {
     return;
@@ -189,15 +185,12 @@ void Kryvo::DispatcherPrivate::processPipeline(const std::size_t id) {
 
 void Kryvo::DispatcherPrivate::abortPipeline(const std::size_t id) {
   Q_Q(Dispatcher);
+  Q_ASSERT(id < pipelines.size());
 
-  if (id >= pipelines.size()) {
-    const bool complete = isComplete();
-
-    if (complete) {
-      state.busy(false);
-      emit q->busyStatus(state.isBusy());
-    }
-
+  if (id >= pipelines.size()) { // Safety check
+    state.busy(false);
+    emit q->busyStatus(state.isBusy());
+    emit q->errorMessage(Constants::kMessages[0], QFileInfo());
     return;
   }
 
@@ -321,6 +314,12 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
     pipelines.push_back(pipeline);
   }
 
+  if (pipelines.empty()) { // No valid files to process
+    state.busy(false);
+    emit q->busyStatus(state.isBusy());
+    return;
+  }
+
   state.init(id);
 
   dispatch();
@@ -429,6 +428,12 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
     }
 
     pipelines.push_back(pipeline);
+  }
+
+  if (pipelines.empty()) { // No valid files to process
+    state.busy(false);
+    emit q->busyStatus(state.isBusy());
+    return;
   }
 
   state.init(id);
