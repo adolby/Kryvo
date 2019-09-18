@@ -41,6 +41,11 @@ bool Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
                                        const QString& modeOfOperation) {
   Q_Q(Crypto);
 
+  if (!providers.contains(cryptoProvider)) {
+    emit q->fileFailed(id);
+    return false;
+  }
+
   CryptoProviderInterface* provider = providers.value(cryptoProvider);
 
   if (!provider) {
@@ -58,6 +63,11 @@ bool Kryvo::CryptoPrivate::decryptFile(
   const QString& passphrase, const QFileInfo& inputFileInfo,
   const QFileInfo& outputFileInfo) {
   Q_Q(Crypto);
+
+  if (!providers.contains(cryptoProvider)) {
+    emit q->fileFailed(id);
+    return false;
+  }
 
   CryptoProviderInterface* provider = providers.value(cryptoProvider);
 
