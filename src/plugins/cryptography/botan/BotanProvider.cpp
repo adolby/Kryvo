@@ -227,6 +227,8 @@ bool Kryvo::BotanProviderPrivate::encryptFile(
     return false;
   }
 
+  emit q->fileProgress(id, QObject::tr("Encrypting"), 0);
+
   Botan::AutoSeeded_RNG rng;
 
   // Define a size for the PBKDF salt vector
@@ -415,6 +417,8 @@ bool Kryvo::BotanProviderPrivate::decryptFile(
     emit q->fileFailed(id);
     return false;
   }
+
+  emit q->fileProgress(id, QObject::tr("Decrypting"), 0);
 
   QFile inFile(inputFileInfo.absoluteFilePath());
 
