@@ -354,6 +354,7 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
 
     if (!header.contains(QByteArrayLiteral("Version"))) {
       emit q->errorMessage(Kryvo::Constants::kMessages[7], inFilePath);
+      continue;
     }
 
     const QByteArray& cryptoProvider =
