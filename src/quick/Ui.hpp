@@ -4,6 +4,7 @@
 #include "settings/Settings.hpp"
 #include "utility/pimpl.h"
 #include "Constants.hpp"
+#include <QFileInfo>
 #include <QObject>
 #include <QUrl>
 #include <QVariantMap>
