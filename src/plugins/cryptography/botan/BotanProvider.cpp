@@ -55,10 +55,18 @@ class Kryvo::BotanProviderPrivate {
 
   DispatcherState* state{nullptr};
 
-  const std::string kKeyLabel{"user secret"};
-  const std::string kIVLabel{"initialization vector"};
-  const std::size_t kPbkdfIterations{50000};
+  static const std::string kKeyLabel;
+  static const std::string kIVLabel;
+  static const std::size_t kPbkdfIterations;
 };
+
+const std::string Kryvo::BotanProviderPrivate::kKeyLabel =
+  std::string("user secret");
+
+const std::string Kryvo::BotanProviderPrivate::kIVLabel =
+  std::string("initialization vector");
+
+const std::size_t Kryvo::BotanProviderPrivate::kPbkdfIterations = 50000;
 
 Kryvo::BotanProviderPrivate::BotanProviderPrivate(BotanProvider* bp)
   : q_ptr(bp) {
