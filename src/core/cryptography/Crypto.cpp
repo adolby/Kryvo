@@ -62,8 +62,8 @@ bool Kryvo::CryptoPrivate::decryptFile(
   CryptoProviderInterface* provider = providers.value(cryptoProvider);
 
   if (!provider) {
-    emit q->errorMessage(Constants::kMessages[11], QFileInfo());
     emit q->fileFailed(id);
+    emit q->errorMessage(Constants::kMessages[11], QFileInfo());
     return false;
   }
 
