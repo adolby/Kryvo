@@ -348,6 +348,7 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
 
     if (!inFileOpen) {
       emit q->errorMessage(Constants::kMessages[5], inFilePath);
+      continue;
     }
 
     const QHash<QByteArray, QByteArray>& header = readHeader(&inFile);
