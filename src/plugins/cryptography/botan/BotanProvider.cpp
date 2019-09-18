@@ -57,7 +57,7 @@ class Kryvo::BotanProviderPrivate {
 
   const std::string kKeyLabel{"user secret"};
   const std::string kIVLabel{"initialization vector"};
-  const std::size_t kPbkdfIterations{200000};
+  const std::size_t kPbkdfIterations{50000};
 };
 
 Kryvo::BotanProviderPrivate::BotanProviderPrivate(BotanProvider* bp)
