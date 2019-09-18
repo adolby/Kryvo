@@ -17,7 +17,7 @@ class Kryvo::BotanProviderPrivate {
   Q_DECLARE_PUBLIC(BotanProvider)
 
  public:
-  BotanProviderPrivate(BotanProvider* bp);
+  explicit BotanProviderPrivate(BotanProvider* bp);
 
   void init(DispatcherState* ds);
 
