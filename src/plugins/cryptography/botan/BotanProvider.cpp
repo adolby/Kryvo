@@ -8,8 +8,8 @@
 #include <QDir>
 #include <QStringBuilder>
 #include <QString>
-#include <string>
 #include <QHash>
+#include <string>
 #include <stdexcept>
 
 class Kryvo::BotanProviderPrivate {
