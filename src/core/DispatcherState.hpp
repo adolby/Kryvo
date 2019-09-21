@@ -11,7 +11,7 @@ namespace Kryvo {
 
 class DispatcherState {
  public:
-  explicit DispatcherState();
+  DispatcherState();
 
   /*!
    * \brief init Reset the abort flag and initialize the stop flags

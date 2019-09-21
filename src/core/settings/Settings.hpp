@@ -22,7 +22,7 @@ class Settings {
   /*!
    * \brief Settings Constructs an instance of the settings management class
    */
-  explicit Settings();
+  Settings();
 
   /*!
    * \brief ~Settings Destroys an instance of the settings management class

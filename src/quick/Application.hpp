@@ -27,7 +27,7 @@ class Application : public QGuiApplication {
   /*!
    * \brief Application Constructs the application.
    */
-  explicit Application(int& argc, char** argv);
+  Application(int& argc, char** argv);
 
   /*!
    * \brief ~Application Destroys the application.

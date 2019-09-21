@@ -43,7 +43,7 @@ class Kryvo::ApplicationPrivate {
   Q_DECLARE_PUBLIC(Application)
 
  public:
-  ApplicationPrivate(Application* app);
+  explicit ApplicationPrivate(Application* app);
 
   Application* const q_ptr{nullptr};
 
