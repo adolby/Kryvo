@@ -620,8 +620,12 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
   pipe->start_msg();
 
   while (!inFile->atEnd() && !state->isAborted() && !state->isStopped(id)) {
-    while (state->isPaused()) {
-      // Wait while paused
+    state->pauseWait(id);
+
+    if (state->isAborted() || state->isStopped(id)) {
+        outFile->cancelWriting();
+        emit q->fileFailed(id);
+        return false;
     }
 
     const qint64 readSize =

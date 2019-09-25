@@ -1,8 +1,10 @@
 #ifndef KRYVO_DISPATCHERSTATE_HPP_
 #define KRYVO_DISPATCHERSTATE_HPP_
 
-#include <QString>
+#include <QWaitCondition>
 #include <QReadWriteLock>
+#include <QMutex>
+#include <QString>
 #include <atomic>
 #include <deque>
 #include <vector>
@@ -16,7 +18,7 @@ class DispatcherState {
   /*!
    * \brief init Reset the abort flag and initialize the stop flags
    */
-  void init(std::size_t maxId);
+  void init(std::size_t maxPipelineId);
 
   /*!
    * \brief abort Updates the abort status
@@ -42,26 +44,27 @@ class DispatcherState {
    */
   bool isPaused() const;
 
+  void pauseWait(std::size_t pipelineId);
+
   /*!
    * \brief stop Updates a stop status in the stop status container. A stop
    * status corresponds with a file path and is used to decide whether to stop
    * encrypting/decrypting a file.
-   * \param id ID representing the file to set to stopped
+   * \param pipelineId ID representing the file to set to stopped
    * \param stop Boolean representing the stop status for the file represented
    * by filePath
    */
-  void stop(std::size_t id, bool stop);
+  void stop(std::size_t pipelineId, bool stop);
 
   /*!
    * \brief isStopped Returns a stop status in the stop status container. A stop
-   * status corresponds with a file path and is used to decide whether to stop
+   * status corresponds to a file path and is used to decide whether to stop
    * encrypting/decrypting a file.
-   * \param id ID representing the file to check the stop status
-   * for
-   * \return Boolean Boolean representing the stop status for the file
+   * \param pipelineId ID representing the file's stopped status
+   * \return Boolean Boolean representing the stopped status for the file
    * represented by filePath
    */
-  bool isStopped(std::size_t id);
+  bool isStopped(std::size_t pipelineId);
 
   /*!
    * \brief busy Updates the busy status
@@ -84,7 +87,9 @@ class DispatcherState {
   // The pause status, when set to false, will pause an executing cipher
   // operation. When the pause status is set to true, the job operation
   // that was in progress when the pause status was set will resume execution.
-  std::atomic<bool> paused;
+  QMutex pauseMutex;
+  QWaitCondition pauseWaitCondition;
+  bool paused;
 
   // The container of stopped flags, which are used to stop
   // encrypting/decrypting a file.

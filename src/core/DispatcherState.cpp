@@ -1,9 +1,18 @@
 #include "DispatcherState.hpp"
 #include <QWriteLocker>
 #include <QReadLocker>
+#include <QMutexLocker>
 
 Kryvo::DispatcherState::DispatcherState()
   : aborted(false), paused(false), busyStatus(false) {
+}
+
+void Kryvo::DispatcherState::init(const std::size_t maxPipelineId) {
+  aborted = false;
+
+  QWriteLocker locker(&stoppedLock);
+  stopped.clear();
+  stopped.resize(maxPipelineId);
 }
 
 void Kryvo::DispatcherState::abort(const bool abort) {
@@ -15,40 +24,46 @@ bool Kryvo::DispatcherState::isAborted() const {
 }
 
 void Kryvo::DispatcherState::pause(const bool pause) {
+  QMutexLocker lock(&pauseMutex);
+
   paused = pause;
+
+  if (!pause) {
+    pauseWaitCondition.wakeAll();
+  }
 }
 
 bool Kryvo::DispatcherState::isPaused() const {
   return paused;
 }
 
-void Kryvo::DispatcherState::stop(const std::size_t id, const bool stop) {
-  QWriteLocker locker(&stoppedLock);
+void Kryvo::DispatcherState::pauseWait(const std::size_t pipelineId) {
+  QMutexLocker lock(&pauseMutex);
 
-  if (id < stopped.size()) {
-    stopped[id] = stop;
+  while (isPaused() && !(isAborted() || isStopped(pipelineId))) {
+    pauseWaitCondition.wait(&pauseMutex);
   }
 }
 
-bool Kryvo::DispatcherState::isStopped(const std::size_t id) {
+void Kryvo::DispatcherState::stop(const std::size_t pipelineId,
+                                  const bool stop) {
+  QWriteLocker locker(&stoppedLock);
+
+  if (pipelineId < stopped.size()) {
+    stopped[pipelineId] = stop;
+  }
+}
+
+bool Kryvo::DispatcherState::isStopped(const std::size_t pipelineId) {
   QReadLocker locker(&stoppedLock);
 
   bool hasBeenStopped = false;
 
-  if (id < stopped.size()) {
-    hasBeenStopped = stopped.at(id);
+  if (pipelineId < stopped.size()) {
+    hasBeenStopped = stopped.at(pipelineId);
   }
 
   return hasBeenStopped;
-}
-
-void Kryvo::DispatcherState::init(const std::size_t maxId) {
-  aborted = false;
-
-  QWriteLocker locker(&stoppedLock);
-
-  stopped.clear();
-  stopped.resize(maxId);
 }
 
 void Kryvo::DispatcherState::busy(const bool busy) {

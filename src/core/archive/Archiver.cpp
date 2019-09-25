@@ -85,13 +85,12 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
 
   /* compress until end of file */
   do {
+    state->pauseWait(id);
+
     if (state->isAborted() || state->isStopped(id)) {
       deflateEnd(&strm);
       dest->cancelWriting();
       return Z_ERRNO;
-    }
-
-    while (state->isPaused()) {
     }
 
     const qint64 bytesRead = source->read(in.data(), kChunk);
@@ -111,8 +110,7 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
     /* run deflate() on input until output buffer not full, finish
        compression if all of source has been read in */
     do {
-      while (state->isPaused()) {
-      }
+      state->pauseWait(id);
 
       strm.avail_out = kChunk;
       strm.next_out = reinterpret_cast<unsigned char*>(out.data());
@@ -206,13 +204,12 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
 
   /* decompress until deflate stream ends or end of file */
   do {
+    state->pauseWait(id);
+
     if (state->isAborted() || state->isStopped(id)) {
       inflateEnd(&strm);
       dest->cancelWriting();
       return Z_ERRNO;
-    }
-
-    while (state->isPaused()) {
     }
 
     const qint64 bytesRead = source->read(in.data(), kChunk);
@@ -233,8 +230,7 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
 
     /* run inflate() on input until output buffer not full */
     do {
-      while (state->isPaused()) {
-      }
+      state->pauseWait(id);
 
       strm.avail_out = kChunk;
       strm.next_out = reinterpret_cast<unsigned char*>(out.data());
