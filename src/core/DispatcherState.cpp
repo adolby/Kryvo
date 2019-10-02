@@ -88,6 +88,10 @@ void Kryvo::DispatcherState::running(const bool run) {
 
     state = ExecutionState::Running;
   } else {
+    if (state != ExecutionState::Running) {
+      return;
+    }
+
     state = ExecutionState::Idle;
   }
 }
