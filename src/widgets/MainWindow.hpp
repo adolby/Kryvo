@@ -139,14 +139,6 @@ class MainWindow : public QMainWindow {
   void updateError(const QString& message, const QFileInfo& fileInfo);
 
   /*!
-   * \brief updateBusyStatus Executed when the cipher operation updates its busy
-   * status. Stores the status to allow the GUI to decide when the user can
-   * request new encryption.
-   * \param busy Boolean representing the busy status
-   */
-  void updateBusyStatus(bool busy);
-
-  /*!
    * \brief updateCipher Executed when the cipher is updated by the user in the
    * settings frame
    * \param cipher String representing the new cipher

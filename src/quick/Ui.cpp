@@ -34,27 +34,12 @@ class Kryvo::UiPrivate {
  public:
   UiPrivate();
 
-  /*!
-   * \brief busy Sets the busy status received from the cipher operation.
-   * \param busy Boolean representing the busy status.
-   */
-  void busy(bool busy);
-
-  /*!
-   * \brief isBusy Returns the busy status received from the cipher operation.
-   * \return Boolean representing the busy status.
-   */
-  bool isBusy() const;
-
   Settings* settings = nullptr;
 
   // Messages to display to user
   const QStringList errorMessages{
     QObject::tr("A password is required to encrypt or decrypt "
-                "files. Please enter one to continue."),
-    QObject::tr("Encryption/decryption is already in progress. "
-                "Please wait until the current operation "
-                "finishes.")};
+                "files. Please enter one to continue.")};
 
   QQmlApplicationEngine engine;
   QUrl mainPageUrl;
@@ -69,24 +54,10 @@ class Kryvo::UiPrivate {
   std::vector<QVariantMap> navigationHistory;
 
   QString password;
-
- private:
-  // The busy status, when set to true, indicates that the cryptography object
-  // is currently executing a cipher operation. The status allows the GUI to
-  // decide whether to send new encryption/decryption requests.
-  bool busyStatus{false};
 };
 
 Kryvo::UiPrivate::UiPrivate()
   : mainPageUrl(QStringLiteral("qrc:/qml/main.qml")) {
-}
-
-void Kryvo::UiPrivate::busy(const bool busy) {
-  busyStatus = busy;
-}
-
-bool Kryvo::UiPrivate::isBusy() const {
-  return busyStatus;
 }
 
 Kryvo::Ui::Ui(Settings* s, QObject* parent)
@@ -336,42 +307,38 @@ void Kryvo::Ui::processFiles(const QString& passphrase,
 
   Q_ASSERT(d->settings);
 
-  if (!d->isBusy()) {
-    if (!passphrase.isEmpty()) {
-        std::vector<QFileInfo> files;
+  if (!passphrase.isEmpty()) {
+    std::vector<QFileInfo> files;
 
-        const int rowCount = d->fileListModel.rowCount();
+    const int rowCount = d->fileListModel.rowCount();
 
-        for (int row = 0; row < rowCount; ++row) {
-          const FileItem& item = d->fileListModel.item(row);
-          files.push_back(QFileInfo(item.fileName()));
-        }
-
-        if (files.empty()) {
-          // TODO Inform user that input files are required to encrypt or
-          // decrypt
-          return;
-        }
-
-        if (Kryvo::CryptDirection::Encrypt == cryptDirection) {
-          emit encrypt(d->settings->cryptoProvider(),
-                       d->settings->compressionFormat(),
-                       passphrase,
-                       files,
-                       d->settings->outputPath(),
-                       d->settings->cipher(),
-                       d->settings->keySize(),
-                       d->settings->modeOfOperation(),
-                       d->settings->removeIntermediateFiles());
-        } else if (Kryvo::CryptDirection::Decrypt == cryptDirection) {
-          emit decrypt(passphrase, files, d->settings->outputPath(),
-                       d->settings->removeIntermediateFiles());
-        }
-    } else { // Inform user that a password is required to encrypt or decrypt
-      appendStatusMessage(d->errorMessages.at(0));
+    for (int row = 0; row < rowCount; ++row) {
+      const FileItem& item = d->fileListModel.item(row);
+      files.push_back(QFileInfo(item.fileName()));
     }
-  } else { // Inform user that encryption/decryption is already in progress
-    appendStatusMessage(d->errorMessages.at(1));
+
+    if (files.empty()) {
+      // TODO Inform user that input files are required to encrypt or
+      // decrypt
+      return;
+    }
+
+    if (Kryvo::CryptDirection::Encrypt == cryptDirection) {
+      emit encrypt(d->settings->cryptoProvider(),
+                   d->settings->compressionFormat(),
+                   passphrase,
+                   files,
+                   d->settings->outputPath(),
+                   d->settings->cipher(),
+                   d->settings->keySize(),
+                   d->settings->modeOfOperation(),
+                   d->settings->removeIntermediateFiles());
+    } else if (Kryvo::CryptDirection::Decrypt == cryptDirection) {
+      emit decrypt(passphrase, files, d->settings->outputPath(),
+                   d->settings->removeIntermediateFiles());
+    }
+  } else { // Inform user that a password is required to encrypt or decrypt
+    appendStatusMessage(d->errorMessages.at(0));
   }
 }
 
@@ -411,11 +378,6 @@ void Kryvo::Ui::appendErrorMessage(const QString& message,
   }
 
   updateFileProgress(fileInfo.absoluteFilePath(), QString(), 0);
-}
-
-void Kryvo::Ui::updateBusyStatus(const bool busy) {
-  Q_D(Ui);
-  d->busy(busy);
 }
 
 void Kryvo::Ui::updateCipher(const QString& cipher) {

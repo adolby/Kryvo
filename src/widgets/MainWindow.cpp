@@ -20,42 +20,13 @@ class Kryvo::MainWindowPrivate {
  public:
   MainWindowPrivate();
 
-  /*!
-   * \brief busy Sets the busy status received from the cipher operation.
-   * \param busy Boolean representing the busy status.
-   */
-  void busy(bool busy);
-
-  /*!
-   * \brief isBusy Returns the busy status received from the cipher operation.
-   * \return Boolean representing the busy status.
-   */
-  bool isBusy() const;
-
   // Messages to display to user
   const QStringList messages{
     QObject::tr("A password is required to encrypt or decrypt "
-                "files. Please enter one to continue."),
-    QObject::tr("Encryption/decryption is already in progress. "
-                "Please wait until the current operation "
-                "finishes.")};
-
- private:
-  // The busy status, when set to true, indicates that the cryptography object
-  // is currently executing a cipher operation. The status allows the GUI to
-  // decide whether to send new encryption/decryption requests.
-  bool busyStatus{false};
+                "files. Please enter one to continue.")};
 };
 
 Kryvo::MainWindowPrivate::MainWindowPrivate() = default;
-
-void Kryvo::MainWindowPrivate::busy(const bool busy) {
-  busyStatus = busy;
-}
-
-bool Kryvo::MainWindowPrivate::isBusy() const {
-  return busyStatus;
-}
 
 Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
   : QMainWindow(parent), d_ptr(std::make_unique<MainWindowPrivate>()) {
@@ -211,45 +182,40 @@ void Kryvo::MainWindow::processFiles(
   Q_ASSERT(passwordFrame);
   Q_ASSERT(fileListFrame);
 
-  if (!d->isBusy()) {
-    const QString& passphrase = passwordFrame->password();
+  const QString& passphrase = passwordFrame->password();
 
-    if (!passphrase.isEmpty()) {
-      const int rowCount = fileListFrame->rowCount();
+  if (!passphrase.isEmpty()) {
+    const int rowCount = fileListFrame->rowCount();
 
-      if (rowCount > 0) {
-        std::vector<QFileInfo> files;
+    if (rowCount > 0) {
+      std::vector<QFileInfo> files;
 
-        for (int row = 0; row < rowCount; ++row) {
-          auto item = fileListFrame->item(row);
-          const QFileInfo fileInfo(item->data().toString());
-          files.push_back(fileInfo);
-        }
-
-        const QString& outputPath = outputFrame->outputPath();
-        const QDir outputDir(outputPath);
-
-        if (Kryvo::CryptDirection::Encrypt == direction) {
-          emit encrypt(settings->cryptoProvider(),
-                       settings->compressionFormat(),
-                       passphrase,
-                       files,
-                       outputDir,
-                       settings->cipher(),
-                       settings->keySize(),
-                       settings->modeOfOperation(),
-                       settings->removeIntermediateFiles());
-        } else {
-          emit decrypt(passphrase, files, outputDir,
-                       settings->removeIntermediateFiles());
-        }
+      for (int row = 0; row < rowCount; ++row) {
+        auto item = fileListFrame->item(row);
+        const QFileInfo fileInfo(item->data().toString());
+        files.push_back(fileInfo);
       }
-    } else { // Inform user that a password is required to encrypt or decrypt
-      updateStatusMessage(d->messages[0]);
+
+      const QString& outputPath = outputFrame->outputPath();
+      const QDir outputDir(outputPath);
+
+      if (Kryvo::CryptDirection::Encrypt == direction) {
+        emit encrypt(settings->cryptoProvider(),
+                     settings->compressionFormat(),
+                     passphrase,
+                     files,
+                     outputDir,
+                     settings->cipher(),
+                     settings->keySize(),
+                     settings->modeOfOperation(),
+                     settings->removeIntermediateFiles());
+      } else {
+        emit decrypt(passphrase, files, outputDir,
+                     settings->removeIntermediateFiles());
+      }
     }
-  } else {
-    // Inform user that encryption/decryption is already in progress
-    updateStatusMessage(d->messages[1]);
+  } else { // Inform user that a password is required to encrypt or decrypt
+    updateStatusMessage(d->messages[0]);
   }
 }
 
@@ -276,11 +242,6 @@ void Kryvo::MainWindow::updateError(const QString& message,
   }
 
   updateFileProgress(fileInfo.absoluteFilePath(), QString(), 0);
-}
-
-void Kryvo::MainWindow::updateBusyStatus(const bool busy) {
-  Q_D(MainWindow);
-  d->busy(busy);
 }
 
 void Kryvo::MainWindow::updateCipher(const QString& cipher) {
@@ -341,6 +302,10 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
 
 void Kryvo::MainWindow::selectOutputDir() {
   Q_ASSERT(settings);
+
+  if (!settings) {
+    return;
+  }
 
   // Open a directory select dialog to get the output directory
   const QString& outputDir =

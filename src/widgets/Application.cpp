@@ -62,10 +62,6 @@ Kryvo::ApplicationPrivate::ApplicationPrivate() {
   QObject::connect(&dispatcher, &Dispatcher::errorMessage,
                    &gui, &MainWindow::updateError);
 
-  // Update operation in progress status
-  QObject::connect(&dispatcher, &Dispatcher::busyStatus,
-                   &gui, &MainWindow::updateBusyStatus);
-
   dispatcher.moveToThread(&dispatcherThread);
 
   dispatcherThread.start();
