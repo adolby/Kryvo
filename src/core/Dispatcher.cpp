@@ -218,7 +218,7 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
   Q_Q(Dispatcher);
 
   if (state.isRunning()) {
-    emit q->errorMessage(Constants::kMessages[12] + "YEAH!", QFileInfo());
+    emit q->errorMessage(Constants::kMessages[12], QFileInfo());
     return;
   }
 
