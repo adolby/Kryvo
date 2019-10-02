@@ -142,9 +142,7 @@ void Kryvo::DispatcherPrivate::dispatch() {
   Q_Q(Dispatcher);
 
   for (std::size_t i = 0; i < pipelines.size(); ++i) {
-    QTimer::singleShot(0, q, [this, i]() {
-                               processPipeline(i);
-                             });
+   processPipeline(i);
   }
 }
 
@@ -153,8 +151,8 @@ void Kryvo::DispatcherPrivate::processPipeline(const std::size_t id) {
   Q_ASSERT(id < pipelines.size());
 
   if (id >= pipelines.size()) { // Safety check
-    state.busy(false);
-    emit q->busyStatus(state.isBusy());
+    state.running(false);
+    emit q->running(false);
     emit q->errorMessage(Constants::kMessages[0], QFileInfo());
     return;
   }
@@ -162,8 +160,8 @@ void Kryvo::DispatcherPrivate::processPipeline(const std::size_t id) {
   const bool complete = isComplete();
 
   if (complete) {
-    state.busy(false);
-    emit q->busyStatus(state.isBusy());
+    state.running(false);
+    emit q->running(false);
     return;
   }
 
@@ -188,8 +186,8 @@ void Kryvo::DispatcherPrivate::abortPipeline(const std::size_t id) {
   Q_ASSERT(id < pipelines.size());
 
   if (id >= pipelines.size()) { // Safety check
-    state.busy(false);
-    emit q->busyStatus(state.isBusy());
+    state.running(false);
+    emit q->running(false);
     emit q->errorMessage(Constants::kMessages[0], QFileInfo());
     return;
   }
@@ -203,8 +201,8 @@ void Kryvo::DispatcherPrivate::abortPipeline(const std::size_t id) {
   const bool complete = isComplete();
 
   if (complete) {
-    state.busy(false);
-    emit q->busyStatus(state.isBusy());
+    state.running(false);
+    emit q->running(false);
   }
 }
 
@@ -219,8 +217,13 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
                                        const bool removeIntermediateFiles) {
   Q_Q(Dispatcher);
 
-  state.busy(true);
-  emit q->busyStatus(state.isBusy());
+  if (state.isRunning()) {
+    emit q->errorMessage(Constants::kMessages[12] + "YEAH!", QFileInfo());
+    return;
+  }
+
+  state.running(true);
+  emit q->running(true);
 
   pipelines.clear();
 
@@ -315,8 +318,8 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
   }
 
   if (pipelines.empty()) { // No valid files to process
-    state.busy(false);
-    emit q->busyStatus(state.isBusy());
+    state.running(false);
+    emit q->running(false);
     return;
   }
 
@@ -331,8 +334,13 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
                                        const bool removeIntermediateFiles) {
   Q_Q(Dispatcher);
 
-  state.busy(true);
-  emit q->busyStatus(state.isBusy());
+  if (state.isRunning()) {
+    emit q->errorMessage(Constants::kMessages[12], QFileInfo());
+    return;
+  }
+
+  state.running(true);
+  emit q->running(true);
 
   pipelines.clear();
 
@@ -431,8 +439,7 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
   }
 
   if (pipelines.empty()) { // No valid files to process
-    state.busy(false);
-    emit q->busyStatus(state.isBusy());
+    state.running(false);
     return;
   }
 
@@ -475,7 +482,7 @@ void Kryvo::Dispatcher::decrypt(const QString& passphrase,
 void Kryvo::Dispatcher::abort() {
   Q_D(Dispatcher);
 
-  if (d->state.isBusy()) {
+  if (d->state.isRunning()) {
     d->state.abort(true);
   }
 }
@@ -489,7 +496,7 @@ void Kryvo::Dispatcher::pause(const bool pause) {
 void Kryvo::Dispatcher::stop(const QFileInfo& fileInfo) {
   Q_D(Dispatcher);
 
-  if (d->state.isBusy()) {
+  if (d->state.isRunning()) {
     std::size_t id = 0;
     bool found = false;
 

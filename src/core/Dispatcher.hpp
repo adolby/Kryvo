@@ -57,11 +57,7 @@ class Dispatcher : public QObject {
    */
   void errorMessage(const QString& message, const QFileInfo& fileInfo);
 
-  /*!
-   * \brief busyStatus Emitted when a cipher operation starts and ends
-   * \param busyStatus Boolean representing the busy status
-   */
-  void busyStatus(bool busyStatus);
+  void running(bool run);
 
   void compressFile(std::size_t id,
                     const QFileInfo& inputFileInfo,

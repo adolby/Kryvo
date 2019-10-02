@@ -4,7 +4,7 @@
 #include <QMutexLocker>
 
 Kryvo::DispatcherState::DispatcherState()
-  : aborted(false), paused(false), busyStatus(false) {
+  : state(ExecutionState::Idle), aborted(false) {
 }
 
 void Kryvo::DispatcherState::init(const std::size_t maxPipelineId) {
@@ -24,24 +24,36 @@ bool Kryvo::DispatcherState::isAborted() const {
 }
 
 void Kryvo::DispatcherState::pause(const bool pause) {
-  QMutexLocker lock(&pauseMutex);
+  QWriteLocker lock(&stateLock);
 
-  paused = pause;
+  if (pause) {
+    if (state != ExecutionState::Running) {
+      return;
+    }
 
-  if (!pause) {
+    state = ExecutionState::Paused;
+  } else {
+    if (state != ExecutionState::Paused) {
+      return;
+    }
+
+    state = ExecutionState::Running;
+
     pauseWaitCondition.wakeAll();
   }
 }
 
-bool Kryvo::DispatcherState::isPaused() const {
-  return paused;
+bool Kryvo::DispatcherState::isPaused() {
+  QReadLocker lock(&stateLock);
+
+  return ExecutionState::Paused == state;
 }
 
 void Kryvo::DispatcherState::pauseWait(const std::size_t pipelineId) {
-  QMutexLocker lock(&pauseMutex);
+  QReadLocker lock(&stateLock);
 
   while (isPaused() && !(isAborted() || isStopped(pipelineId))) {
-    pauseWaitCondition.wait(&pauseMutex);
+    pauseWaitCondition.wait(&stateLock);
   }
 }
 
@@ -66,10 +78,22 @@ bool Kryvo::DispatcherState::isStopped(const std::size_t pipelineId) {
   return hasBeenStopped;
 }
 
-void Kryvo::DispatcherState::busy(const bool busy) {
-  busyStatus = busy;
+void Kryvo::DispatcherState::running(const bool run) {
+  QWriteLocker locker(&stateLock);
+
+  if (run) {
+    if (state != ExecutionState::Idle) {
+      return;
+    }
+
+    state = ExecutionState::Running;
+  } else {
+    state = ExecutionState::Idle;
+  }
 }
 
-bool Kryvo::DispatcherState::isBusy() const {
-  return busyStatus;
+bool Kryvo::DispatcherState::isRunning() {
+  QReadLocker lock(&stateLock);
+
+  return ExecutionState::Running == state;
 }

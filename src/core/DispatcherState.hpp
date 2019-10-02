@@ -3,7 +3,6 @@
 
 #include <QWaitCondition>
 #include <QReadWriteLock>
-#include <QMutex>
 #include <QString>
 #include <atomic>
 #include <deque>
@@ -42,7 +41,7 @@ class DispatcherState {
    * \brief isPaused Returns the current pause status
    * \return Boolean representing the pause status
    */
-  bool isPaused() const;
+  bool isPaused();
 
   void pauseWait(std::size_t pipelineId);
 
@@ -66,40 +65,29 @@ class DispatcherState {
    */
   bool isStopped(std::size_t pipelineId);
 
-  /*!
-   * \brief busy Updates the busy status
-   * \param busy Boolean representing the busy status
-   */
-  void busy(bool busy);
+  void running(bool run);
 
-  /*!
-   * \brief isBusy Returns the busy status
-   * \return Boolean representing the busy status
-   */
-  bool isBusy() const;
+  bool isRunning();
 
  private:
+  enum ExecutionState {
+    Idle,
+    Running,
+    Paused };
+
+  ExecutionState state;
+  QReadWriteLock stateLock;
+  QWaitCondition pauseWaitCondition;
+
   // The abort status, when set to true, will stop an executing job
   // operation and prevent new job operations from starting until it is reset
   // to false.
   std::atomic<bool> aborted;
 
-  // The pause status, when set to false, will pause an executing cipher
-  // operation. When the pause status is set to true, the job operation
-  // that was in progress when the pause status was set will resume execution.
-  QMutex pauseMutex;
-  QWaitCondition pauseWaitCondition;
-  bool paused;
-
   // The container of stopped flags, which are used to stop
   // encrypting/decrypting a file.
   std::deque<bool> stopped;
-
   QReadWriteLock stoppedLock;
-
-  // The busy status, when set to true, indicates that this class is currently
-  // executing a cipher operation.
-  std::atomic<bool> busyStatus;
 };
 
 } // namespace Kryvo

@@ -29,5 +29,7 @@ const QStringList Kryvo::Constants::kMessages {
               "that you have permission to access it and try again."), // 8
   QObject::tr("Compression stopped. File %1 not fully compressed."), // 9
   QObject::tr("Decompression stopped. File %1 not fully decompressed."), // 10
-  QObject::tr("Error: No encryption providers found.") // 11
+  QObject::tr("Error: No encryption providers found."), // 11
+  QObject::tr("Encryption/decryption is already in progress. Please wait until "
+              "the current operation finishes.") // 12
 };

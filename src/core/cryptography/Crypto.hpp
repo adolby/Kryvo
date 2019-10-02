@@ -57,12 +57,6 @@ class Crypto : public QObject {
    */
   void errorMessage(const QString& message, const QFileInfo& fileInfo);
 
-  /*!
-   * \brief busyStatus Emitted when a cipher operation starts and ends
-   * \param busyStatus Boolean representing the busy status
-   */
-  void busyStatus(bool busyStatus);
-
  public slots:
   void updateProviders(const QHash<QString, Plugin>& loadedProviders);
 
