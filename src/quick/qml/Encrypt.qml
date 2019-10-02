@@ -132,6 +132,8 @@ Page {
         icon.height: 30
 
         onClicked: {
+          pauseButton.checked = false;
+          ui.pauseProcessing(false);
           ui.removeFiles();
         }
       }
