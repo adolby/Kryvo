@@ -73,11 +73,11 @@ Kryvo::HeaderFrame::HeaderFrame(QWidget* parent)
   connect(d->pauseButton, &QPushButton::toggled,
           this, &HeaderFrame::pause);
   connect(d->pauseButton, &QPushButton::toggled,
-          this, &HeaderFrame::togglePauseIcon);
+          this, &HeaderFrame::pauseIconChecked);
   connect(d->addFilesButton, &QPushButton::clicked,
           this, &HeaderFrame::addFiles);
   connect(d->clearFilesButton, &QPushButton::clicked,
-          this, &HeaderFrame::removeFiles);
+          this, &HeaderFrame::removeAllFiles);
   connect(d->settingsButton, &QPushButton::clicked,
           this, &HeaderFrame::switchFrame);
 }
@@ -97,11 +97,18 @@ void Kryvo::HeaderFrame::setIconSize(const QSize& iconSize) {
   d->clearFilesButton->setIconSize(d->iconSize);
 }
 
-void Kryvo::HeaderFrame::togglePauseIcon(const bool toggle) {
+void Kryvo::HeaderFrame::removeAllFiles() {
+    Q_D(HeaderFrame);
+
+    d->pauseButton->setChecked(false);
+    emit removeFiles();
+}
+
+void Kryvo::HeaderFrame::pauseIconChecked(const bool checked) {
   Q_D(HeaderFrame);
   Q_ASSERT(d->pauseButton);
 
-  if (toggle) {
+  if (checked) {
     d->pauseButton->setIcon(QIcon(QStringLiteral(":/images/resumeIcon.png")));
     d->pauseButton->setText(tr(" Resume"));
   } else {

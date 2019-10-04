@@ -58,11 +58,8 @@ class HeaderFrame : public QFrame {
   void switchFrame();
 
  private slots:
-  /*!
-   * \brief togglePauseIcon Toggles the pause button icon and text when the
-   * paused button is checked
-   */
-  void togglePauseIcon(bool toggle);
+  void removeAllFiles();
+  void pauseIconChecked(bool checked);
 };
 
 } // namespace Kryvo
