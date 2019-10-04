@@ -88,15 +88,15 @@ matrix:
     script:
     - chmod +x build_android_armv7.sh
     - TAG_NAME=${TRAVIS_TAG} ./build_android_armv7.sh
-    deploy:
-      provider: releases
-      api_key:
-        secure: Up/pPCFDt32GiRNsBak0mjxUslto6+OjJkUUni5nOg4LDw9fErDlyToCUD6R/ZKfrgQ6iQAL81Bo99+GPDgiRhUh/AdTMyguKtpVGeXCe/qKoO+hUj3B+Qk8iHIUva8zybJPIyLkKwUB/ghTSk/XQgn7/vofg1UtOU6TOvaRiNY=
-      file: build/android/armv7/release/kryvo_${TRAVIS_TAG}_android_armv7.apk
-      overwrite: true
-      skip_cleanup: true
-      on:
-        tags: true
+    # deploy:
+    #   provider: releases
+    #   api_key:
+    #     secure: Up/pPCFDt32GiRNsBak0mjxUslto6+OjJkUUni5nOg4LDw9fErDlyToCUD6R/ZKfrgQ6iQAL81Bo99+GPDgiRhUh/AdTMyguKtpVGeXCe/qKoO+hUj3B+Qk8iHIUva8zybJPIyLkKwUB/ghTSk/XQgn7/vofg1UtOU6TOvaRiNY=
+    #   file: build/android/armv7/release/kryvo_${TRAVIS_TAG}_android_armv7.apk
+    #   overwrite: true
+    #   skip_cleanup: true
+    #   on:
+    #     tags: true
   - language: android
     env: SPEC=android-arm64-v8a
     dist: trusty
@@ -120,12 +120,12 @@ matrix:
     script:
     - chmod +x build_android_arm64_v8a.sh
     - TAG_NAME=${TRAVIS_TAG} ./build_android_arm64_v8a.sh
-    deploy:
-      provider: releases
-      api_key:
-        secure: Up/pPCFDt32GiRNsBak0mjxUslto6+OjJkUUni5nOg4LDw9fErDlyToCUD6R/ZKfrgQ6iQAL81Bo99+GPDgiRhUh/AdTMyguKtpVGeXCe/qKoO+hUj3B+Qk8iHIUva8zybJPIyLkKwUB/ghTSk/XQgn7/vofg1UtOU6TOvaRiNY=
-      file: build/android/arm64_v8a/release/kryvo_${TRAVIS_TAG}_android_arm64_v8a.apk
-      overwrite: true
-      skip_cleanup: true
-      on:
-        tags: true
+    # deploy:
+    #   provider: releases
+    #   api_key:
+    #     secure: Up/pPCFDt32GiRNsBak0mjxUslto6+OjJkUUni5nOg4LDw9fErDlyToCUD6R/ZKfrgQ6iQAL81Bo99+GPDgiRhUh/AdTMyguKtpVGeXCe/qKoO+hUj3B+Qk8iHIUva8zybJPIyLkKwUB/ghTSk/XQgn7/vofg1UtOU6TOvaRiNY=
+    #   file: build/android/arm64_v8a/release/kryvo_${TRAVIS_TAG}_android_arm64_v8a.apk
+    #   overwrite: true
+    #   skip_cleanup: true
+    #   on:
+    #     tags: true
