@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QStringBuilder>
 
-const QVersionNumber Kryvo::Constants::kVersion({1, 0, 11});
+const QVersionNumber Kryvo::Constants::kVersion({1, 1, 0});
 
 const QString Kryvo::Constants::kDot = QStringLiteral(".");
 const QString Kryvo::Constants::kEncryptedFileExtension = QStringLiteral("enc");
