@@ -252,15 +252,13 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
       outputPath.mkpath(outputPath.absolutePath());
     }
 
-    const QString& inFilePath = inputFile.absoluteFilePath();
-
     const QString& outPath = outputPath.exists() ?
                              outputPath.absolutePath() :
                              inputFile.absolutePath();
 
     Pipeline pipeline;
 
-    pipeline.inputFilePath = inFilePath;
+    pipeline.inputFilePath = inputFile;
 
     id = id + 1;
 
@@ -271,9 +269,8 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
                 Kryvo::Constants::kCompressedFileExtension);
 
       auto compressFunction =
-        [this, q, inFilePath, compressedFilePath](std::size_t id) {
-          emit q->compressFile(id, QFileInfo(inFilePath),
-                               QFileInfo(compressedFilePath));
+        [this, q, inputFile, compressedFilePath](std::size_t id) {
+          emit q->compressFile(id, inputFile, QFileInfo(compressedFilePath));
         };
 
       pipeline.stages.push_back(compressFunction);
@@ -310,10 +307,10 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
                 Kryvo::Constants::kEncryptedFileExtension);
 
       auto encryptFunction =
-        [this, q, cryptoProvider, compressionFormat, passphrase, inFilePath,
+        [this, q, cryptoProvider, compressionFormat, passphrase, inputFile,
          encryptedFilePath, cipher, keySize, modeOfOperation](std::size_t id) {
           emit q->encryptFile(id, cryptoProvider, compressionFormat,
-                              passphrase, QFileInfo(inFilePath),
+                              passphrase, inputFile,
                               QFileInfo(encryptedFilePath), cipher, keySize,
                               modeOfOperation);
         };
@@ -354,21 +351,19 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
   std::size_t id = 0;
 
   for (const QFileInfo& inputFile : inputFiles) {
-    const QString& inFilePath = inputFile.absoluteFilePath();
-
-    QFile inFile(inFilePath);
+    QFile inFile(inputFile.absoluteFilePath());
 
     const bool inFileOpen = inFile.open(QIODevice::ReadOnly);
 
     if (!inFileOpen) {
-      emit q->errorMessage(Constants::kMessages[5], inFilePath);
+      emit q->errorMessage(Constants::kMessages[5], inputFile);
       continue;
     }
 
     const QHash<QByteArray, QByteArray>& header = readHeader(&inFile);
 
     if (!header.contains(QByteArrayLiteral("Version"))) {
-      emit q->errorMessage(Kryvo::Constants::kMessages[7], inFilePath);
+      emit q->errorMessage(Kryvo::Constants::kMessages[7], inputFile);
       continue;
     }
 
@@ -392,7 +387,7 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
 
     Pipeline pipeline;
 
-    pipeline.inputFilePath = inFilePath;
+    pipeline.inputFilePath = inputFile;
 
     id = id + 1;
 
@@ -401,12 +396,12 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
       removeExtension(outputFilePath, Constants::kEncryptedFileExtension);
 
     // Create a unique file name for the file in this directory
-    const QString& uniqueDecryptedFilePath = uniqueFilePath(decryptedFilePath);
+    const QFileInfo uniqueDecryptedFilePath(uniqueFilePath(decryptedFilePath));
 
     auto decryptFunction =
-      [this, q, cryptoProvider, passphrase, inFilePath, uniqueDecryptedFilePath,
+      [this, q, cryptoProvider, passphrase, inputFile, uniqueDecryptedFilePath,
        header](std::size_t id) {
-        emit q->decryptFile(id, cryptoProvider, passphrase, inFilePath,
+        emit q->decryptFile(id, cryptoProvider, passphrase, inputFile,
                             uniqueDecryptedFilePath);
       };
 
@@ -415,18 +410,18 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
     if (QByteArrayLiteral("gzip") == compressionFormat) {
       // Remove the gz extension if at the end of the file path
       const QString& decompressedFilePath =
-        removeExtension(uniqueDecryptedFilePath,
+        removeExtension(uniqueDecryptedFilePath.absoluteFilePath(),
                         Constants::kCompressedFileExtension);
 
       // Create a unique file name for the file in this directory
-      const QString& uniqueDecompressedFilePath =
-        uniqueFilePath(decompressedFilePath);
+      const QFileInfo uniqueDecompressedFilePath(
+        uniqueFilePath(decompressedFilePath));
 
       auto decompressFunction =
         [this, q, uniqueDecryptedFilePath,
          uniqueDecompressedFilePath](std::size_t id) {
-          emit q->decompressFile(id, QFileInfo(uniqueDecryptedFilePath),
-                                 QFileInfo(uniqueDecompressedFilePath));
+          emit q->decompressFile(id, uniqueDecryptedFilePath,
+                                 uniqueDecompressedFilePath);
         };
 
       pipeline.stages.push_back(decompressFunction);
@@ -434,7 +429,7 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
       if (removeIntermediateFiles) {
         auto removeIntermediateFilesFunction =
           [this, q, uniqueDecryptedFilePath](std::size_t id) {
-            QFile::remove(uniqueDecryptedFilePath);
+            QFile::remove(uniqueDecryptedFilePath.absoluteFilePath());
             emit q->fileCompleted(id);
           };
 
