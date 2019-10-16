@@ -27,6 +27,7 @@ CONFIG(release, debug|release) {
 
 SOURCES += \
   Constants.cpp \
+  DispatchQueue.cpp \
   Dispatcher.cpp \
   DispatcherState.cpp \
   Plugin.cpp \
@@ -39,6 +40,7 @@ SOURCES += \
 
 HEADERS += \
   Constants.hpp \
+  DispatchQueue.hpp \
   Dispatcher.hpp \
   DispatcherState.hpp \
   FileUtility.h \

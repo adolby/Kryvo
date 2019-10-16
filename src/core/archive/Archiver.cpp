@@ -1,5 +1,6 @@
 #include "archive/Archiver.hpp"
 #include "Constants.hpp"
+#include "DispatchQueue.hpp"
 #include <QDir>
 #include <QSaveFile>
 #include <QFile>
@@ -30,11 +31,12 @@ class Kryvo::ArchiverPrivate {
 
   DispatcherState* state{nullptr};
 
+  DispatchQueue queue;
+
   static constexpr qint64 kChunk{256000};
 };
 
-Kryvo::ArchiverPrivate::ArchiverPrivate(Archiver* archiver,
-                                        DispatcherState* ds)
+Kryvo::ArchiverPrivate::ArchiverPrivate(Archiver* archiver, DispatcherState* ds)
   : q_ptr(archiver), state(ds) {
 }
 
@@ -419,13 +421,23 @@ bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
 void Kryvo::ArchiverPrivate::compress(const std::size_t id,
                                       const QFileInfo& inputFileInfo,
                                       const QFileInfo& outputFileInfo) {
-  compressFile(id, inputFileInfo, outputFileInfo);
+  const auto compressFunc =
+    [this, id, inputFileInfo, outputFileInfo]() {
+      compressFile(id, inputFileInfo, outputFileInfo);
+    };
+
+  queue.enqueue(compressFunc);
 }
 
 void Kryvo::ArchiverPrivate::decompress(const std::size_t id,
                                         const QFileInfo& inputFileInfo,
                                         const QFileInfo& outputFileInfo) {
-  decompressFile(id, inputFileInfo, outputFileInfo);
+  const auto decompressFunc =
+    [this, id, inputFileInfo, outputFileInfo]() {
+      decompressFile(id, inputFileInfo, outputFileInfo);
+    };
+
+  queue.enqueue(decompressFunc);
 }
 
 Kryvo::Archiver::Archiver(DispatcherState* state, QObject* parent)
@@ -450,10 +462,10 @@ void Kryvo::Archiver::decompress(std::size_t id,
   d->decompress(id, inputFileInfo, outputFileInfo);
 }
 
-void Kryvo::Archiver::archive(const std::vector<QFileInfo>& inputFiles) {
-  // TODO: Adapt a tar implementation
-}
+//void Kryvo::Archiver::archive(const std::vector<QFileInfo>& inputFiles) {
+//  // TODO: Adapt a tar implementation
+//}
 
-void Kryvo::Archiver::extract(const QFileInfo& archiveFileInfo) {
-  // TODO: Adapt a tar implementation
-}
+//void Kryvo::Archiver::extract(const QFileInfo& archiveFileInfo) {
+//  // TODO: Adapt a tar implementation
+//}

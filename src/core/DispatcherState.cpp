@@ -1,7 +1,6 @@
 #include "DispatcherState.hpp"
 #include <QWriteLocker>
 #include <QReadLocker>
-#include <QMutexLocker>
 
 Kryvo::DispatcherState::DispatcherState()
   : state(ExecutionState::Idle), aborted(false) {

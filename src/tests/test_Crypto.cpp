@@ -113,12 +113,12 @@ SCENARIO("Test encryption and decryption on various file types",
 
         // Test encryption and decryption
         const bool encrypted =
-          cryptographer.encrypt(id, etd.cryptoProvider, etd.compressionFormat,
-                                etd.passphrase, etd.inputFilePath,
-                                etd.encryptedFilePath,
-                                etd.cipher,
-                                static_cast<std::size_t>(etd.keySize),
-                                etd.modeOfOperation);
+          cryptographer.encryptFile(id, etd.cryptoProvider,
+                                    etd.compressionFormat, etd.passphrase,
+                                    etd.inputFilePath, etd.encryptedFilePath,
+                                    etd.cipher,
+                                    static_cast<std::size_t>(etd.keySize),
+                                    etd.modeOfOperation);
 
         REQUIRE(encrypted);
 
@@ -143,8 +143,9 @@ SCENARIO("Test encryption and decryption on various file types",
         inFile.close();
 
         const bool decrypted =
-          cryptographer.decrypt(id, etd.cryptoProvider, etd.passphrase,
-                                etd.encryptedFilePath, etd.decryptedFilePath);
+          cryptographer.decryptFile(id, etd.cryptoProvider, etd.passphrase,
+                                    etd.encryptedFilePath,
+                                    etd.decryptedFilePath);
 
         REQUIRE(decrypted);
 

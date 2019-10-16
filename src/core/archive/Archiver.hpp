@@ -58,9 +58,9 @@ class Archiver : public QObject {
   void decompress(std::size_t id, const QFileInfo& inputFileInfo,
                   const QFileInfo& outputFileInfo);
 
-  void archive(const std::vector<QFileInfo>& inputFiles);
+//  void archive(const std::vector<QFileInfo>& inputFiles);
 
-  void extract(const QFileInfo& archiveFileInfo);
+//  void extract(const QFileInfo& archiveFileInfo);
 };
 
 } // namespace Kryvo

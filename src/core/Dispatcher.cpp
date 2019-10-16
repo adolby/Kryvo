@@ -49,69 +49,76 @@ class Kryvo::DispatcherPrivate {
   PluginLoader pluginLoader;
 
   Archiver archiver;
-  Thread archiverThread;
   Crypto cryptographer;
-  Thread cryptographerThread;
 
   std::vector<Pipeline> pipelines;
 };
 
 Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* disp)
   : q_ptr(disp), archiver(&state), cryptographer(&state) {
-  archiver.moveToThread(&archiverThread);
-  cryptographer.moveToThread(&cryptographerThread);
-
   QObject::connect(q_ptr, &Dispatcher::fileCompleted,
                    q_ptr, &Dispatcher::processPipeline,
                    Qt::QueuedConnection);
 
   QObject::connect(&pluginLoader, &PluginLoader::cryptoProvidersChanged,
-                   &cryptographer, &Crypto::updateProviders);
+                   &cryptographer, &Crypto::updateProviders,
+                   Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::fileProgress,
-                   q_ptr, &Dispatcher::updateFileProgress);
-
-  QObject::connect(&archiver, &Archiver::statusMessage,
-                   q_ptr, &Dispatcher::statusMessage);
-
-  QObject::connect(&archiver, &Archiver::errorMessage,
-                   q_ptr, &Dispatcher::errorMessage);
-
-  QObject::connect(q_ptr, &Dispatcher::compressFile,
-                   &archiver, &Archiver::compress);
-
-  QObject::connect(q_ptr, &Dispatcher::decompressFile,
-                   &archiver, &Archiver::decompress);
+                   q_ptr, &Dispatcher::updateFileProgress,
+                   Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::fileCompleted,
-                   q_ptr, &Dispatcher::fileCompleted);
+                   q_ptr, &Dispatcher::fileCompleted,
+                   Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::fileFailed,
-                   q_ptr, &Dispatcher::abortPipeline);
+                   q_ptr, &Dispatcher::abortPipeline,
+                   Qt::QueuedConnection);
+
+  QObject::connect(&archiver, &Archiver::statusMessage,
+                   q_ptr, &Dispatcher::statusMessage,
+                   Qt::QueuedConnection);
+
+  QObject::connect(&archiver, &Archiver::errorMessage,
+                   q_ptr, &Dispatcher::errorMessage,
+                   Qt::QueuedConnection);
+
+  QObject::connect(q_ptr, &Dispatcher::compressFile,
+                   &archiver, &Archiver::compress,
+                   Qt::DirectConnection);
+
+  QObject::connect(q_ptr, &Dispatcher::decompressFile,
+                   &archiver, &Archiver::decompress,
+                   Qt::DirectConnection);
 
   QObject::connect(&cryptographer, &Crypto::fileProgress,
-                   q_ptr, &Dispatcher::updateFileProgress);
-
-  QObject::connect(&cryptographer, &Crypto::statusMessage,
-                   q_ptr, &Dispatcher::statusMessage);
-
-  QObject::connect(&cryptographer, &Crypto::errorMessage,
-                   q_ptr, &Dispatcher::errorMessage);
-
-  QObject::connect(q_ptr, &Dispatcher::encryptFile,
-                   &cryptographer, &Crypto::encrypt);
-
-  QObject::connect(q_ptr, &Dispatcher::decryptFile,
-                   &cryptographer, &Crypto::decrypt);
+                   q_ptr, &Dispatcher::updateFileProgress,
+                   Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::fileCompleted,
-                   q_ptr, &Dispatcher::fileCompleted);
+                   q_ptr, &Dispatcher::fileCompleted,
+                   Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::fileFailed,
-                   q_ptr, &Dispatcher::abortPipeline);
+                   q_ptr, &Dispatcher::abortPipeline,
+                   Qt::QueuedConnection);
 
-  archiverThread.start();
-  cryptographerThread.start();
+  QObject::connect(&cryptographer, &Crypto::statusMessage,
+                   q_ptr, &Dispatcher::statusMessage,
+                   Qt::QueuedConnection);
+
+  QObject::connect(&cryptographer, &Crypto::errorMessage,
+                   q_ptr, &Dispatcher::errorMessage,
+                   Qt::QueuedConnection);
+
+  QObject::connect(q_ptr, &Dispatcher::encryptFile,
+                   &cryptographer, &Crypto::encrypt,
+                   Qt::DirectConnection);
+
+  QObject::connect(q_ptr, &Dispatcher::decryptFile,
+                   &cryptographer, &Crypto::decrypt,
+                   Qt::DirectConnection);
 
   QTimer::singleShot(0, q_ptr,
                      [this]() {
