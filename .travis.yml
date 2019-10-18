@@ -13,14 +13,14 @@ matrix:
     compiler: clang
     env: SPEC=macx-clang
     osx_image: xcode10
-    cache:
-      directories:
-      - "${HOME}/Library/Caches/Homebrew"
-    before_cache:
-    - brew cleanup
-    install:
-    - brew install ccache
-    - export PATH="/usr/local/opt/ccache/libexec:${PATH}"
+    # cache:
+      # directories:
+      # - "${HOME}/Library/Caches/Homebrew"
+    # before_cache:
+    # - brew cleanup
+    # install:
+    # - brew install ccache
+    # - export PATH="/usr/local/opt/ccache/libexec:${PATH}"
     script:
     - chmod +x build_macOS.sh
     - TAG_NAME=${TRAVIS_TAG} ./build_macOS.sh
