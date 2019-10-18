@@ -33,8 +33,11 @@ SCENARIO("Test compression and decompression on a text file",
     WHEN("Compressing and decompressing file") {
       const std::size_t id = 0;
 
-      archiver.compress(id, inputFilePath, compressedFilePath);
-      archiver.decompress(id, compressedFilePath, decompressedFilePath);
+      const bool compressed =
+        archiver.compressFile(id, inputFilePath, compressedFilePath);
+
+      const bool decompressed =
+        archiver.decompressFile(id, compressedFilePath, decompressedFilePath);
 
       // Compare initial file with decompressed file
       const bool equivalentTest =
@@ -55,6 +58,8 @@ SCENARIO("Test compression and decompression on a text file",
 
       THEN("Decompressed file matches original file: " +
            inputFilePath.toStdString()) {
+        REQUIRE(compressed);
+        REQUIRE(decompressed);
         REQUIRE(equivalentTest);
       }
     }

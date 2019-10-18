@@ -446,6 +446,22 @@ Kryvo::Archiver::Archiver(DispatcherState* state, QObject* parent)
 
 Kryvo::Archiver::~Archiver() = default;
 
+bool Kryvo::Archiver::compressFile(const std::size_t id,
+                                   const QFileInfo& inputFileInfo,
+                                   const QFileInfo& outputFileInfo) {
+  Q_D(Archiver);
+
+  return d->compressFile(id, inputFileInfo, outputFileInfo);
+}
+
+bool Kryvo::Archiver::decompressFile(std::size_t id,
+                                     const QFileInfo& inputFileInfo,
+                                     const QFileInfo& outputFileInfo) {
+  Q_D(Archiver);
+
+  return d->decompressFile(id, inputFileInfo, outputFileInfo);
+}
+
 void Kryvo::Archiver::compress(const std::size_t id,
                                const QFileInfo& inputFileInfo,
                                const QFileInfo& outputFileInfo) {

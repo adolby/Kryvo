@@ -120,8 +120,6 @@ SCENARIO("Test encryption and decryption on various file types",
                                     static_cast<std::size_t>(etd.keySize),
                                     etd.modeOfOperation);
 
-        REQUIRE(encrypted);
-
         QFile inFile(etd.encryptedFilePath.absoluteFilePath());
 
         const bool inFileOpen = inFile.open(QIODevice::ReadOnly);
@@ -147,8 +145,6 @@ SCENARIO("Test encryption and decryption on various file types",
                                     etd.encryptedFilePath,
                                     etd.decryptedFilePath);
 
-        REQUIRE(decrypted);
-
         // Compare initial file with decrypted file
         const bool equivalentTest =
           FileOperations::filesEqual(etd.inputFilePath.absoluteFilePath(),
@@ -169,6 +165,8 @@ SCENARIO("Test encryption and decryption on various file types",
 
         THEN("Decrypted file matches plaintext file: " +
              inputFilePath.toStdString()) {
+          REQUIRE(encrypted);
+          REQUIRE(decrypted);
           REQUIRE(equivalentTest);
         }
       }

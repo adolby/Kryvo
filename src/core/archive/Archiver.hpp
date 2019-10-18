@@ -23,6 +23,12 @@ class Archiver : public QObject {
 
   ~Archiver() override;
 
+  bool compressFile(std::size_t id, const QFileInfo& inputFileInfo,
+                    const QFileInfo& outputFileInfo);
+
+  bool decompressFile(std::size_t id, const QFileInfo& inputFileInfo,
+                      const QFileInfo& outputFileInfo);
+
  signals:
   void fileCompleted(std::size_t id);
   void fileFailed(std::size_t id);
