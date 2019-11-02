@@ -174,7 +174,10 @@ void Kryvo::CryptoPrivate::encrypt(const std::size_t id,
                   modeOfOperation);
     };
 
-  queue.enqueue(encryptFunc);
+  DispatchTask task;
+  task.func = encryptFunc;
+
+  queue.enqueue(task);
 }
 
 void Kryvo::CryptoPrivate::decrypt(const std::size_t id,
@@ -188,7 +191,10 @@ void Kryvo::CryptoPrivate::decrypt(const std::size_t id,
                   outputFileInfo);
     };
 
-  queue.enqueue(decryptFunc);
+  DispatchTask task;
+  task.func = decryptFunc;
+
+  queue.enqueue(task);
 }
 
 Kryvo::Crypto::Crypto(DispatcherState* state, QObject* parent)

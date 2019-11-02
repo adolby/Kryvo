@@ -426,7 +426,10 @@ void Kryvo::ArchiverPrivate::compress(const std::size_t id,
       compressFile(id, inputFileInfo, outputFileInfo);
     };
 
-  queue.enqueue(compressFunc);
+  DispatchTask task;
+  task.func = compressFunc;
+
+  queue.enqueue(task);
 }
 
 void Kryvo::ArchiverPrivate::decompress(const std::size_t id,
@@ -437,7 +440,10 @@ void Kryvo::ArchiverPrivate::decompress(const std::size_t id,
       decompressFile(id, inputFileInfo, outputFileInfo);
     };
 
-  queue.enqueue(decompressFunc);
+  DispatchTask task;
+  task.func = decompressFunc;
+
+  queue.enqueue(task);
 }
 
 Kryvo::Archiver::Archiver(DispatcherState* state, QObject* parent)

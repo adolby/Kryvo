@@ -1,3 +1,6 @@
+// Adapted from Embedded Artistry's dispatch queue implementation
+// https://embeddedartistry.com/blog/2017/2/1/c11-implementing-a-dispatch-queue-using-stdfunction?rq=queue
+
 #ifndef DISPATCHQUEUE_HPP
 #define DISPATCHQUEUE_HPP
 
@@ -10,13 +13,17 @@
 
 namespace Kryvo {
 
+struct DispatchTask {
+  std::function<void(void)> func;
+  int priority = 0;
+};
+
 class DispatchQueue {
  public:
   DispatchQueue(size_t threadCount = 1);
   virtual ~DispatchQueue();
 
-  void enqueue(const std::function<void(void)>& func);
-  void enqueue(std::function<void(void)>&& func);
+  void enqueue(const DispatchTask& func);
 
   // Deleted operations
   DispatchQueue(const DispatchQueue& rhs) = delete;
@@ -25,12 +32,12 @@ class DispatchQueue {
   DispatchQueue& operator=(DispatchQueue&& rhs) = delete;
 
  private:
-  void acquireWork();
+  void performWork();
 
   std::vector<std::thread> threadPool;
 
   std::mutex queueMutex;
-  std::queue<std::function<void(void)>> queue;
+  std::queue<DispatchTask> queue;
   std::condition_variable queueWaitCondition;
 
   bool quit = false;

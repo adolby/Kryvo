@@ -3,7 +3,7 @@
 Kryvo::DispatchQueue::DispatchQueue(size_t threadCount)
   : threadPool(threadCount) {
   for (size_t i = 0; i < threadPool.size(); ++i) {
-    threadPool[i] = std::thread(&DispatchQueue::acquireWork, this);
+    threadPool[i] = std::thread(&DispatchQueue::performWork, this);
   }
 }
 
@@ -21,27 +21,17 @@ Kryvo::DispatchQueue::~DispatchQueue() {
   }
 }
 
-void Kryvo::DispatchQueue::enqueue(const std::function<void(void)>& func) {
+void Kryvo::DispatchQueue::enqueue(const Kryvo::DispatchTask& task) {
   std::unique_lock<std::mutex> lock(queueMutex);
 
-  queue.push(func);
+  queue.push(task);
 
   lock.unlock();
 
   queueWaitCondition.notify_all();
 }
 
-void Kryvo::DispatchQueue::enqueue(std::function<void(void)>&& func) {
-    std::unique_lock<std::mutex> lock(queueMutex);
-
-    queue.push(std::move(func));
-
-    lock.unlock();
-
-    queueWaitCondition.notify_all();
-}
-
-void Kryvo::DispatchQueue::acquireWork() {
+void Kryvo::DispatchQueue::performWork() {
   std::unique_lock<std::mutex> lock(queueMutex);
 
   do {
@@ -51,13 +41,13 @@ void Kryvo::DispatchQueue::acquireWork() {
                             });
 
     if (!queue.empty() && !quit) {
-      auto func = std::move(queue.front());
+      const DispatchTask& task = queue.front();
 
       queue.pop();
 
       lock.unlock();
 
-      func();
+      task.func();
 
       lock.lock();
     }
