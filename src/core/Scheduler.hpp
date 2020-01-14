@@ -1,5 +1,5 @@
-#ifndef KRYVO_DISPATCHER_HPP_
-#define KRYVO_DISPATCHER_HPP_
+#ifndef KRYVO_SCHEDULER_HPP_
+#define KRYVO_SCHEDULER_HPP_
 
 #include "utility/pimpl.h"
 #include <QObject>
@@ -18,18 +18,18 @@ struct Pipeline {
   QFileInfo inputFilePath;
 };
 
-class DispatcherPrivate;
+class SchedulerPrivate;
 
-class Dispatcher : public QObject {
+class Scheduler : public QObject {
   Q_OBJECT
-  Q_DISABLE_COPY(Dispatcher)
-  DECLARE_PRIVATE(Dispatcher)
-  std::unique_ptr<DispatcherPrivate> const d_ptr;
+  Q_DISABLE_COPY(Scheduler)
+  DECLARE_PRIVATE(Scheduler)
+  std::unique_ptr<SchedulerPrivate> const d_ptr;
 
  public:
-  explicit Dispatcher(QObject* parent = nullptr);
+  explicit Scheduler(QObject* parent = nullptr);
 
-  ~Dispatcher() override;
+  ~Scheduler() override;
 
  signals:
   void fileCompleted(std::size_t id);
@@ -154,4 +154,4 @@ class Dispatcher : public QObject {
 
 } // namespace Kryvo
 
-#endif // KRYVO_DISPATCHER_HPP_
+#endif // KRYVO_SCHEDULER_HPP_

@@ -28,10 +28,10 @@ CONFIG(release, debug|release) {
 SOURCES += \
   Constants.cpp \
   DispatchQueue.cpp \
-  Dispatcher.cpp \
-  DispatcherState.cpp \
+  SchedulerState.cpp \
   Plugin.cpp \
   PluginLoader.cpp \
+  Scheduler.cpp \
   archive/Archiver.cpp \
   cryptography/Crypto.cpp \
   settings/Settings.cpp \
@@ -41,11 +41,11 @@ SOURCES += \
 HEADERS += \
   Constants.hpp \
   DispatchQueue.hpp \
-  Dispatcher.hpp \
-  DispatcherState.hpp \
+  SchedulerState.hpp \
   FileUtility.h \
   Plugin.hpp \
   PluginLoader.hpp \
+  Scheduler.hpp \
   archive/Archiver.hpp \
   cryptography/Crypto.hpp \
   cryptography/CryptoProviderInterface.hpp \

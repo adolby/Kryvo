@@ -1,4 +1,4 @@
-#include "DispatcherState.hpp"
+#include "SchedulerState.hpp"
 #include "archive/Archiver.hpp"
 #include "FileOperations.hpp"
 #include "catch.hpp"
@@ -15,7 +15,7 @@
 SCENARIO("Test compression and decompression on a text file",
          "[testCompressDecompressText]") {
   GIVEN("A text file") {
-    Kryvo::DispatcherState state;
+    Kryvo::SchedulerState state;
     Kryvo::Archiver archiver(&state);
 
     const QString& inputFilePath = QStringLiteral("test1.txt");

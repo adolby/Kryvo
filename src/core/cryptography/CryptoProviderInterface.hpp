@@ -1,7 +1,7 @@
 #ifndef KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDERINTERFACE_HPP_
 #define KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDERINTERFACE_HPP_
 
-#include "DispatcherState.hpp"
+#include "SchedulerState.hpp"
 #include <QObject>
 #include <QFileInfo>
 #include <QString>
@@ -41,7 +41,7 @@ class CryptoProviderInterface {
   virtual void errorMessage(const QString& message,
                             const QFileInfo& fileInfo) = 0;
 
-  virtual void init(DispatcherState* state) = 0;
+  virtual void init(SchedulerState* state) = 0;
 
   /*!
   * \brief encrypt Encrypt a file

@@ -30,7 +30,7 @@ SOURCES += BotanProvider.cpp
 HEADERS += \
   BotanProvider.hpp \
   $$PWD/../../../core/Constants.hpp \
-  $$PWD/../../../core/DispatcherState.hpp
+  $$PWD/../../../core/SchedulerState.hpp
 
 OTHER_FILES += botan.json
 

@@ -2,7 +2,7 @@
 #include "MainWindow.hpp"
 #include "DesktopMainWindow.hpp"
 #include "settings/Settings.hpp"
-#include "Dispatcher.hpp"
+#include "Scheduler.hpp"
 #include "Plugin.hpp"
 #include "utility/Thread.hpp"
 #include <QFileInfo>
@@ -16,8 +16,8 @@ class Kryvo::ApplicationPrivate {
  public:
   ApplicationPrivate();
 
-  Dispatcher dispatcher;
-  Thread dispatcherThread;
+  Scheduler scheduler;
+  Thread schedulerThread;
   Settings settings;
   DesktopMainWindow gui{&settings};
 };
@@ -31,40 +31,40 @@ Kryvo::ApplicationPrivate::ApplicationPrivate() {
 
   // Connect GUI encrypt/decrypt actions
   QObject::connect(&gui, &MainWindow::encrypt,
-                   &dispatcher, &Dispatcher::encrypt);
+                   &scheduler, &Scheduler::encrypt);
 
   QObject::connect(&gui, &MainWindow::decrypt,
-                   &dispatcher, &Dispatcher::decrypt);
+                   &scheduler, &Scheduler::decrypt);
 
   // Connections are direct so the cryptography object can receive communication
   // via flags from a different thread while it is runnning a cipher operation
   QObject::connect(&gui, &MainWindow::pause,
-                   &dispatcher, &Dispatcher::pause,
+                   &scheduler, &Scheduler::pause,
                    Qt::DirectConnection);
 
   QObject::connect(&gui, &MainWindow::abort,
-                   &dispatcher, &Dispatcher::abort,
+                   &scheduler, &Scheduler::abort,
                    Qt::DirectConnection);
 
   QObject::connect(&gui, &MainWindow::stopFile,
-                   &dispatcher, &Dispatcher::stop,
+                   &scheduler, &Scheduler::stop,
                    Qt::DirectConnection);
 
   // Update progress bars
-  QObject::connect(&dispatcher, &Dispatcher::fileProgress,
+  QObject::connect(&scheduler, &Scheduler::fileProgress,
                    &gui, &MainWindow::updateFileProgress);
 
   // Update status message
-  QObject::connect(&dispatcher, &Dispatcher::statusMessage,
+  QObject::connect(&scheduler, &Scheduler::statusMessage,
                    &gui, &MainWindow::updateStatusMessage);
 
   // Update error message
-  QObject::connect(&dispatcher, &Dispatcher::errorMessage,
+  QObject::connect(&scheduler, &Scheduler::errorMessage,
                    &gui, &MainWindow::updateError);
 
-  dispatcher.moveToThread(&dispatcherThread);
+  scheduler.moveToThread(&schedulerThread);
 
-  dispatcherThread.start();
+  schedulerThread.start();
 
   gui.show();
 }
@@ -77,5 +77,5 @@ Kryvo::Application::~Application() {
   Q_D(Application);
 
   // Abort current threaded operation
-  d->dispatcher.abort();
+  d->scheduler.abort();
 }

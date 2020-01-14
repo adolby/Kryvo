@@ -1,5 +1,5 @@
 ﻿#include "BotanProvider.hpp"
-#include "DispatcherState.hpp"
+#include "SchedulerState.hpp"
 #include "Constants.hpp"
 #include "FileUtility.h"
 #include <QSaveFile>
@@ -19,7 +19,7 @@ class Kryvo::BotanProviderPrivate {
  public:
   explicit BotanProviderPrivate(BotanProvider* bp);
 
-  void init(DispatcherState* ds);
+  void init(SchedulerState* s);
 
   bool encrypt(std::size_t id,
                const QString& compressionFormat,
@@ -56,7 +56,7 @@ class Kryvo::BotanProviderPrivate {
 
   BotanProvider* const q_ptr{nullptr};
 
-  DispatcherState* state{nullptr};
+  SchedulerState* state{nullptr};
 
   static const std::string kKeyLabel;
   static const std::string kIVLabel;
@@ -75,8 +75,8 @@ Kryvo::BotanProviderPrivate::BotanProviderPrivate(BotanProvider* bp)
   : q_ptr(bp) {
 }
 
-void Kryvo::BotanProviderPrivate::init(DispatcherState* ds) {
-  state = ds;
+void Kryvo::BotanProviderPrivate::init(SchedulerState* s) {
+  state = s;
 }
 
 bool Kryvo::BotanProviderPrivate::encrypt(const std::size_t id,
@@ -709,7 +709,7 @@ Kryvo::BotanProvider::BotanProvider(QObject* parent)
 
 Kryvo::BotanProvider::~BotanProvider() = default;
 
-void Kryvo::BotanProvider::init(DispatcherState* state) {
+void Kryvo::BotanProvider::init(SchedulerState* state) {
   Q_D(BotanProvider);
 
   d->init(state);

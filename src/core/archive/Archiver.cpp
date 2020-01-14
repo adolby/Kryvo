@@ -12,7 +12,7 @@ class Kryvo::ArchiverPrivate {
   Q_DECLARE_PUBLIC(Archiver)
 
  public:
-  ArchiverPrivate(Archiver* archiver, DispatcherState* ds);
+  ArchiverPrivate(Archiver* archiver, SchedulerState* s);
 
   int gzipDeflateFile(std::size_t id, QFile* source, QSaveFile* dest,
                       int level = Z_DEFAULT_COMPRESSION);
@@ -29,15 +29,15 @@ class Kryvo::ArchiverPrivate {
 
   Archiver* const q_ptr{nullptr};
 
-  DispatcherState* state{nullptr};
+  SchedulerState* state{nullptr};
 
   DispatchQueue queue;
 
   static constexpr qint64 kChunk{256000};
 };
 
-Kryvo::ArchiverPrivate::ArchiverPrivate(Archiver* archiver, DispatcherState* ds)
-  : q_ptr(archiver), state(ds) {
+Kryvo::ArchiverPrivate::ArchiverPrivate(Archiver* archiver, SchedulerState* s)
+  : q_ptr(archiver), state(s) {
 }
 
 /* Compress from file source to file dest until EOF on source.
@@ -446,7 +446,7 @@ void Kryvo::ArchiverPrivate::decompress(const std::size_t id,
   queue.enqueue(task);
 }
 
-Kryvo::Archiver::Archiver(DispatcherState* state, QObject* parent)
+Kryvo::Archiver::Archiver(SchedulerState* state, QObject* parent)
   : QObject(parent), d_ptr(std::make_unique<ArchiverPrivate>(this, state)) {
 }
 

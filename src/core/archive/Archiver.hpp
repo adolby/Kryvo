@@ -1,7 +1,7 @@
 #ifndef KRYVO_ARCHIVE_ARCHIVER_HPP_
 #define KRYVO_ARCHIVE_ARCHIVER_HPP_
 
-#include "DispatcherState.hpp"
+#include "SchedulerState.hpp"
 #include "utility/pimpl.h"
 #include <QObject>
 #include <QFileInfo>
@@ -19,7 +19,7 @@ class Archiver : public QObject {
   std::unique_ptr<ArchiverPrivate> const d_ptr;
 
  public:
-  explicit Archiver(DispatcherState* state, QObject* parent = nullptr);
+  explicit Archiver(SchedulerState* state, QObject* parent = nullptr);
 
   ~Archiver() override;
 
@@ -36,7 +36,7 @@ class Archiver : public QObject {
   /*!
    * \brief fileProgress Emitted when the file operation progress changes
    * \param id ID representing file
-   * \param task Sting containing task name
+   * \param task String containing task name
    * \param percentProgress Integer representing the current progress as a
    * percent
    */

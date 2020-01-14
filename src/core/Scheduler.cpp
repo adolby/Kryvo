@@ -1,5 +1,5 @@
-#include "Dispatcher.hpp"
-#include "DispatcherState.hpp"
+#include "Scheduler.hpp"
+#include "SchedulerState.hpp"
 #include "PluginLoader.hpp"
 #include "archive/Archiver.hpp"
 #include "cryptography/Crypto.hpp"
@@ -10,12 +10,12 @@
 #include <QTimer>
 #include <QStringBuilder>
 
-class Kryvo::DispatcherPrivate {
-  Q_DISABLE_COPY(DispatcherPrivate)
-  Q_DECLARE_PUBLIC(Dispatcher)
+class Kryvo::SchedulerPrivate {
+  Q_DISABLE_COPY(SchedulerPrivate)
+  Q_DECLARE_PUBLIC(Scheduler)
 
  public:
-  explicit DispatcherPrivate(Dispatcher* disp);
+  explicit SchedulerPrivate(Scheduler* disp);
 
   void init();
 
@@ -42,9 +42,9 @@ class Kryvo::DispatcherPrivate {
                const QDir& outputPath,
                bool removeIntermediateFiles);
 
-  Dispatcher* const q_ptr{nullptr};
+  Scheduler* const q_ptr{nullptr};
 
-  DispatcherState state;
+  SchedulerState state;
 
   PluginLoader pluginLoader;
 
@@ -54,10 +54,10 @@ class Kryvo::DispatcherPrivate {
   std::vector<Pipeline> pipelines;
 };
 
-Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* disp)
-  : q_ptr(disp), archiver(&state), cryptographer(&state) {
-  QObject::connect(q_ptr, &Dispatcher::fileCompleted,
-                   q_ptr, &Dispatcher::processPipeline,
+Kryvo::SchedulerPrivate::SchedulerPrivate(Scheduler* s)
+  : q_ptr(s), archiver(&state), cryptographer(&state) {
+  QObject::connect(q_ptr, &Scheduler::fileCompleted,
+                   q_ptr, &Scheduler::processPipeline,
                    Qt::QueuedConnection);
 
   QObject::connect(&pluginLoader, &PluginLoader::cryptoProvidersChanged,
@@ -65,58 +65,58 @@ Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* disp)
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::fileProgress,
-                   q_ptr, &Dispatcher::updateFileProgress,
+                   q_ptr, &Scheduler::updateFileProgress,
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::fileCompleted,
-                   q_ptr, &Dispatcher::fileCompleted,
+                   q_ptr, &Scheduler::fileCompleted,
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::fileFailed,
-                   q_ptr, &Dispatcher::abortPipeline,
+                   q_ptr, &Scheduler::abortPipeline,
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::statusMessage,
-                   q_ptr, &Dispatcher::statusMessage,
+                   q_ptr, &Scheduler::statusMessage,
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::errorMessage,
-                   q_ptr, &Dispatcher::errorMessage,
+                   q_ptr, &Scheduler::errorMessage,
                    Qt::QueuedConnection);
 
-  QObject::connect(q_ptr, &Dispatcher::compressFile,
+  QObject::connect(q_ptr, &Scheduler::compressFile,
                    &archiver, &Archiver::compress,
                    Qt::DirectConnection);
 
-  QObject::connect(q_ptr, &Dispatcher::decompressFile,
+  QObject::connect(q_ptr, &Scheduler::decompressFile,
                    &archiver, &Archiver::decompress,
                    Qt::DirectConnection);
 
   QObject::connect(&cryptographer, &Crypto::fileProgress,
-                   q_ptr, &Dispatcher::updateFileProgress,
+                   q_ptr, &Scheduler::updateFileProgress,
                    Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::fileCompleted,
-                   q_ptr, &Dispatcher::fileCompleted,
+                   q_ptr, &Scheduler::fileCompleted,
                    Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::fileFailed,
-                   q_ptr, &Dispatcher::abortPipeline,
+                   q_ptr, &Scheduler::abortPipeline,
                    Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::statusMessage,
-                   q_ptr, &Dispatcher::statusMessage,
+                   q_ptr, &Scheduler::statusMessage,
                    Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::errorMessage,
-                   q_ptr, &Dispatcher::errorMessage,
+                   q_ptr, &Scheduler::errorMessage,
                    Qt::QueuedConnection);
 
-  QObject::connect(q_ptr, &Dispatcher::encryptFile,
+  QObject::connect(q_ptr, &Scheduler::encryptFile,
                    &cryptographer, &Crypto::encrypt,
                    Qt::DirectConnection);
 
-  QObject::connect(q_ptr, &Dispatcher::decryptFile,
+  QObject::connect(q_ptr, &Scheduler::decryptFile,
                    &cryptographer, &Crypto::decrypt,
                    Qt::DirectConnection);
 
@@ -126,12 +126,12 @@ Kryvo::DispatcherPrivate::DispatcherPrivate(Dispatcher* disp)
                      });
 }
 
-void Kryvo::DispatcherPrivate::init() {
+void Kryvo::SchedulerPrivate::init() {
   pluginLoader.loadPlugins();
 }
 
-bool Kryvo::DispatcherPrivate::isComplete() const {
-  Q_Q(const Dispatcher);
+bool Kryvo::SchedulerPrivate::isComplete() const {
+  Q_Q(const Scheduler);
 
   bool finished = true;
 
@@ -145,16 +145,16 @@ bool Kryvo::DispatcherPrivate::isComplete() const {
   return finished;
 }
 
-void Kryvo::DispatcherPrivate::dispatch() {
-  Q_Q(Dispatcher);
+void Kryvo::SchedulerPrivate::dispatch() {
+  Q_Q(Scheduler);
 
   for (std::size_t i = 0; i < pipelines.size(); ++i) {
    processPipeline(i);
   }
 }
 
-void Kryvo::DispatcherPrivate::processPipeline(const std::size_t id) {
-  Q_Q(Dispatcher);
+void Kryvo::SchedulerPrivate::processPipeline(const std::size_t id) {
+  Q_Q(Scheduler);
   Q_ASSERT(id < pipelines.size());
 
   if (id >= pipelines.size()) { // Safety check
@@ -188,8 +188,8 @@ void Kryvo::DispatcherPrivate::processPipeline(const std::size_t id) {
   func(id);
 }
 
-void Kryvo::DispatcherPrivate::abortPipeline(const std::size_t id) {
-  Q_Q(Dispatcher);
+void Kryvo::SchedulerPrivate::abortPipeline(const std::size_t id) {
+  Q_Q(Scheduler);
   Q_ASSERT(id < pipelines.size());
 
   if (id >= pipelines.size()) { // Safety check
@@ -213,7 +213,7 @@ void Kryvo::DispatcherPrivate::abortPipeline(const std::size_t id) {
   }
 }
 
-void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
+void Kryvo::SchedulerPrivate::encrypt(const QString& cryptoProvider,
                                        const QString& compressionFormat,
                                        const QString& passphrase,
                                        const std::vector<QFileInfo>& inputFiles,
@@ -222,7 +222,7 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
                                        const std::size_t inputKeySize,
                                        const QString& modeOfOperation,
                                        const bool removeIntermediateFiles) {
-  Q_Q(Dispatcher);
+  Q_Q(Scheduler);
 
   if (state.isRunning()) {
     emit q->errorMessage(Constants::kMessages[12], QFileInfo());
@@ -332,11 +332,11 @@ void Kryvo::DispatcherPrivate::encrypt(const QString& cryptoProvider,
   dispatch();
 }
 
-void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
+void Kryvo::SchedulerPrivate::decrypt(const QString& passphrase,
                                        const std::vector<QFileInfo>& inputFiles,
                                        const QDir& outputPath,
                                        const bool removeIntermediateFiles) {
-  Q_Q(Dispatcher);
+  Q_Q(Scheduler);
 
   if (state.isRunning()) {
     emit q->errorMessage(Constants::kMessages[12], QFileInfo());
@@ -450,13 +450,13 @@ void Kryvo::DispatcherPrivate::decrypt(const QString& passphrase,
   dispatch();
 }
 
-Kryvo::Dispatcher::Dispatcher(QObject* parent)
-  : QObject(parent), d_ptr(std::make_unique<DispatcherPrivate>(this)) {
+Kryvo::Scheduler::Scheduler(QObject* parent)
+  : QObject(parent), d_ptr(std::make_unique<SchedulerPrivate>(this)) {
 }
 
-Kryvo::Dispatcher::~Dispatcher() = default;
+Kryvo::Scheduler::~Scheduler() = default;
 
-void Kryvo::Dispatcher::encrypt(const QString& cryptoProvider,
+void Kryvo::Scheduler::encrypt(const QString& cryptoProvider,
                                 const QString& compressionFormat,
                                 const QString& passphrase,
                                 const std::vector<QFileInfo>& inputFiles,
@@ -465,38 +465,38 @@ void Kryvo::Dispatcher::encrypt(const QString& cryptoProvider,
                                 const std::size_t inputKeySize,
                                 const QString& modeOfOperation,
                                 const bool removeIntermediateFiles) {
-  Q_D(Dispatcher);
+  Q_D(Scheduler);
 
   d->encrypt(cryptoProvider, compressionFormat, passphrase, inputFiles,
              outputPath, cipher, inputKeySize, modeOfOperation,
              removeIntermediateFiles);
 }
 
-void Kryvo::Dispatcher::decrypt(const QString& passphrase,
+void Kryvo::Scheduler::decrypt(const QString& passphrase,
                                 const std::vector<QFileInfo>& inputFiles,
                                 const QDir& outputPath,
                                 const bool removeIntermediateFiles) {
-  Q_D(Dispatcher);
+  Q_D(Scheduler);
 
   d->decrypt(passphrase, inputFiles, outputPath, removeIntermediateFiles);
 }
 
-void Kryvo::Dispatcher::abort() {
-  Q_D(Dispatcher);
+void Kryvo::Scheduler::abort() {
+  Q_D(Scheduler);
 
   if (d->state.isRunning()) {
     d->state.abort(true);
   }
 }
 
-void Kryvo::Dispatcher::pause(const bool pause) {
-  Q_D(Dispatcher);
+void Kryvo::Scheduler::pause(const bool pause) {
+  Q_D(Scheduler);
 
   d->state.pause(pause);
 }
 
-void Kryvo::Dispatcher::stop(const QFileInfo& fileInfo) {
-  Q_D(Dispatcher);
+void Kryvo::Scheduler::stop(const QFileInfo& fileInfo) {
+  Q_D(Scheduler);
 
   if (d->state.isRunning()) {
     std::size_t id = 0;
@@ -518,22 +518,22 @@ void Kryvo::Dispatcher::stop(const QFileInfo& fileInfo) {
   }
 }
 
-void Kryvo::Dispatcher::processPipeline(const std::size_t id) {
-  Q_D(Dispatcher);
+void Kryvo::Scheduler::processPipeline(const std::size_t id) {
+  Q_D(Scheduler);
 
   d->processPipeline(id);
 }
 
-void Kryvo::Dispatcher::abortPipeline(const std::size_t id) {
-  Q_D(Dispatcher);
+void Kryvo::Scheduler::abortPipeline(const std::size_t id) {
+  Q_D(Scheduler);
 
   d->abortPipeline(id);
 }
 
-void Kryvo::Dispatcher::updateFileProgress(const std::size_t id,
+void Kryvo::Scheduler::updateFileProgress(const std::size_t id,
                                            const QString& task,
                                            const qint64 percentProgress) {
-  Q_D(Dispatcher);
+  Q_D(Scheduler);
 
   if (id >= d->pipelines.size()) {
     return;

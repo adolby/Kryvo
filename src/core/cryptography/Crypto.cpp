@@ -10,7 +10,7 @@ class Kryvo::CryptoPrivate {
   Q_DECLARE_PUBLIC(Crypto)
 
  public:
-  explicit CryptoPrivate(Crypto* crypto, DispatcherState* ds);
+  explicit CryptoPrivate(Crypto* crypto, SchedulerState* s);
 
   void updateProviders(const QHash<QString, Plugin>& loadedProviders);
 
@@ -36,7 +36,7 @@ class Kryvo::CryptoPrivate {
 
   Crypto* const q_ptr{nullptr};
 
-  DispatcherState* state{nullptr};
+  SchedulerState* state{nullptr};
 
   DispatchQueue queue;
 
@@ -44,8 +44,8 @@ class Kryvo::CryptoPrivate {
   std::shared_timed_mutex providersMutex;
 };
 
-Kryvo::CryptoPrivate::CryptoPrivate(Crypto* crypto, DispatcherState* ds)
-  : q_ptr(crypto), state(ds), providersMutex(){
+Kryvo::CryptoPrivate::CryptoPrivate(Crypto* crypto, SchedulerState* s)
+  : q_ptr(crypto), state(s), providersMutex(){
 }
 
 void Kryvo::CryptoPrivate::updateProviders(
@@ -197,7 +197,7 @@ void Kryvo::CryptoPrivate::decrypt(const std::size_t id,
   queue.enqueue(task);
 }
 
-Kryvo::Crypto::Crypto(DispatcherState* state, QObject* parent)
+Kryvo::Crypto::Crypto(SchedulerState* state, QObject* parent)
   : QObject(parent), d_ptr(std::make_unique<CryptoPrivate>(this, state)) {
 }
 

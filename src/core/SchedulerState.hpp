@@ -1,5 +1,5 @@
-#ifndef KRYVO_DISPATCHERSTATE_HPP_
-#define KRYVO_DISPATCHERSTATE_HPP_
+#ifndef KRYVO_SCHEDULERSTATE_HPP_
+#define KRYVO_SCHEDULERSTATE_HPP_
 
 #include <QWaitCondition>
 #include <QReadWriteLock>
@@ -10,9 +10,9 @@
 
 namespace Kryvo {
 
-class DispatcherState {
+class SchedulerState {
  public:
-  DispatcherState();
+  SchedulerState();
 
   /*!
    * \brief init Reset the abort flag and initialize the stop flags
@@ -92,4 +92,4 @@ class DispatcherState {
 
 } // namespace Kryvo
 
-#endif // KRYVO_DISPATCHERSTATE_HPP_
+#endif // KRYVO_SCHEDULERSTATE_HPP_

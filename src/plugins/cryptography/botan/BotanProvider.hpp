@@ -86,7 +86,7 @@ class BotanProvider : public QObject,
   void errorMessage(const QString& message, const QFileInfo& fileInfo) override;
 
  public:
-  void init(DispatcherState* state) override;
+  void init(SchedulerState* state) override;
 
   /*!
    * \brief encrypt Encrypt a file

@@ -1,4 +1,5 @@
 #include "cryptography/Crypto.hpp"
+#include "SchedulerState.hpp"
 #include "PluginLoader.hpp"
 #include "Plugin.hpp"
 #include "FileUtility.h"
@@ -84,7 +85,7 @@ SCENARIO("Test encryption and decryption on various file types",
                               QFileInfo(QStringLiteral("test3.zip.enc")),
                               QFileInfo(QStringLiteral("test3 (2).zip")));
 
-  Kryvo::DispatcherState state;
+  Kryvo::SchedulerState state;
 
   Kryvo::PluginLoader pluginLoader;
   pluginLoader.loadPlugins();

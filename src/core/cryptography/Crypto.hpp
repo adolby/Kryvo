@@ -1,7 +1,7 @@
 #ifndef KRYVO_CRYPTOGRAPHY_CRYPTO_HPP_
 #define KRYVO_CRYPTOGRAPHY_CRYPTO_HPP_
 
-#include "DispatcherState.hpp"
+#include "SchedulerState.hpp"
 #include "cryptography/CryptoProviderInterface.hpp"
 #include "Plugin.hpp"
 #include "utility/pimpl.h"
@@ -25,7 +25,7 @@ class Crypto : public QObject {
    * \brief Crypto Constructs the Crypto class
    * \param parent
    */
-  explicit Crypto(DispatcherState* state, QObject* parent = nullptr);
+  explicit Crypto(SchedulerState* state, QObject* parent = nullptr);
 
   ~Crypto() override;
 
