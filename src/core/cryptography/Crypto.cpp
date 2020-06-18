@@ -61,7 +61,7 @@ void Kryvo::CryptoPrivate::updateProviders(
   for (auto providerIterator = loadedProviders.cbegin();
        providerIterator != end;
        ++providerIterator) {
-    const Plugin& providerPlugin = providerIterator.value();
+    const Plugin providerPlugin = providerIterator.value();
 
     QObject* provider = providerPlugin.instance();
 

@@ -12,21 +12,21 @@ QString pluginAttributeFromMetaData(const QJsonObject& metaData,
     return QString();
   }
 
-  const QJsonValue& metaDataValue = metaData.value(QStringLiteral("MetaData"));
+  const QJsonValue metaDataValue = metaData.value(QStringLiteral("MetaData"));
 
-  const QJsonObject& metaDataObject = metaDataValue.toObject();
+  const QJsonObject metaDataObject = metaDataValue.toObject();
 
   if (metaDataObject.isEmpty()) {
     return QString();
   }
 
-  const QJsonValue& value = metaDataObject.value(attributeName);
+  const QJsonValue value = metaDataObject.value(attributeName);
 
   if (value.isUndefined()) {
     return QString();
   }
 
-  const QString& attribute = value.toString();
+  const QString attribute = value.toString();
 
   return attribute;
 }

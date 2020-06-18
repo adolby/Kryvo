@@ -149,7 +149,7 @@ void Kryvo::MainWindow::addFiles() {
   Q_ASSERT(fileListFrame);
 
   // Open a file dialog to get files
-  const QStringList& fileNames =
+  const QStringList fileNames =
     QFileDialog::getOpenFileNames(this, tr("Add Files"),
                                   settings->inputPath(),
                                   tr("Any files (*)"));
@@ -182,7 +182,7 @@ void Kryvo::MainWindow::processFiles(
   Q_ASSERT(passwordFrame);
   Q_ASSERT(fileListFrame);
 
-  const QString& passphrase = passwordFrame->password();
+  const QString passphrase = passwordFrame->password();
 
   if (!passphrase.isEmpty()) {
     const int rowCount = fileListFrame->rowCount();
@@ -196,7 +196,7 @@ void Kryvo::MainWindow::processFiles(
         files.push_back(fileInfo);
       }
 
-      const QString& outputPath = outputFrame->outputPath();
+      const QString outputPath = outputFrame->outputPath();
       const QDir outputDir(outputPath);
 
       if (Kryvo::CryptDirection::Encrypt == direction) {
@@ -272,8 +272,8 @@ void Kryvo::MainWindow::updateContainerMode(const bool container) {
 QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
                                           const QString& defaultFile) const {
   // Try to load user theme, if it exists
-  const QString& styleSheetPath = QStringLiteral("themes") %
-                                  QStringLiteral("/") % styleFile;
+  const QString styleSheetPath = QStringLiteral("themes") %
+                                 QStringLiteral("/") % styleFile;
   QFile userTheme(styleSheetPath);
 
   QString styleSheet;
@@ -286,7 +286,7 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
       userTheme.close();
     }
   } else { // Otherwise, load default theme
-    const QString& localPath = QStringLiteral(":/stylesheets/") % defaultFile;
+    const QString localPath = QStringLiteral(":/stylesheets/") % defaultFile;
     QFile defaultTheme(localPath);
 
     const bool defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
@@ -308,7 +308,7 @@ void Kryvo::MainWindow::selectOutputDir() {
   }
 
   // Open a directory select dialog to get the output directory
-  const QString& outputDir =
+  const QString outputDir =
     QFileDialog::getExistingDirectory(this, tr("Select Folder"),
                                       settings->outputPath());
 

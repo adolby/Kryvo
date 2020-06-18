@@ -54,24 +54,24 @@ Kryvo::SettingsPrivate::SettingsPrivate() = default;
 
 void Kryvo::SettingsPrivate::importSettings() {
 #if defined(Q_OS_MACOS)
-  const QString& settingsPath =
+  const QString settingsPath =
     QString(QCoreApplication::instance()->applicationDirPath() %
             QStringLiteral("/") %
             QStringLiteral("settings.json"));
 #else
-  const QString& settingsPath = QStringLiteral("settings.json");
+  const QString settingsPath = QStringLiteral("settings.json");
 #endif
 
   QFile settingsFile(settingsPath);
   const bool fileOpen = settingsFile.open(QIODevice::ReadOnly);
 
   if (fileOpen) {
-    const QByteArray& settingsData = settingsFile.readAll();
+    const QByteArray settingsData = settingsFile.readAll();
 
-    const QJsonDocument& settingsDoc = QJsonDocument::fromJson(settingsData);
-    const QJsonObject& settings = settingsDoc.object();
+    const QJsonDocument settingsDoc = QJsonDocument::fromJson(settingsData);
+    const QJsonObject settings = settingsDoc.object();
 
-    const QJsonObject& positionObject =
+    const QJsonObject positionObject =
       settings[QStringLiteral("position")].toObject();
     position = QPoint(positionObject[QStringLiteral("x")].toInt(100),
                       positionObject[QStringLiteral("y")].toInt(100));
@@ -79,7 +79,7 @@ void Kryvo::SettingsPrivate::importSettings() {
     maximized = settings[QStringLiteral("maximized")].toBool(false);
 
     if (!maximized) {
-      const QJsonObject& sizeObject =
+      const QJsonObject sizeObject =
         settings[QStringLiteral("size")].toObject();
       size = QSize(sizeObject[QStringLiteral("width")].toInt(800),
                    sizeObject[QStringLiteral("height")].toInt(600));
@@ -96,7 +96,7 @@ void Kryvo::SettingsPrivate::importSettings() {
     keySize =
       static_cast<std::size_t>(settings[QStringLiteral("keySize")].toInt(128));
 
-    const QJsonValue& modeOfOperationObject =
+    const QJsonValue modeOfOperationObject =
       settings[QStringLiteral("modeOfOperation")];
     modeOfOperation = modeOfOperationObject.toString(QStringLiteral("GCM"));
 
@@ -113,7 +113,7 @@ void Kryvo::SettingsPrivate::importSettings() {
       settings[QStringLiteral("inputPath")].toString(
         Constants::kDocumentsPath);
 
-    const QJsonValue& styleObject = settings[QStringLiteral("styleSheetPath")];
+    const QJsonValue styleObject = settings[QStringLiteral("styleSheetPath")];
     styleSheetPath = styleObject.toString(QStringLiteral("kryvo.qss"));
   } else { // Settings file couldn't be opened, so use defaults
     position = QPoint(100, 100);
@@ -134,11 +134,11 @@ void Kryvo::SettingsPrivate::importSettings() {
 
 void Kryvo::SettingsPrivate::exportSettings() const {
 #if defined(Q_OS_MACOS)
-  const QString& settingsPath = QString(QCoreApplication::applicationDirPath() %
-                                        QStringLiteral("/") %
-                                        QStringLiteral("settings.json"));
+  const QString settingsPath = QString(QCoreApplication::applicationDirPath() %
+                                       QStringLiteral("/") %
+                                       QStringLiteral("settings.json"));
 #else
-  const QString& settingsPath = QStringLiteral("settings.json");
+  const QString settingsPath = QStringLiteral("settings.json");
 #endif
 
   QSaveFile settingsFile(settingsPath);

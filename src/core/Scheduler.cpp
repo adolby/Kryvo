@@ -178,7 +178,7 @@ void Kryvo::SchedulerPrivate::processPipeline(const std::size_t id) {
     return;
   }
 
-  const std::function<void(std::size_t)>& func =
+  const std::function<void(std::size_t)> func =
     pipeline.stages.at(pipeline.stage);
 
   pipeline.stage = pipeline.stage + 1;
@@ -214,14 +214,14 @@ void Kryvo::SchedulerPrivate::abortPipeline(const std::size_t id) {
 }
 
 void Kryvo::SchedulerPrivate::encrypt(const QString& cryptoProvider,
-                                       const QString& compressionFormat,
-                                       const QString& passphrase,
-                                       const std::vector<QFileInfo>& inputFiles,
-                                       const QDir& outputPath,
-                                       const QString& cipher,
-                                       const std::size_t inputKeySize,
-                                       const QString& modeOfOperation,
-                                       const bool removeIntermediateFiles) {
+                                      const QString& compressionFormat,
+                                      const QString& passphrase,
+                                      const std::vector<QFileInfo>& inputFiles,
+                                      const QDir& outputPath,
+                                      const QString& cipher,
+                                      const std::size_t inputKeySize,
+                                      const QString& modeOfOperation,
+                                      const bool removeIntermediateFiles) {
   Q_Q(Scheduler);
 
   if (state.isRunning()) {
@@ -252,9 +252,9 @@ void Kryvo::SchedulerPrivate::encrypt(const QString& cryptoProvider,
       outputPath.mkpath(outputPath.absolutePath());
     }
 
-    const QString& outPath = outputPath.exists() ?
-                             outputPath.absolutePath() :
-                             inputFile.absolutePath();
+    const QString outPath = outputPath.exists() ?
+                            outputPath.absolutePath() :
+                            inputFile.absolutePath();
 
     Pipeline pipeline;
 
@@ -263,7 +263,7 @@ void Kryvo::SchedulerPrivate::encrypt(const QString& cryptoProvider,
     id = id + 1;
 
     if (QStringLiteral("gzip") == compressionFormat) {
-      const QString& compressedFilePath =
+      const QString compressedFilePath =
         QString(outPath % QStringLiteral("/") % inputFile.fileName() %
                 Kryvo::Constants::kDot %
                 Kryvo::Constants::kCompressedFileExtension);
@@ -275,7 +275,7 @@ void Kryvo::SchedulerPrivate::encrypt(const QString& cryptoProvider,
 
       pipeline.stages.push_back(compressFunction);
 
-      const QString& encryptedFilePath =
+      const QString encryptedFilePath =
         QString(compressedFilePath % Kryvo::Constants::kDot %
                 Kryvo::Constants::kEncryptedFileExtension);
 
@@ -301,7 +301,7 @@ void Kryvo::SchedulerPrivate::encrypt(const QString& cryptoProvider,
         pipeline.stages.push_back(removeIntermediateFilesFunction);
       }
     } else {
-      const QString& encryptedFilePath =
+      const QString encryptedFilePath =
         QString(outPath % QStringLiteral("/") % inputFile.fileName() %
                 Kryvo::Constants::kDot %
                 Kryvo::Constants::kEncryptedFileExtension);
@@ -333,9 +333,9 @@ void Kryvo::SchedulerPrivate::encrypt(const QString& cryptoProvider,
 }
 
 void Kryvo::SchedulerPrivate::decrypt(const QString& passphrase,
-                                       const std::vector<QFileInfo>& inputFiles,
-                                       const QDir& outputPath,
-                                       const bool removeIntermediateFiles) {
+                                      const std::vector<QFileInfo>& inputFiles,
+                                      const QDir& outputPath,
+                                      const bool removeIntermediateFiles) {
   Q_Q(Scheduler);
 
   if (state.isRunning()) {
@@ -360,17 +360,17 @@ void Kryvo::SchedulerPrivate::decrypt(const QString& passphrase,
       continue;
     }
 
-    const QHash<QByteArray, QByteArray>& header = readHeader(&inFile);
+    const QHash<QByteArray, QByteArray> header = readHeader(&inFile);
 
     if (!header.contains(QByteArrayLiteral("Version"))) {
       emit q->errorMessage(Kryvo::Constants::kMessages[7], inputFile);
       continue;
     }
 
-    const QByteArray& cryptoProvider =
+    const QByteArray cryptoProvider =
       header.value(QByteArrayLiteral("Cryptography provider"));
 
-    const QByteArray& compressionFormat =
+    const QByteArray compressionFormat =
       header.value(QByteArrayLiteral("Compression format"));
 
     // Create output path if it doesn't exist
@@ -378,12 +378,12 @@ void Kryvo::SchedulerPrivate::decrypt(const QString& passphrase,
       outputPath.mkpath(outputPath.absolutePath());
     }
 
-    const QString& outPath = outputPath.exists() ?
-                             outputPath.absolutePath() :
-                             inputFile.absolutePath();
+    const QString outPath = outputPath.exists() ?
+                            outputPath.absolutePath() :
+                            inputFile.absolutePath();
 
-    const QString& outputFilePath = QString(outPath % QStringLiteral("/") %
-                                            inputFile.fileName());
+    const QString outputFilePath = QString(outPath % QStringLiteral("/") %
+                                           inputFile.fileName());
 
     Pipeline pipeline;
 
@@ -392,7 +392,7 @@ void Kryvo::SchedulerPrivate::decrypt(const QString& passphrase,
     id = id + 1;
 
     // Remove the .enc extensions if at the end of the file path
-    const QString& decryptedFilePath =
+    const QString decryptedFilePath =
       removeExtension(outputFilePath, Constants::kEncryptedFileExtension);
 
     // Create a unique file name for the file in this directory
@@ -409,7 +409,7 @@ void Kryvo::SchedulerPrivate::decrypt(const QString& passphrase,
 
     if (QByteArrayLiteral("gzip") == compressionFormat) {
       // Remove the gz extension if at the end of the file path
-      const QString& decompressedFilePath =
+      const QString decompressedFilePath =
         removeExtension(uniqueDecryptedFilePath.absoluteFilePath(),
                         Constants::kCompressedFileExtension);
 
@@ -457,14 +457,14 @@ Kryvo::Scheduler::Scheduler(QObject* parent)
 Kryvo::Scheduler::~Scheduler() = default;
 
 void Kryvo::Scheduler::encrypt(const QString& cryptoProvider,
-                                const QString& compressionFormat,
-                                const QString& passphrase,
-                                const std::vector<QFileInfo>& inputFiles,
-                                const QDir& outputPath,
-                                const QString& cipher,
-                                const std::size_t inputKeySize,
-                                const QString& modeOfOperation,
-                                const bool removeIntermediateFiles) {
+                               const QString& compressionFormat,
+                               const QString& passphrase,
+                               const std::vector<QFileInfo>& inputFiles,
+                               const QDir& outputPath,
+                               const QString& cipher,
+                               const std::size_t inputKeySize,
+                               const QString& modeOfOperation,
+                               const bool removeIntermediateFiles) {
   Q_D(Scheduler);
 
   d->encrypt(cryptoProvider, compressionFormat, passphrase, inputFiles,
@@ -473,9 +473,9 @@ void Kryvo::Scheduler::encrypt(const QString& cryptoProvider,
 }
 
 void Kryvo::Scheduler::decrypt(const QString& passphrase,
-                                const std::vector<QFileInfo>& inputFiles,
-                                const QDir& outputPath,
-                                const bool removeIntermediateFiles) {
+                               const std::vector<QFileInfo>& inputFiles,
+                               const QDir& outputPath,
+                               const bool removeIntermediateFiles) {
   Q_D(Scheduler);
 
   d->decrypt(passphrase, inputFiles, outputPath, removeIntermediateFiles);
@@ -503,7 +503,7 @@ void Kryvo::Scheduler::stop(const QFileInfo& fileInfo) {
     bool found = false;
 
     for (std::size_t i = 0; i < d->pipelines.size(); ++i) {
-      const Pipeline& pipeline = d->pipelines.at(i);
+      const Pipeline pipeline = d->pipelines.at(i);
 
       if (pipeline.inputFilePath == fileInfo) {
         id = i;
@@ -531,15 +531,15 @@ void Kryvo::Scheduler::abortPipeline(const std::size_t id) {
 }
 
 void Kryvo::Scheduler::updateFileProgress(const std::size_t id,
-                                           const QString& task,
-                                           const qint64 percentProgress) {
+                                          const QString& task,
+                                          const qint64 percentProgress) {
   Q_D(Scheduler);
 
   if (id >= d->pipelines.size()) {
     return;
   }
 
-  const Pipeline& pipeline = d->pipelines.at(id);
+  const Pipeline pipeline = d->pipelines.at(id);
 
   emit fileProgress(pipeline.inputFilePath, task, percentProgress);
 }

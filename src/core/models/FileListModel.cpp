@@ -14,7 +14,7 @@ Kryvo::FileListModelPrivate::FileListModelPrivate() {
 
 Kryvo::FileListModel::FileListModel(QObject* parent)
   : QAbstractListModel(parent),
-    d_ptr(std::make_unique<FileListModelPrivate>()){
+    d_ptr(std::make_unique<FileListModelPrivate>()) {
 }
 
 Kryvo::FileListModel::~FileListModel() = default;
@@ -40,7 +40,7 @@ QVariant Kryvo::FileListModel::data(const QModelIndex& index, int role) const {
     return QVariant();
   }
 
-  const FileItem& el = d->files.at(index.row());
+  const FileItem el = d->files.at(index.row());
 
   if (ProgressRole == role) {
     return el.progress();

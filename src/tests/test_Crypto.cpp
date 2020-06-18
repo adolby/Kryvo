@@ -90,7 +90,7 @@ SCENARIO("Test encryption and decryption on various file types",
   Kryvo::PluginLoader pluginLoader;
   pluginLoader.loadPlugins();
 
-  const QHash<QString, Kryvo::Plugin>& providers =
+  const QHash<QString, Kryvo::Plugin> providers =
       pluginLoader.cryptoProviders();
 
   Kryvo::Crypto cryptographer(&state);
@@ -98,12 +98,12 @@ SCENARIO("Test encryption and decryption on various file types",
   cryptographer.updateProviders(providers);
 
   for (const EncryptionTestData& etd : testDataVector) {
-    const QString& inputFilePath = etd.inputFilePath.absoluteFilePath();
+    const QString inputFilePath = etd.inputFilePath.absoluteFilePath();
 
     GIVEN("Test file: " + inputFilePath.toStdString()) {
       const QFileInfo inputFileInfo(etd.inputFilePath);
 
-      const QString& msgMissing = QStringLiteral("Test file %1 is missing.");
+      const QString msgMissing = QStringLiteral("Test file %1 is missing.");
 
       if (!inputFileInfo.exists()) {
         FAIL(msgMissing.arg(inputFilePath).toStdString());
@@ -130,11 +130,11 @@ SCENARIO("Test encryption and decryption on various file types",
             etd.encryptedFilePath.absoluteFilePath()).toStdString());
         }
 
-        const QHash<QByteArray, QByteArray>& headers =
+        const QHash<QByteArray, QByteArray> headers =
           Kryvo::readHeader(&inFile);
 
         if (!headers.contains(QByteArrayLiteral("Version"))) {
-          const QString& headerError = QStringLiteral("Header error in %1");
+          const QString headerError = QStringLiteral("Header error in %1");
           FAIL(headerError.arg(
             etd.encryptedFilePath.absoluteFilePath()).toStdString());
         }

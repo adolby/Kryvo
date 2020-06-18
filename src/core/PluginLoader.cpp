@@ -37,7 +37,7 @@ Kryvo::PluginLoaderPrivate::loadPluginFromFile(const QString& filePath) {
 
   QObject* plugin = loader.instance();
 
-  const QJsonObject& metaData = loader.metaData();
+  const QJsonObject metaData = loader.metaData();
 
   return Plugin(plugin, metaData);
 }
@@ -45,13 +45,12 @@ Kryvo::PluginLoaderPrivate::loadPluginFromFile(const QString& filePath) {
 void Kryvo::PluginLoaderPrivate::loadPlugins() {
   Q_Q(PluginLoader);
 
-  const QVector<QStaticPlugin>& staticPlugins =
-    QPluginLoader::staticPlugins();
+  const QVector<QStaticPlugin> staticPlugins = QPluginLoader::staticPlugins();
 
   for (const QStaticPlugin& staticPlugin : staticPlugins) {
     const Plugin plugin(staticPlugin);
 
-    const QString& pluginName = plugin.name();
+    const QString pluginName = plugin.name();
 
     if (plugin.instance()) {
       if (QStringLiteral("Crypto") == plugin.category()) {
@@ -80,14 +79,14 @@ void Kryvo::PluginLoaderPrivate::loadPlugins() {
     while (it.hasNext()) {
       it.next();
 
-      const QFileInfo& fileInfo = it.fileInfo();
+      const QFileInfo fileInfo = it.fileInfo();
 
-      const QString& filePath = fileInfo.absoluteFilePath();
+      const QString filePath = fileInfo.absoluteFilePath();
 
       const bool isLibrary = QLibrary::isLibrary(filePath);
 
       if (isLibrary) {
-        const Plugin& plugin = loadPluginFromFile(filePath);
+        const Plugin plugin = loadPluginFromFile(filePath);
 
         if (plugin.instance()) {
           if (QStringLiteral("Crypto") == plugin.category()) {

@@ -6,13 +6,13 @@
 
 SCENARIO("File compare returns success for identical files", "[compareSame]") {
   GIVEN("Two identical PNG files") {
-    const QString& fileName1 = QStringLiteral("file1.png");
-    const QString& fileName2 = QStringLiteral("file2.png");
+    const QString fileName1 = QStringLiteral("file1.png");
+    const QString fileName2 = QStringLiteral("file2.png");
 
     const QFileInfo fileInfo1(fileName1);
     const QFileInfo fileInfo2(fileName2);
 
-    const QString& msgTemplate = QStringLiteral("Test file %1 is missing.");
+    const QString msgTemplate = QStringLiteral("Test file %1 is missing.");
 
     if (!fileInfo1.exists()) {
       FAIL(msgTemplate.arg(fileName1).toStdString());
@@ -35,13 +35,13 @@ SCENARIO("File compare returns success for identical files", "[compareSame]") {
 SCENARIO("File compare returns success for different files",
          "[compareDifferent]") {
   GIVEN("Two different PNG files") {
-    const QString& fileName1 = QStringLiteral("file1.png");
-    const QString& fileName2 = QStringLiteral("file3.png");
+    const QString fileName1 = QStringLiteral("file1.png");
+    const QString fileName2 = QStringLiteral("file3.png");
 
     const QFileInfo fileInfo1(fileName1);
     const QFileInfo fileInfo2(fileName2);
 
-    const QString& msgTemplate = QStringLiteral("Test file %1 is missing. ");
+    const QString msgTemplate = QStringLiteral("Test file %1 is missing. ");
 
     if (!fileInfo1.exists()) {
       FAIL(msgTemplate.arg(fileName1).toStdString());

@@ -83,8 +83,8 @@ void Kryvo::FileListFrame::clear() {
   d->fileListModel.clear();
 
   // File list header
-  const QStringList& headerList = {tr("File"), tr("Task"), tr("Progress"),
-                                   tr("Remove")};
+  const QStringList headerList = {tr("File"), tr("Task"), tr("Progress"),
+                                  tr("Remove")};
   d->fileListModel.setHorizontalHeaderLabels(headerList);
 
   QHeaderView* header = d->fileListView.horizontalHeader();
@@ -101,7 +101,7 @@ void Kryvo::FileListFrame::updateProgress(const QFileInfo& info,
                                           const qint64 percent) {
   Q_D(FileListFrame);
 
-  const QList<QStandardItem*>& items =
+  const QList<QStandardItem*> items =
     d->fileListModel.findItems(info.absoluteFilePath(), Qt::MatchExactly, 0);
 
   if (!items.empty()) {
@@ -137,7 +137,7 @@ void Kryvo::FileListFrame::addFileToModel(const QFileInfo& fileInfo) {
     pathItem->setSelectable(false);
     pathItem->setToolTip(fileInfo.absoluteFilePath());
 
-    const QVariant& pathVariant =
+    const QVariant pathVariant =
       QVariant::fromValue(fileInfo.absoluteFilePath());
     pathItem->setData(pathVariant);
 
@@ -159,8 +159,8 @@ void Kryvo::FileListFrame::addFileToModel(const QFileInfo& fileInfo) {
     closeFileItem->setEditable(false);
     closeFileItem->setSelectable(false);
 
-    const QList<QStandardItem*>& items = {pathItem, taskItem, progressItem,
-                                          closeFileItem};
+    const QList<QStandardItem*> items = {pathItem, taskItem, progressItem,
+                                         closeFileItem};
 
     // Search to see if this item is already in the model
     bool addNewItem = true;
@@ -175,8 +175,8 @@ void Kryvo::FileListFrame::addFileToModel(const QFileInfo& fileInfo) {
           return;
       }
 
-      const QVariant& testItemData = testItem->data();
-      const QVariant& pathItemData = pathItem->data();
+      const QVariant testItemData = testItem->data();
+      const QVariant pathItemData = pathItem->data();
 
       if (testItemData.toString() == pathItemData.toString()) {
         addNewItem = false;
@@ -201,7 +201,7 @@ void Kryvo::FileListFrame::removeFileFromModel(const QModelIndex& index) {
       return;
   }
 
-  const QVariant& data = testItem->data();
+  const QVariant data = testItem->data();
 
   // Signal that this file shouldn't be encrypted or decrypted
   emit stopFile(QFileInfo(data.toString()));

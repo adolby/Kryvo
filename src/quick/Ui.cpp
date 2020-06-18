@@ -128,19 +128,19 @@ bool Kryvo::Ui::canNavigateBack() const {
 
 QUrl Kryvo::Ui::inputPath() const {
   Q_D(const Ui);
-  const QDir& inputDir = d->settings->inputPath();
+  const QDir inputDir = d->settings->inputPath();
   return QUrl::fromLocalFile(inputDir.absolutePath());
 }
 
 QUrl Kryvo::Ui::outputPath() const {
   Q_D(const Ui);
-  const QDir& outputDir = d->settings->outputPath();
+  const QDir outputDir = d->settings->outputPath();
   return QUrl::fromLocalFile(outputDir.absolutePath());
 }
 
 QString Kryvo::Ui::outputPathString() const {
   Q_D(const Ui);
-  const QDir& outputDir = d->settings->outputPath();
+  const QDir outputDir = d->settings->outputPath();
   return outputDir.absolutePath();
 }
 
@@ -259,7 +259,7 @@ void Kryvo::Ui::addFiles(const QList<QUrl>& fileUrls) {
 
   if (!fileUrls.isEmpty()) { // If files were selected, add them to the model
     for (const QUrl& fileUrl : fileUrls) {
-      const QString& filePath = qmlUrlToPath(fileUrl);
+      const QString filePath = qmlUrlToPath(fileUrl);
 
       const QFileInfo fileInfo(filePath);
 
@@ -271,8 +271,8 @@ void Kryvo::Ui::addFiles(const QList<QUrl>& fileUrls) {
     }
 
     // Save the last file directory for returning to later
-    const QUrl& lastInputUrl = fileUrls.last();
-    const QString& inputPath = qmlUrlToPath(lastInputUrl);
+    const QUrl lastInputUrl = fileUrls.last();
+    const QString inputPath = qmlUrlToPath(lastInputUrl);
 
     const QDir inputDir(inputPath);
 
@@ -313,7 +313,7 @@ void Kryvo::Ui::processFiles(const QString& passphrase,
     const int rowCount = d->fileListModel.rowCount();
 
     for (int row = 0; row < rowCount; ++row) {
-      const FileItem& item = d->fileListModel.item(row);
+      const FileItem item = d->fileListModel.item(row);
       files.push_back(QFileInfo(item.fileName()));
     }
 
@@ -394,7 +394,7 @@ void Kryvo::Ui::updateKeySize(const QString& keySizeString) {
   if (keySize != d->settings->keySize()) {
     d->settings->keySize(keySize);
 
-    const QString& updatedKeySizeString =
+    const QString updatedKeySizeString =
       QString::number(d->settings->keySize());
 
     emit keySizeChanged(updatedKeySizeString);
@@ -440,7 +440,7 @@ void Kryvo::Ui::updateContainerMode(const bool container) {
 void Kryvo::Ui::updateOutputPath(const QUrl& url) {
   Q_D(Ui);
 
-  const QString& outputPath = qmlUrlToPath(url);
+  const QString outputPath = qmlUrlToPath(url);
 
   if (outputPath != d->settings->outputPath()) {
     d->settings->outputPath(outputPath);

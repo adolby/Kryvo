@@ -43,7 +43,7 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
       break;
     }
     case 2: {
-      const QVariant& progressVariant = index.data(Qt::DisplayRole);
+      const QVariant progressVariant = index.data(Qt::DisplayRole);
       const int progress = progressVariant.toInt();
       const int progressAbsolute = progress < 0 ? 0 : progress;
 

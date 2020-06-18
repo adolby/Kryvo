@@ -18,13 +18,13 @@ SCENARIO("Test compression and decompression on a text file",
     Kryvo::SchedulerState state;
     Kryvo::Archiver archiver(&state);
 
-    const QString& inputFilePath = QStringLiteral("test1.txt");
-    const QString& compressedFilePath = QStringLiteral("test1.txt.gz");
-    const QString& decompressedFilePath = QStringLiteral("test1 (2).txt");
+    const QString inputFilePath = QStringLiteral("test1.txt");
+    const QString compressedFilePath = QStringLiteral("test1.txt.gz");
+    const QString decompressedFilePath = QStringLiteral("test1 (2).txt");
 
     const QFileInfo inputFileInfo(inputFilePath);
 
-    const QString& msgTemplate = QStringLiteral("Test file %1 is missing.");
+    const QString msgTemplate = QStringLiteral("Test file %1 is missing.");
 
     if (!inputFileInfo.exists()) {
       FAIL(msgTemplate.arg(inputFilePath).toStdString());

@@ -41,7 +41,7 @@ void Kryvo::DispatchQueue::performWork() {
                             });
 
     if (!queue.empty() && !quit) {
-      const DispatchTask& task = queue.front();
+      const DispatchTask task = queue.front();
 
       queue.pop();
 

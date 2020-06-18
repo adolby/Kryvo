@@ -140,16 +140,16 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cryptoProvider,
   auto keySizeFrame = new QFrame(cryptoSettingsFrame);
   keySizeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  const QString& keySizeToolTip = tr("The cipher key size is the number of "
-                                     "bits in the key that is created from "
-                                     "your password via a secure hash "
-                                     "function. A larger key size does not "
-                                     "necessarily yield a more secure "
-                                     "encrypted output. Key sizes of 128, 192, "
-                                     "and 256 are all currently considered to "
-                                     "be secure key sizes.");
-  const QString& keySizeSplitToolTip = splitToolTip(keySizeToolTip,
-                                                    d->toolTipWidth);
+  const QString keySizeToolTip = tr("The cipher key size is the number of bits "
+                                    "in the key that is created from your "
+                                    "password via a secure hash function. A "
+                                    "larger key size does not necessarily "
+                                    "yield a more secure encrypted output. Key "
+                                    "sizes of 128, 192, and 256 are all "
+                                    "currently considered to be secure key "
+                                    "sizes.");
+  const QString keySizeSplitToolTip = splitToolTip(keySizeToolTip,
+                                                   d->toolTipWidth);
 
   auto keySizeLabel = new QLabel(tr("Key size (bits)"), keySizeFrame);
   keySizeLabel->setObjectName(QStringLiteral("text"));
@@ -170,13 +170,12 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cryptoProvider,
   auto modeFrame = new QFrame(cryptoSettingsFrame);
   modeFrame->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
-  const QString& modeToolTip = tr("The mode of operation is the algorithm that "
-                                  "repeatedly applies the cipher's "
-                                  "single-block operation to securely "
-                                  "transform data. GCM and EAX are both "
-                                  "currently considered to be secure modes of "
-                                  "operation.");
-  const QString& modeSplitToolTip = splitToolTip(modeToolTip, d->toolTipWidth);
+  const QString modeToolTip = tr("The mode of operation is the algorithm that "
+                                 "repeatedly applies the cipher's single-block "
+                                 "operation to securely transform data. GCM "
+                                 "and EAX are both currently considered to be "
+                                 "secure modes of operation.");
+  const QString modeSplitToolTip = splitToolTip(modeToolTip, d->toolTipWidth);
 
   auto modeLabel = new QLabel(tr("Mode of operation"), modeFrame);
   modeLabel->setObjectName(QStringLiteral("text"));
@@ -323,7 +322,7 @@ void Kryvo::SettingsFrame::changeKeySize() {
   Q_D(SettingsFrame);
   Q_ASSERT(d->keySizeComboBox);
 
-  const QString& keySizeString = d->keySizeComboBox->currentText();
+  const QString keySizeString = d->keySizeComboBox->currentText();
 
   const std::size_t keySize = keySizeString.toInt();
 

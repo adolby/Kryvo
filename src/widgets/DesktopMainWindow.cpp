@@ -4,8 +4,7 @@
 #include <QMimeData>
 #include <QUrl>
 
-Kryvo::DesktopMainWindow::DesktopMainWindow(Settings* s,
-                                            QWidget* parent)
+Kryvo::DesktopMainWindow::DesktopMainWindow(Settings* s, QWidget* parent)
   : MainWindow(s, parent) {
   messageFrame->appendMessage(tr("To begin, click the Add Files button or drag "
                                  "and drop files. Next, enter a file path for "
@@ -45,8 +44,8 @@ Kryvo::DesktopMainWindow::DesktopMainWindow(Settings* s,
   this->setAcceptDrops(true);
 
   // Load stylesheet
-  const QString& styleSheet = loadStyleSheet(settings->styleSheetPath(),
-                                             QStringLiteral("kryvo.qss"));
+  const QString styleSheet = loadStyleSheet(settings->styleSheetPath(),
+                                            QStringLiteral("kryvo.qss"));
 
   if (!styleSheet.isEmpty()) {
     this->setStyleSheet(styleSheet);

@@ -82,7 +82,7 @@ void Kryvo::ElidedLabel::setElideMode(const Qt::TextElideMode mode) {
 QSize Kryvo::ElidedLabel::sizeHint() const {
   Q_D(const ElidedLabel);
 
-  const QFontMetrics& fm = fontMetrics();
+  const QFontMetrics fm = fontMetrics();
   const QSize size(fm.width(d->text), fm.height());
   return size;
 }
@@ -94,8 +94,8 @@ QSize Kryvo::ElidedLabel::minimumSizeHint() const {
     case Qt::ElideNone:
       return sizeHint();
     default: {
-      const QFontMetrics& fm = fontMetrics();
-      const QSize size{fm.width(QStringLiteral("...")), fm.height()};
+      const QFontMetrics fm = fontMetrics();
+      const QSize size(fm.width(QStringLiteral("...")), fm.height());
       return size;
     }
   }
@@ -107,7 +107,7 @@ void Kryvo::ElidedLabel::paintEvent(QPaintEvent* event) {
   QFrame::paintEvent(event);
 
   QPainter p(this);
-  const QRect& r = contentsRect();
+  const QRect r = contentsRect();
 
   const QString elidedText =
     fontMetrics().elidedText(d->text, d->mode, r.width());
