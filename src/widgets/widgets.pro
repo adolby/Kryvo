@@ -6,7 +6,7 @@ TARGET = Kryvo
 
 TEMPLATE = app
 
-CONFIG += c++14
+CONFIG += c++17
 
 # Qt Creator Debug/Release Differentiation
 # Ensure one "debug_and_release" in CONFIG, for clarity.

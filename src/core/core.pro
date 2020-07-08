@@ -6,7 +6,7 @@ TARGET = core
 
 TEMPLATE = lib
 
-CONFIG += staticlib c++14
+CONFIG += staticlib c++17
 
 # Qt Creator Debug/Release Differentiation
 # Ensure one "debug_and_release" in CONFIG, for clarity.
