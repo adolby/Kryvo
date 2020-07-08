@@ -18,7 +18,7 @@ npm install -g appdmg
 echo "Installing Qt..."
 cd "${qt_install_dir}"
 echo "Downloading Qt files..."
-wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/qt-5.9.8/qt-opensource-5.9.8-macos-clang.zip &> /dev/null
+wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/qt-5.15.0/qt-opensource-5.15.0-macos-clang.zip &> /dev/null
 echo "Extracting Qt files..."
 7z x qt-opensource-5.9.8-macos-clang.zip -aos &> /dev/null
 
