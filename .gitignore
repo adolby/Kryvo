@@ -55,6 +55,7 @@ Makefile*
 *.Debug
 *.Release
 *deployment-settings.json
+*_wrapper.sh
 
 # Qt Creator
 *.autosave
