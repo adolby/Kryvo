@@ -12,7 +12,7 @@ matrix:
     language: cpp
     compiler: clang
     env: SPEC=macx-clang
-    osx_image: xcode10
+    osx_image: xcode12
     # cache:
       # directories:
       # - "${HOME}/Library/Caches/Homebrew"
