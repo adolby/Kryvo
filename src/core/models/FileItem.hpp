@@ -17,9 +17,9 @@ class FileItem {
   void setProgress(int percent);
 
  private:
-  QString mFileName;
-  QString mTask;
-  int mProgress = -1;
+  QString fileName_;
+  QString task_;
+  int progress_ = -1;
 };
 
 inline bool operator== (const FileItem& item1, const FileItem& item2) {

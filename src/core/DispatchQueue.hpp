@@ -34,13 +34,13 @@ class DispatchQueue {
  private:
   void performWork();
 
-  std::vector<std::thread> threadPool;
+  std::vector<std::thread> threadPool_;
 
-  std::mutex queueMutex;
-  std::queue<DispatchTask> queue;
-  std::condition_variable queueWaitCondition;
+  std::mutex queueMutex_;
+  std::queue<DispatchTask> queue_;
+  std::condition_variable queueWaitCondition_;
 
-  bool quit = false;
+  bool quit_ = false;
 };
 
 }

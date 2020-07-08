@@ -7,96 +7,96 @@ Kryvo::SchedulerState::SchedulerState()
 }
 
 void Kryvo::SchedulerState::init(const std::size_t maxPipelineId) {
-  aborted = false;
+  aborted_ = false;
 
-  QWriteLocker locker(&stoppedLock);
-  stopped.clear();
-  stopped.resize(maxPipelineId);
+  QWriteLocker locker(&stoppedLock_);
+  stopped_.clear();
+  stopped_.resize(maxPipelineId);
 }
 
 void Kryvo::SchedulerState::abort(const bool abort) {
-  aborted = abort;
+  aborted_ = abort;
 }
 
 bool Kryvo::SchedulerState::isAborted() const {
-  return aborted;
+  return aborted_;
 }
 
 void Kryvo::SchedulerState::pause(const bool pause) {
-  QWriteLocker lock(&stateLock);
+  QWriteLocker lock(&stateLock_);
 
   if (pause) {
-    if (state != ExecutionState::Running) {
+    if (state_ != ExecutionState::Running) {
       return;
     }
 
-    state = ExecutionState::Paused;
+    state_ = ExecutionState::Paused;
   } else {
-    if (state != ExecutionState::Paused) {
+    if (state_ != ExecutionState::Paused) {
       return;
     }
 
-    state = ExecutionState::Running;
+    state_ = ExecutionState::Running;
 
-    pauseWaitCondition.wakeAll();
+    pauseWaitCondition_.wakeAll();
   }
 }
 
 bool Kryvo::SchedulerState::isPaused() {
-  QReadLocker lock(&stateLock);
+  QReadLocker lock(&stateLock_);
 
-  return ExecutionState::Paused == state;
+  return ExecutionState::Paused == state_;
 }
 
 void Kryvo::SchedulerState::pauseWait(const std::size_t pipelineId) {
-  QReadLocker lock(&stateLock);
+  QReadLocker lock(&stateLock_);
 
   while (isPaused() && !(isAborted() || isStopped(pipelineId))) {
-    pauseWaitCondition.wait(&stateLock);
+    pauseWaitCondition_.wait(&stateLock_);
   }
 }
 
 void Kryvo::SchedulerState::stop(const std::size_t pipelineId,
-                                  const bool stop) {
-  QWriteLocker locker(&stoppedLock);
+                                 const bool stop) {
+  QWriteLocker locker(&stoppedLock_);
 
-  if (pipelineId < stopped.size()) {
-    stopped[pipelineId] = stop;
+  if (pipelineId < stopped_.size()) {
+    stopped_[pipelineId] = stop;
   }
 }
 
 bool Kryvo::SchedulerState::isStopped(const std::size_t pipelineId) {
-  QReadLocker locker(&stoppedLock);
+  QReadLocker locker(&stoppedLock_);
 
   bool hasBeenStopped = false;
 
-  if (pipelineId < stopped.size()) {
-    hasBeenStopped = stopped.at(pipelineId);
+  if (pipelineId < stopped_.size()) {
+    hasBeenStopped = stopped_.at(pipelineId);
   }
 
   return hasBeenStopped;
 }
 
 void Kryvo::SchedulerState::running(const bool run) {
-  QWriteLocker locker(&stateLock);
+  QWriteLocker locker(&stateLock_);
 
   if (run) {
-    if (state != ExecutionState::Idle) {
+    if (state_ != ExecutionState::Idle) {
       return;
     }
 
-    state = ExecutionState::Running;
+    state_ = ExecutionState::Running;
   } else {
-    if (state != ExecutionState::Running) {
+    if (state_ != ExecutionState::Running) {
       return;
     }
 
-    state = ExecutionState::Idle;
+    state_ = ExecutionState::Idle;
   }
 }
 
 bool Kryvo::SchedulerState::isRunning() {
-  QReadLocker lock(&stateLock);
+  QReadLocker lock(&stateLock_);
 
-  return ExecutionState::Running == state;
+  return ExecutionState::Running == state_;
 }

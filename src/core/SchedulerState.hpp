@@ -75,19 +75,19 @@ class SchedulerState {
     Running,
     Paused };
 
-  ExecutionState state;
-  QReadWriteLock stateLock;
-  QWaitCondition pauseWaitCondition;
+  ExecutionState state_;
+  QReadWriteLock stateLock_;
+  QWaitCondition pauseWaitCondition_;
 
   // The abort status, when set to true, will stop an executing job
   // operation and prevent new job operations from starting until it is reset
   // to false.
-  std::atomic<bool> aborted;
+  std::atomic<bool> aborted_;
 
   // The container of stopped flags, which are used to stop
   // encrypting/decrypting a file.
-  std::deque<bool> stopped;
-  QReadWriteLock stoppedLock;
+  std::deque<bool> stopped_;
+  QReadWriteLock stoppedLock_;
 };
 
 } // namespace Kryvo

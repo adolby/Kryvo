@@ -1,49 +1,49 @@
 #include "DispatchQueue.hpp"
 
 Kryvo::DispatchQueue::DispatchQueue(size_t threadCount)
-  : threadPool(threadCount) {
-  for (size_t i = 0; i < threadPool.size(); ++i) {
-    threadPool[i] = std::thread(&DispatchQueue::performWork, this);
+  : threadPool_(threadCount) {
+  for (size_t i = 0; i < threadPool_.size(); ++i) {
+    threadPool_[i] = std::thread(&DispatchQueue::performWork, this);
   }
 }
 
 Kryvo::DispatchQueue::~DispatchQueue() {
-  std::unique_lock<std::mutex> lock(queueMutex);
-  quit = true;
+  std::unique_lock<std::mutex> lock(queueMutex_);
+  quit_ = true;
   lock.unlock();
 
-  queueWaitCondition.notify_all();
+  queueWaitCondition_.notify_all();
 
-  for (size_t i = 0; i < threadPool.size(); ++i) {
-    if (threadPool[i].joinable()) {
-      threadPool[i].join();
+  for (size_t i = 0; i < threadPool_.size(); ++i) {
+    if (threadPool_[i].joinable()) {
+      threadPool_[i].join();
     }
   }
 }
 
 void Kryvo::DispatchQueue::enqueue(const Kryvo::DispatchTask& task) {
-  std::unique_lock<std::mutex> lock(queueMutex);
+  std::unique_lock<std::mutex> lock(queueMutex_);
 
-  queue.push(task);
+  queue_.push(task);
 
   lock.unlock();
 
-  queueWaitCondition.notify_all();
+  queueWaitCondition_.notify_all();
 }
 
 void Kryvo::DispatchQueue::performWork() {
-  std::unique_lock<std::mutex> lock(queueMutex);
+  std::unique_lock<std::mutex> lock(queueMutex_);
 
   do {
-    queueWaitCondition.wait(lock,
+    queueWaitCondition_.wait(lock,
                             [this]{
-                              return (!queue.empty() || quit);
+                              return (!queue_.empty() || quit_);
                             });
 
-    if (!queue.empty() && !quit) {
-      const DispatchTask task = queue.front();
+    if (!queue_.empty() && !quit_) {
+      const DispatchTask task = queue_.front();
 
-      queue.pop();
+      queue_.pop();
 
       lock.unlock();
 
@@ -51,5 +51,5 @@ void Kryvo::DispatchQueue::performWork() {
 
       lock.lock();
     }
-  } while (!quit);
+  } while (!quit_);
 }

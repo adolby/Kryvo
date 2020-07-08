@@ -1,29 +1,29 @@
 #include "models/FileItem.hpp"
 
 Kryvo::FileItem::FileItem(const QString& fileName)
-  : mFileName(fileName) {
+  : fileName_(fileName) {
 }
 
 QString Kryvo::FileItem::fileName() const {
-  return mFileName;
+  return fileName_;
 }
 
 void Kryvo::FileItem::setFileName(const QString& file) {
-  mFileName = file;
+  fileName_ = file;
 }
 
 QString Kryvo::FileItem::task() const {
-  return mTask;
+  return task_;
 }
 
 void Kryvo::FileItem::setTask(const QString& task) {
-  mTask = task;
+  task_ = task;
 }
 
 int Kryvo::FileItem::progress() const {
-  return mProgress;
+  return progress_;
 }
 
 void Kryvo::FileItem::setProgress(const int percent) {
-  mProgress = percent;
+  progress_ = percent;
 }

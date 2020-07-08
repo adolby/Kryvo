@@ -69,7 +69,7 @@ class FileListDelegate : public QStyledItemDelegate {
                    const QModelIndex& index) override;
 
  protected:
-  bool focusBorderEnabled;
+  bool focusBorderEnabled_;
 };
 
 } // namespace Kryvo

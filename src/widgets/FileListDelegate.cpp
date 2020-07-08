@@ -4,18 +4,18 @@
 #include <QEvent>
 
 Kryvo::FileListDelegate::FileListDelegate(QObject* parent)
-  : QStyledItemDelegate(parent), focusBorderEnabled(false) {
+  : QStyledItemDelegate(parent), focusBorderEnabled_(false) {
 }
 
 void Kryvo::FileListDelegate::setFocusBorderEnabled(bool enabled) {
-  focusBorderEnabled = enabled;
+  focusBorderEnabled_ = enabled;
 }
 
 void Kryvo::FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
                                               const QModelIndex& index) const {
   QStyledItemDelegate::initStyleOption(option, index);
 
-  if (!focusBorderEnabled && option->state & QStyle::State_HasFocus) {
+  if (!focusBorderEnabled_ && option->state & QStyle::State_HasFocus) {
     option->state = option->state & ~QStyle::State_HasFocus;
   }
 }
