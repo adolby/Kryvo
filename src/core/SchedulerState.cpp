@@ -3,7 +3,7 @@
 #include <QReadLocker>
 
 Kryvo::SchedulerState::SchedulerState()
-  : state(ExecutionState::Idle), aborted(false) {
+  : state_(ExecutionState::Idle), aborted_(false) {
 }
 
 void Kryvo::SchedulerState::init(const std::size_t maxPipelineId) {
