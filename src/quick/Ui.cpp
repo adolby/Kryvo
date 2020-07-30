@@ -38,8 +38,8 @@ class Kryvo::UiPrivate {
 
   // Messages to display to user
   const QStringList errorMessages{
-    QObject::tr("A password is required to encrypt or decrypt "
-                "files. Please enter one to continue.")};
+    QObject::tr("A password is required to encrypt or decrypt files. Please "
+                "enter one to continue.")};
 
   QQmlApplicationEngine engine;
   QUrl mainPageUrl;
@@ -101,8 +101,8 @@ void Kryvo::Ui::init() {
 }
 
 QVariantMap Kryvo::Ui::currentPage() const {
-    Q_D(const Ui);
-    return d->currentPage;
+  Q_D(const Ui);
+  return d->currentPage;
 }
 
 QVariantMap Kryvo::Ui::page(int index) const {
@@ -245,9 +245,9 @@ void Kryvo::Ui::clearNavigationHistory() {
 }
 
 void Kryvo::Ui::addFile(const QUrl& fileUrl) {
-    const QList<QUrl> fileUrlList = {
-      fileUrl
-    };
+  const QList<QUrl> fileUrlList = {
+    fileUrl
+  };
 
   addFiles(fileUrlList);
 }

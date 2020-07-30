@@ -460,7 +460,7 @@ bool Kryvo::Archiver::compressFile(const std::size_t id,
   return d->compressFile(id, inputFileInfo, outputFileInfo);
 }
 
-bool Kryvo::Archiver::decompressFile(std::size_t id,
+bool Kryvo::Archiver::decompressFile(const std::size_t id,
                                      const QFileInfo& inputFileInfo,
                                      const QFileInfo& outputFileInfo) {
   Q_D(Archiver);
@@ -476,7 +476,7 @@ void Kryvo::Archiver::compress(const std::size_t id,
   d->compress(id, inputFileInfo, outputFileInfo);
 }
 
-void Kryvo::Archiver::decompress(std::size_t id,
+void Kryvo::Archiver::decompress(const std::size_t id,
                                  const QFileInfo& inputFileInfo,
                                  const QFileInfo& outputFileInfo) {
   Q_D(Archiver);
