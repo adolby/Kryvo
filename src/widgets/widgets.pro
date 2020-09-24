@@ -132,8 +132,8 @@ linux {
     }
   } # End linux-clang
 
-  linux-g++-64 {
-    message(g++ x86_64)
+  linux-g++ {
+    message(g++)
 
     SOURCES += DesktopMainWindow.cpp
     HEADERS += DesktopMainWindow.hpp
@@ -156,7 +156,7 @@ linux {
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/plugins/cryptography/botan -lbotan
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/widgets
     }
-  } # End linux-g++-64
+  } # End linux-g++
 } # End linux
 
 darwin {

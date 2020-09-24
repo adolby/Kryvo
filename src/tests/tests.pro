@@ -107,8 +107,8 @@ linux {
     }
   } # End linux-clang
 
-  linux-g++-64 {
-    message(g++ x86_64)
+  linux-g++ {
+    message(g++)
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -128,7 +128,7 @@ linux {
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/plugins/cryptography/botan -lbotan
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/test
     }
-  } # End linux-g++-64
+  } # End linux-g++
 } # End linux
 
 darwin {
