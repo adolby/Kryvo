@@ -32,6 +32,7 @@ SOURCES += \
   Plugin.cpp \
   PluginLoader.cpp \
   Scheduler.cpp \
+  Pipe.cpp \
   archive/Archiver.cpp \
   cryptography/Crypto.cpp \
   settings/Settings.cpp \
@@ -46,9 +47,10 @@ HEADERS += \
   Plugin.hpp \
   PluginLoader.hpp \
   Scheduler.hpp \
+  Pipe.hpp \
   archive/Archiver.hpp \
   cryptography/Crypto.hpp \
-  cryptography/CryptoProviderInterface.hpp \
+  cryptography/CryptoProvider.hpp \
   settings/Settings.hpp \
   models/FileListModel.hpp \
   models/FileItem.hpp \

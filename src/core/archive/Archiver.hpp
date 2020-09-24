@@ -1,6 +1,7 @@
 #ifndef KRYVO_ARCHIVE_ARCHIVER_HPP_
 #define KRYVO_ARCHIVE_ARCHIVER_HPP_
 
+#include "Pipe.hpp"
 #include "SchedulerState.hpp"
 #include "utility/pimpl.h"
 #include <QObject>
@@ -12,7 +13,7 @@ namespace Kryvo {
 
 class ArchiverPrivate;
 
-class Archiver : public QObject {
+class Archiver : public Pipe {
   Q_OBJECT
   Q_DISABLE_COPY(Archiver)
   DECLARE_PRIVATE(Archiver)
@@ -28,34 +29,6 @@ class Archiver : public QObject {
 
   bool decompressFile(std::size_t id, const QFileInfo& inputFileInfo,
                       const QFileInfo& outputFileInfo);
-
- signals:
-  void fileCompleted(std::size_t id);
-  void fileFailed(std::size_t id);
-
-  /*!
-   * \brief fileProgress Emitted when the file operation progress changes
-   * \param id ID representing file
-   * \param task String containing task name
-   * \param percentProgress Integer representing the current progress as a
-   * percent
-   */
-  void fileProgress(std::size_t id, const QString& task,
-                    qint64 percentProgress);
-
-  /*!
-   * \brief statusMessage Emitted when a message about the current
-   * operation is produced
-   * \param message String containing the information message
-   */
-  void statusMessage(const QString& message);
-
-  /*!
-   * \brief errorMessage Emitted when an error occurs
-   * \param message String containing the error message to display
-   * \param fileInfo File that encountered an error
-   */
-  void errorMessage(const QString& message, const QFileInfo& fileInfo);
 
  public slots:
   void compress(std::size_t id, const QFileInfo& inputFileInfo,

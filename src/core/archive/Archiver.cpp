@@ -447,7 +447,7 @@ void Kryvo::ArchiverPrivate::decompress(const std::size_t id,
 }
 
 Kryvo::Archiver::Archiver(SchedulerState* state, QObject* parent)
-  : QObject(parent), d_ptr(std::make_unique<ArchiverPrivate>(this, state)) {
+  : Pipe(parent), d_ptr(std::make_unique<ArchiverPrivate>(this, state)) {
 }
 
 Kryvo::Archiver::~Archiver() = default;

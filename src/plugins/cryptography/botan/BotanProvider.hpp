@@ -1,7 +1,7 @@
 #ifndef KRYVO_PLUGINS_CRYPTOGRAPHY_BOTANPROVIDER_HPP_
 #define KRYVO_PLUGINS_CRYPTOGRAPHY_BOTANPROVIDER_HPP_
 
-#include "cryptography/CryptoProviderInterface.hpp"
+#include "cryptography/CryptoProvider.hpp"
 #include "utility/pimpl.h"
 
 #include <QtGlobal>
@@ -45,11 +45,11 @@ namespace Kryvo {
 class BotanProviderPrivate;
 
 class BotanProvider : public QObject,
-                      public CryptoProviderInterface {
+                      public CryptoProvider {
   Q_OBJECT
   Q_DISABLE_COPY(BotanProvider)
-  Q_PLUGIN_METADATA(IID "app.kryvo.CryptoProviderInterface" FILE "botan.json")
-  Q_INTERFACES(Kryvo::CryptoProviderInterface)
+  Q_PLUGIN_METADATA(IID "app.kryvo.CryptoProvider" FILE "botan.json")
+  Q_INTERFACES(Kryvo::CryptoProvider)
   DECLARE_PRIVATE(BotanProvider)
   std::unique_ptr<BotanProviderPrivate> const d_ptr;
 

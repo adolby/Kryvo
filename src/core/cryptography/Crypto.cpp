@@ -40,7 +40,7 @@ class Kryvo::CryptoPrivate {
 
   DispatchQueue queue;
 
-  QHash<QString, CryptoProviderInterface*> providers;
+  QHash<QString, CryptoProvider*> providers;
   std::shared_timed_mutex providersMutex;
 };
 
@@ -94,8 +94,7 @@ void Kryvo::CryptoPrivate::updateProviders(
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
-    CryptoProviderInterface* cryptoProvider =
-      qobject_cast<CryptoProviderInterface*>(provider);
+    CryptoProvider* cryptoProvider = qobject_cast<CryptoProvider*>(provider);
 
     cryptoProvider->init(state);
 
@@ -121,7 +120,7 @@ bool Kryvo::CryptoPrivate::encryptFile(const std::size_t id,
     return false;
   }
 
-  CryptoProviderInterface* provider = providers.value(cryptoProvider);
+  CryptoProvider* provider = providers.value(cryptoProvider);
 
   if (!provider) {
     emit q->fileFailed(id);
@@ -146,7 +145,7 @@ bool Kryvo::CryptoPrivate::decryptFile(
     return false;
   }
 
-  CryptoProviderInterface* provider = providers.value(cryptoProvider);
+  CryptoProvider* provider = providers.value(cryptoProvider);
 
   if (!provider) {
     emit q->fileFailed(id);
@@ -198,7 +197,7 @@ void Kryvo::CryptoPrivate::decrypt(const std::size_t id,
 }
 
 Kryvo::Crypto::Crypto(SchedulerState* state, QObject* parent)
-  : QObject(parent), d_ptr(std::make_unique<CryptoPrivate>(this, state)) {
+  : Pipe(parent), d_ptr(std::make_unique<CryptoPrivate>(this, state)) {
 }
 
 Kryvo::Crypto::~Crypto() = default;

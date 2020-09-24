@@ -1,8 +1,9 @@
 #ifndef KRYVO_CRYPTOGRAPHY_CRYPTO_HPP_
 #define KRYVO_CRYPTOGRAPHY_CRYPTO_HPP_
 
+#include "Pipe.hpp"
 #include "SchedulerState.hpp"
-#include "cryptography/CryptoProviderInterface.hpp"
+#include "cryptography/CryptoProvider.hpp"
 #include "Plugin.hpp"
 #include "utility/pimpl.h"
 #include <QFileInfo>
@@ -14,7 +15,7 @@ namespace Kryvo {
 
 class CryptoPrivate;
 
-class Crypto : public QObject {
+class Crypto : public Pipe {
   Q_OBJECT
   Q_DISABLE_COPY(Crypto)
   DECLARE_PRIVATE(Crypto)
@@ -66,34 +67,6 @@ class Crypto : public QObject {
                    const QString& passphrase,
                    const QFileInfo& inputFileInfo,
                    const QFileInfo& outputFileInfo);
-
- signals:
-  void fileCompleted(std::size_t id);
-  void fileFailed(std::size_t id);
-
-  /*!
-   * \brief fileProgress Emitted when the cipher operation file progress changes
-   * \param id ID representing the file to update progress on
-   * \param task Path name string
-   * \param percentProgress Integer representing the current progress as a
-   * percent
-   */
-  void fileProgress(std::size_t id, const QString& task,
-                    qint64 percentProgress);
-
-  /*!
-   * \brief statusMessage Emitted when a message about the current cipher
-   * operation is produced
-   * \param message Information message string
-   */
-  void statusMessage(const QString& message);
-
-  /*!
-   * \brief errorMessage Emitted when an error occurs
-   * \param message Error message string
-   * \param fileInfo File that encountered an error
-   */
-  void errorMessage(const QString& message, const QFileInfo& fileInfo);
 
  public slots:
   void updateProviders(const QHash<QString, Plugin>& loadedProviders);

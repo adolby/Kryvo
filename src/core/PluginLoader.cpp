@@ -1,5 +1,4 @@
 #include "PluginLoader.hpp"
-#include "cryptography/CryptoProviderInterface.hpp"
 #include <QPluginLoader>
 #include <QStaticPlugin>
 #include <QLibrary>

@@ -1,5 +1,5 @@
-#ifndef KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDERINTERFACE_HPP_
-#define KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDERINTERFACE_HPP_
+#ifndef KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDER_HPP_
+#define KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDER_HPP_
 
 #include "SchedulerState.hpp"
 #include <QObject>
@@ -9,9 +9,9 @@
 
 namespace Kryvo {
 
-class CryptoProviderInterface {
+class CryptoProvider {
  public:
-  virtual ~CryptoProviderInterface() = default;
+  virtual ~CryptoProvider() = default;
 
   virtual void fileCompleted(std::size_t id) = 0;
 
@@ -24,7 +24,7 @@ class CryptoProviderInterface {
   * \param percent Integer representing the current progress as a percent
   */
   virtual void fileProgress(std::size_t id, const QString& task,
-                            qint64 percentProgress) = 0;
+                           qint64 percentProgress) = 0;
 
  /*!
   * \brief statusMessage Emitted when a message about the current cipher
@@ -85,8 +85,8 @@ class CryptoProviderInterface {
 
 } // namespace Kryvo
 
-#define CryptoProviderInterface_iid "app.kryvo.CryptoProviderInterface"
+#define CryptoProvider_iid "app.kryvo.CryptoProvider"
 
-Q_DECLARE_INTERFACE(Kryvo::CryptoProviderInterface, CryptoProviderInterface_iid)
+Q_DECLARE_INTERFACE(Kryvo::CryptoProvider, CryptoProvider_iid)
 
-#endif // KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDERINTERFACE_HPP_
+#endif // KRYVO_CRYPTOGRAPHY_CRYPTOPROVIDER_HPP_
