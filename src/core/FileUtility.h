@@ -60,7 +60,7 @@ inline QString uniqueFilePath(const QString& filePath) {
                                inputFile.baseName() %
                                QStringLiteral(" (%1)").arg(i + 2));
 
-      const QString& suffix = inputFile.completeSuffix();
+      const QString suffix = inputFile.completeSuffix();
       if (!suffix.isEmpty()) {
         // Add the file extension if there is one
         uniqueFilePath += QString(Constants::kDot % suffix);
@@ -95,24 +95,24 @@ inline QHash<QByteArray, QByteArray> readHeader(QFile* file) {
   }
 
   // Read start header line
-  const QByteArray& headerString = readLine(file);
+  const QByteArray headerString = readLine(file);
 
   while (!file->atEnd()) {
-    const QByteArray& line = readLine(file);
+    const QByteArray line = readLine(file);
 
     if (QByteArrayLiteral("------------------------------------") == line) {
       // Read end header line
       break;
     }
 
-    const QList<QByteArray>& keyValuePair = line.split(':');
+    const QList<QByteArray> keyValuePair = line.split(':');
 
     if (keyValuePair.size() < 2) {
       break;
     }
 
-    const QByteArray& key = keyValuePair.at(0);
-    const QByteArray& value = keyValuePair.at(1).trimmed();
+    const QByteArray key = keyValuePair.at(0);
+    const QByteArray value = keyValuePair.at(1).trimmed();
 
     headerData.insert(key, value);
   }
@@ -127,8 +127,8 @@ inline void writeHeader(QSaveFile* file,
 
   auto end = headerData.cend();
   for (auto it = headerData.cbegin(); it != end; ++it) {
-    const QByteArray& key = it.key();
-    const QByteArray& val = it.value();
+    const QByteArray key = it.key();
+    const QByteArray val = it.value();
 
     QByteArray headerEntry = key;
 
