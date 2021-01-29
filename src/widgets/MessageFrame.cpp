@@ -19,7 +19,9 @@ class Kryvo::MessageFramePrivate {
   QLabel* messageLabel{nullptr};
 };
 
-Kryvo::MessageFramePrivate::MessageFramePrivate() = default;
+Kryvo::MessageFramePrivate::MessageFramePrivate() {
+    messageIterator = messages.cbegin();
+}
 
 Kryvo::MessageFrame::MessageFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<MessageFramePrivate>()) {
@@ -58,7 +60,7 @@ void Kryvo::MessageFrame::appendMessage(const QString& message) {
   Q_ASSERT(d->messageLabel);
 
   d->messages.push_back(message);
-  d->messageIterator = std::prev(d->messages.end(), 1);
+  d->messageIterator = std::prev(d->messages.cend(), 1);
   d->messageLabel->setText(*d->messageIterator);
 }
 
@@ -66,7 +68,7 @@ void Kryvo::MessageFrame::pageLeft() {
   Q_D(MessageFrame);
   Q_ASSERT(d->messageLabel);
 
-  if (d->messageIterator != d->messages.begin()) {
+  if (d->messageIterator != d->messages.cbegin()) {
     d->messageIterator = std::prev(d->messageIterator, 1);
     d->messageLabel->setText(*d->messageIterator);
   }
@@ -76,9 +78,9 @@ void Kryvo::MessageFrame::pageRight() {
   Q_D(MessageFrame);
   Q_ASSERT(d->messageLabel);
 
-  const auto end = d->messages.end();
+  const auto end = d->messages.cend();
 
-  if (d->messageIterator != std::prev(end, 1) && d->messageIterator != end) {
+  if (d->messageIterator != end && d->messageIterator != std::prev(end, 1)) {
     d->messageIterator = std::next(d->messageIterator, 1);
     d->messageLabel->setText(*d->messageIterator);
   }

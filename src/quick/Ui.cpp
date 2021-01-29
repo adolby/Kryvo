@@ -32,7 +32,7 @@ class Kryvo::UiPrivate {
   Q_DISABLE_COPY(UiPrivate)
 
  public:
-  UiPrivate();
+  UiPrivate(Settings* s);
 
   Settings* settings = nullptr;
 
@@ -56,15 +56,13 @@ class Kryvo::UiPrivate {
   QString password;
 };
 
-Kryvo::UiPrivate::UiPrivate()
-  : mainPageUrl(QStringLiteral("qrc:/qml/main.qml")) {
+Kryvo::UiPrivate::UiPrivate(Settings* s)
+  : settings(s), mainPageUrl(QStringLiteral("qrc:/qml/main.qml")) {
+    statusMessageIterator = statusMessages.cbegin();
 }
 
 Kryvo::Ui::Ui(Settings* s, QObject* parent)
-  : QObject(parent), d_ptr(std::make_unique<UiPrivate>()) {
-  // Keep settings object
-  d_ptr->settings = s;
-
+  : QObject(parent), d_ptr(std::make_unique<UiPrivate>(s)) {
   connect(&d_ptr->engine,
           &QQmlApplicationEngine::objectCreated,
           this,
@@ -363,7 +361,7 @@ void Kryvo::Ui::appendStatusMessage(const QString& message) {
   Q_D(Ui);
 
   d->statusMessages.push_back(message);
-  d->statusMessageIterator = std::prev(d->statusMessages.end(), 1);
+  d->statusMessageIterator = std::prev(d->statusMessages.cend(), 1);
 
   d->statusMessage = *d->statusMessageIterator;
   emit statusMessageChanged(d->statusMessage);
@@ -451,7 +449,7 @@ void Kryvo::Ui::updateOutputPath(const QUrl& url) {
 void Kryvo::Ui::navigateMessageLeft() {
   Q_D(Ui);
 
-  if (d->statusMessageIterator != d->statusMessages.begin()) {
+  if (d->statusMessageIterator != d->statusMessages.cbegin()) {
     d->statusMessageIterator = std::prev(d->statusMessageIterator, 1);
 
     d->statusMessage = *d->statusMessageIterator;
@@ -462,10 +460,10 @@ void Kryvo::Ui::navigateMessageLeft() {
 void Kryvo::Ui::navigateMessageRight() {
   Q_D(Ui);
 
-  const auto end = d->statusMessages.end();
+  const auto end = d->statusMessages.cend();
 
-  if (d->statusMessageIterator != std::prev(end, 1) &&
-      d->statusMessageIterator != end) {
+  if (d->statusMessageIterator != end &&
+      d->statusMessageIterator != std::prev(end, 1)) {
     d->statusMessageIterator = std::next(d->statusMessageIterator, 1);
 
     d->statusMessage = *d->statusMessageIterator;

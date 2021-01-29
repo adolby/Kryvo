@@ -172,7 +172,7 @@ void Kryvo::FileListFrame::addFileToModel(const QFileInfo& fileInfo) {
       Q_ASSERT(testItem);
 
       if (!testItem) {
-          return;
+        return;
       }
 
       const QVariant testItemData = testItem->data();
@@ -198,7 +198,7 @@ void Kryvo::FileListFrame::removeFileFromModel(const QModelIndex& index) {
   Q_ASSERT(testItem);
 
   if (!testItem) {
-      return;
+    return;
   }
 
   const QVariant data = testItem->data();
