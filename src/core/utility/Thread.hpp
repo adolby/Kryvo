@@ -39,7 +39,7 @@ public:
 
       if (!obj->property(kRegistered).isValid()) {
          QObject::connect(this, &Thread::finished, obj, [this, obj]{
-            if (!inDestructor.load() || obj->thread() != this)
+            if (!inDestructor.loadRelaxed() || obj->thread() != this)
                return;
             // The object is about to become threadless
             Q_ASSERT(obj->thread() == QThread::currentThread());
@@ -65,7 +65,7 @@ public:
    }
 
    ~Thread() override {
-      inDestructor.store(1);
+      inDestructor.storeRelaxed(1);
       requestInterruption();
       quit();
       wait();
