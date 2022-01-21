@@ -15,15 +15,15 @@ enum class CryptDirection {
 
 class Constants {
  public:
-  static const QVersionNumber kVersion;
-  static constexpr int kFileVersion = 1;
-  static const QString kDot;
-  static const QString kEncryptedFileExtension;
-  static const QString kCompressedFileExtension;
-  static const QString kArchiveFileExtension;
-  static const QStringList kDefaultPaths;
-  static const QString kDocumentsPath;
-  static const QStringList kMessages;
+  static const QVersionNumber version;
+  static constexpr int fileVersion = 1;
+  static const QString dot;
+  static const QString encryptedFileExtension;
+  static const QString compressedFileExtension;
+  static const QString archiveFileExtension;
+  static const QStringList defaultPaths;
+  static const QString documentsPath;
+  static const QStringList messages;
 };
 
 } // namespace Kryvo

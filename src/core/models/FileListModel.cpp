@@ -1,6 +1,8 @@
 #include "models/FileListModel.hpp"
 
-class Kryvo::FileListModelPrivate {
+namespace Kryvo {
+
+class FileListModelPrivate {
   Q_DISABLE_COPY(FileListModelPrivate)
 
  public:
@@ -9,17 +11,17 @@ class Kryvo::FileListModelPrivate {
   std::vector<FileItem> files;
 };
 
-Kryvo::FileListModelPrivate::FileListModelPrivate() {
+FileListModelPrivate::FileListModelPrivate() {
 }
 
-Kryvo::FileListModel::FileListModel(QObject* parent)
+FileListModel::FileListModel(QObject* parent)
   : QAbstractListModel(parent),
     d_ptr(std::make_unique<FileListModelPrivate>()) {
 }
 
-Kryvo::FileListModel::~FileListModel() = default;
+FileListModel::~FileListModel() = default;
 
-int Kryvo::FileListModel::rowCount(const QModelIndex& parent) const {
+int FileListModel::rowCount(const QModelIndex& parent) const {
   Q_D(const FileListModel);
 
   Q_UNUSED(parent);
@@ -27,7 +29,7 @@ int Kryvo::FileListModel::rowCount(const QModelIndex& parent) const {
   return static_cast<int>(d->files.size());
 }
 
-QVariant Kryvo::FileListModel::data(const QModelIndex& index, int role) const {
+QVariant FileListModel::data(const QModelIndex& index, int role) const {
   Q_D(const FileListModel);
 
   if (!index.isValid()) {
@@ -53,9 +55,8 @@ QVariant Kryvo::FileListModel::data(const QModelIndex& index, int role) const {
   return QVariant();
 }
 
-bool Kryvo::FileListModel::setData(const QModelIndex& index,
-                                   const QVariant& value,
-                                   int role) {
+bool FileListModel::setData(const QModelIndex& index, const QVariant& value,
+                            int role) {
   Q_D(FileListModel);
 
   const int size = static_cast<int>(d->files.size());
@@ -81,17 +82,17 @@ bool Kryvo::FileListModel::setData(const QModelIndex& index,
   return true;
 }
 
-std::vector<Kryvo::FileItem> Kryvo::FileListModel::fileListData() const {
+std::vector<FileItem> FileListModel::fileListData() const {
   Q_D(const FileListModel);
   return d->files;
 }
 
-Kryvo::FileItem Kryvo::FileListModel::item(const int id) const {
+FileItem FileListModel::item(const int id) const {
   Q_D(const FileListModel);
   return d->files.at(id);
 }
 
-void Kryvo::FileListModel::init(const std::vector<FileItem>& fileList) {
+void FileListModel::init(const std::vector<FileItem>& fileList) {
   Q_D(FileListModel);
 
   beginResetModel();
@@ -101,7 +102,7 @@ void Kryvo::FileListModel::init(const std::vector<FileItem>& fileList) {
   endResetModel();
 }
 
-void Kryvo::FileListModel::appendRow(const FileItem& item) {
+void FileListModel::appendRow(const FileItem& item) {
   Q_D(FileListModel);
 
   const bool itemInModel =
@@ -121,9 +122,8 @@ void Kryvo::FileListModel::appendRow(const FileItem& item) {
   endInsertRows();
 }
 
-void Kryvo::FileListModel::updateRow(const QString& fileName,
-                                     const QString& task,
-                                     const int progressValue) {
+void FileListModel::updateRow(const QString& fileName, const QString& task,
+                              const int progressValue) {
   Q_D(FileListModel);
 
   const ptrdiff_t pos = std::distance(d->files.begin(),
@@ -135,7 +135,7 @@ void Kryvo::FileListModel::updateRow(const QString& fileName,
   setData(index(pos), progressValue, ProgressRole);
 }
 
-void Kryvo::FileListModel::clear() {
+void FileListModel::clear() {
   Q_D(FileListModel);
 
   beginResetModel();
@@ -145,7 +145,7 @@ void Kryvo::FileListModel::clear() {
   endResetModel();
 }
 
-QHash<int, QByteArray> Kryvo::FileListModel::roleNames() const {
+QHash<int, QByteArray> FileListModel::roleNames() const {
   QHash<int, QByteArray> roles;
 
   roles[FileNameRole] = QByteArrayLiteral("fileName");
@@ -153,4 +153,6 @@ QHash<int, QByteArray> Kryvo::FileListModel::roleNames() const {
   roles[ProgressRole] = QByteArrayLiteral("progress");
 
   return roles;
+}
+
 }

@@ -9,6 +9,8 @@
 #include <QStringBuilder>
 #include <QCoreApplication>
 
+namespace Kryvo {
+
 QString addPathSeparator(const QDir& inDir) {
   QString outPath = inDir.absolutePath();
 
@@ -19,7 +21,7 @@ QString addPathSeparator(const QDir& inDir) {
   return outPath;
 }
 
-class Kryvo::SettingsPrivate {
+class SettingsPrivate {
   Q_DISABLE_COPY(SettingsPrivate)
 
  public:
@@ -45,14 +47,14 @@ class Kryvo::SettingsPrivate {
   QString modeOfOperation;
   bool removeIntermediateFiles{true};
   bool containerMode{false};
-  QString outputPath{Kryvo::Constants::kDocumentsPath};
-  QString inputPath{Kryvo::Constants::kDocumentsPath};
+  QString outputPath{Constants::documentsPath};
+  QString inputPath{Constants::documentsPath};
   QString styleSheetPath;
 };
 
-Kryvo::SettingsPrivate::SettingsPrivate() = default;
+SettingsPrivate::SettingsPrivate() = default;
 
-void Kryvo::SettingsPrivate::importSettings() {
+void SettingsPrivate::importSettings() {
 #if defined(Q_OS_MACOS)
   const QString settingsPath =
     QString(QCoreApplication::instance()->applicationDirPath() %
@@ -106,12 +108,10 @@ void Kryvo::SettingsPrivate::importSettings() {
     containerMode = settings[QStringLiteral("containerMode")].toBool(true);
 
     outputPath =
-      settings[QStringLiteral("outputPath")].toString(
-        Constants::kDocumentsPath);
+      settings[QStringLiteral("outputPath")].toString(Constants::documentsPath);
 
     inputPath =
-      settings[QStringLiteral("inputPath")].toString(
-        Constants::kDocumentsPath);
+      settings[QStringLiteral("inputPath")].toString(Constants::documentsPath);
 
     const QJsonValue styleObject = settings[QStringLiteral("styleSheetPath")];
     styleSheetPath = styleObject.toString(QStringLiteral("kryvo.qss"));
@@ -126,13 +126,13 @@ void Kryvo::SettingsPrivate::importSettings() {
     modeOfOperation = QStringLiteral("GCM");
     removeIntermediateFiles = true;
     containerMode = true;
-    outputPath = Constants::kDocumentsPath;
-    inputPath = Constants::kDocumentsPath;
+    outputPath = Constants::documentsPath;
+    inputPath = Constants::documentsPath;
     styleSheetPath = QStringLiteral("kryvo.qss");
   }
 }
 
-void Kryvo::SettingsPrivate::exportSettings() const {
+void SettingsPrivate::exportSettings() const {
 #if defined(Q_OS_MACOS)
   const QString settingsPath = QString(QCoreApplication::applicationDirPath() %
                                        QStringLiteral("/") %
@@ -173,11 +173,11 @@ void Kryvo::SettingsPrivate::exportSettings() const {
 
     settings[QStringLiteral("outputPath")] =
       outputPath.isEmpty() ?
-      Constants::kDocumentsPath :
+      Constants::documentsPath :
       outputPath;
     settings[QStringLiteral("inputPath")] =
       inputPath.isEmpty() ?
-      Constants::kDocumentsPath :
+      Constants::documentsPath :
       inputPath;
     settings[QStringLiteral("styleSheetPath")] =
       styleSheetPath;
@@ -189,20 +189,20 @@ void Kryvo::SettingsPrivate::exportSettings() const {
   settingsFile.commit();
 }
 
-Kryvo::Settings::Settings()
+Settings::Settings()
   : d_ptr{std::make_unique<SettingsPrivate>()} {
   Q_D(Settings);
 
   d->importSettings();
 }
 
-Kryvo::Settings::~Settings() {
+Settings::~Settings() {
   Q_D(Settings);
 
   d->exportSettings();
 }
 
-void Kryvo::Settings::position(const QPoint& position) {
+void Settings::position(const QPoint& position) {
   Q_D(Settings);
 
   d->position = position;
@@ -210,13 +210,13 @@ void Kryvo::Settings::position(const QPoint& position) {
   d->exportSettings();
 }
 
-QPoint Kryvo::Settings::position() const {
+QPoint Settings::position() const {
   Q_D(const Settings);
 
   return d->position;
 }
 
-void Kryvo::Settings::maximized(const bool maximized) {
+void Settings::maximized(const bool maximized) {
   Q_D(Settings);
 
   d->maximized = maximized;
@@ -224,13 +224,13 @@ void Kryvo::Settings::maximized(const bool maximized) {
   d->exportSettings();
 }
 
-bool Kryvo::Settings::maximized() const {
+bool Settings::maximized() const {
   Q_D(const Settings);
 
   return d->maximized;
 }
 
-void Kryvo::Settings::size(const QSize& size) {
+void Settings::size(const QSize& size) {
   Q_D(Settings);
 
   d->size = size;
@@ -238,13 +238,13 @@ void Kryvo::Settings::size(const QSize& size) {
   d->exportSettings();
 }
 
-QSize Kryvo::Settings::size() const {
+QSize Settings::size() const {
   Q_D(const Settings);
 
   return d->size;
 }
 
-void Kryvo::Settings::cryptoProvider(const QString& provider) {
+void Settings::cryptoProvider(const QString& provider) {
   Q_D(Settings);
 
   d->cryptoProvider = provider;
@@ -252,13 +252,13 @@ void Kryvo::Settings::cryptoProvider(const QString& provider) {
   d->exportSettings();
 }
 
-QString Kryvo::Settings::cryptoProvider() const {
+QString Settings::cryptoProvider() const {
   Q_D(const Settings);
 
   return d->cryptoProvider;
 }
 
-void Kryvo::Settings::compressionFormat(const QString& format) {
+void Settings::compressionFormat(const QString& format) {
   Q_D(Settings);
 
   d->compressionFormat = format;
@@ -266,13 +266,13 @@ void Kryvo::Settings::compressionFormat(const QString& format) {
   d->exportSettings();
 }
 
-QString Kryvo::Settings::compressionFormat() const {
+QString Settings::compressionFormat() const {
   Q_D(const Settings);
 
   return d->compressionFormat;
 }
 
-void Kryvo::Settings::cipher(const QString& cipherName) {
+void Settings::cipher(const QString& cipherName) {
   Q_D(Settings);
 
   d->cipher = cipherName;
@@ -280,13 +280,13 @@ void Kryvo::Settings::cipher(const QString& cipherName) {
   d->exportSettings();
 }
 
-QString Kryvo::Settings::cipher() const {
+QString Settings::cipher() const {
   Q_D(const Settings);
 
   return d->cipher;
 }
 
-void Kryvo::Settings::keySize(const std::size_t keySize) {
+void Settings::keySize(const std::size_t keySize) {
   Q_D(Settings);
 
   d->keySize = keySize;
@@ -294,13 +294,13 @@ void Kryvo::Settings::keySize(const std::size_t keySize) {
   d->exportSettings();
 }
 
-std::size_t Kryvo::Settings::keySize() const {
+std::size_t Settings::keySize() const {
   Q_D(const Settings);
 
   return d->keySize;
 }
 
-void Kryvo::Settings::modeOfOperation(const QString& modeOfOperation) {
+void Settings::modeOfOperation(const QString& modeOfOperation) {
   Q_D(Settings);
 
   d->modeOfOperation = modeOfOperation;
@@ -308,13 +308,13 @@ void Kryvo::Settings::modeOfOperation(const QString& modeOfOperation) {
   d->exportSettings();
 }
 
-QString Kryvo::Settings::modeOfOperation() const {
+QString Settings::modeOfOperation() const {
   Q_D(const Settings);
 
   return d->modeOfOperation;
 }
 
-void Kryvo::Settings::removeIntermediateFiles(const bool removeIntermediate) {
+void Settings::removeIntermediateFiles(const bool removeIntermediate) {
   Q_D(Settings);
 
   d->removeIntermediateFiles = removeIntermediate;
@@ -322,13 +322,13 @@ void Kryvo::Settings::removeIntermediateFiles(const bool removeIntermediate) {
   d->exportSettings();
 }
 
-bool Kryvo::Settings::removeIntermediateFiles() const {
+bool Settings::removeIntermediateFiles() const {
   Q_D(const Settings);
 
   return d->removeIntermediateFiles;
 }
 
-void Kryvo::Settings::containerMode(const bool container) {
+void Settings::containerMode(const bool container) {
   Q_D(Settings);
 
   d->containerMode = container;
@@ -336,13 +336,13 @@ void Kryvo::Settings::containerMode(const bool container) {
   d->exportSettings();
 }
 
-bool Kryvo::Settings::containerMode() const {
+bool Settings::containerMode() const {
   Q_D(const Settings);
 
   return d->containerMode;
 }
 
-void Kryvo::Settings::outputPath(const QString& path) {
+void Settings::outputPath(const QString& path) {
   Q_D(Settings);
 
   const QDir outputDir(path);
@@ -350,19 +350,19 @@ void Kryvo::Settings::outputPath(const QString& path) {
   if (outputDir.exists()) {
     d->outputPath = addPathSeparator(outputDir);
   } else {
-    d->outputPath = Constants::kDocumentsPath;
+    d->outputPath = Constants::documentsPath;
   }
 
   d->exportSettings();
 }
 
-QString Kryvo::Settings::outputPath() const {
+QString Settings::outputPath() const {
   Q_D(const Settings);
 
   return d->outputPath;
 }
 
-void Kryvo::Settings::inputPath(const QString& path) {
+void Settings::inputPath(const QString& path) {
   Q_D(Settings);
 
   const QDir inputDir(path);
@@ -370,20 +370,22 @@ void Kryvo::Settings::inputPath(const QString& path) {
   if (inputDir.exists()) {
     d->inputPath = addPathSeparator(inputDir);
   } else {
-    d->inputPath = Constants::kDocumentsPath;
+    d->inputPath = Constants::documentsPath;
   }
 
   d->exportSettings();
 }
 
-QString Kryvo::Settings::inputPath() const {
+QString Settings::inputPath() const {
   Q_D(const Settings);
 
   return d->inputPath;
 }
 
-QString Kryvo::Settings::styleSheetPath() const {
+QString Settings::styleSheetPath() const {
   Q_D(const Settings);
 
   return d->styleSheetPath;
 }
+
+} // namespace Kryvo

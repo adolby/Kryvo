@@ -1,13 +1,15 @@
 #include "DispatchQueue.hpp"
 
-Kryvo::DispatchQueue::DispatchQueue(size_t threadCount)
+namespace Kryvo {
+
+DispatchQueue::DispatchQueue(size_t threadCount)
   : threadPool_(threadCount) {
   for (size_t i = 0; i < threadPool_.size(); ++i) {
     threadPool_[i] = std::thread(&DispatchQueue::performWork, this);
   }
 }
 
-Kryvo::DispatchQueue::~DispatchQueue() {
+DispatchQueue::~DispatchQueue() {
   std::unique_lock<std::mutex> lock(queueMutex_);
   quit_ = true;
   lock.unlock();
@@ -21,7 +23,7 @@ Kryvo::DispatchQueue::~DispatchQueue() {
   }
 }
 
-void Kryvo::DispatchQueue::enqueue(const Kryvo::DispatchTask& task) {
+void DispatchQueue::enqueue(const DispatchTask& task) {
   std::unique_lock<std::mutex> lock(queueMutex_);
 
   queue_.push(task);
@@ -31,7 +33,7 @@ void Kryvo::DispatchQueue::enqueue(const Kryvo::DispatchTask& task) {
   queueWaitCondition_.notify_all();
 }
 
-void Kryvo::DispatchQueue::performWork() {
+void DispatchQueue::performWork() {
   std::unique_lock<std::mutex> lock(queueMutex_);
 
   do {
@@ -53,3 +55,5 @@ void Kryvo::DispatchQueue::performWork() {
     }
   } while (!quit_);
 }
+
+} // namespace Kryvo

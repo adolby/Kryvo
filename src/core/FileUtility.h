@@ -63,7 +63,7 @@ inline QString uniqueFilePath(const QString& filePath) {
       const QString suffix = inputFile.completeSuffix();
       if (!suffix.isEmpty()) {
         // Add the file extension if there is one
-        uniqueFilePath += QString(Constants::kDot % suffix);
+        uniqueFilePath += QString(Constants::dot % suffix);
       }
 
       ++i;

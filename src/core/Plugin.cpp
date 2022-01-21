@@ -31,18 +31,16 @@ QString pluginAttributeFromMetaData(const QJsonObject& metaData,
   return attribute;
 }
 
-} // namespace Kryvo
+Plugin::Plugin() = default;
 
-Kryvo::Plugin::Plugin() = default;
-
-Kryvo::Plugin::Plugin(QObject* instance, const QJsonObject& metaData)
+Plugin::Plugin(QObject* instance, const QJsonObject& metaData)
   : instance_(instance), metaData_(metaData),
     name_(pluginAttributeFromMetaData(metaData, QStringLiteral("Name"))),
     category_(pluginAttributeFromMetaData(metaData,
                                           QStringLiteral("Category"))) {
 }
 
-Kryvo::Plugin::Plugin(const QStaticPlugin& staticPlugin)
+Plugin::Plugin(const QStaticPlugin& staticPlugin)
   : instance_(staticPlugin.instance()), metaData_(staticPlugin.metaData()),
     name_(pluginAttributeFromMetaData(staticPlugin.metaData(),
                                       QStringLiteral("Name"))),
@@ -50,18 +48,20 @@ Kryvo::Plugin::Plugin(const QStaticPlugin& staticPlugin)
                                           QStringLiteral("Category"))) {
 }
 
-QObject* Kryvo::Plugin::instance() const {
+QObject* Plugin::instance() const {
   return instance_;
 }
 
-QJsonObject Kryvo::Plugin::metaData() const {
+QJsonObject Plugin::metaData() const {
   return metaData_;
 }
 
-QString Kryvo::Plugin::name() const {
+QString Plugin::name() const {
   return name_;
 }
 
-QString Kryvo::Plugin::category() const {
+QString Plugin::category() const {
   return category_;
 }
+
+} // namespace Kryvo

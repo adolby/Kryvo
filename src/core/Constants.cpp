@@ -3,19 +3,21 @@
 #include <QObject>
 #include <QStringBuilder>
 
-const QVersionNumber Kryvo::Constants::kVersion({1, 1, 0});
+namespace Kryvo {
 
-const QString Kryvo::Constants::kDot = QStringLiteral(".");
-const QString Kryvo::Constants::kEncryptedFileExtension = QStringLiteral("enc");
-const QString Kryvo::Constants::kCompressedFileExtension = QStringLiteral("gz");
-const QString Kryvo::Constants::kArchiveFileExtension = QStringLiteral("tar");
+const QVersionNumber Constants::version({1, 1, 0});
 
-const QStringList Kryvo::Constants::kDefaultPaths =
+const QString Constants::dot = QStringLiteral(".");
+const QString Constants::encryptedFileExtension = QStringLiteral("enc");
+const QString Constants::compressedFileExtension = QStringLiteral("gz");
+const QString Constants::archiveFileExtension = QStringLiteral("tar");
+
+const QStringList Constants::defaultPaths =
   QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
-const QString Kryvo::Constants::kDocumentsPath = QString(kDefaultPaths.first() %
-                                                         QStringLiteral("/"));
+const QString Constants::documentsPath = QString(defaultPaths.first() %
+                                                 QStringLiteral("/"));
 
-const QStringList Kryvo::Constants::kMessages {
+const QStringList Constants::messages {
   QObject::tr("Unknown error: Please contact andrewdolby@gmail.com."), // 0
   QObject::tr("File %1 encrypted."), // 1
   QObject::tr("File %1 decrypted."), // 2
@@ -33,3 +35,5 @@ const QStringList Kryvo::Constants::kMessages {
   QObject::tr("Encryption/decryption is already in progress. Please wait until "
               "the current operation finishes.") // 12
 };
+
+} // namespace Kryvo

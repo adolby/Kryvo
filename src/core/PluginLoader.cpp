@@ -10,7 +10,9 @@
 
 Q_IMPORT_PLUGIN(BotanProvider)
 
-class Kryvo::PluginLoaderPrivate {
+namespace Kryvo {
+
+class PluginLoaderPrivate {
   Q_DISABLE_COPY(PluginLoaderPrivate)
   Q_DECLARE_PUBLIC(PluginLoader)
 
@@ -26,12 +28,11 @@ class Kryvo::PluginLoaderPrivate {
   QHash<QString, Plugin> loadedCryptoProviders;
 };
 
-Kryvo::PluginLoaderPrivate::PluginLoaderPrivate(PluginLoader* loader)
+PluginLoaderPrivate::PluginLoaderPrivate(PluginLoader* loader)
   : q_ptr(loader) {
 }
 
-Kryvo::Plugin
-Kryvo::PluginLoaderPrivate::loadPluginFromFile(const QString& filePath) {
+Plugin PluginLoaderPrivate::loadPluginFromFile(const QString& filePath) {
   QPluginLoader loader(filePath);
 
   QObject* plugin = loader.instance();
@@ -41,7 +42,7 @@ Kryvo::PluginLoaderPrivate::loadPluginFromFile(const QString& filePath) {
   return Plugin(plugin, metaData);
 }
 
-void Kryvo::PluginLoaderPrivate::loadPlugins() {
+void PluginLoaderPrivate::loadPlugins() {
   Q_Q(PluginLoader);
 
   const QVector<QStaticPlugin> staticPlugins = QPluginLoader::staticPlugins();
@@ -103,20 +104,22 @@ void Kryvo::PluginLoaderPrivate::loadPlugins() {
   emit q->cryptoProvidersChanged(loadedCryptoProviders);
 }
 
-Kryvo::PluginLoader::PluginLoader(QObject* parent)
+PluginLoader::PluginLoader(QObject* parent)
   : QObject(parent), d_ptr(std::make_unique<PluginLoaderPrivate>(this)) {
 }
 
-Kryvo::PluginLoader::~PluginLoader() = default;
+PluginLoader::~PluginLoader() = default;
 
-void Kryvo::PluginLoader::loadPlugins() {
+void PluginLoader::loadPlugins() {
   Q_D(PluginLoader);
 
   d->loadPlugins();
 }
 
-QHash<QString, Kryvo::Plugin> Kryvo::PluginLoader::cryptoProviders() const {
+QHash<QString, Plugin> PluginLoader::cryptoProviders() const {
   Q_D(const PluginLoader);
 
   return d->loadedCryptoProviders;
 }
+
+} // namespace Kryvo

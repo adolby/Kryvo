@@ -2,11 +2,13 @@
 #include <QWriteLocker>
 #include <QReadLocker>
 
-Kryvo::SchedulerState::SchedulerState()
+namespace Kryvo {
+
+SchedulerState::SchedulerState()
   : state_(ExecutionState::Idle), aborted_(false) {
 }
 
-void Kryvo::SchedulerState::init(const std::size_t maxPipelineId) {
+void SchedulerState::init(const std::size_t maxPipelineId) {
   aborted_ = false;
 
   QWriteLocker locker(&stoppedLock_);
@@ -14,15 +16,15 @@ void Kryvo::SchedulerState::init(const std::size_t maxPipelineId) {
   stopped_.resize(maxPipelineId);
 }
 
-void Kryvo::SchedulerState::abort(const bool abort) {
+void SchedulerState::abort(const bool abort) {
   aborted_ = abort;
 }
 
-bool Kryvo::SchedulerState::isAborted() const {
+bool SchedulerState::isAborted() const {
   return aborted_;
 }
 
-void Kryvo::SchedulerState::pause(const bool pause) {
+void SchedulerState::pause(const bool pause) {
   QWriteLocker lock(&stateLock_);
 
   if (pause) {
@@ -42,13 +44,13 @@ void Kryvo::SchedulerState::pause(const bool pause) {
   }
 }
 
-bool Kryvo::SchedulerState::isPaused() {
+bool SchedulerState::isPaused() {
   QReadLocker lock(&stateLock_);
 
   return ExecutionState::Paused == state_;
 }
 
-void Kryvo::SchedulerState::pauseWait(const std::size_t pipelineId) {
+void SchedulerState::pauseWait(const std::size_t pipelineId) {
   QReadLocker lock(&stateLock_);
 
   while (isPaused() && !(isAborted() || isStopped(pipelineId))) {
@@ -56,7 +58,7 @@ void Kryvo::SchedulerState::pauseWait(const std::size_t pipelineId) {
   }
 }
 
-void Kryvo::SchedulerState::stop(const std::size_t pipelineId,
+void SchedulerState::stop(const std::size_t pipelineId,
                                  const bool stop) {
   QWriteLocker locker(&stoppedLock_);
 
@@ -65,7 +67,7 @@ void Kryvo::SchedulerState::stop(const std::size_t pipelineId,
   }
 }
 
-bool Kryvo::SchedulerState::isStopped(const std::size_t pipelineId) {
+bool SchedulerState::isStopped(const std::size_t pipelineId) {
   QReadLocker locker(&stoppedLock_);
 
   bool hasBeenStopped = false;
@@ -77,7 +79,7 @@ bool Kryvo::SchedulerState::isStopped(const std::size_t pipelineId) {
   return hasBeenStopped;
 }
 
-void Kryvo::SchedulerState::running(const bool run) {
+void SchedulerState::running(const bool run) {
   QWriteLocker locker(&stateLock_);
 
   if (run) {
@@ -95,8 +97,10 @@ void Kryvo::SchedulerState::running(const bool run) {
   }
 }
 
-bool Kryvo::SchedulerState::isRunning() {
+bool SchedulerState::isRunning() {
   QReadLocker lock(&stateLock_);
 
   return ExecutionState::Running == state_;
 }
+
+} // namespace Kryvo

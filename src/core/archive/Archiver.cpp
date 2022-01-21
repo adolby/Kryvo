@@ -7,7 +7,9 @@
 #include <QStringBuilder>
 #include "zlib.h"
 
-class Kryvo::ArchiverPrivate {
+namespace Kryvo {
+
+class ArchiverPrivate {
   Q_DISABLE_COPY(ArchiverPrivate)
   Q_DECLARE_PUBLIC(Archiver)
 
@@ -36,7 +38,7 @@ class Kryvo::ArchiverPrivate {
   static constexpr qint64 kChunk{256000};
 };
 
-Kryvo::ArchiverPrivate::ArchiverPrivate(Archiver* archiver, SchedulerState* s)
+ArchiverPrivate::ArchiverPrivate(Archiver* archiver, SchedulerState* s)
   : q_ptr(archiver), state(s) {
 }
 
@@ -46,7 +48,7 @@ Kryvo::ArchiverPrivate::ArchiverPrivate(Archiver* archiver, SchedulerState* s)
    level is supplied, Z_VERSION_ERROR if the version of zlib.h and the
    version of the library linked do not match, or Z_ERRNO if there is
    an error reading or writing the files. */
-int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
+int ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
                                             QSaveFile* dest, int level) {
   Q_Q(Archiver);
   Q_ASSERT(state);
@@ -163,7 +165,7 @@ int Kryvo::ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
    invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
    the version of the library linked do not match, or Z_ERRNO if there
    is an error reading or writing the files. */
-int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
+int ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
                                             QSaveFile* dest) {
   Q_Q(Archiver);
   Q_ASSERT(state);
@@ -290,18 +292,18 @@ int Kryvo::ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
   return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 
-QByteArray Kryvo::ArchiverPrivate::compressChunk(const QByteArray& chunk) {
+QByteArray ArchiverPrivate::compressChunk(const QByteArray& chunk) {
     return QByteArray();
 }
 
-bool Kryvo::ArchiverPrivate::compressFile(const std::size_t id,
+bool ArchiverPrivate::compressFile(const std::size_t id,
                                           const QFileInfo& inputFileInfo,
                                           const QFileInfo& outputFileInfo) {
   Q_Q(Archiver);
   Q_ASSERT(state);
 
   if (!state) {
-    emit q->errorMessage(Constants::kMessages[0], QFileInfo());
+    emit q->errorMessage(Constants::messages[0], QFileInfo());
     emit q->fileFailed(id);
     return false;
   }
@@ -313,7 +315,7 @@ bool Kryvo::ArchiverPrivate::compressFile(const std::size_t id,
 
   if (!inputFileInfo.exists() || !inputFileInfo.isFile() ||
       !inputFileInfo.isReadable()) {
-    emit q->errorMessage(Constants::kMessages[9],
+    emit q->errorMessage(Constants::messages[9],
                          inputFileInfo.absoluteFilePath());
     emit q->fileFailed(id);
     return false;
@@ -337,7 +339,7 @@ bool Kryvo::ArchiverPrivate::compressFile(const std::size_t id,
                                   Z_DEFAULT_COMPRESSION);
 
   if (ret != Z_OK) {
-    emit q->errorMessage(Constants::kMessages[9], inputFileInfo);
+    emit q->errorMessage(Constants::messages[9], inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -357,14 +359,14 @@ bool Kryvo::ArchiverPrivate::compressFile(const std::size_t id,
   return true;
 }
 
-bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
+bool ArchiverPrivate::decompressFile(const std::size_t id,
                                             const QFileInfo& inputFileInfo,
                                             const QFileInfo& outputFileInfo) {
   Q_Q(Archiver);
   Q_ASSERT(state);
 
   if (!state) {
-    emit q->errorMessage(Constants::kMessages[0], QFileInfo());
+    emit q->errorMessage(Constants::messages[0], QFileInfo());
     emit q->fileFailed(id);
     return false;
   }
@@ -376,7 +378,7 @@ bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
 
   if (!inputFileInfo.exists() || !inputFileInfo.isFile() ||
       !inputFileInfo.isReadable()) {
-    emit q->errorMessage(Constants::kMessages[10], inputFileInfo);
+    emit q->errorMessage(Constants::messages[10], inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -398,7 +400,7 @@ bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
   const int ret = gzipInflateFile(id, &inputFile, &outputFile);
 
   if (ret != Z_OK) {
-    emit q->errorMessage(Constants::kMessages[10], inputFileInfo);
+    emit q->errorMessage(Constants::messages[10], inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -418,9 +420,9 @@ bool Kryvo::ArchiverPrivate::decompressFile(const std::size_t id,
   return true;
 }
 
-void Kryvo::ArchiverPrivate::compress(const std::size_t id,
-                                      const QFileInfo& inputFileInfo,
-                                      const QFileInfo& outputFileInfo) {
+void ArchiverPrivate::compress(const std::size_t id,
+                               const QFileInfo& inputFileInfo,
+                               const QFileInfo& outputFileInfo) {
   const auto compressFunc =
     [this, id, inputFileInfo, outputFileInfo]() {
       compressFile(id, inputFileInfo, outputFileInfo);
@@ -432,9 +434,9 @@ void Kryvo::ArchiverPrivate::compress(const std::size_t id,
   queue.enqueue(task);
 }
 
-void Kryvo::ArchiverPrivate::decompress(const std::size_t id,
-                                        const QFileInfo& inputFileInfo,
-                                        const QFileInfo& outputFileInfo) {
+void ArchiverPrivate::decompress(const std::size_t id,
+                                 const QFileInfo& inputFileInfo,
+                                 const QFileInfo& outputFileInfo) {
   const auto decompressFunc =
     [this, id, inputFileInfo, outputFileInfo]() {
       decompressFile(id, inputFileInfo, outputFileInfo);
@@ -446,48 +448,50 @@ void Kryvo::ArchiverPrivate::decompress(const std::size_t id,
   queue.enqueue(task);
 }
 
-Kryvo::Archiver::Archiver(SchedulerState* state, QObject* parent)
+Archiver::Archiver(SchedulerState* state, QObject* parent)
   : Pipe(parent), d_ptr(std::make_unique<ArchiverPrivate>(this, state)) {
 }
 
-Kryvo::Archiver::~Archiver() = default;
+Archiver::~Archiver() = default;
 
-bool Kryvo::Archiver::compressFile(const std::size_t id,
-                                   const QFileInfo& inputFileInfo,
-                                   const QFileInfo& outputFileInfo) {
+bool Archiver::compressFile(const std::size_t id,
+                            const QFileInfo& inputFileInfo,
+                            const QFileInfo& outputFileInfo) {
   Q_D(Archiver);
 
   return d->compressFile(id, inputFileInfo, outputFileInfo);
 }
 
-bool Kryvo::Archiver::decompressFile(const std::size_t id,
-                                     const QFileInfo& inputFileInfo,
-                                     const QFileInfo& outputFileInfo) {
+bool Archiver::decompressFile(const std::size_t id,
+                              const QFileInfo& inputFileInfo,
+                              const QFileInfo& outputFileInfo) {
   Q_D(Archiver);
 
   return d->decompressFile(id, inputFileInfo, outputFileInfo);
 }
 
-void Kryvo::Archiver::compress(const std::size_t id,
-                               const QFileInfo& inputFileInfo,
-                               const QFileInfo& outputFileInfo) {
+void Archiver::compress(const std::size_t id,
+                        const QFileInfo& inputFileInfo,
+                        const QFileInfo& outputFileInfo) {
   Q_D(Archiver);
 
   d->compress(id, inputFileInfo, outputFileInfo);
 }
 
-void Kryvo::Archiver::decompress(const std::size_t id,
-                                 const QFileInfo& inputFileInfo,
-                                 const QFileInfo& outputFileInfo) {
+void Archiver::decompress(const std::size_t id,
+                          const QFileInfo& inputFileInfo,
+                          const QFileInfo& outputFileInfo) {
   Q_D(Archiver);
 
   d->decompress(id, inputFileInfo, outputFileInfo);
 }
 
-//void Kryvo::Archiver::archive(const std::vector<QFileInfo>& inputFiles) {
+//void Archiver::archive(const std::vector<QFileInfo>& inputFiles) {
 //  // TODO: Adapt a tar implementation
 //}
 
-//void Kryvo::Archiver::extract(const QFileInfo& archiveFileInfo) {
+//void Archiver::extract(const QFileInfo& archiveFileInfo) {
 //  // TODO: Adapt a tar implementation
 //}
+
+} // namespace Kryvo
