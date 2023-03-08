@@ -12,7 +12,6 @@
 #include <QFontMetrics>
 #include <QPainter>
 #include <QPropertyAnimation>
-#include <QStringRef>
 #include <QStringBuilder>
 #include <memory>
 
@@ -29,14 +28,16 @@ QString splitToolTip(const QString& text, const int width) {
     while (i < temp.length()) {
       i = i + 1;
 
-      if (fm.width(temp.left(i + 1)) > width) {
+      const QRect textRect = fm.boundingRect(temp.left(i + 1));
+
+      if (textRect.width() > width) {
         int j = temp.lastIndexOf(' ', i);
 
         if (j > 0) {
           i = j;
         }
 
-        result += temp.leftRef(i);
+        result += temp.left(i);
         result += '\n';
         temp = temp.mid(i + 1);
 
@@ -275,20 +276,16 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cryptoProvider,
   settingsLayout->addWidget(centerFrame, 1);
   settingsLayout->setSpacing(0);
 
-  // Capture function pointer to specific QComboBox signal overload
-  void (QComboBox::*indexChangedSignal)(const QString&) =
-    &QComboBox::currentIndexChanged;
-
-  connect(d->cipherComboBox, indexChangedSignal,
+  connect(d->cipherComboBox, &QComboBox::currentTextChanged,
           this, &SettingsFrame::changeCipher);
 
-  connect(d->keySizeComboBox, indexChangedSignal,
+  connect(d->keySizeComboBox, &QComboBox::currentTextChanged,
           this, &SettingsFrame::changeKeySize);
 
-  connect(d->modeComboBox, indexChangedSignal,
+  connect(d->modeComboBox, &QComboBox::currentTextChanged,
           this, &SettingsFrame::changeModeOfOperation);
 
-  connect(d->compressionComboBox, indexChangedSignal,
+  connect(d->compressionComboBox, &QComboBox::currentTextChanged,
           this, &SettingsFrame::changeCompressionFormat);
 
   connect(d->removeIntermediateFilesCheckBox, &QCheckBox::stateChanged,

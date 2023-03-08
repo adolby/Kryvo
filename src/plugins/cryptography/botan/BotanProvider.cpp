@@ -674,9 +674,11 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
         outFile->cancelWriting();
 
         if (Kryvo::CryptDirection::Encrypt == direction) {
-          emit q->errorMessage(Constants::messages[8], inFile->fileName());
+          emit q->errorMessage(Constants::messages[8],
+                               QFileInfo(inFile->fileName()));
         } else {
-          emit q->errorMessage(Constants::messages[7], inFile->fileName());
+          emit q->errorMessage(Constants::messages[7],
+                               QFileInfo(inFile->fileName()));
         }
 
         emit q->fileFailed(id);
@@ -690,9 +692,11 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
         outFile->cancelWriting();
 
         if (Kryvo::CryptDirection::Encrypt == direction) {
-          emit q->errorMessage(Constants::messages[8], inFile->fileName());
+          emit q->errorMessage(Constants::messages[8],
+                               QFileInfo(inFile->fileName()));
         } else {
-          emit q->errorMessage(Constants::messages[7], inFile->fileName());
+          emit q->errorMessage(Constants::messages[7],
+                               QFileInfo(inFile->fileName()));
         }
 
         emit q->fileFailed(id);

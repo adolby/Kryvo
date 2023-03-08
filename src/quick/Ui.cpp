@@ -10,7 +10,6 @@
 #include <QSize>
 #include <QStringList>
 #include <QList>
-#include <QStringRef>
 #include <QStringBuilder>
 #include <QString>
 
@@ -375,7 +374,7 @@ void Kryvo::Ui::appendErrorMessage(const QString& message,
     appendStatusMessage(message);
   }
 
-  updateFileProgress(fileInfo.absoluteFilePath(), QString(), 0);
+  updateFileProgress(QFileInfo(fileInfo.absoluteFilePath()), QString(), 0);
 }
 
 void Kryvo::Ui::updateCipher(const QString& cipher) {

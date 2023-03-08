@@ -83,8 +83,10 @@ QSize Kryvo::ElidedLabel::sizeHint() const {
   Q_D(const ElidedLabel);
 
   const QFontMetrics fm = fontMetrics();
-  const QSize size(fm.width(d->text), fm.height());
-  return size;
+
+  const QRect textRect = fm.boundingRect(d->text);
+
+  return textRect.size();
 }
 
 QSize Kryvo::ElidedLabel::minimumSizeHint() const {
@@ -95,8 +97,8 @@ QSize Kryvo::ElidedLabel::minimumSizeHint() const {
       return sizeHint();
     default: {
       const QFontMetrics fm = fontMetrics();
-      const QSize size(fm.width(QStringLiteral("...")), fm.height());
-      return size;
+      const QRect textRect = fm.boundingRect(QStringLiteral("..."));
+      return textRect.size();
     }
   }
 }

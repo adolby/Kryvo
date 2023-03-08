@@ -34,10 +34,12 @@ SCENARIO("Test compression and decompression on a text file",
       const std::size_t id = 0;
 
       const bool compressed =
-        archiver.compressFile(id, inputFilePath, compressedFilePath);
+        archiver.compressFile(id, QFileInfo(inputFilePath),
+                              QFileInfo(compressedFilePath));
 
       const bool decompressed =
-        archiver.decompressFile(id, compressedFilePath, decompressedFilePath);
+        archiver.decompressFile(id, QFileInfo(compressedFilePath),
+                                QFileInfo(decompressedFilePath));
 
       // Compare initial file with decompressed file
       const bool equivalentTest =

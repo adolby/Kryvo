@@ -6,7 +6,6 @@
 #include <QStandardItemModel>
 #include <QFileInfo>
 #include <QDir>
-#include <QStringRef>
 #include <QStringBuilder>
 #include <QString>
 

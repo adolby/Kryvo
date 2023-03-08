@@ -316,7 +316,7 @@ bool ArchiverPrivate::compressFile(const std::size_t id,
   if (!inputFileInfo.exists() || !inputFileInfo.isFile() ||
       !inputFileInfo.isReadable()) {
     emit q->errorMessage(Constants::messages[9],
-                         inputFileInfo.absoluteFilePath());
+                         QFileInfo(inputFileInfo.absoluteFilePath()));
     emit q->fileFailed(id);
     return false;
   }
