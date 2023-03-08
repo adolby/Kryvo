@@ -208,35 +208,6 @@ darwin {
 win32 {
   message(Windows)
 
-  win32-g++ {
-    message(g++)
-
-    SOURCES += \
-      botan/windows/mingw/x86_32/botan_all.cpp \
-      botan/windows/mingw/x86_32/botan_all_aesni.cpp \
-      botan/windows/mingw/x86_32/botan_all_avx2.cpp \
-      botan/windows/mingw/x86_32/botan_all_bmi2.cpp \
-      botan/windows/mingw/x86_32/botan_all_rdrand.cpp \
-      botan/windows/mingw/x86_32/botan_all_rdseed.cpp \
-      botan/windows/mingw/x86_32/botan_all_sha_sse41_ssse3.cpp \
-      botan/windows/mingw/x86_32/botan_all_sha_ssse3.cpp \
-      botan/windows/mingw/x86_32/botan_all_sse2.cpp \
-      botan/windows/mingw/x86_32/botan_all_ssse3.cpp
-
-    HEADERS += \
-      botan/windows/mingw/x86_32/botan_all.h \
-      botan/windows/mingw/x86_32/botan_all_internal.h
-
-    debug {
-      message(Debug)
-      DESTDIR = $$PWD/../../../../build/windows/mingw/x86_32/debug/plugins/cryptography/botan
-    }
-    release {
-      message(Release)
-      DESTDIR = $$PWD/../../../../build/windows/mingw/x86_32/release/plugins/cryptography/botan
-    }
-  } # End win32-g++
-
   win32-msvc {
     message(MSVC)
 

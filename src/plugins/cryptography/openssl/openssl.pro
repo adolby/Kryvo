@@ -138,19 +138,6 @@ darwin {
 win32 {
   message(Windows)
 
-  win32-g++ {
-    message(g++)
-
-    debug {
-      message(Debug)
-      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/debug/plugins/cryptography/openssl
-    }
-    release {
-      message(Release)
-      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/release/plugins/cryptography/openssl
-    }
-  }
-
   win32-msvc {
     message(MSVC)
 

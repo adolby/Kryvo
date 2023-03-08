@@ -188,23 +188,6 @@ darwin {
 win32 {
   message(Windows)
 
-  win32-g++ {
-    message(g++)
-
-    debug {
-      message(Debug)
-      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/debug/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/debug/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/debug/core
-    }
-    release {
-      message(Release)
-      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/release/lib/zlib -lz
-      LIBS += -L$$PWD/../../build/windows/mingw/x86_32/release/plugins/cryptography/botan -lbotan
-      DESTDIR = $$PWD/../../build/windows/mingw/x86_32/release/core
-    }
-  } # End win32-g++
-
   win32-msvc {
     message(MSVC)
 
