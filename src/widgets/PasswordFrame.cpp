@@ -3,7 +3,9 @@
 #include <QLineEdit>
 #include <QHBoxLayout>
 
-class Kryvo::PasswordFramePrivate {
+namespace Kryvo {
+
+class PasswordFramePrivate {
   Q_DISABLE_COPY(PasswordFramePrivate)
 
  public:
@@ -12,9 +14,9 @@ class Kryvo::PasswordFramePrivate {
   QLineEdit* passwordLineEdit{nullptr};
 };
 
-Kryvo::PasswordFramePrivate::PasswordFramePrivate() = default;
+PasswordFramePrivate::PasswordFramePrivate() = default;
 
-Kryvo::PasswordFrame::PasswordFrame(QWidget* parent)
+PasswordFrame::PasswordFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<PasswordFramePrivate>()) {
   Q_D(PasswordFrame);
 
@@ -31,11 +33,13 @@ Kryvo::PasswordFrame::PasswordFrame(QWidget* parent)
   passwordLayout->setContentsMargins(0, 0, 0, 0);
 }
 
-Kryvo::PasswordFrame::~PasswordFrame() = default;
+PasswordFrame::~PasswordFrame() = default;
 
-QString Kryvo::PasswordFrame::password() const {
+QString PasswordFrame::password() const {
   Q_D(const PasswordFrame);
   Q_ASSERT(d->passwordLineEdit);
 
   return d->passwordLineEdit->text();
 }
+
+} // namespace Kryvo

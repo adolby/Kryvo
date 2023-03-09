@@ -8,7 +8,9 @@
 #include <iterator>
 #include <vector>
 
-class Kryvo::MessageFramePrivate {
+namespace Kryvo {
+
+class MessageFramePrivate {
   Q_DISABLE_COPY(MessageFramePrivate)
 
  public:
@@ -19,11 +21,11 @@ class Kryvo::MessageFramePrivate {
   QLabel* messageLabel{nullptr};
 };
 
-Kryvo::MessageFramePrivate::MessageFramePrivate() {
+MessageFramePrivate::MessageFramePrivate() {
     messageIterator = messages.cbegin();
 }
 
-Kryvo::MessageFrame::MessageFrame(QWidget* parent)
+MessageFrame::MessageFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<MessageFramePrivate>()) {
   Q_D(MessageFrame);
 
@@ -53,9 +55,9 @@ Kryvo::MessageFrame::MessageFrame(QWidget* parent)
   messageLayout->setSpacing(8);
 }
 
-Kryvo::MessageFrame::~MessageFrame() = default;
+MessageFrame::~MessageFrame() = default;
 
-void Kryvo::MessageFrame::appendMessage(const QString& message) {
+void MessageFrame::appendMessage(const QString& message) {
   Q_D(MessageFrame);
   Q_ASSERT(d->messageLabel);
 
@@ -64,7 +66,7 @@ void Kryvo::MessageFrame::appendMessage(const QString& message) {
   d->messageLabel->setText(*d->messageIterator);
 }
 
-void Kryvo::MessageFrame::pageLeft() {
+void MessageFrame::pageLeft() {
   Q_D(MessageFrame);
   Q_ASSERT(d->messageLabel);
 
@@ -74,7 +76,7 @@ void Kryvo::MessageFrame::pageLeft() {
   }
 }
 
-void Kryvo::MessageFrame::pageRight() {
+void MessageFrame::pageRight() {
   Q_D(MessageFrame);
   Q_ASSERT(d->messageLabel);
 
@@ -85,3 +87,5 @@ void Kryvo::MessageFrame::pageRight() {
     d->messageLabel->setText(*d->messageIterator);
   }
 }
+
+} // namespace Kryvo

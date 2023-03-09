@@ -4,7 +4,9 @@
 #include <QPushButton>
 #include <QHBoxLayout>
 
-class Kryvo::OutputFramePrivate {
+namespace Kryvo {
+
+class OutputFramePrivate {
   Q_DISABLE_COPY(OutputFramePrivate)
 
  public:
@@ -14,9 +16,9 @@ class Kryvo::OutputFramePrivate {
   QPushButton* outputPushButton{nullptr};
 };
 
-Kryvo::OutputFramePrivate::OutputFramePrivate() = default;
+OutputFramePrivate::OutputFramePrivate() = default;
 
-Kryvo::OutputFrame::OutputFrame(QWidget* parent)
+OutputFrame::OutputFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<OutputFramePrivate>()) {
   Q_D(OutputFrame);
 
@@ -39,18 +41,20 @@ Kryvo::OutputFrame::OutputFrame(QWidget* parent)
   outputLayout->setContentsMargins(0, 0, 0, 0);
 }
 
-Kryvo::OutputFrame::~OutputFrame() = default;
+OutputFrame::~OutputFrame() = default;
 
-void Kryvo::OutputFrame::outputPath(const QString& path) {
+void OutputFrame::outputPath(const QString& path) {
   Q_D(OutputFrame);
   Q_ASSERT(d->outputLineEdit);
 
   d->outputLineEdit->setText(path);
 }
 
-QString Kryvo::OutputFrame::outputPath() const {
+QString OutputFrame::outputPath() const {
   Q_D(const OutputFrame);
   Q_ASSERT(d->outputLineEdit);
 
   return d->outputLineEdit->text();
 }
+
+} // namespace Kryvo

@@ -3,7 +3,9 @@
 #include <QHBoxLayout>
 #include <QIcon>
 
-class Kryvo::ControlButtonFramePrivate {
+namespace Kryvo {
+
+class ControlButtonFramePrivate {
   Q_DISABLE_COPY(ControlButtonFramePrivate)
 
  public:
@@ -17,9 +19,9 @@ class Kryvo::ControlButtonFramePrivate {
   QPushButton* decryptButton{nullptr};
 };
 
-Kryvo::ControlButtonFramePrivate::ControlButtonFramePrivate() = default;
+ControlButtonFramePrivate::ControlButtonFramePrivate() = default;
 
-Kryvo::ControlButtonFrame::ControlButtonFrame(QWidget* parent)
+ControlButtonFrame::ControlButtonFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<ControlButtonFramePrivate>()) {
   Q_D(ControlButtonFrame);
 
@@ -48,9 +50,9 @@ Kryvo::ControlButtonFrame::ControlButtonFrame(QWidget* parent)
           this, &ControlButtonFrame::decryptFiles);
 }
 
-Kryvo::ControlButtonFrame::~ControlButtonFrame() = default;
+ControlButtonFrame::~ControlButtonFrame() = default;
 
-void Kryvo::ControlButtonFrame::setIconSize(const QSize& iconSize) {
+void ControlButtonFrame::setIconSize(const QSize& iconSize) {
   Q_D(ControlButtonFrame);
   Q_ASSERT(d->encryptButton);
   Q_ASSERT(d->decryptButton);
@@ -59,10 +61,12 @@ void Kryvo::ControlButtonFrame::setIconSize(const QSize& iconSize) {
   d->decryptButton->setIconSize(iconSize);
 }
 
-void Kryvo::ControlButtonFrame::encryptFiles() {
-  emit processFiles(Kryvo::CryptDirection::Encrypt);
+void ControlButtonFrame::encryptFiles() {
+  emit processFiles(CryptDirection::Encrypt);
 }
 
-void Kryvo::ControlButtonFrame::decryptFiles() {
-  emit processFiles(Kryvo::CryptDirection::Decrypt);
+void ControlButtonFrame::decryptFiles() {
+  emit processFiles(CryptDirection::Decrypt);
 }
+
+} // namespace Kryvo

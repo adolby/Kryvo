@@ -9,6 +9,8 @@
 #include <QHash>
 #include <QString>
 
+namespace Kryvo {
+
 #if defined(Q_OS_ANDROID)
 #include <QtAndroid>
 
@@ -38,7 +40,7 @@ bool checkPermissions() {
 }
 #endif
 
-class Kryvo::ApplicationPrivate {
+class ApplicationPrivate {
   Q_DISABLE_COPY(ApplicationPrivate)
   Q_DECLARE_PUBLIC(Application)
 
@@ -53,7 +55,7 @@ class Kryvo::ApplicationPrivate {
   Ui gui{&settings};
 };
 
-Kryvo::ApplicationPrivate::ApplicationPrivate(Application* app)
+ApplicationPrivate::ApplicationPrivate(Application* app)
   : q_ptr(app) {
   qRegisterMetaType<std::size_t>("std::size_t");
   qRegisterMetaType<QFileInfo>("QFileInfo");
@@ -107,19 +109,19 @@ Kryvo::ApplicationPrivate::ApplicationPrivate(Application* app)
 #endif
 }
 
-Kryvo::Application::Application(int& argc, char** argv)
+Application::Application(int& argc, char** argv)
   : QGuiApplication(argc, argv),
     d_ptr(std::make_unique<ApplicationPrivate>(this)) {
 }
 
-Kryvo::Application::~Application() {
+Application::~Application() {
   Q_D(Application);
 
   // Abort current threaded operations
   d->scheduler.abort();
 }
 
-bool Kryvo::Application::notify(QObject* receiver, QEvent* event) {
+bool Application::notify(QObject* receiver, QEvent* event) {
 #if defined(Q_OS_ANDROID)
   if (QEvent::Close == event->type()) {
     emit back();
@@ -131,3 +133,5 @@ bool Kryvo::Application::notify(QObject* receiver, QEvent* event) {
   return QGuiApplication::notify(receiver, event);
 #endif
 }
+
+} // namespace Kryvo

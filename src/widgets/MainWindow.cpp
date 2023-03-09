@@ -13,7 +13,9 @@
 #include <QStringBuilder>
 #include <QString>
 
-class Kryvo::MainWindowPrivate {
+namespace Kryvo {
+
+class MainWindowPrivate {
   Q_DISABLE_COPY(MainWindowPrivate)
 
  public:
@@ -25,9 +27,9 @@ class Kryvo::MainWindowPrivate {
                 "files. Please enter one to continue.")};
 };
 
-Kryvo::MainWindowPrivate::MainWindowPrivate() = default;
+MainWindowPrivate::MainWindowPrivate() = default;
 
-Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
+MainWindow::MainWindow(Settings* s, QWidget* parent)
   : QMainWindow(parent), d_ptr(std::make_unique<MainWindowPrivate>()) {
   // Set object name
   this->setObjectName(QStringLiteral("mainWindow"));
@@ -139,11 +141,11 @@ Kryvo::MainWindow::MainWindow(Settings* s, QWidget* parent)
           this, &MainWindow::processFiles);
 }
 
-Kryvo::MainWindow::~MainWindow() {
+MainWindow::~MainWindow() {
   settings->outputPath(outputFrame->outputPath());
 }
 
-void Kryvo::MainWindow::addFiles() {
+void MainWindow::addFiles() {
   Q_ASSERT(settings);
   Q_ASSERT(fileListFrame);
 
@@ -165,7 +167,7 @@ void Kryvo::MainWindow::addFiles() {
   }
 }
 
-void Kryvo::MainWindow::removeFiles() {
+void MainWindow::removeFiles() {
   Q_ASSERT(fileListFrame);
 
   // Signal to abort current cipher operation if it's in progress
@@ -174,8 +176,8 @@ void Kryvo::MainWindow::removeFiles() {
   fileListFrame->clear();
 }
 
-void Kryvo::MainWindow::processFiles(
-  const Kryvo::CryptDirection direction) {
+void MainWindow::processFiles(
+  const CryptDirection direction) {
   Q_D(MainWindow);
   Q_ASSERT(settings);
   Q_ASSERT(passwordFrame);
@@ -198,7 +200,7 @@ void Kryvo::MainWindow::processFiles(
       const QString outputPath = outputFrame->outputPath();
       const QDir outputDir(outputPath);
 
-      if (Kryvo::CryptDirection::Encrypt == direction) {
+      if (CryptDirection::Encrypt == direction) {
         emit encrypt(settings->cryptoProvider(),
                      settings->compressionFormat(),
                      passphrase,
@@ -218,22 +220,22 @@ void Kryvo::MainWindow::processFiles(
   }
 }
 
-void Kryvo::MainWindow::updateFileProgress(const QFileInfo& fileInfo,
-                                           const QString& task,
-                                           const qint64 progressValue) {
+void MainWindow::updateFileProgress(const QFileInfo& fileInfo,
+                                    const QString& task,
+                                    const qint64 progressValue) {
   Q_ASSERT(fileListFrame);
 
   fileListFrame->updateProgress(fileInfo, task, progressValue);
 }
 
-void Kryvo::MainWindow::updateStatusMessage(const QString& message) {
+void MainWindow::updateStatusMessage(const QString& message) {
   Q_ASSERT(messageFrame);
 
   messageFrame->appendMessage(message);
 }
 
-void Kryvo::MainWindow::updateError(const QString& message,
-                                    const QFileInfo& fileInfo) {
+void MainWindow::updateError(const QString& message,
+                             const QFileInfo& fileInfo) {
   if (message.contains(QStringLiteral("%1"))) {
     updateStatusMessage(message.arg(fileInfo.absoluteFilePath()));
   } else {
@@ -243,33 +245,33 @@ void Kryvo::MainWindow::updateError(const QString& message,
   updateFileProgress(QFileInfo(fileInfo.absoluteFilePath()), QString(), 0);
 }
 
-void Kryvo::MainWindow::updateCipher(const QString& cipher) {
+void MainWindow::updateCipher(const QString& cipher) {
   settings->cipher(cipher);
 }
 
-void Kryvo::MainWindow::updateKeySize(const std::size_t keySize) {
+void MainWindow::updateKeySize(const std::size_t keySize) {
   settings->keySize(keySize);
 }
 
-void Kryvo::MainWindow::updateModeOfOperation(const QString& mode) {
+void MainWindow::updateModeOfOperation(const QString& mode) {
   settings->modeOfOperation(mode);
 }
 
-void Kryvo::MainWindow::updateCompressionFormat(const QString& format) {
+void MainWindow::updateCompressionFormat(const QString& format) {
   settings->compressionFormat(format);
 }
 
-void Kryvo::MainWindow::updateRemoveIntermediateFiles(
+void MainWindow::updateRemoveIntermediateFiles(
   const bool removeIntermediate) {
   settings->removeIntermediateFiles(removeIntermediate);
 }
 
-void Kryvo::MainWindow::updateContainerMode(const bool container) {
+void MainWindow::updateContainerMode(const bool container) {
   settings->containerMode(container);
 }
 
-QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
-                                          const QString& defaultFile) const {
+QString MainWindow::loadStyleSheet(const QString& styleFile,
+                                   const QString& defaultFile) const {
   // Try to load user theme, if it exists
   const QString styleSheetPath = QStringLiteral("themes") %
                                  QStringLiteral("/") % styleFile;
@@ -299,7 +301,7 @@ QString Kryvo::MainWindow::loadStyleSheet(const QString& styleFile,
   return styleSheet;
 }
 
-void Kryvo::MainWindow::selectOutputDir() {
+void MainWindow::selectOutputDir() {
   Q_ASSERT(settings);
 
   if (!settings) {
@@ -317,3 +319,5 @@ void Kryvo::MainWindow::selectOutputDir() {
     outputFrame->outputPath(outputDir);
   }
 }
+
+} // namespace Kryvo

@@ -17,6 +17,8 @@
 #include <QtAndroid>
 #endif
 
+namespace Kryvo {
+
 QString qmlUrlToPath(const QUrl& url) {
   QString pathString;
 
@@ -27,7 +29,7 @@ QString qmlUrlToPath(const QUrl& url) {
   return pathString;
 }
 
-class Kryvo::UiPrivate {
+class UiPrivate {
   Q_DISABLE_COPY(UiPrivate)
 
  public:
@@ -55,12 +57,12 @@ class Kryvo::UiPrivate {
   QString password;
 };
 
-Kryvo::UiPrivate::UiPrivate(Settings* s)
+UiPrivate::UiPrivate(Settings* s)
   : settings(s), mainPageUrl(QStringLiteral("qrc:/qml/main.qml")) {
     statusMessageIterator = statusMessages.cbegin();
 }
 
-Kryvo::Ui::Ui(Settings* s, QObject* parent)
+Ui::Ui(Settings* s, QObject* parent)
   : QObject(parent), d_ptr(std::make_unique<UiPrivate>(s)) {
   connect(&d_ptr->engine,
           &QQmlApplicationEngine::objectCreated,
@@ -81,9 +83,9 @@ Kryvo::Ui::Ui(Settings* s, QObject* parent)
   QMetaObject::invokeMethod(this, "init", Qt::QueuedConnection);
 }
 
-Kryvo::Ui::~Ui() = default;
+Ui::~Ui() = default;
 
-void Kryvo::Ui::init() {
+void Ui::init() {
   Q_D(Ui);
 
   QQmlContext* const context = d->engine.rootContext();
@@ -97,12 +99,12 @@ void Kryvo::Ui::init() {
   d->engine.load(d->mainPageUrl);
 }
 
-QVariantMap Kryvo::Ui::currentPage() const {
+QVariantMap Ui::currentPage() const {
   Q_D(const Ui);
   return d->currentPage;
 }
 
-QVariantMap Kryvo::Ui::page(int index) const {
+QVariantMap Ui::page(int index) const {
   Q_D(const Ui);
 
   QVariantMap pg;
@@ -117,80 +119,80 @@ QVariantMap Kryvo::Ui::page(int index) const {
   return pg;
 }
 
-bool Kryvo::Ui::canNavigateBack() const {
+bool Ui::canNavigateBack() const {
   Q_D(const Ui);
 
   return d->navigationHistory.size() > 1;
 }
 
-QUrl Kryvo::Ui::inputPath() const {
+QUrl Ui::inputPath() const {
   Q_D(const Ui);
   const QDir inputDir = d->settings->inputPath();
   return QUrl::fromLocalFile(inputDir.absolutePath());
 }
 
-QUrl Kryvo::Ui::outputPath() const {
+QUrl Ui::outputPath() const {
   Q_D(const Ui);
   const QDir outputDir = d->settings->outputPath();
   return QUrl::fromLocalFile(outputDir.absolutePath());
 }
 
-QString Kryvo::Ui::outputPathString() const {
+QString Ui::outputPathString() const {
   Q_D(const Ui);
   const QDir outputDir = d->settings->outputPath();
   return outputDir.absolutePath();
 }
 
-QString Kryvo::Ui::password() const {
+QString Ui::password() const {
   Q_D(const Ui);
   return d->password;
 }
 
-QString Kryvo::Ui::cipher() const {
+QString Ui::cipher() const {
   Q_D(const Ui);
   return d->settings->cipher();
 }
 
-QString Kryvo::Ui::keySize() const {
+QString Ui::keySize() const {
   Q_D(const Ui);
   return QString::number(d->settings->keySize());
 }
 
-QString Kryvo::Ui::modeOfOperation() const {
+QString Ui::modeOfOperation() const {
   Q_D(const Ui);
   return d->settings->modeOfOperation();
 }
 
-QString Kryvo::Ui::compressionFormat() const {
+QString Ui::compressionFormat() const {
   Q_D(const Ui);
   return d->settings->compressionFormat();
 }
 
-bool Kryvo::Ui::removeIntermediateFiles() const {
+bool Ui::removeIntermediateFiles() const {
   Q_D(const Ui);
   return d->settings->removeIntermediateFiles();
 }
 
-bool Kryvo::Ui::containerMode() const {
+bool Ui::containerMode() const {
   Q_D(const Ui);
   return d->settings->containerMode();
 }
 
-QString Kryvo::Ui::statusMessage() const {
+QString Ui::statusMessage() const {
   Q_D(const Ui);
   return d->statusMessage;
 }
 
-void Kryvo::Ui::changePage(const QString& name) {
+void Ui::changePage(const QString& name) {
   changePage(name, QVariantMap(), 0);
 }
 
-void Kryvo::Ui::changePage(const QString& name, const QVariantMap& properties) {
+void Ui::changePage(const QString& name, const QVariantMap& properties) {
   changePage(name, properties, 0);
 }
 
-void Kryvo::Ui::changePage(const QString& name, const QVariantMap& properties,
-                           const int delayInMSecs) {
+void Ui::changePage(const QString& name, const QVariantMap& properties,
+                    const int delayInMSecs) {
   const auto changeThePage = [this, name, properties]() {
     Q_D(Ui);
 
@@ -213,7 +215,7 @@ void Kryvo::Ui::changePage(const QString& name, const QVariantMap& properties,
   }
 }
 
-void Kryvo::Ui::navigate(const QString& name, const QVariantMap& properties) {
+void Ui::navigate(const QString& name, const QVariantMap& properties) {
   Q_D(Ui);
 
   changePage(name, properties);
@@ -221,7 +223,7 @@ void Kryvo::Ui::navigate(const QString& name, const QVariantMap& properties) {
   d->navigationHistory.push_back(d->currentPage);
 }
 
-void Kryvo::Ui::navigateBack() {
+void Ui::navigateBack() {
   Q_D(Ui);
 
   if (canNavigateBack()) {
@@ -235,13 +237,13 @@ void Kryvo::Ui::navigateBack() {
   }
 }
 
-void Kryvo::Ui::clearNavigationHistory() {
+void Ui::clearNavigationHistory() {
   Q_D(Ui);
 
   d->navigationHistory.clear();
 }
 
-void Kryvo::Ui::addFile(const QUrl& fileUrl) {
+void Ui::addFile(const QUrl& fileUrl) {
   const QList<QUrl> fileUrlList = {
     fileUrl
   };
@@ -249,7 +251,7 @@ void Kryvo::Ui::addFile(const QUrl& fileUrl) {
   addFiles(fileUrlList);
 }
 
-void Kryvo::Ui::addFiles(const QList<QUrl>& fileUrls) {
+void Ui::addFiles(const QList<QUrl>& fileUrls) {
   Q_D(Ui);
 
   Q_ASSERT(d->settings);
@@ -281,7 +283,7 @@ void Kryvo::Ui::addFiles(const QList<QUrl>& fileUrls) {
   }
 }
 
-void Kryvo::Ui::removeFiles() {
+void Ui::removeFiles() {
   Q_D(Ui);
 
   // Signal to abort current cipher operation if it's in progress
@@ -290,16 +292,16 @@ void Kryvo::Ui::removeFiles() {
   d->fileListModel.clear();
 }
 
-void Kryvo::Ui::encryptFiles(const QString& passphrase) {
-  processFiles(passphrase, Kryvo::CryptDirection::Encrypt);
+void Ui::encryptFiles(const QString& passphrase) {
+  processFiles(passphrase, CryptDirection::Encrypt);
 }
 
-void Kryvo::Ui::decryptFiles(const QString& passphrase) {
-  processFiles(passphrase, Kryvo::CryptDirection::Decrypt);
+void Ui::decryptFiles(const QString& passphrase) {
+  processFiles(passphrase, CryptDirection::Decrypt);
 }
 
-void Kryvo::Ui::processFiles(const QString& passphrase,
-                             const Kryvo::CryptDirection cryptDirection) {
+void Ui::processFiles(const QString& passphrase,
+                      const CryptDirection cryptDirection) {
   Q_D(Ui);
 
   Q_ASSERT(d->settings);
@@ -320,7 +322,7 @@ void Kryvo::Ui::processFiles(const QString& passphrase,
       return;
     }
 
-    if (Kryvo::CryptDirection::Encrypt == cryptDirection) {
+    if (CryptDirection::Encrypt == cryptDirection) {
       emit encrypt(d->settings->cryptoProvider(),
                    d->settings->compressionFormat(),
                    passphrase,
@@ -330,7 +332,7 @@ void Kryvo::Ui::processFiles(const QString& passphrase,
                    d->settings->keySize(),
                    d->settings->modeOfOperation(),
                    d->settings->removeIntermediateFiles());
-    } else if (Kryvo::CryptDirection::Decrypt == cryptDirection) {
+    } else if (CryptDirection::Decrypt == cryptDirection) {
       emit decrypt(passphrase, files, d->settings->outputPath(),
                    d->settings->removeIntermediateFiles());
     }
@@ -339,13 +341,13 @@ void Kryvo::Ui::processFiles(const QString& passphrase,
   }
 }
 
-void Kryvo::Ui::pauseProcessing(const bool pauseStatus) {
+void Ui::pauseProcessing(const bool pauseStatus) {
   emit pause(pauseStatus);
 }
 
-void Kryvo::Ui::updateFileProgress(const QFileInfo& fileInfo,
-                                   const QString& task,
-                                   const qint64 progressValue) {
+void Ui::updateFileProgress(const QFileInfo& fileInfo,
+                            const QString& task,
+                            const qint64 progressValue) {
   Q_D(Ui);
 
   if (task.isEmpty()) {
@@ -356,7 +358,7 @@ void Kryvo::Ui::updateFileProgress(const QFileInfo& fileInfo,
   d->fileListModel.updateRow(fileInfo.absoluteFilePath(), task, progressValue);
 }
 
-void Kryvo::Ui::appendStatusMessage(const QString& message) {
+void Ui::appendStatusMessage(const QString& message) {
   Q_D(Ui);
 
   d->statusMessages.push_back(message);
@@ -366,8 +368,8 @@ void Kryvo::Ui::appendStatusMessage(const QString& message) {
   emit statusMessageChanged(d->statusMessage);
 }
 
-void Kryvo::Ui::appendErrorMessage(const QString& message,
-                                   const QFileInfo& fileInfo) {
+void Ui::appendErrorMessage(const QString& message,
+                            const QFileInfo& fileInfo) {
   if (message.contains(QStringLiteral("%1"))) {
     appendStatusMessage(message.arg(fileInfo.absoluteFilePath()));
   } else {
@@ -377,13 +379,13 @@ void Kryvo::Ui::appendErrorMessage(const QString& message,
   updateFileProgress(QFileInfo(fileInfo.absoluteFilePath()), QString(), 0);
 }
 
-void Kryvo::Ui::updateCipher(const QString& cipher) {
+void Ui::updateCipher(const QString& cipher) {
   Q_D(Ui);
 
   d->settings->cipher(cipher);
 }
 
-void Kryvo::Ui::updateKeySize(const QString& keySizeString) {
+void Ui::updateKeySize(const QString& keySizeString) {
   Q_D(Ui);
 
   const std::size_t keySize = static_cast<std::size_t>(keySizeString.toInt());
@@ -398,7 +400,7 @@ void Kryvo::Ui::updateKeySize(const QString& keySizeString) {
   }
 }
 
-void Kryvo::Ui::updateModeOfOperation(const QString& mode) {
+void Ui::updateModeOfOperation(const QString& mode) {
   Q_D(Ui);
 
   if (mode != d->settings->modeOfOperation()) {
@@ -407,7 +409,7 @@ void Kryvo::Ui::updateModeOfOperation(const QString& mode) {
   }
 }
 
-void Kryvo::Ui::updateCompressionFormat(const QString& format) {
+void Ui::updateCompressionFormat(const QString& format) {
   Q_D(Ui);
 
   if (format != d->settings->compressionFormat()) {
@@ -416,7 +418,7 @@ void Kryvo::Ui::updateCompressionFormat(const QString& format) {
   }
 }
 
-void Kryvo::Ui::updateRemoveIntermediateFiles(const bool removeIntermediate) {
+void Ui::updateRemoveIntermediateFiles(const bool removeIntermediate) {
   Q_D(Ui);
 
   if (removeIntermediate != d->settings->removeIntermediateFiles()) {
@@ -425,7 +427,7 @@ void Kryvo::Ui::updateRemoveIntermediateFiles(const bool removeIntermediate) {
   }
 }
 
-void Kryvo::Ui::updateContainerMode(const bool container) {
+void Ui::updateContainerMode(const bool container) {
   Q_D(Ui);
 
   if (container != d->settings->containerMode()) {
@@ -434,7 +436,7 @@ void Kryvo::Ui::updateContainerMode(const bool container) {
   }
 }
 
-void Kryvo::Ui::updateOutputPath(const QUrl& url) {
+void Ui::updateOutputPath(const QUrl& url) {
   Q_D(Ui);
 
   const QString outputPath = qmlUrlToPath(url);
@@ -445,7 +447,7 @@ void Kryvo::Ui::updateOutputPath(const QUrl& url) {
   }
 }
 
-void Kryvo::Ui::navigateMessageLeft() {
+void Ui::navigateMessageLeft() {
   Q_D(Ui);
 
   if (d->statusMessageIterator != d->statusMessages.cbegin()) {
@@ -456,7 +458,7 @@ void Kryvo::Ui::navigateMessageLeft() {
   }
 }
 
-void Kryvo::Ui::navigateMessageRight() {
+void Ui::navigateMessageRight() {
   Q_D(Ui);
 
   const auto end = d->statusMessages.cend();
@@ -470,7 +472,7 @@ void Kryvo::Ui::navigateMessageRight() {
   }
 }
 
-void Kryvo::Ui::updatePassword(const QString& password) {
+void Ui::updatePassword(const QString& password) {
   Q_D(Ui);
 
   if (d->password != password) {
@@ -478,3 +480,5 @@ void Kryvo::Ui::updatePassword(const QString& password) {
     emit passwordChanged(d->password);
   }
 }
+
+} // namespace Kryvo

@@ -14,7 +14,7 @@
 
 namespace Kryvo {
 
-class Kryvo::BotanProviderPrivate {
+class BotanProviderPrivate {
   Q_DISABLE_COPY(BotanProviderPrivate)
   Q_DECLARE_PUBLIC(BotanProvider)
 
@@ -51,7 +51,7 @@ class Kryvo::BotanProviderPrivate {
                    const QFileInfo& outputFileInfo);
 
   bool executeCipher(std::size_t id,
-                     Kryvo::CryptDirection direction,
+                     CryptDirection direction,
                      QFile* inFile,
                      QSaveFile* outFile,
                      Botan::Pipe* pipe);
@@ -65,30 +65,30 @@ class Kryvo::BotanProviderPrivate {
   static const std::size_t kPbkdfIterations;
 };
 
-const std::string Kryvo::BotanProviderPrivate::kKeyLabel =
+const std::string BotanProviderPrivate::kKeyLabel =
   std::string("user secret");
 
-const std::string Kryvo::BotanProviderPrivate::kIVLabel =
+const std::string BotanProviderPrivate::kIVLabel =
   std::string("initialization vector");
 
-const std::size_t Kryvo::BotanProviderPrivate::kPbkdfIterations = 50000;
+const std::size_t BotanProviderPrivate::kPbkdfIterations = 50000;
 
-Kryvo::BotanProviderPrivate::BotanProviderPrivate(BotanProvider* bp)
+BotanProviderPrivate::BotanProviderPrivate(BotanProvider* bp)
   : q_ptr(bp) {
 }
 
-void Kryvo::BotanProviderPrivate::init(SchedulerState* s) {
+void BotanProviderPrivate::init(SchedulerState* s) {
   state = s;
 }
 
-bool Kryvo::BotanProviderPrivate::encrypt(const std::size_t id,
-                                          const QString& compressionFormat,
-                                          const QString& passphrase,
-                                          const QFileInfo& inputFileInfo,
-                                          const QFileInfo& outputFileInfo,
-                                          const QString& cipher,
-                                          const std::size_t keySize,
-                                          const QString& modeOfOperation) {
+bool BotanProviderPrivate::encrypt(const std::size_t id,
+                                   const QString& compressionFormat,
+                                   const QString& passphrase,
+                                   const QFileInfo& inputFileInfo,
+                                   const QFileInfo& outputFileInfo,
+                                   const QString& cipher,
+                                   const std::size_t keySize,
+                                   const QString& modeOfOperation) {
   Q_Q(BotanProvider);
   Q_ASSERT(state);
 
@@ -154,7 +154,7 @@ bool Kryvo::BotanProviderPrivate::encrypt(const std::size_t id,
   return success;
 }
 
-bool Kryvo::BotanProviderPrivate::decrypt(
+bool BotanProviderPrivate::decrypt(
   const std::size_t id, const QString& passphrase,
   const QFileInfo& inputFileInfo, const QFileInfo& outputFileInfo) {
   Q_Q(BotanProvider);
@@ -214,7 +214,7 @@ bool Kryvo::BotanProviderPrivate::decrypt(
   return success;
 }
 
-bool Kryvo::BotanProviderPrivate::encryptFile(
+bool BotanProviderPrivate::encryptFile(
   const std::size_t id, const QString& compressionFormat,
   const QString& passphrase, const QFileInfo& inputFileInfo,
   const QFileInfo& outputFileInfo, const QString& algorithmName,
@@ -377,7 +377,7 @@ bool Kryvo::BotanProviderPrivate::encryptFile(
   pipe.append_filter(Botan::get_cipher(algorithmName.toStdString(), key, iv,
                                        Botan::ENCRYPTION));
 
-  const bool success = executeCipher(id, Kryvo::CryptDirection::Encrypt,
+  const bool success = executeCipher(id, CryptDirection::Encrypt,
                                      &inFile, &outFile, &pipe);
 
   if (!success) {
@@ -407,7 +407,7 @@ bool Kryvo::BotanProviderPrivate::encryptFile(
   return success;
 }
 
-bool Kryvo::BotanProviderPrivate::decryptFile(
+bool BotanProviderPrivate::decryptFile(
   const std::size_t id, const QString& passphrase,
   const QFileInfo& inputFileInfo, const QFileInfo& outputFileInfo) {
   Q_Q(BotanProvider);
@@ -569,7 +569,7 @@ bool Kryvo::BotanProviderPrivate::decryptFile(
   pipe.append_filter(Botan::get_cipher(algorithmNameByteArray.toStdString(),
                                        key, iv, Botan::DECRYPTION));
 
-  const bool success = executeCipher(id, Kryvo::CryptDirection::Decrypt,
+  const bool success = executeCipher(id, CryptDirection::Decrypt,
                                      &inFile, &outFile, &pipe);
 
   if (!success) {
@@ -599,8 +599,8 @@ bool Kryvo::BotanProviderPrivate::decryptFile(
   return true;
 }
 
-bool Kryvo::BotanProviderPrivate::executeCipher(
-  const std::size_t id, const Kryvo::CryptDirection direction, QFile* inFile,
+bool BotanProviderPrivate::executeCipher(
+  const std::size_t id, const CryptDirection direction, QFile* inFile,
   QSaveFile* outFile, Botan::Pipe* pipe) {
   Q_Q(BotanProvider);
   Q_ASSERT(state);
@@ -656,7 +656,7 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
     if (percentProgressInteger > percent && percentProgressInteger < 100) {
       percent = percentProgressInteger;
 
-      const QString task = Kryvo::CryptDirection::Encrypt == direction ?
+      const QString task = CryptDirection::Encrypt == direction ?
                            QObject::tr("Encrypting") :
                            QObject::tr("Decrypting");
 
@@ -673,7 +673,7 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
       if (buffered < 0) {
         outFile->cancelWriting();
 
-        if (Kryvo::CryptDirection::Encrypt == direction) {
+        if (CryptDirection::Encrypt == direction) {
           emit q->errorMessage(Constants::messages[8],
                                QFileInfo(inFile->fileName()));
         } else {
@@ -691,7 +691,7 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
       if (writeSize < 0) {
         outFile->cancelWriting();
 
-        if (Kryvo::CryptDirection::Encrypt == direction) {
+        if (CryptDirection::Encrypt == direction) {
           emit q->errorMessage(Constants::messages[8],
                                QFileInfo(inFile->fileName()));
         } else {
@@ -708,34 +708,34 @@ bool Kryvo::BotanProviderPrivate::executeCipher(
   return true;
 }
 
-Kryvo::BotanProvider::BotanProvider(QObject* parent)
+BotanProvider::BotanProvider(QObject* parent)
   : QObject(parent),
     d_ptr(std::make_unique<BotanProviderPrivate>(this)) {
 }
 
-Kryvo::BotanProvider::~BotanProvider() = default;
+BotanProvider::~BotanProvider() = default;
 
-void Kryvo::BotanProvider::init(SchedulerState* state) {
+void BotanProvider::init(SchedulerState* state) {
   Q_D(BotanProvider);
 
   d->init(state);
 }
 
-bool Kryvo::BotanProvider::encrypt(const std::size_t id,
-                                   const QString& compressionFormat,
-                                   const QString& passphrase,
-                                   const QFileInfo& inputFileInfo,
-                                   const QFileInfo& outputFileInfo,
-                                   const QString& cipher,
-                                   const std::size_t keySize,
-                                   const QString& modeOfOperation) {
+bool BotanProvider::encrypt(const std::size_t id,
+                            const QString& compressionFormat,
+                            const QString& passphrase,
+                            const QFileInfo& inputFileInfo,
+                            const QFileInfo& outputFileInfo,
+                            const QString& cipher,
+                            const std::size_t keySize,
+                            const QString& modeOfOperation) {
   Q_D(BotanProvider);
 
   return d->encrypt(id, compressionFormat, passphrase, inputFileInfo,
                     outputFileInfo, cipher, keySize, modeOfOperation);
 }
 
-bool Kryvo::BotanProvider::decrypt(const std::size_t id,
+bool BotanProvider::decrypt(const std::size_t id,
                                    const QString& passphrase,
                                    const QFileInfo& inputFileInfo,
                                    const QFileInfo& outputFileInfo) {
@@ -744,7 +744,7 @@ bool Kryvo::BotanProvider::decrypt(const std::size_t id,
   return d->decrypt(id, passphrase, inputFileInfo, outputFileInfo);
 }
 
-QObject* Kryvo::BotanProvider::qObject() {
+QObject* BotanProvider::qObject() {
   return this;
 }
 

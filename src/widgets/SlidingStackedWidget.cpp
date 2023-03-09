@@ -4,7 +4,9 @@
 #include <QPropertyAnimation>
 #include <QByteArray>
 
-class Kryvo::SlidingStackedWidgetPrivate {
+namespace Kryvo {
+
+class SlidingStackedWidgetPrivate {
   Q_DISABLE_COPY(SlidingStackedWidgetPrivate)
 
  public:
@@ -27,7 +29,7 @@ class Kryvo::SlidingStackedWidgetPrivate {
   QParallelAnimationGroup* animationGroup{nullptr};
 };
 
-Kryvo::SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate() {
+SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate() {
   currentWidgetAnimation = new QPropertyAnimation();
   currentWidgetAnimation->setPropertyName(QByteArrayLiteral("pos"));
 
@@ -40,7 +42,7 @@ Kryvo::SlidingStackedWidgetPrivate::SlidingStackedWidgetPrivate() {
   animationGroup->addAnimation(nextWidgetAnimation);
 }
 
-Kryvo::SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
+SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
   : QStackedWidget(parent),
     d_ptr(std::make_unique<SlidingStackedWidgetPrivate>()) {
   Q_D(SlidingStackedWidget);
@@ -51,34 +53,33 @@ Kryvo::SlidingStackedWidget::SlidingStackedWidget(QWidget* parent)
           this, &SlidingStackedWidget::animationDone);
 }
 
-Kryvo::SlidingStackedWidget::~SlidingStackedWidget() = default;
+SlidingStackedWidget::~SlidingStackedWidget() = default;
 
-void Kryvo::SlidingStackedWidget::setSpeed(const int speed) {
+void SlidingStackedWidget::setSpeed(const int speed) {
   Q_D(SlidingStackedWidget);
 
   d->speed = speed;
 }
 
-void
-Kryvo::SlidingStackedWidget::setAnimation(QEasingCurve::Type animationType) {
+void SlidingStackedWidget::setAnimation(QEasingCurve::Type animationType) {
   Q_D(SlidingStackedWidget);
 
   d->animationType = animationType;
 }
 
-void Kryvo::SlidingStackedWidget::setVerticalMode(const bool vertical) {
+void SlidingStackedWidget::setVerticalMode(const bool vertical) {
   Q_D(SlidingStackedWidget);
 
   d->vertical = vertical;
 }
 
-void Kryvo::SlidingStackedWidget::setWrap(const bool wrap) {
+void SlidingStackedWidget::setWrap(const bool wrap) {
   Q_D(SlidingStackedWidget);
 
   d->wrap = wrap;
 }
 
-void Kryvo::SlidingStackedWidget::slideInNext() {
+void SlidingStackedWidget::slideInNext() {
   Q_D(SlidingStackedWidget);
 
   stopAnimation();
@@ -90,7 +91,7 @@ void Kryvo::SlidingStackedWidget::slideInNext() {
   }
 }
 
-void Kryvo::SlidingStackedWidget::slideInPrev() {
+void SlidingStackedWidget::slideInPrev() {
   Q_D(SlidingStackedWidget);
 
   stopAnimation();
@@ -102,8 +103,8 @@ void Kryvo::SlidingStackedWidget::slideInPrev() {
   }
 }
 
-void Kryvo::SlidingStackedWidget::slideInIndex(const int index,
-                                               const Direction direction) {
+void SlidingStackedWidget::slideInIndex(const int index,
+                                        const Direction direction) {
   Q_D(SlidingStackedWidget);
 
   int updatedIndex = index;
@@ -122,7 +123,7 @@ void Kryvo::SlidingStackedWidget::slideInIndex(const int index,
   slideInWidget(widget(updatedIndex), updatedDirection);
 }
 
-void Kryvo::SlidingStackedWidget::animationDone() {
+void SlidingStackedWidget::animationDone() {
   Q_D(SlidingStackedWidget);
 
   setCurrentIndex(d->nextIndex);
@@ -133,8 +134,8 @@ void Kryvo::SlidingStackedWidget::animationDone() {
   emit animationFinished();
 }
 
-void Kryvo::SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
-                                                const Direction direction) {
+void SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
+                                         const Direction direction) {
   Q_D(SlidingStackedWidget);
 
   const int currentIdx = currentIndex();
@@ -214,7 +215,7 @@ void Kryvo::SlidingStackedWidget::slideInWidget(QWidget* nextWidget,
   }
 }
 
-void Kryvo::SlidingStackedWidget::stopAnimation() {
+void SlidingStackedWidget::stopAnimation() {
   Q_D(SlidingStackedWidget);
 
   if (d->animationGroup->state() == QAbstractAnimation::Running) {
@@ -227,3 +228,5 @@ void Kryvo::SlidingStackedWidget::stopAnimation() {
     widget(d->nextIndex)->move(d->lastWidgetPos);
   }
 }
+
+} // namespace Kryvo

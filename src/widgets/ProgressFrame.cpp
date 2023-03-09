@@ -5,7 +5,9 @@
 #include <QHBoxLayout>
 #include <QString>
 
-class Kryvo::ProgressFramePrivate {
+namespace Kryvo {
+
+class ProgressFramePrivate {
   Q_DISABLE_COPY(ProgressFramePrivate)
 
  public:
@@ -19,9 +21,9 @@ class Kryvo::ProgressFramePrivate {
   QProgressBar* progressBar{nullptr};
 };
 
-Kryvo::ProgressFramePrivate::ProgressFramePrivate() = default;
+ProgressFramePrivate::ProgressFramePrivate() = default;
 
-Kryvo::ProgressFrame::ProgressFrame(QWidget* parent)
+ProgressFrame::ProgressFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<ProgressFramePrivate>()) {
   Q_D(ProgressFrame);
 
@@ -39,10 +41,10 @@ Kryvo::ProgressFrame::ProgressFrame(QWidget* parent)
   progressLayout->setContentsMargins(5, 5, 5, 5);
 }
 
-Kryvo::ProgressFrame::~ProgressFrame() = default;
+ProgressFrame::~ProgressFrame() = default;
 
-void Kryvo::ProgressFrame::updateTask(const QString& task,
-                                      const int percentProgress) {
+void ProgressFrame::updateTask(const QString& task,
+                               const int percentProgress) {
   Q_D(ProgressFrame);
   Q_ASSERT(d->progressTaskLabel);
   Q_ASSERT(d->progressBar);
@@ -57,3 +59,5 @@ void Kryvo::ProgressFrame::updateTask(const QString& task,
 
   d->progressBar->setValue(percentProgress);
 }
+
+} // namespace Kryvo

@@ -3,7 +3,9 @@
 #include <QPainter>
 #include <QString>
 
-class Kryvo::ElidedLabelPrivate {
+namespace Kryvo {
+
+class ElidedLabelPrivate {
   Q_DISABLE_COPY(ElidedLabelPrivate)
 
  public:
@@ -14,33 +16,33 @@ class Kryvo::ElidedLabelPrivate {
   Qt::TextElideMode mode{Qt::ElideLeft};
 };
 
-Kryvo::ElidedLabelPrivate::ElidedLabelPrivate() = default;
+ElidedLabelPrivate::ElidedLabelPrivate() = default;
 
-Kryvo::ElidedLabel::ElidedLabel(QWidget* parent, Qt::WindowFlags f)
+ElidedLabel::ElidedLabel(QWidget* parent, Qt::WindowFlags f)
   : QFrame(parent, f), d_ptr(std::make_unique<ElidedLabelPrivate>()) {
 }
 
-Kryvo::ElidedLabel::ElidedLabel(const QString& text, QWidget* parent,
-                                Qt::WindowFlags f)
+ElidedLabel::ElidedLabel(const QString& text, QWidget* parent,
+                         Qt::WindowFlags f)
   : QFrame(parent, f), d_ptr(std::make_unique<ElidedLabelPrivate>()) {
   Q_D(ElidedLabel);
 
   d->text = text;
 }
 
-Kryvo::ElidedLabel::~ElidedLabel() = default;
+ElidedLabel::~ElidedLabel() = default;
 
-void Kryvo::ElidedLabel::updateLabel() {
+void ElidedLabel::updateLabel() {
   this->updateGeometry();
   this->update();
 }
 
-QString Kryvo::ElidedLabel::text() const {
+QString ElidedLabel::text() const {
   Q_D(const ElidedLabel);
   return d->text;
 }
 
-void Kryvo::ElidedLabel::setText(const QString& text) {
+void ElidedLabel::setText(const QString& text) {
   Q_D(ElidedLabel);
 
   if (d->text != text) {
@@ -49,13 +51,13 @@ void Kryvo::ElidedLabel::setText(const QString& text) {
   }
 }
 
-Qt::Alignment Kryvo::ElidedLabel::alignment() const {
+Qt::Alignment ElidedLabel::alignment() const {
   Q_D(const ElidedLabel);
 
   return d->align;
 }
 
-void Kryvo::ElidedLabel::setAlignment(const Qt::Alignment alignment) {
+void ElidedLabel::setAlignment(const Qt::Alignment alignment) {
   Q_D(ElidedLabel);
 
   if (d->align != alignment) {
@@ -64,13 +66,13 @@ void Kryvo::ElidedLabel::setAlignment(const Qt::Alignment alignment) {
   }
 }
 
-Qt::TextElideMode Kryvo::ElidedLabel::elideMode() const {
+Qt::TextElideMode ElidedLabel::elideMode() const {
   Q_D(const ElidedLabel);
 
   return d->mode;
 }
 
-void Kryvo::ElidedLabel::setElideMode(const Qt::TextElideMode mode) {
+void ElidedLabel::setElideMode(const Qt::TextElideMode mode) {
   Q_D(ElidedLabel);
 
   if (d->mode != mode) {
@@ -79,7 +81,7 @@ void Kryvo::ElidedLabel::setElideMode(const Qt::TextElideMode mode) {
   }
 }
 
-QSize Kryvo::ElidedLabel::sizeHint() const {
+QSize ElidedLabel::sizeHint() const {
   Q_D(const ElidedLabel);
 
   const QFontMetrics fm = fontMetrics();
@@ -89,7 +91,7 @@ QSize Kryvo::ElidedLabel::sizeHint() const {
   return textRect.size();
 }
 
-QSize Kryvo::ElidedLabel::minimumSizeHint() const {
+QSize ElidedLabel::minimumSizeHint() const {
   Q_D(const ElidedLabel);
 
   switch (d->mode) {
@@ -103,7 +105,7 @@ QSize Kryvo::ElidedLabel::minimumSizeHint() const {
   }
 }
 
-void Kryvo::ElidedLabel::paintEvent(QPaintEvent* event) {
+void ElidedLabel::paintEvent(QPaintEvent* event) {
   Q_D(ElidedLabel);
 
   QFrame::paintEvent(event);
@@ -117,11 +119,12 @@ void Kryvo::ElidedLabel::paintEvent(QPaintEvent* event) {
   p.drawText(r, d->align, elidedText);
 }
 
-void Kryvo::ElidedLabel::changeEvent(QEvent* event) {
+void ElidedLabel::changeEvent(QEvent* event) {
   QFrame::changeEvent(event);
 
   switch (event->type()) {
     case QEvent::FontChange:
+      Q_FALLTHROUGH();
     case QEvent::ApplicationFontChange:
       updateLabel();
     break;
@@ -130,3 +133,5 @@ void Kryvo::ElidedLabel::changeEvent(QEvent* event) {
     break;
   }
 }
+
+} // namespace Kryvo

@@ -9,7 +9,9 @@
 #include <QStringBuilder>
 #include <QString>
 
-class Kryvo::FileListFramePrivate {
+namespace Kryvo {
+
+class FileListFramePrivate {
   Q_DISABLE_COPY(FileListFramePrivate)
 
  public:
@@ -25,9 +27,9 @@ class Kryvo::FileListFramePrivate {
   QTableView fileListView;
 };
 
-Kryvo::FileListFramePrivate::FileListFramePrivate() = default;
+FileListFramePrivate::FileListFramePrivate() = default;
 
-Kryvo::FileListFrame::FileListFrame(QWidget* parent)
+FileListFrame::FileListFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<FileListFramePrivate>()) {
   Q_D(FileListFrame);
 
@@ -62,21 +64,21 @@ Kryvo::FileListFrame::FileListFrame(QWidget* parent)
           this, &FileListFrame::removeFileFromModel);
 }
 
-Kryvo::FileListFrame::~FileListFrame() = default;
+FileListFrame::~FileListFrame() = default;
 
-QStandardItem* Kryvo::FileListFrame::item(const int row) {
+QStandardItem* FileListFrame::item(const int row) {
   Q_D(FileListFrame);
 
   return d->fileListModel.item(row, 0);
 }
 
-int Kryvo::FileListFrame::rowCount() const {
+int FileListFrame::rowCount() const {
   Q_D(const FileListFrame);
 
   return d->fileListModel.rowCount();
 }
 
-void Kryvo::FileListFrame::clear() {
+void FileListFrame::clear() {
   Q_D(FileListFrame);
 
   d->fileListModel.clear();
@@ -95,9 +97,9 @@ void Kryvo::FileListFrame::clear() {
   d->fileListView.setColumnWidth(3, this->width() * 0.04);
 }
 
-void Kryvo::FileListFrame::updateProgress(const QFileInfo& info,
-                                          const QString& task,
-                                          const qint64 percent) {
+void FileListFrame::updateProgress(const QFileInfo& info,
+                                   const QString& task,
+                                   const qint64 percent) {
   Q_D(FileListFrame);
 
   const QList<QStandardItem*> items =
@@ -124,7 +126,7 @@ void Kryvo::FileListFrame::updateProgress(const QFileInfo& info,
   }
 }
 
-void Kryvo::FileListFrame::addFileToModel(const QFileInfo& fileInfo) {
+void FileListFrame::addFileToModel(const QFileInfo& fileInfo) {
   Q_D(FileListFrame);
 
   if (fileInfo.exists() && fileInfo.isFile()) {
@@ -189,7 +191,7 @@ void Kryvo::FileListFrame::addFileToModel(const QFileInfo& fileInfo) {
   }
 }
 
-void Kryvo::FileListFrame::removeFileFromModel(const QModelIndex& index) {
+void FileListFrame::removeFileFromModel(const QModelIndex& index) {
   Q_D(FileListFrame);
 
   QStandardItem* testItem = d->fileListModel.item(index.row(), 0);
@@ -209,7 +211,7 @@ void Kryvo::FileListFrame::removeFileFromModel(const QModelIndex& index) {
   d->fileListModel.removeRow(index.row());
 }
 
-void Kryvo::FileListFrame::resizeEvent(QResizeEvent* event) {
+void FileListFrame::resizeEvent(QResizeEvent* event) {
   Q_D(FileListFrame);
   Q_UNUSED(event);
 
@@ -220,3 +222,5 @@ void Kryvo::FileListFrame::resizeEvent(QResizeEvent* event) {
   d->fileListView.setColumnWidth(2, static_cast<int>(width * 0.2));
   d->fileListView.setColumnWidth(3, static_cast<int>(width * 0.04));
 }
+
+} // namespace Kryvo

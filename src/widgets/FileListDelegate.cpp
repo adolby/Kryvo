@@ -3,15 +3,17 @@
 #include <QMouseEvent>
 #include <QEvent>
 
-Kryvo::FileListDelegate::FileListDelegate(QObject* parent)
+namespace Kryvo {
+
+FileListDelegate::FileListDelegate(QObject* parent)
   : QStyledItemDelegate(parent), focusBorderEnabled_(false) {
 }
 
-void Kryvo::FileListDelegate::setFocusBorderEnabled(bool enabled) {
+void FileListDelegate::setFocusBorderEnabled(bool enabled) {
   focusBorderEnabled_ = enabled;
 }
 
-void Kryvo::FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
+void FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
                                               const QModelIndex& index) const {
   QStyledItemDelegate::initStyleOption(option, index);
 
@@ -20,9 +22,9 @@ void Kryvo::FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
   }
 }
 
-void Kryvo::FileListDelegate::paint(QPainter* painter,
-                                    const QStyleOptionViewItem& option,
-                                    const QModelIndex& index) const {
+void FileListDelegate::paint(QPainter* painter,
+                             const QStyleOptionViewItem& option,
+                             const QModelIndex& index) const {
   const int column = index.column();
 
   switch (column) {
@@ -100,10 +102,10 @@ void Kryvo::FileListDelegate::paint(QPainter* painter,
   }
 }
 
-bool Kryvo::FileListDelegate::editorEvent(QEvent* event,
-                                          QAbstractItemModel* model,
-                                          const QStyleOptionViewItem& option,
-                                          const QModelIndex& index) {
+bool FileListDelegate::editorEvent(QEvent* event,
+                                   QAbstractItemModel* model,
+                                   const QStyleOptionViewItem& option,
+                                   const QModelIndex& index) {
   if (3 == index.column()) {
     if (QEvent::MouseButtonRelease == event->type() ||
         QEvent::MouseButtonDblClick == event->type()) {
@@ -118,3 +120,5 @@ bool Kryvo::FileListDelegate::editorEvent(QEvent* event,
 
   return QStyledItemDelegate::editorEvent(event, model, option, index);
 }
+
+} // namespace Kryvo

@@ -5,7 +5,9 @@
 #include <QHBoxLayout>
 #include <QIcon>
 
-class Kryvo::HeaderFramePrivate {
+namespace Kryvo {
+
+class HeaderFramePrivate {
   Q_DISABLE_COPY(HeaderFramePrivate)
 
  public:
@@ -23,9 +25,9 @@ class Kryvo::HeaderFramePrivate {
   QSize iconSize;
 };
 
-Kryvo::HeaderFramePrivate::HeaderFramePrivate() = default;
+HeaderFramePrivate::HeaderFramePrivate() = default;
 
-Kryvo::HeaderFrame::HeaderFrame(QWidget* parent)
+HeaderFrame::HeaderFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<HeaderFramePrivate>()) {
   Q_D(HeaderFrame);
 
@@ -82,9 +84,9 @@ Kryvo::HeaderFrame::HeaderFrame(QWidget* parent)
           this, &HeaderFrame::switchFrame);
 }
 
-Kryvo::HeaderFrame::~HeaderFrame() = default;
+HeaderFrame::~HeaderFrame() = default;
 
-void Kryvo::HeaderFrame::setIconSize(const QSize& iconSize) {
+void HeaderFrame::setIconSize(const QSize& iconSize) {
   Q_D(HeaderFrame);
   Q_ASSERT(d->pauseButton);
   Q_ASSERT(d->addFilesButton);
@@ -97,14 +99,14 @@ void Kryvo::HeaderFrame::setIconSize(const QSize& iconSize) {
   d->clearFilesButton->setIconSize(d->iconSize);
 }
 
-void Kryvo::HeaderFrame::removeAllFiles() {
+void HeaderFrame::removeAllFiles() {
     Q_D(HeaderFrame);
 
     d->pauseButton->setChecked(false);
     emit removeFiles();
 }
 
-void Kryvo::HeaderFrame::pauseIconChecked(const bool checked) {
+void HeaderFrame::pauseIconChecked(const bool checked) {
   Q_D(HeaderFrame);
   Q_ASSERT(d->pauseButton);
 
@@ -116,3 +118,5 @@ void Kryvo::HeaderFrame::pauseIconChecked(const bool checked) {
     d->pauseButton->setText(tr(" Pause"));
   }
 }
+
+} // namespace Kryvo

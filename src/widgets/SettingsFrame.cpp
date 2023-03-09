@@ -1,5 +1,4 @@
 #include "SettingsFrame.hpp"
-#include "SlideSwitch.hpp"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGroupBox>
@@ -14,6 +13,8 @@
 #include <QPropertyAnimation>
 #include <QStringBuilder>
 #include <memory>
+
+namespace Kryvo {
 
 QString splitToolTip(const QString& text, const int width) {
   const QFontMetrics fm(QToolTip::font());
@@ -55,7 +56,7 @@ QString splitToolTip(const QString& text, const int width) {
   return result + temp;
 }
 
-class Kryvo::SettingsFramePrivate {
+class SettingsFramePrivate {
   Q_DISABLE_COPY(SettingsFramePrivate)
 
  public:
@@ -78,16 +79,16 @@ class Kryvo::SettingsFramePrivate {
   int toolTipWidth{250};
 };
 
-Kryvo::SettingsFramePrivate::SettingsFramePrivate() = default;
+SettingsFramePrivate::SettingsFramePrivate() = default;
 
-Kryvo::SettingsFrame::SettingsFrame(const QString& cryptoProvider,
-                                    const QString& compressionFormat,
-                                    const QString& cipher,
-                                    const std::size_t keySize,
-                                    const QString& mode,
-                                    const bool removeIntermediateFiles,
-                                    const bool containerMode,
-                                    QWidget* parent)
+SettingsFrame::SettingsFrame(const QString& cryptoProvider,
+                             const QString& compressionFormat,
+                             const QString& cipher,
+                             const std::size_t keySize,
+                             const QString& mode,
+                             const bool removeIntermediateFiles,
+                             const bool containerMode,
+                             QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<SettingsFramePrivate>()) {
   Q_D(SettingsFrame);
 
@@ -306,16 +307,16 @@ Kryvo::SettingsFrame::SettingsFrame(const QString& cryptoProvider,
   this->addAction(returnAction);
 }
 
-Kryvo::SettingsFrame::~SettingsFrame() = default;
+SettingsFrame::~SettingsFrame() = default;
 
-void Kryvo::SettingsFrame::changeCipher() {
+void SettingsFrame::changeCipher() {
   Q_D(SettingsFrame);
   Q_ASSERT(d->cipherComboBox);
 
   emit updateCipher(d->cipherComboBox->currentText());
 }
 
-void Kryvo::SettingsFrame::changeKeySize() {
+void SettingsFrame::changeKeySize() {
   Q_D(SettingsFrame);
   Q_ASSERT(d->keySizeComboBox);
 
@@ -326,21 +327,21 @@ void Kryvo::SettingsFrame::changeKeySize() {
   emit updateKeySize(keySize);
 }
 
-void Kryvo::SettingsFrame::changeModeOfOperation() {
+void SettingsFrame::changeModeOfOperation() {
   Q_D(SettingsFrame);
   Q_ASSERT(d->modeComboBox);
 
   emit updateModeOfOperation(d->modeComboBox->currentText());
 }
 
-void Kryvo::SettingsFrame::changeCompressionFormat() {
+void SettingsFrame::changeCompressionFormat() {
   Q_D(SettingsFrame);
   Q_ASSERT(d->compressionComboBox);
 
   emit updateCompressionFormat(d->compressionComboBox->currentText());
 }
 
-void Kryvo::SettingsFrame::changeRemoveIntermediateFiles() {
+void SettingsFrame::changeRemoveIntermediateFiles() {
   Q_D(SettingsFrame);
   Q_ASSERT(d->removeIntermediateFilesCheckBox);
 
@@ -348,9 +349,11 @@ void Kryvo::SettingsFrame::changeRemoveIntermediateFiles() {
     d->removeIntermediateFilesCheckBox->isChecked());
 }
 
-void Kryvo::SettingsFrame::changeContainerMode() {
+void SettingsFrame::changeContainerMode() {
   Q_D(SettingsFrame);
   Q_ASSERT(d->containerCheckBox);
 
   emit updateContainerMode(d->containerCheckBox->isChecked());
 }
+
+} // namespace Kryvo

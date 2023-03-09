@@ -10,7 +10,9 @@
 #include <QHash>
 #include <QString>
 
-class Kryvo::ApplicationPrivate {
+namespace Kryvo {
+
+class ApplicationPrivate {
   Q_DISABLE_COPY(ApplicationPrivate)
 
  public:
@@ -22,7 +24,7 @@ class Kryvo::ApplicationPrivate {
   DesktopMainWindow gui{&settings};
 };
 
-Kryvo::ApplicationPrivate::ApplicationPrivate() {
+ApplicationPrivate::ApplicationPrivate() {
   qRegisterMetaType<std::size_t>("std::size_t");
   qRegisterMetaType<QFileInfo>("QFileInfo");
   qRegisterMetaType<std::vector<QFileInfo>>("std::vector<QFileInfo>");
@@ -69,13 +71,15 @@ Kryvo::ApplicationPrivate::ApplicationPrivate() {
   gui.show();
 }
 
-Kryvo::Application::Application(int& argc, char** argv)
+Application::Application(int& argc, char** argv)
   : QApplication(argc, argv), d_ptr(std::make_unique<ApplicationPrivate>()) {
 }
 
-Kryvo::Application::~Application() {
+Application::~Application() {
   Q_D(Application);
 
   // Abort current threaded operation
   d->scheduler.abort();
 }
+
+} // namespace Kryvo
