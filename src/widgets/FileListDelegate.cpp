@@ -60,23 +60,20 @@ void FileListDelegate::paint(QPainter* painter,
       progressBarOption.text = QStringLiteral("%1%").arg(progressAbsolute);
 
 #if defined(Q_OS_MACOS)
-      QImage progressImage(progressBarOption.rect.size(),
-                           QImage::Format_ARGB32_Premultiplied);
-      progressImage.fill(QColor(0, 0, 0, 0));
-      QPainter progressPainter(&progressImage);
-      progressPainter.setRenderHints(QPainter::Antialiasing |
-                                     QPainter::SmoothPixmapTransform);
-      QApplication::style()->drawControl(QStyle::CE_ProgressBar,
-                                         &progressBarOption,
-                                         &progressPainter);
-      progressPainter.end();
+      painter->save();
+      painter->translate(progressBarOption.rect.left(),
+                         progressBarOption.rect.top());
+      progressBarOption.rect.moveTo(0,0);
+#endif
 
-      painter->drawImage(progressBarOption.rect, progressImage);
-#else
       QApplication::style()->drawControl(QStyle::CE_ProgressBar,
                                          &progressBarOption,
                                          painter);
+
+#if defined(Q_OS_MACOS)
+      painter->restore();
 #endif
+
       break;
     }
 
