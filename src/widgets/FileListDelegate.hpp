@@ -21,14 +21,6 @@ class FileListDelegate : public QStyledItemDelegate {
    */
   explicit FileListDelegate(QObject* parent = nullptr);
 
-  /*!
-   * \brief setFocusBorderEnabled Enables/disables the focus dotted line border
-   * that appears on click
-   * \param enabled Boolean representing whether to enable or disable the
-   * focus border. True represents the enabled state.
-   */
-  void setFocusBorderEnabled(bool enabled);
-
  signals:
   /*!
    * \brief removeRow Emitted when the delegate needs to remove a row from its
@@ -38,15 +30,6 @@ class FileListDelegate : public QStyledItemDelegate {
   void removeRow(const QModelIndex& index);
 
  protected:
-  /*!
-   * \brief initStyleOption Initializes the style option for this delegate. Used
-   * to remove the focus.
-   * \param option Style view options
-   * \param index Index of the current cell in the model
-   */
-  void initStyleOption(QStyleOptionViewItem* option,
-                       const QModelIndex& index) const override;
-
   /*!
    * \brief paint Paints the progress bar and the close button
    * \param painter Painter object
@@ -67,9 +50,6 @@ class FileListDelegate : public QStyledItemDelegate {
   bool editorEvent(QEvent* event, QAbstractItemModel* model,
                    const QStyleOptionViewItem& option,
                    const QModelIndex& index) override;
-
- protected:
-  bool focusBorderEnabled_;
 };
 
 } // namespace Kryvo

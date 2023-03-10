@@ -1,25 +1,13 @@
 #include "FileListDelegate.hpp"
 #include <QApplication>
+#include <QPainter>
 #include <QMouseEvent>
 #include <QEvent>
 
 namespace Kryvo {
 
 FileListDelegate::FileListDelegate(QObject* parent)
-  : QStyledItemDelegate(parent), focusBorderEnabled_(false) {
-}
-
-void FileListDelegate::setFocusBorderEnabled(bool enabled) {
-  focusBorderEnabled_ = enabled;
-}
-
-void FileListDelegate::initStyleOption(QStyleOptionViewItem* option,
-                                              const QModelIndex& index) const {
-  QStyledItemDelegate::initStyleOption(option, index);
-
-  if (!focusBorderEnabled_ && option->state & QStyle::State_HasFocus) {
-    option->state = option->state & ~QStyle::State_HasFocus;
-  }
+  : QStyledItemDelegate(parent) {
 }
 
 void FileListDelegate::paint(QPainter* painter,
@@ -29,66 +17,83 @@ void FileListDelegate::paint(QPainter* painter,
 
   switch (column) {
     case 0: {
-      QStyleOptionViewItem elidedOption = option;
-      elidedOption.textElideMode = Qt::ElideLeft;
+      QStyleOptionViewItem updatedOption = option;
+      updatedOption.textElideMode = Qt::ElideLeft;
+      updatedOption.font.setPointSize(20);
 
-      QStyledItemDelegate::paint(painter, elidedOption, index);
-
+      QStyledItemDelegate::paint(painter, updatedOption, index);
       break;
     }
+
     case 1: {
-      QStyleOptionViewItem elidedOption = option;
-      elidedOption.textElideMode = Qt::ElideRight;
+      QStyleOptionViewItem updatedOption = option;
+      updatedOption.textElideMode = Qt::ElideRight;
+      updatedOption.font.setPointSize(20);
 
-      QStyledItemDelegate::paint(painter, elidedOption, index);
-
+      QStyledItemDelegate::paint(painter, updatedOption, index);
       break;
     }
+
     case 2: {
       const QVariant progressVariant = index.data(Qt::DisplayRole);
-      const int progress = progressVariant.toInt();
+      const int progress = qvariant_cast<int>(progressVariant);
       const int progressAbsolute = progress < 0 ? 0 : progress;
 
       // Set up a QStyleOptionProgressBar to mimic the environment of a progress
       // bar
       QStyleOptionProgressBar progressBarOption;
-      progressBarOption.state = QStyle::State_Enabled;
-      progressBarOption.direction = QApplication::layoutDirection();
+      progressBarOption.state = option.state | QStyle::State_Horizontal;
+      progressBarOption.direction = painter->layoutDirection();
       progressBarOption.rect = QRect(option.rect.x(),
                                      option.rect.y() + 1,
                                      option.rect.width(),
                                      option.rect.height() - 1);
-      progressBarOption.fontMetrics = QApplication::fontMetrics();
+      progressBarOption.fontMetrics = QFontMetrics(QApplication::font());
       progressBarOption.minimum = 0;
       progressBarOption.maximum = 100;
       progressBarOption.textAlignment = Qt::AlignCenter;
+      progressBarOption.palette = option.palette;
       progressBarOption.textVisible = true;
 
       // Set the progress and text values of the style option
       progressBarOption.progress = progressAbsolute;
       progressBarOption.text = QStringLiteral("%1%").arg(progressAbsolute);
 
-      // Draw the progress bar onto the view
+#if defined(Q_OS_MACOS)
+      QImage progressImage(progressBarOption.rect.size(),
+                           QImage::Format_ARGB32_Premultiplied);
+      progressImage.fill(QColor(0, 0, 0, 0));
+      QPainter progressPainter(&progressImage);
+      progressPainter.setRenderHints(QPainter::Antialiasing |
+                                     QPainter::SmoothPixmapTransform);
+      QApplication::style()->drawControl(QStyle::CE_ProgressBar,
+                                         &progressBarOption,
+                                         &progressPainter);
+      progressPainter.end();
+
+      painter->drawImage(progressBarOption.rect, progressImage);
+#else
       QApplication::style()->drawControl(QStyle::CE_ProgressBar,
                                          &progressBarOption,
                                          painter);
-
+#endif
       break;
     }
+
     case 3: {
       QStyleOptionButton buttonOption;
       buttonOption.state = QStyle::State_Enabled;
-      buttonOption.direction = QApplication::layoutDirection();
-      buttonOption.rect = QRect{option.rect.x(), option.rect.y(),
-                                option.rect.width(), option.rect.height()};
-      buttonOption.fontMetrics = QApplication::fontMetrics();
+      buttonOption.direction = painter->layoutDirection();
+      buttonOption.rect = option.rect;
+      buttonOption.fontMetrics = painter->fontMetrics();
       buttonOption.features = QStyleOptionButton::Flat;
+
       const QIcon closeIcon(QStringLiteral(":/images/closeFileIcon.png"));
       buttonOption.icon = closeIcon;
+
       const int iconDimension =
         qMax(qMin(option.rect.width() / 2, option.rect.height() / 2), 6) -
         4;
-
       const QSize iconSize(iconDimension, iconDimension);
       buttonOption.iconSize = iconSize;
 
@@ -96,8 +101,10 @@ void FileListDelegate::paint(QPainter* painter,
                                          painter);
       break;
     }
+
     default: {
       QStyledItemDelegate::paint(painter, option, index);
+      break;
     }
   }
 }

@@ -15,7 +15,7 @@ class FileListFramePrivate {
   Q_DISABLE_COPY(FileListFramePrivate)
 
  public:
-  FileListFramePrivate();
+  FileListFramePrivate(FileListFrame* flf);
 
   /*!
    * \brief addFileToModel Adds a file to the file list model.
@@ -23,14 +23,18 @@ class FileListFramePrivate {
    */
   void addFileToModel(const QString& filePath);
 
+  FileListFrame* const q_ptr{nullptr};
+
   QStandardItemModel fileListModel;
   QTableView fileListView;
 };
 
-FileListFramePrivate::FileListFramePrivate() = default;
+FileListFramePrivate::FileListFramePrivate(FileListFrame* flf)
+  : q_ptr(flf), fileListView(flf) {
+}
 
 FileListFrame::FileListFrame(QWidget* parent)
-  : QFrame(parent), d_ptr(std::make_unique<FileListFramePrivate>()) {
+  : QFrame(parent), d_ptr(std::make_unique<FileListFramePrivate>(this)) {
   Q_D(FileListFrame);
 
   // File list header
@@ -38,13 +42,13 @@ FileListFrame::FileListFrame(QWidget* parent)
                                   tr("Remove")};
   d->fileListModel.setHorizontalHeaderLabels(headerList);
 
-  d->fileListView.setParent(this);
   d->fileListView.setModel(&d->fileListModel);
   d->fileListView.setShowGrid(false);
   d->fileListView.verticalHeader()->hide();
   d->fileListView.horizontalHeader()->hide();
   d->fileListView.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   d->fileListView.setFrameShape(QFrame::NoFrame);
+  d->fileListView.setEditTriggers(QAbstractItemView::NoEditTriggers);
 
   QHeaderView* header = d->fileListView.horizontalHeader();
   header->setStretchLastSection(false);
@@ -143,10 +147,10 @@ void FileListFrame::addFileToModel(const QFileInfo& fileInfo) {
     pathItem->setData(pathVariant);
 
     auto taskItem = new QStandardItem();
-    pathItem->setDragEnabled(false);
-    pathItem->setDropEnabled(false);
-    pathItem->setEditable(false);
-    pathItem->setSelectable(false);
+    taskItem->setDragEnabled(false);
+    taskItem->setDropEnabled(false);
+    taskItem->setEditable(false);
+    taskItem->setSelectable(false);
 
     auto progressItem = new QStandardItem();
     progressItem->setDragEnabled(false);

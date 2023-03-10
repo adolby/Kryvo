@@ -231,28 +231,3 @@ QCheckBox#settingsCheckBox:indicator {
   width: 20px;
   height: 20px;
 }
-
-/*--------- File list view ---------*/
-QTableView {
-  font-size: 20px;
-}
-
-QTableView::item {
-  border: none;
-  margin-right: 10px;
-}
-
-QTableView::item:selected:!active {
-  color: black;
-  background-color: white;
-}
-
-QTableView::item:selected:active {
-  color: black;
-  background-color: white;
-}
-
-QTableView::item:hover {
-  color: black;
-  background-color: white;
-}
