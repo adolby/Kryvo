@@ -30,13 +30,16 @@ HeaderFramePrivate::HeaderFramePrivate() = default;
 HeaderFrame::HeaderFrame(QWidget* parent)
   : QFrame(parent), d_ptr(std::make_unique<HeaderFramePrivate>()) {
   Q_D(HeaderFrame);
+  auto headerLayout = new QHBoxLayout(this);
 
   auto headerImageLabel = new QLabel(this);
   headerImageLabel->setPixmap(QPixmap(QStringLiteral(":/images/kryvo.png")));
   headerImageLabel->setObjectName(QStringLiteral("headerImageLabel"));
+  headerLayout->addWidget(headerImageLabel);
 
   auto buttonFrame = new QFrame(this);
   buttonFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+  headerLayout->addWidget(buttonFrame);
 
   const QIcon pauseIcon(QStringLiteral(":/images/pauseIcon.png"));
   d->pauseButton = new QPushButton(pauseIcon, tr(" Pause"), buttonFrame);
@@ -65,8 +68,7 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   d->settingsButton->setObjectName(QStringLiteral("settingsButton"));
   d->settingsButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  auto buttonLayout = new FlowLayout(this, 2);
-  buttonLayout->addWidget(headerImageLabel);
+  auto buttonLayout = new FlowLayout(buttonFrame, 2);
   buttonLayout->addWidget(d->pauseButton);
   buttonLayout->addWidget(d->addFilesButton);
   buttonLayout->addWidget(d->clearFilesButton);
