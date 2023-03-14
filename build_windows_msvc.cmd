@@ -7,6 +7,8 @@ echo "Setting up environment..."
 set PATH=%qt_path%\bin\;C:\Qt\QtIFW-3.0.1\bin\;%PATH%
 call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
 
+cd project_dir
+
 echo "Building Kryvo..."
 qmake -makefile -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
 nmake
