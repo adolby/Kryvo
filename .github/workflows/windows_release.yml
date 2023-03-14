@@ -17,6 +17,7 @@ defaults:
 
 env:
   SOURCE_DIR: ${{ github.workspace }}
+  TAG_NAME: ${{ github.ref_name }}
   ARCH: amd64
   QT_VERSION: 6.4.2
 
