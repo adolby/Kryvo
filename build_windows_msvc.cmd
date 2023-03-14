@@ -8,8 +8,8 @@ set PATH=%qt_path%\bin\;C:\Qt\QtIFW-3.0.1\bin\;%PATH%
 call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 
 echo "Building Kryvo..."
-%qt_path%\bin\qmake.exe -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
-nmake.exe
+qmake -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
+nmake
 
 REM echo "Copying Qt dependencies to test app..."
 REM cd "%project_dir%\build\windows\msvc\x86_64\release\test\"
@@ -59,8 +59,8 @@ mkdir "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data\"
 robocopy Kryvo\ "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data" /E
 
 echo "Packaging portable archive..."
-7z.exe a -aoa kryvo_%TAG_NAME%_windows_x86_64_portable.zip Kryvo
+7z a -aoa kryvo_%TAG_NAME%_windows_x86_64_portable.zip Kryvo
 
 echo "Creating installer..."
 cd "%project_dir%\installer\windows\x86_64\"
-binarycreator.exe --offline-only -c config\config.xml -p packages kryvo_%TAG_NAME%_windows_x86_64_installer.exe
+binarycreator --offline-only -c config\config.xml -p packages kryvo_%TAG_NAME%_windows_x86_64_installer.exe
