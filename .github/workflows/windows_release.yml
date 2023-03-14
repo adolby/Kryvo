@@ -55,9 +55,7 @@ jobs:
       - name: (8) Build
         working-directory: ${{ runner.temp }}\build
         run:
-          echo ${{ runner.temp }}
           call "${{ env.SOURCE_DIR }}\src\build_windows_msvc.cmd"
-          dir "${{ runner.temp }}\build"
 
       # - name: (9) Zip build
       #   working-directory: ${{ runner.temp }}
