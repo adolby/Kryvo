@@ -41,16 +41,11 @@ jobs:
           cache: true
           dir: ${{ runner.temp }}
 
-      - name: (3) Set up Visual Studio shell
-        uses: egor-tensin/vs-shell@v2
-        with:
-          arch: x64
-
-      - name: (4) Build
+      - name: (3) Build
         working-directory: ${{ github.workspace }}
         run: call "${{ env.SOURCE_DIR }}\build_windows_msvc.cmd"
 
-      - name: (5) Save build artifact
+      - name: (4) Save build artifact
         uses: actions/upload-artifact@v3
         with:
           name: "kryvo_${{ env.REF_NAME }}_windows_x86_64_portable.zip"
