@@ -18,6 +18,7 @@ defaults:
 env:
   SOURCE_DIR:   ${{ github.workspace }}
   QT_VERSION:   6.4.2
+  QTPATH: ${{ Qt6_DIR }}
 
 jobs:
   build:
@@ -55,8 +56,9 @@ jobs:
       - name: (8) Build
         working-directory: ${{ runner.temp }}\build
         run:
-          echo ${{ env.SOURCE_DIR }}
-          call "${{ env.SOURCE_DIR }}\build_windows_msvc.cmd"
+          echo ${{ runner.temp }}
+          call "${{ env.SOURCE_DIR }}\src\build_windows_msvc.cmd"
+          dir "${{ runner.temp }}\build"
 
       # - name: (9) Zip build
       #   working-directory: ${{ runner.temp }}
