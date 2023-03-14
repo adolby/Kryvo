@@ -1,13 +1,14 @@
 echo on
 
 SET project_dir="%cd%"
+SET qt_path="%Qt6_DIR%"
 
 echo "Setting up environment..."
-set PATH=%QTPATH%\bin\;C:\Qt\QtIFW-3.0.1\bin\;%PATH%
+set PATH=%qt_path%\bin\;C:\Qt\QtIFW-3.0.1\bin\;%PATH%
 call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
 
 echo "Building Kryvo..."
-%QTPATH%\bin\qmake.exe -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
+%qt_path%\bin\qmake.exe -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
 nmake.exe
 
 REM echo "Copying Qt dependencies to test app..."
