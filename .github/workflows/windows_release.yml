@@ -17,6 +17,7 @@ defaults:
 
 env:
   SOURCE_DIR: ${{ github.workspace }}
+  ARCH: amd64
   QT_VERSION: 6.4.2
 
 jobs:

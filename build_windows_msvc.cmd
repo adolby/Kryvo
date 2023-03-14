@@ -5,10 +5,10 @@ SET qt_path="%Qt6_DIR%"
 
 echo "Setting up environment..."
 set PATH=%qt_path%\bin\;C:\Qt\QtIFW-3.0.1\bin\;%PATH%
-call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
+call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
 
 echo "Building Kryvo..."
-qmake -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
+qmake -makefile -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release
 nmake
 
 REM echo "Copying Qt dependencies to test app..."
