@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Preconditions: chrpath is required
-
 set -o errexit -o nounset
 
 project_dir="${SOURCE_DIR}"
