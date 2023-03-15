@@ -65,9 +65,13 @@ cp "${qt_path}/lib/libicui18n.so.56.1" "libicui18n.so.56"
 cp "${qt_path}/lib/libicuuc.so.56.1" "libicuuc.so.56"
 cp "${qt_path}/lib/libicudata.so.56.1" "libicudata.so.56"
 
-ls "${qt_path}/lib/"
-cp "${qt_path}/lib/libQt6Core.so.6.2.4" "libQt6Core.so.6"
-cp "${qt_path}/lib/libQt6Test.so.6.2.4" "libQt6Test.so.6"
+ls -la "${qt_path}/lib/"
+cp "${qt_path}/lib/libQt6Core.so" "libQt6Core.so"
+cp "${qt_path}/lib/libQt6Core.so.6" "libQt6Core.so.6"
+cp "${qt_path}/lib/libQt6Core.so.6.2.4" "libQt6Core.so.6.2.4"
+cp "${qt_path}/lib/libQt6Test.so" "libQt6Test.so"
+cp "${qt_path}/lib/libQt6Test.so.6" "libQt6Test.so.6"
+cp "${qt_path}/lib/libQt6Test.so.6.2.4" "libQt6Test.so.6.2.4"
 
 # Copy plugins for test app
 # echo "Copying plugins for test app..."
