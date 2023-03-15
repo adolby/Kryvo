@@ -1,10 +1,12 @@
 #include "FileOperations.hpp"
-#include "catch.hpp"
+#include <doctest.h>
 #include <QFileInfo>
 #include <QFile>
 #include <QString>
 
-SCENARIO("File compare returns success for identical files", "[compareSame]") {
+SCENARIO("compareSame") {
+  INFO("File compare returns success for identical files");
+
   GIVEN("Two identical PNG files") {
     const QString fileName1 = QStringLiteral("file1.png");
     const QString fileName2 = QStringLiteral("file2.png");
@@ -32,8 +34,9 @@ SCENARIO("File compare returns success for identical files", "[compareSame]") {
   }
 }
 
-SCENARIO("File compare returns success for different files",
-         "[compareDifferent]") {
+SCENARIO("compareDifferent") {
+  INFO("File compare returns success for different files");
+
   GIVEN("Two different PNG files") {
     const QString fileName1 = QStringLiteral("file1.png");
     const QString fileName2 = QStringLiteral("file3.png");

@@ -4,7 +4,7 @@
 #include "Plugin.hpp"
 #include "FileUtility.h"
 #include "FileOperations.hpp"
-#include "catch.hpp"
+#include "doctest.h"
 #include <QFileInfo>
 #include <QFile>
 #include <QStringList>
@@ -57,8 +57,9 @@ EncryptionTestData::EncryptionTestData(const QString& cryptoProvider,
  * together. Tests the encryption/decryption process with various file types as
  * input.
  */
-SCENARIO("Test encryption and decryption on various file types",
-         "[testEncryptDecrypt]") {
+SCENARIO("testEncryptDecrypt") {
+  INFO("Test encryption and decryption on various file types");
+
   std::vector<EncryptionTestData> testDataVector;
 
   // Text file without compression
@@ -91,7 +92,7 @@ SCENARIO("Test encryption and decryption on various file types",
   pluginLoader.loadPlugins();
 
   const QHash<QString, Kryvo::Plugin> providers =
-      pluginLoader.cryptoProviders();
+    pluginLoader.cryptoProviders();
 
   Kryvo::Crypto cryptographer(&state);
 
@@ -100,7 +101,12 @@ SCENARIO("Test encryption and decryption on various file types",
   for (const EncryptionTestData& etd : testDataVector) {
     const QString inputFilePath = etd.inputFilePath.absoluteFilePath();
 
-    GIVEN("Test file: " + inputFilePath.toStdString()) {
+    GIVEN("A test file") {
+      const QString filePathMessage =
+        QStringLiteral("File name: %1").arg(inputFilePath);
+
+      INFO(filePathMessage.toStdString());
+
       const QFileInfo inputFileInfo(etd.inputFilePath);
 
       const QString msgMissing = QStringLiteral("Test file %1 is missing.");
@@ -109,7 +115,7 @@ SCENARIO("Test encryption and decryption on various file types",
         FAIL(msgMissing.arg(inputFilePath).toStdString());
       }
 
-      WHEN("Encrypting and decrypting file: " + inputFilePath.toStdString()) {
+      WHEN("Encrypting and decrypting a file") {
         const std::size_t id = 0;
 
         // Test encryption and decryption
@@ -126,8 +132,9 @@ SCENARIO("Test encryption and decryption on various file types",
         const bool inFileOpen = inFile.open(QIODevice::ReadOnly);
 
         if (!inFileOpen) {
-          FAIL(msgMissing.arg(
-            etd.encryptedFilePath.absoluteFilePath()).toStdString());
+          FAIL(
+            msgMissing.arg(
+              etd.encryptedFilePath.absoluteFilePath()).toStdString());
         }
 
         const QHash<QByteArray, QByteArray> headers =
@@ -135,8 +142,9 @@ SCENARIO("Test encryption and decryption on various file types",
 
         if (!headers.contains(QByteArrayLiteral("Version"))) {
           const QString headerError = QStringLiteral("Header error in %1");
-          FAIL(headerError.arg(
-            etd.encryptedFilePath.absoluteFilePath()).toStdString());
+          FAIL(
+            headerError.arg(
+              etd.encryptedFilePath.absoluteFilePath()).toStdString());
         }
 
         inFile.close();
@@ -164,8 +172,7 @@ SCENARIO("Test encryption and decryption on various file types",
           decryptedFile.remove();
         }
 
-        THEN("Decrypted file matches plaintext file: " +
-             inputFilePath.toStdString()) {
+        THEN("Decrypted file matches plaintext file") {
           REQUIRE(encrypted);
           REQUIRE(decrypted);
           REQUIRE(equivalentTest);

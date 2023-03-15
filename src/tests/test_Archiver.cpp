@@ -1,7 +1,7 @@
 #include "SchedulerState.hpp"
 #include "archive/Archiver.hpp"
 #include "FileOperations.hpp"
-#include "catch.hpp"
+#include <doctest.h>
 #include <QFileInfo>
 #include <QFile>
 #include <QStringList>
@@ -12,15 +12,21 @@
  * testCompressDecompress Tests the compression/decompression process with a
  * text file as input.
  */
-SCENARIO("Test compression and decompression on a text file",
-         "[testCompressDecompressText]") {
-  GIVEN("A text file") {
-    Kryvo::SchedulerState state;
-    Kryvo::Archiver archiver(&state);
+SCENARIO("testCompressDecompressText") {
+  INFO("Test compression and decompression on a text file");
 
+  GIVEN("A text file") {
     const QString inputFilePath = QStringLiteral("test1.txt");
     const QString compressedFilePath = QStringLiteral("test1.txt.gz");
     const QString decompressedFilePath = QStringLiteral("test1 (2).txt");
+
+    const QString filePathMessage =
+      QStringLiteral("File name: %1").arg(inputFilePath);
+
+    INFO(filePathMessage.toStdString());
+
+    Kryvo::SchedulerState state;
+    Kryvo::Archiver archiver(&state);
 
     const QFileInfo inputFileInfo(inputFilePath);
 
@@ -58,8 +64,7 @@ SCENARIO("Test compression and decompression on a text file",
         decompressedFile.remove();
       }
 
-      THEN("Decompressed file matches original file: " +
-           inputFilePath.toStdString()) {
+      THEN("Decompressed file matches original file") {
         REQUIRE(compressed);
         REQUIRE(decompressed);
         REQUIRE(equivalentTest);

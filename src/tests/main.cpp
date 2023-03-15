@@ -1,6 +1,5 @@
-#define CATCH_CONFIG_RUNNER
-#include "catch.hpp"
-
+#define DOCTEST_CONFIG_IMPLEMENT
+#include <doctest.h>
 #include <QMetaType>
 #include <QCoreApplication>
 #include <QtTest>
@@ -11,7 +10,16 @@ int main(int argc, char* argv[]) {
   qRegisterMetaType<QFileInfo>("QFileInfo");
 
   QTEST_SET_MAIN_SOURCE_PATH
-  const int result = Catch::Session().run(argc, argv);
 
-  return (result < 0xFF ? result : 0xFF);
+  doctest::Context context;
+
+  context.applyCommandLine(argc, argv);
+
+  int res = context.run();
+
+  if (context.shouldExit()) { // important - query flags (and --exit) rely on the user doing this
+    return res;
+  }
+
+  return res; // the result from doctest is propagated here as well
 }
