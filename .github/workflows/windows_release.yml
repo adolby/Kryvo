@@ -29,10 +29,10 @@ jobs:
     steps:
       - name: (1) Set up Git ref/tag environment variable
         run:  |
-          if %REF_TYPE%=="tag" (
-            echo TAG_NAME="%REF_NAME%" >> $env:GITHUB_ENV
+          if ${{ env.REF_TYPE }}=="tag" (
+            echo "TAG_NAME=%REF_NAME%" >> $env:GITHUB_ENV
           ) else (
-            echo TAG_NAME="dev" >> $env:GITHUB_ENV
+            echo "TAG_NAME=dev" >> $env:GITHUB_ENV
           )
 
       - name: (2) Checkout repo
