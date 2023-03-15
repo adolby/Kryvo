@@ -53,9 +53,9 @@ jobs:
       - name: (3) Build
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
-          - cd "${{ env.SOURCE_DIR }}"
-          - chmod +x build_linux.sh
-          - ./build_linux.sh
+          cd "${{ env.SOURCE_DIR }}"
+          chmod +x build_linux.sh
+          ./build_linux.sh
 
       - name: (4) Save build artifact
         uses: actions/upload-artifact@v3
