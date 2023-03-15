@@ -53,7 +53,7 @@ jobs:
       - name: (3) Build
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
-          - cd "${SOURCE_DIR}"
+          - cd "${{ env.SOURCE_DIR }}"
           - chmod +x build_linux.sh
           - ./build_linux.sh
 
