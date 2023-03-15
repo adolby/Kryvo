@@ -4,25 +4,14 @@
 
 set -o errexit -o nounset
 
-project_dir=$(pwd)
-qt_install_dir=${HOME}
-
-# Get Qt
-echo "Installing Qt..."
-cd "${qt_install_dir}"
-echo "Downloading Qt files..."
-wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/qt-5.12.4/qt-opensource-5.12.4-linux-gcc-x86_64.zip &> /dev/null
-echo "Extracting Qt files..."
-7z x qt-opensource-5.12.4-linux-gcc-x86_64.zip -aos &> /dev/null
-
-# Install Qt Installer Framework
-echo "Installing Qt Installer Framework..."
-wget --timestamping --quiet https://github.com/adolby/qt-more-builds/releases/download/qt-ifw-3.1/qt-installer-framework-opensource-3.1-linux.zip &> /dev/null
-7z x qt-installer-framework-opensource-3.1-linux.zip -aos &> /dev/null
+project_dir="${SOURCE_DIR}"
+qt_path="${Qt6_DIR}"
+qt_tools="${IQTA_TOOLS}"
+tag_name="${TAG_NAME:-dev}"
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
-PATH="${qt_install_dir}/Qt/5.12.4/gcc_64/bin/:${qt_install_dir}/Qt/Tools/QtInstallerFramework/3.1/bin/:${PATH}"
+PATH="${qt_path}/bin/:${qt_tools}/QtInstallerFramework/4.5/bin/:${PATH}"
 
 # Check qmake version
 qmake --version
@@ -74,11 +63,11 @@ make
 # Copy Qt dependencies for test app
 echo "Copying Qt dependencies to test app..."
 cd "${project_dir}/build/linux/gcc/x86_64/release/test/"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Core.so.5.12.4" "libQt5Core.so.5"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Test.so.5.12.4" "libQt5Test.so.5"
+cp "${qt_path}/lib/libicui18n.so.56.1" "libicui18n.so.56"
+cp "${qt_path}/lib/libicuuc.so.56.1" "libicuuc.so.56"
+cp "${qt_path}/lib/libicudata.so.56.1" "libicudata.so.56"
+cp "${qt_path}/lib/libQt5Core.so.6.2.4" "libQt5Core.so.6"
+cp "${qt_path}/lib/libQt5Test.so.6.2.4" "libQt5Test.so.6"
 
 # Copy plugins for test app
 # echo "Copying plugins for test app..."
@@ -119,20 +108,20 @@ rm -rf qrc
 
 echo "Copying Qt dependencies..."
 
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicui18n.so.56.1" "libicui18n.so.56"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicuuc.so.56.1" "libicuuc.so.56"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libicudata.so.56.1" "libicudata.so.56"
+cp "${qt_path}/lib/libicui18n.so.56.1" "libicui18n.so.56"
+cp "${qt_path}/lib/libicuuc.so.56.1" "libicuuc.so.56"
+cp "${qt_path}/lib/libicudata.so.56.1" "libicudata.so.56"
 
 mkdir platforms
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
+cp "${qt_path}/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
+cp "${qt_path}/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
 
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Core.so.5.12.4" "libQt5Core.so.5"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Gui.so.5.12.4" "libQt5Gui.so.5"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Svg.so.5.12.4" "libQt5Svg.so.5"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5DBus.so.5.12.4" "libQt5DBus.so.5"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5XcbQpa.so.5.12.4" "libQt5XcbQpa.so.5"
-cp "${qt_install_dir}/Qt/5.12.4/gcc_64/lib/libQt5Widgets.so.5.12.4" "libQt5Widgets.so.5"
+cp "${qt_path}/lib/libQt6Core.so.6.2.4" "libQt6Core.so.6"
+cp "${qt_path}/lib/libQt6Gui.so.6.2.4" "libQt6Gui.so.6"
+cp "${qt_path}/lib/libQt6Svg.so.6.2.4" "libQt6Svg.so.6"
+cp "${qt_path}/lib/libQt6DBus.so.6.2.4" "libQt6DBus.so.6"
+cp "${qt_path}/lib/libQt6XcbQpa.so.6.2.4" "libQt6XcbQpa.so.6"
+cp "${qt_path}/lib/libQt6Widgets.so.6.2.4" "libQt6Widgets.so.6"
 
 chrpath -r \$ORIGIN/.. platforms/libqxcb.so
 chrpath -r \$ORIGIN/.. platforms/libqminimal.so
@@ -149,15 +138,13 @@ echo "Copying files for installer..."
 mkdir -p "${project_dir}/installer/linux/packages/app.kryvo/data/"
 cp -R * "${project_dir}/installer/linux/packages/app.kryvo/data/"
 
-TAG_NAME="${TAG_NAME:-dev}"
-
 echo "Packaging portable archive..."
 cd ..
-7z a kryvo_${TAG_NAME}_linux_x86_64_portable.zip Kryvo
+7z a kryvo_${tag_name}_linux_x86_64_portable.zip Kryvo
 
 echo "Creating installer..."
 cd "${project_dir}/installer/linux/"
-binarycreator --offline-only -c config/config.xml -p packages kryvo_${TAG_NAME}_linux_x86_64_installer
+binarycreator --offline-only -c config/config.xml -p packages kryvo_${tag_name}_linux_x86_64_installer
 
 echo "Done!"
 

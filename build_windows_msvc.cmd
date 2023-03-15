@@ -68,4 +68,4 @@ echo "Packaging portable archive..."
 
 echo "Creating installer..."
 cd "%project_dir%\installer\windows\x86_64\"
-binarycreator --offline-only -c config\config.xml -p packages "%project_dir%\installer\windows\x86_64\kryvo_%tag_name%_windows_x86_64_installer.exe"
+binarycreator --offline-only -c config\config.xml -p packages kryvo_%tag_name%_windows_x86_64_installer.exe
