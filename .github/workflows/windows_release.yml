@@ -27,10 +27,18 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: (1) Checkout repo
+      - name: (1) Set up Git ref/tag environment variable
+        run:  |
+          if %REF_TYPE%=="tag" (
+            echo TAG_NAME="%REF_NAME%" >> $env:GITHUB_ENV
+          ) else (
+            echo TAG_NAME="dev" >> $env:GITHUB_ENV
+          )
+
+      - name: (2) Checkout repo
         uses: actions/checkout@v3
 
-      - name: (2) Install Qt
+      - name: (3) Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           version: ${{ env.QT_VERSION }}
@@ -41,12 +49,12 @@ jobs:
           cache: true
           dir: ${{ runner.temp }}
 
-      - name: (3) Build
+      - name: (4) Build
         working-directory: ${{ github.workspace }}
         run: call "${{ env.SOURCE_DIR }}\build_windows_msvc.cmd"
 
-      - name: (4) Save build artifact
+      - name: (5) Save build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: "kryvo_${{ env.REF_NAME }}_windows_x86_64_portable.zip"
-          path: "${{ env.SOURCE_DIR }}\\build\\windows\\msvc\\x86_64\\release\\kryvo_${{ env.REF_NAME }}_windows_x86_64_portable.zip"
+          name: "kryvo_${{ env.TAG_NAME }}_windows_x86_64_portable.zip"
+          path: "${{ env.SOURCE_DIR }}\\build\\windows\\msvc\\x86_64\\release\\kryvo_${{ env.TAG_NAME }}_windows_x86_64_portable.zip"

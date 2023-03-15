@@ -4,13 +4,8 @@ echo "Setting up environment..."
 
 SET project_dir="%SOURCE_DIR%"
 SET qt_path="%Qt6_DIR%"
-SET qt_tools=%IQTA_TOOLS%
-
-if %REF_TYPE%=="tag" (
-  SET tag_name="%REF_NAME%"
-) else (
-  SET tag_name="dev"
-)
+SET qt_tools="%IQTA_TOOLS%"
+SET tag_name="%TAG_NAME%"
 
 SET PATH=%qt_path%\bin\;%qt_tools%\QtInstallerFramework\4.5\bin;%PATH%
 call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
