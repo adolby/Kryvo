@@ -55,7 +55,7 @@ if [ -f "${project_dir}/Makefile" ]; then
   make distclean
 fi
 
-qmake -spec linux-g++ CONFIG+=release
+qmake -makefile -spec linux-g++ CONFIG+=release
 make
 
 # Copy Qt dependencies for test app
@@ -64,8 +64,8 @@ cd "${project_dir}/build/linux/gcc/x86_64/release/test/"
 cp "${qt_path}/lib/libicui18n.so.56.1" "libicui18n.so.56"
 cp "${qt_path}/lib/libicuuc.so.56.1" "libicuuc.so.56"
 cp "${qt_path}/lib/libicudata.so.56.1" "libicudata.so.56"
-cp "${qt_path}/lib/libQt5Core.so.6.2.4" "libQt5Core.so.6"
-cp "${qt_path}/lib/libQt5Test.so.6.2.4" "libQt5Test.so.6"
+cp "${qt_path}/lib/libQt6Core.so.6.2.4" "libQt6Core.so.6"
+cp "${qt_path}/lib/libQt6Test.so.6.2.4" "libQt6Test.so.6"
 
 # Copy plugins for test app
 # echo "Copying plugins for test app..."
