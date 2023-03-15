@@ -64,6 +64,9 @@ cd "${project_dir}/build/linux/gcc/x86_64/release/test/"
 cp "${qt_path}/lib/libicui18n.so.56.1" "libicui18n.so.56"
 cp "${qt_path}/lib/libicuuc.so.56.1" "libicuuc.so.56"
 cp "${qt_path}/lib/libicudata.so.56.1" "libicudata.so.56"
+
+/home/runner/work/_temp/Qt/6.4.2/gcc_64/lib/
+ls "${qt_path}/lib/"
 cp "${qt_path}/lib/libQt6Core.so.6.2.4" "libQt6Core.so.6"
 cp "${qt_path}/lib/libQt6Test.so.6.2.4" "libQt6Test.so.6"
 
