@@ -51,7 +51,6 @@ jobs:
           arch: win64_msvc2019_64
           tools: tools_ifw
           cache: true
-          dir: ${{ runner.temp }}
 
       - name: (3) Build
         working-directory: ${{ env.SOURCE_DIR }}

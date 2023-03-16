@@ -48,11 +48,11 @@ jobs:
           arch: gcc_64
           tools: tools_ifw
           cache: true
-          dir: ${{ runner.temp }}
 
       - name: (3) Build
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
+          sudo apt install chrpath
           cd "${{ env.SOURCE_DIR }}"
           chmod +x build_linux.sh
           ./build_linux.sh

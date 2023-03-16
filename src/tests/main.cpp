@@ -17,9 +17,10 @@ int main(int argc, char* argv[]) {
 
   int res = context.run();
 
-  if (context.shouldExit()) { // important - query flags (and --exit) rely on the user doing this
+  if (context.shouldExit()) {
+    // important - query flags (and --exit) rely on the user doing this
     return res;
   }
 
-  return res; // the result from doctest is propagated here as well
+  return res;
 }
