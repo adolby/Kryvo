@@ -1,7 +1,7 @@
 #include "SchedulerState.hpp"
 #include "archive/Archiver.hpp"
 #include "FileOperations.hpp"
-#include <doctest.h>
+#include "doctest.h"
 #include <QFileInfo>
 #include <QFile>
 #include <QStringList>

@@ -1,5 +1,5 @@
 #define DOCTEST_CONFIG_IMPLEMENT
-#include <doctest.h>
+#include "doctest.h"
 #include <QMetaType>
 #include <QCoreApplication>
 #include <QtTest>

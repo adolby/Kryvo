@@ -26,6 +26,11 @@ jobs:
     runs-on:  ubuntu-latest
 
     steps:
+      - name: (0) Check user
+        run: |
+          whoami
+          groups
+
       - name: (0) Sets env vars for tag ref
         run: |
           echo "TAG_NAME=$REF_NAME" >> $GITHUB_ENV

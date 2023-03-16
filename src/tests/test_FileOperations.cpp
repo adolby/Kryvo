@@ -1,5 +1,5 @@
 #include "FileOperations.hpp"
-#include <doctest.h>
+#include "doctest.h"
 #include <QFileInfo>
 #include <QFile>
 #include <QString>
