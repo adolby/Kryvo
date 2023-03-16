@@ -1,9 +1,12 @@
-name: Windows Release
+name: Windows Develop
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - 'develop'
+  pull_request:
+    branches:
+      - 'develop'
 
 defaults:
   run:
@@ -13,7 +16,7 @@ env:
   SOURCE_DIR: ${{ github.workspace }}
   ARCH: amd64
   QT_VERSION: 6.4.2
-  TAG_NAME: ${{ github.ref_name }}
+  TAG_NAME: dev
 
 jobs:
   build:
