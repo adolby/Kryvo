@@ -61,11 +61,14 @@ make
 # Copy Qt dependencies for test app
 echo "Copying Qt dependencies to test app..."
 cd "${project_dir}/build/linux/gcc/x86_64/release/test/"
-cp "${qt_path}/lib/libicui18n.so.56.1" "libicui18n.so.56"
-cp "${qt_path}/lib/libicuuc.so.56.1" "libicuuc.so.56"
-cp "${qt_path}/lib/libicudata.so.56.1" "libicudata.so.56"
 
-ls -la "${qt_path}/lib/"
+cp "${qt_path}/lib/libicui18n.so.56" "libicui18n.so.56"
+cp "${qt_path}/lib/libicui18n.so.56.1" "libicui18n.so.56.1"
+cp "${qt_path}/lib/libicuuc.so.56" "libicuuc.so.56"
+cp "${qt_path}/lib/libicuuc.so.56.1" "libicuuc.so.56.1"
+cp "${qt_path}/lib/libicudata.so.56" "libicudata.so.56"
+cp "${qt_path}/lib/libicudata.so.56.1" "libicudata.so.56.1"
+
 cp "${qt_path}/lib/libQt6Core.so" "libQt6Core.so"
 cp "${qt_path}/lib/libQt6Core.so.6" "libQt6Core.so.6"
 cp "${qt_path}/lib/libQt6Core.so.6.4.2" "libQt6Core.so.6.4.2"
@@ -112,9 +115,12 @@ rm -rf qrc
 
 echo "Copying Qt dependencies..."
 
-cp "${qt_path}/lib/libicui18n.so.56.1" "libicui18n.so.56"
-cp "${qt_path}/lib/libicuuc.so.56.1" "libicuuc.so.56"
-cp "${qt_path}/lib/libicudata.so.56.1" "libicudata.so.56"
+cp "${qt_path}/lib/libicui18n.so.56" "libicui18n.so.56"
+cp "${qt_path}/lib/libicui18n.so.56.1" "libicui18n.so.56.1"
+cp "${qt_path}/lib/libicuuc.so.56" "libicuuc.so.56"
+cp "${qt_path}/lib/libicuuc.so.56.1" "libicuuc.so.56.1"
+cp "${qt_path}/lib/libicudata.so.56" "libicudata.so.56"
+cp "${qt_path}/lib/libicudata.so.56.1" "libicudata.so.56.1"
 
 mkdir platforms
 cp "${qt_path}/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
