@@ -52,8 +52,8 @@ jobs:
       - name: (3) Build
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
-          sudo apt -qq install chrpath
-          sudo apt -qq install libxkbcommon-x11-0
+          sudo apt-get -qq install chrpath
+          sudo apt-get -qq install libxkbcommon-x11-0
           cd "${{ env.SOURCE_DIR }}"
           chmod +x build_linux.sh
           ./build_linux.sh
