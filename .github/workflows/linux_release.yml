@@ -49,16 +49,19 @@ jobs:
           tools: tools_ifw
           cache: true
 
-      - name: (3) Build
-        working-directory: ${{ env.SOURCE_DIR }}
+      - name: (3) Install extra Linux dependencies
         run: |
           sudo apt-get -qq install chrpath
           sudo apt-get -qq install libxkbcommon-x11-0
+
+      - name: (4) Build
+        working-directory: ${{ env.SOURCE_DIR }}
+        run: |
           cd "${{ env.SOURCE_DIR }}"
-          chmod +x build_linux.sh
+          chmod +x build_linux_ci.sh
           ./build_linux_ci.sh
 
-      - name: (4) Save build artifact
+      - name: (5) Save build artifact
         uses: actions/upload-artifact@v3
         with:
           name: "kryvo_${{ env.TAG_NAME }}_linux_x86_64_portable.tar.gz"
