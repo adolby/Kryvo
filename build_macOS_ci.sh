@@ -4,7 +4,6 @@ set -o errexit -o nounset
 
 project_dir="${SOURCE_DIR}"
 qt_path="${Qt6_DIR}"
-qt_tools="${IQTA_TOOLS}"
 tag_name="${TAG_NAME:-dev}"
 
 # Output macOS version
