@@ -109,7 +109,7 @@ mkdir themes
 cp -a "${project_dir}/resources/stylesheets/kryvo.qss" "themes/kryvo.qss"
 
 echo "Packaging archive..."
-tar czvf "kryvo_${tag_name}_macos.tar.gz" "Kryvo_${tag_name}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
+tar czvf "kryvo_${tag_name}_macos.tar.gz" "Kryvo_${tag_name}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License" "themes/"
 
 cd "${project_dir}/build/macOS/clang/x86_64/release/"
 
