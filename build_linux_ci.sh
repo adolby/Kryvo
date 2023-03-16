@@ -138,8 +138,8 @@ cp -a "${qt_path}/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
 cp -a "${qt_path}/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
 
 cp -a "${qt_path}/lib/libQt6Core.so.6.4.2" "libQt6Core.so.6.4.2"
-ln -s "libQt6Core.so.6.4.2" "libQtCore.so"
-ln -s "libQt6Core.so.6.4.2" "libQtCore.so.6"
+ln -s "libQt6Core.so.6.4.2" "libQt6Core.so"
+ln -s "libQt6Core.so.6.4.2" "libQt6Core.so.6"
 
 cp -a "${qt_path}/lib/libQt6Gui.so.6.4.2" "libQt6Gui.so.6.4.2"
 ln -s "libQt6Gui.so.6.4.2" "libQt6Gui.so"

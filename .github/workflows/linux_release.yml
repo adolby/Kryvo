@@ -56,7 +56,7 @@ jobs:
           sudo apt-get -qq install libxkbcommon-x11-0
           cd "${{ env.SOURCE_DIR }}"
           chmod +x build_linux.sh
-          ./build_linux.sh
+          ./build_linux_ci.sh
 
       - name: (4) Save build artifact
         uses: actions/upload-artifact@v3

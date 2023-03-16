@@ -54,7 +54,7 @@ jobs:
 
       - name: (3) Build
         working-directory: ${{ env.SOURCE_DIR }}
-        run: call "${{ env.SOURCE_DIR }}\build_windows_msvc.cmd"
+        run: call "${{ env.SOURCE_DIR }}\build_windows_ci.cmd"
 
       - name: (4) Save build artifact
         uses: actions/upload-artifact@v3
