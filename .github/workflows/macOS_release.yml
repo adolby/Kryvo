@@ -1,0 +1,62 @@
+name: macOS Release
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'feat/githubActions'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+    - 'main'
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  SOURCE_DIR: ${{ github.workspace }}
+  REF_NAME: ${{ github.ref_name }}
+  REF_TYPE: ${{ github.ref_type }}
+  QT_VERSION: 6.4.2
+
+jobs:
+  build:
+    runs-on:  macos-latest
+
+    steps:
+      - name: (0) Sets env vars for tag ref
+        run: |
+          echo "TAG_NAME=$REF_NAME" >> $GITHUB_ENV
+        if: ${{ env.REF_TYPE }}=="tag"
+
+      - name: (0) Sets env var for branch ref
+        run: |
+          echo "TAG_NAME=dev" >> $GITHUB_ENV
+        if: ${{ env.REF_TYPE }}=="branch"
+
+      - name: (1) Checkout repo
+        uses: actions/checkout@v3
+
+      - name: (2) Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: mac
+          target: desktop
+          arch: clang_64
+          cache: true
+
+      - name: (3) Build
+        working-directory: ${{ env.SOURCE_DIR }}
+        run: |
+          cd "${{ env.SOURCE_DIR }}"
+          chmod +x build_macOS_ci.sh
+          ./build_macOS_ci.sh
+
+      - name: (4) Save build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: "kryvo_${{ env.TAG_NAME }}_macos.tar.gz"
+          path: "${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.TAG_NAME }}_macos.tar.gz"
