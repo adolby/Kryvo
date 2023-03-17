@@ -38,8 +38,17 @@ jobs:
           chmod +x build_macOS_ci.sh
           ./build_macOS_ci.sh
 
-      - name: (4) Save build artifact
+      - name: (4) Upload build artifact
         uses: actions/upload-artifact@v3
         with:
           name: "kryvo_${{ env.TAG_NAME }}_macos.tar.gz"
           path: "${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.TAG_NAME }}_macos.tar.gz"
+
+       - name: (5) Create release
+         uses: softprops/action-gh-release@v1
+         with:
+           draft: false
+           prerelease: false
+           fail_on_unmatched_files: true
+           files: |
+             "${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.TAG_NAME }}_macos.tar.gz"
