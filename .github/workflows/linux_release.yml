@@ -12,7 +12,7 @@ defaults:
 env:
   SOURCE_DIR: ${{ github.workspace }}
   QT_VERSION: 6.4.2
-  TAG_NAME: ${{ github.ref_name }}
+  KRYVO_VERSION: ${{ github.ref_name }}
 
 jobs:
   build:
@@ -47,8 +47,8 @@ jobs:
       - name: (5) Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: "kryvo_${{ env.TAG_NAME }}_linux_x86_64_portable.tar.gz"
-          path: "${{ env.SOURCE_DIR }}/build/linux/gcc/x86_64/release/kryvo_${{ env.TAG_NAME }}_linux_x86_64_portable.tar.gz"
+          name: "kryvo_${{ env.KRYVO_VERSION }}_linux_x86_64_portable.tar.gz"
+          path: "${{ env.SOURCE_DIR }}/build/linux/gcc/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_linux_x86_64_portable.tar.gz"
 
       - name: (6) Create release
         uses: softprops/action-gh-release@v1
@@ -57,5 +57,5 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: true
           files: |
-            "${{ env.SOURCE_DIR }}/build/linux/gcc/x86_64/release/kryvo_${{ env.TAG_NAME }}_linux_x86_64_portable.tar.gz"
-            "${{ env.SOURCE_DIR }}/installer/linux/x86_64/kryvo_${{ env.TAG_NAME }}_linux_x86_64_installer"
+            "${{ env.SOURCE_DIR }}/build/linux/gcc/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_linux_x86_64_portable.tar.gz"
+            "${{ env.SOURCE_DIR }}/installer/linux/x86_64/kryvo_${{ env.KRYVO_VERSION }}_linux_x86_64_installer"

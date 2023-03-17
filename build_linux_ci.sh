@@ -5,7 +5,7 @@ set -o errexit -o nounset
 project_dir="${SOURCE_DIR}"
 qt_path="${Qt6_DIR}"
 qt_tools="${IQTA_TOOLS}"
-tag_name="${TAG_NAME:-dev}"
+kryvo_version="${KRYVO_VERSION:-dev}"
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
@@ -166,11 +166,11 @@ cp -a * "${project_dir}/installer/linux/packages/app.kryvo/data/"
 
 echo "Packaging portable archive..."
 cd ..
-tar czvf kryvo_${tag_name}_linux_x86_64_portable.tar.gz Kryvo
+tar czvf kryvo_${kryvo_version}_linux_x86_64_portable.tar.gz Kryvo
 
 echo "Creating installer..."
 cd "${project_dir}/installer/linux/"
-binarycreator --offline-only -c config/config.xml -p packages kryvo_${tag_name}_linux_x86_64_installer
+binarycreator --offline-only -c config/config.xml -p packages kryvo_${kryvo_version}_linux_x86_64_installer
 
 echo "Done!"
 

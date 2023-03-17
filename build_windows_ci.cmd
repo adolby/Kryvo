@@ -5,7 +5,7 @@ echo "Setting up environment..."
 SET project_dir="%SOURCE_DIR%"
 SET qt_path="%Qt6_DIR%"
 SET qt_tools="%IQTA_TOOLS%"
-SET tag_name="%TAG_NAME%"
+SET kryvo_version="%KRYVO_VERSION%"
 
 SET PATH=%qt_path%\bin\;%qt_tools%\QtInstallerFramework\4.5\bin;%PATH%
 call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
@@ -64,8 +64,8 @@ mkdir "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data\"
 robocopy Kryvo\ "%project_dir%\installer\windows\x86_64\packages\app.kryvo\data" /E
 
 echo "Packaging portable archive..."
-7z a -aoa kryvo_%tag_name%_windows_x86_64_portable.zip Kryvo
+7z a -aoa kryvo_%kryvo_version%_windows_x86_64_portable.zip Kryvo
 
 echo "Creating installer..."
 cd "%project_dir%\installer\windows\x86_64\"
-binarycreator --offline-only -c config\config.xml -p packages kryvo_%tag_name%_windows_x86_64_installer.exe
+binarycreator --offline-only -c config\config.xml -p packages kryvo_%kryvo_version%_windows_x86_64_installer.exe

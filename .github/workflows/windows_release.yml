@@ -13,7 +13,7 @@ env:
   SOURCE_DIR: ${{ github.workspace }}
   ARCH: amd64
   QT_VERSION: 6.4.2
-  TAG_NAME: ${{ github.ref_name }}
+  KRYVO_VERSION: ${{ github.ref_name }}
 
 jobs:
   build:
@@ -40,8 +40,8 @@ jobs:
       - name: (4) Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: "kryvo_${{ env.TAG_NAME }}_windows_x86_64_portable.zip"
-          path: "${{ env.SOURCE_DIR }}\\build\\windows\\msvc\\x86_64\\release\\kryvo_${{ env.TAG_NAME }}_windows_x86_64_portable.zip"
+          name: "kryvo_${{ env.KRYVO_VERSION }}_windows_x86_64_portable.zip"
+          path: "${{ env.SOURCE_DIR }}\\build\\windows\\msvc\\x86_64\\release\\kryvo_${{ env.KRYVO_VERSION }}_windows_x86_64_portable.zip"
 
       - name: (5) Create release
         uses: softprops/action-gh-release@v1
@@ -50,5 +50,5 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: true
           files: |
-            "${{ env.SOURCE_DIR }}\\build\\windows\\msvc\\x86_64\\release\\kryvo_${{ env.TAG_NAME }}_windows_x86_64_portable.zip"
-            "${{ env.SOURCE_DIR }}\\installer\\windows\\x86_64\\kryvo_${{ env.TAG_NAME }}_windows_x86_64_installer.exe"
+            "${{ env.SOURCE_DIR }}\\build\\windows\\msvc\\x86_64\\release\\kryvo_${{ env.KRYVO_VERSION }}_windows_x86_64_portable.zip"
+            "${{ env.SOURCE_DIR }}\\installer\\windows\\x86_64\\kryvo_${{ env.KRYVO_VERSION }}_windows_x86_64_installer.exe"

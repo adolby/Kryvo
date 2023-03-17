@@ -15,7 +15,6 @@ defaults:
 env:
   SOURCE_DIR: ${{ github.workspace }}
   QT_VERSION: 6.4.2
-  TAG_NAME: dev
 
 jobs:
   build:
@@ -41,8 +40,11 @@ jobs:
           chmod +x build_macOS_ci.sh
           ./build_macOS_ci.sh
 
-      - name: (4) Save build artifact
+      - name: (4) Get short SHA for artifact naming
+        run: echo "KRYVO_VERSION=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+
+      - name: (5) Save build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: "kryvo_${{ env.TAG_NAME }}_macos.tar.gz"
-          path: "${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.TAG_NAME }}_macos.tar.gz"
+          name: "kryvo_${{ env.KRYVO_VERSION }}_macos.tar.gz"
+          path: "${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_macos.tar.gz"

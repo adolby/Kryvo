@@ -4,7 +4,7 @@ set -o errexit -o nounset
 
 project_dir="${SOURCE_DIR}"
 qt_path="${Qt6_DIR}"
-tag_name="${TAG_NAME:-dev}"
+kryvo_version="${KRYVO_VERSION:-dev}"
 
 # Output macOS version
 sw_vers
@@ -97,7 +97,7 @@ rm -rf qrc
 echo "Copying Qt dependencies and creating dmg archive..."
 macdeployqt Kryvo.app -dmg
 
-mv Kryvo.dmg "Kryvo_${tag_name}.dmg"
+mv Kryvo.dmg "Kryvo_${kryvo_version}.dmg"
 # appdmg json-path Kryvo_${TRAVIS_TAG}.dmg
 
 cp -a "${project_dir}/Release Notes" "Release Notes"
@@ -109,11 +109,11 @@ mkdir themes
 cp -a "${project_dir}/resources/stylesheets/kryvo.qss" "themes/kryvo.qss"
 
 echo "Packaging archive..."
-tar czvf "kryvo_${tag_name}_macos.tar.gz" "Kryvo_${tag_name}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License" "themes/"
+tar czvf "kryvo_${kryvo_version}_macos.tar.gz" "Kryvo_${kryvo_version}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
 
 cd "${project_dir}/build/macOS/clang/x86_64/release/"
 
-mv "Kryvo/kryvo_${tag_name}_macos.tar.gz" "kryvo_${tag_name}_macos.tar.gz"
+mv "Kryvo/kryvo_${kryvo_version}_macos.tar.gz" "kryvo_${kryvo_version}_macos.tar.gz"
 
 echo "Done!"
 
