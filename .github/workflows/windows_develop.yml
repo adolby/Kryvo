@@ -1,0 +1,47 @@
+name: Windows Develop
+
+on:
+  push:
+    branches:
+      - 'develop'
+  pull_request:
+    branches:
+      - 'develop'
+
+defaults:
+  run:
+    shell: cmd
+
+env:
+  SOURCE_DIR: ${{ github.workspace }}
+  ARCH: amd64
+  QT_VERSION: 6.4.2
+  TAG_NAME: dev
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: (1) Checkout repo
+        uses: actions/checkout@v3
+
+      - name: (2) Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: windows
+          target: desktop
+          arch: win64_msvc2019_64
+          tools: tools_ifw
+          cache: true
+
+      - name: (3) Build
+        working-directory: ${{ env.SOURCE_DIR }}
+        run: call "${{ env.SOURCE_DIR }}\build_windows_ci.cmd"
+
+      - name: (4) Save build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: "kryvo_${{ env.TAG_NAME }}_windows_x86_64_portable.zip"
+          path: "${{ env.SOURCE_DIR }}\\build\\windows\\msvc\\x86_64\\release\\kryvo_${{ env.TAG_NAME }}_windows_x86_64_portable.zip"

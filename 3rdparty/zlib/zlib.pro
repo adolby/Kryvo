@@ -105,8 +105,8 @@ linux {
     }
   } # End clang
 
-  linux-g++-64 {
-    message(g++ x86_64)
+  linux-g++ {
+    message(g++)
 
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
@@ -118,7 +118,7 @@ linux {
       message(Release)
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/lib/zlib
     }
-  } # End linux-g++-64
+  } # End linux-g++
 } # End linux
 
 darwin {

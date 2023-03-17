@@ -2,5 +2,5 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 INCLUDEPATH += $$PWD/src/core
 INCLUDEPATH += $$PWD/3rdparty/zlib
-INCLUDEPATH += $$PWD/3rdparty/catch
+INCLUDEPATH += $$PWD/3rdparty/doctest
 SRC_DIR = $$PWD
