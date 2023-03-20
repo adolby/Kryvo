@@ -2,15 +2,13 @@
 
 Kryvo is a cross-platform open source file encryptor.
 
-[![Build Status](https://travis-ci.com/adolby/Kryvo.svg?branch=master)](https://travis-ci.com/adolby/Kryvo) [![Build status](https://ci.appveyor.com/api/projects/status/9idpva2lb6w4pwpe/branch/master?svg=true)](https://ci.appveyor.com/project/adolby/kryvo/branch/master)
-
 ## Getting Started
 
 ### Download
 [Download Kryvo](https://github.com/adolby/Kryvo/releases) for macOS, Windows, or Linux.
 
 ### Installation
-To install Kryvo on Windows or Linux, run the installer executable or extract the files from the Kryvo archive. To install Kryvo on macOS, extract the disk image archive, then mount the disk image. Drag Kryvo.app to your Applications folder. Once the install files are copied, run the Kryvo executable.
+To install Kryvo on Windows or Linux, run the installer executable or extract the files from the Kryvo portable archive. To install Kryvo on macOS, extract the disk image archive, then mount the disk image. Drag Kryvo.app to your Applications folder. Once the install files are copied, run the Kryvo executable.
 
 ### Solving Windows missing DLL error
 If you receive an error indicating a missing msvcp140.dll, vcruntime140.dll, or other DLL files when you run Kryvo, you'll need to install the Visual C++ 2015 Redistributable (x64).
@@ -28,15 +26,13 @@ Files are encrypted/decrypted one-to-one, meaning that encryption of a "file.txt
 
 Kryvo supports user theming on desktop platforms. To create your own theme, start with the kryvo.qss file in the themes directory as your template. The kryvo.qss file is a stylesheet file that has syntax very similar to CSS.
 
-Colors, fonts, and many other attributes can be styled. Save your stylesheet file inside of the themes folder. To apply your theme to Kryvo, edit the settings.ini file located in the same directory as kryvo.exe. Change the value styleSheetPath to your newly created stylesheet file.
+Colors, fonts, and many other attributes can be styled. Save your stylesheet file inside of the themes folder. To apply your theme to Kryvo, edit the settings.ini file located in the same directory as the Kryvo executable. Change the value styleSheetPath to your newly created stylesheet file.
 
 Example: You created a new theme and saved the stylesheet to myTheme.qss in the themes folder. You would then update settings.json with this value: styleSheetPath: myTheme.qss
 
 ## Plugins
 
-Kryvo uses cryptography provider plugins to perform cryptographic operations.
-
-The default cryptography provider is [Botan](https://botan.randombit.net/).
+Kryvo uses cryptography provider plugins to perform cryptographic operations. The default cryptography provider is [Botan](https://botan.randombit.net/).
 
 ## Licenses
 
