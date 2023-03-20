@@ -39,15 +39,15 @@ jobs:
           sudo apt-get -qq install chrpath
           sudo apt-get -qq install libxkbcommon-x11-0
 
-      - name: (4) Build
+      - name: (4) Get short SHA for artifact naming
+        run: echo "KRYVO_VERSION=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+
+      - name: (5) Build
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
           cd "${{ env.SOURCE_DIR }}"
           chmod +x build_linux_ci.sh
           ./build_linux_ci.sh
-
-      - name: (5) Get short SHA for artifact naming
-        run: echo "KRYVO_VERSION=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
 
       - name: (6) Save build artifact
         uses: actions/upload-artifact@v3

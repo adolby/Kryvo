@@ -33,15 +33,15 @@ jobs:
           arch: clang_64
           cache: true
 
-      - name: (3) Build
+      - name: (3) Get short SHA for artifact naming
+        run: echo "KRYVO_VERSION=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+
+      - name: (4) Build
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
           cd "${{ env.SOURCE_DIR }}"
           chmod +x build_macOS_ci.sh
           ./build_macOS_ci.sh
-
-      - name: (4) Get short SHA for artifact naming
-        run: echo "KRYVO_VERSION=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
 
       - name: (5) Save build artifact
         uses: actions/upload-artifact@v3
