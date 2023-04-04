@@ -1,7 +1,8 @@
-import QtQuick 2.9
-import QtQuick.Controls 2.2
-import QtQuick.Layouts 1.3
-import QtQuick.Controls.Material 2.2
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.Material
+import QtQuick.Layouts
+import QtQuick.Dialogs
 
 ApplicationWindow {
   id: window
@@ -18,7 +19,7 @@ ApplicationWindow {
   Connections {
     target: ui
 
-    onPushPage: {
+    function onPushPage(page) {
       if (page.name) {
         if (page.properties) {
           pageLoader.push(page.name, page.properties);
@@ -28,7 +29,7 @@ ApplicationWindow {
       }
     }
 
-    onPopPage: {
+    function onPopPage() {
       pageLoader.pop();
     }
   }

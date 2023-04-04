@@ -40,7 +40,8 @@ class UiPrivate {
   // Messages to display to user
   const QStringList errorMessages{
     QObject::tr("A password is required to encrypt or decrypt files. Please "
-                "enter one to continue.")};
+                "enter one to continue."),
+    QObject::tr("Input files are required to encrypt or decrypt files.")};
 
   QQmlApplicationEngine engine;
   QUrl mainPageUrl;
@@ -317,8 +318,7 @@ void Ui::processFiles(const QString& passphrase,
     }
 
     if (files.empty()) {
-      // TODO Inform user that input files are required to encrypt or
-      // decrypt
+      appendStatusMessage(d->errorMessages.at(1));
       return;
     }
 
