@@ -1,8 +1,8 @@
-import QtQuick 2.13
-import QtQuick.Controls 2.13
-import QtQuick.Controls.Material 2.13
-import QtQuick.Layouts 1.13
-import Qt.labs.folderlistmodel 2.13
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.Material
+import QtQuick.Layouts
+import Qt.labs.folderlistmodel
 
 Page {
   id: fileSelector
@@ -101,9 +101,9 @@ Page {
 
         onClicked: {
           if (item.fileIsDir) {
-            fileSelector.folder = item.fileURL;
+            fileSelector.folder = item.fileUrl;
           } else {
-            ui.addFile(item.fileURL);
+            ui.addFile(item.fileUrl);
             ui.changePage("Encrypt.qml");
           }
         }

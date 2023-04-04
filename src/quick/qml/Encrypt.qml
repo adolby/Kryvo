@@ -1,8 +1,8 @@
-import QtQuick 2.9
-import QtQuick.Controls 2.2
-import QtQuick.Dialogs 1.3
-import QtQuick.Layouts 1.13
-import QtQuick.Controls.Material 2.2
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.Material
+import QtQuick.Layouts
+import QtQuick.Dialogs
 
 Page {
   id: page
@@ -289,8 +289,7 @@ Page {
                         {"folder": Qt.resolvedUrl(ui.outputPath),
                          "selectFolder": true});
           } else {
-            outputFileDialog.folder = Qt.resolvedUrl(ui.outputPath);
-            outputFileDialog.open();
+            outputDirDialog.open();
           }
         }
       }
@@ -330,13 +329,11 @@ Page {
   FileDialog {
     id: inputFileDialog
     title: qsTr("Please choose files")
-    folder: ui.inputPath
-    selectExisting: true
-    selectMultiple: true
-    selectFolder: false
+    currentFolder: Qt.resolvedUrl(ui.outputPath)
+    fileMode: FileDialog.OpenFiles
 
     onAccepted: {
-      ui.addFiles(inputFileDialog.fileUrls);
+      ui.addFiles(inputFileDialog.selectedFiles);
       close();
     }
 
@@ -345,15 +342,13 @@ Page {
     }
   }
 
-  FileDialog {
-    id: outputFileDialog
+  FolderDialog {
+    id: outputDirDialog
     title: qsTr("Please choose an output directory")
-    selectExisting: true
-    selectFolder: true
-    selectMultiple: false
+    currentFolder: Qt.resolvedUrl(ui.outputPath)
 
     onAccepted: {
-      ui.updateOutputPath(folder);
+      ui.updateOutputPath(outputDirDialog.selectedFolder);
       close();
     }
 
