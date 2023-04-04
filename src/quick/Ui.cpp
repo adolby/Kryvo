@@ -41,7 +41,7 @@ class UiPrivate {
   const QStringList errorMessages{
     QObject::tr("A password is required to encrypt or decrypt files. Please "
                 "enter one to continue."),
-    QObject::tr("Input files are required to encrypt or decrypt files.")};
+    QObject::tr("First add files to encrypt or decrypt.")};
 
   QQmlApplicationEngine engine;
   QUrl mainPageUrl;
