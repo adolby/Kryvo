@@ -19,7 +19,12 @@ void FileListDelegate::paint(QPainter* painter,
     case 0: {
       QStyleOptionViewItem updatedOption = option;
       updatedOption.textElideMode = Qt::ElideLeft;
+
+#if defined(Q_OS_MACOS)
       updatedOption.font.setPointSize(20);
+#else
+      updatedOption.font.setPointSize(18);
+#endif
 
       QStyledItemDelegate::paint(painter, updatedOption, index);
       break;
@@ -28,7 +33,12 @@ void FileListDelegate::paint(QPainter* painter,
     case 1: {
       QStyleOptionViewItem updatedOption = option;
       updatedOption.textElideMode = Qt::ElideRight;
+
+#if defined(Q_OS_MACOS)
       updatedOption.font.setPointSize(20);
+#else
+      updatedOption.font.setPointSize(18);
+#endif
 
       QStyledItemDelegate::paint(painter, updatedOption, index);
       break;

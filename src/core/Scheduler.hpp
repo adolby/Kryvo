@@ -1,6 +1,10 @@
 #ifndef KRYVO_SCHEDULER_HPP_
 #define KRYVO_SCHEDULER_HPP_
 
+#include "cryptography/EncryptFileConfig.hpp"
+#include "cryptography/DecryptFileConfig.hpp"
+#include "archive/CompressFileConfig.hpp"
+#include "archive/DecompressFileConfig.hpp"
 #include "utility/pimpl.h"
 #include <QObject>
 #include <QFileInfo>
@@ -59,29 +63,15 @@ class Scheduler : public QObject {
 
   void running(bool run);
 
-  void compressFile(std::size_t id,
-                    const QFileInfo& inputFileInfo,
-                    const QFileInfo& outputFileInfo);
+  void compressFile(std::size_t id, const Kryvo::CompressFileConfig& config);
 
   void decompressFile(std::size_t id,
-                      const QFileInfo& inputFileInfo,
-                      const QFileInfo& outputFileInfo);
+                      const Kryvo::DecompressFileConfig& config);
 
   void encryptFile(std::size_t id,
-                   const QString& cryptoProvider,
-                   const QString& compressionFormat,
-                   const QString& passphrase,
-                   const QFileInfo& inputFileInfo,
-                   const QFileInfo& outputFileInfo,
-                   const QString& cipher,
-                   std::size_t inputKeySize,
-                   const QString& modeOfOperation);
+                   const Kryvo::EncryptFileConfig& config);
 
-  void decryptFile(std::size_t id,
-                   const QString& cryptoProvider,
-                   const QString& passphrase,
-                   const QFileInfo& inputFileInfo,
-                   const QFileInfo& outputFileInfo);
+  void decryptFile(std::size_t id, const Kryvo::DecryptFileConfig& config);
 
  public slots:
   /*!

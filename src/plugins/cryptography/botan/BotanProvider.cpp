@@ -14,6 +14,18 @@
 
 namespace Kryvo {
 
+QString algorithmString(const QString& cipher, const QString& mode,
+                        const std::size_t keySize) {
+  QString algo = QString(cipher % QStringLiteral("/") % mode);
+
+  if (QStringLiteral("AES") == cipher) {
+    algo = QString(cipher % QStringLiteral("-") % QString::number(keySize) %
+                   QStringLiteral("/") % mode);
+  }
+
+  return algo;
+}
+
 class BotanProviderPrivate {
   Q_DISABLE_COPY(BotanProviderPrivate)
   Q_DECLARE_PUBLIC(BotanProvider)
@@ -23,32 +35,13 @@ class BotanProviderPrivate {
 
   void init(SchedulerState* s);
 
-  bool encrypt(std::size_t id,
-               const QString& compressionFormat,
-               const QString& passphrase,
-               const QFileInfo& inputFileInfo,
-               const QFileInfo& outputFileInfo,
-               const QString& cipher,
-               std::size_t keySize,
-               const QString& modeOfOperation);
+  bool encrypt(std::size_t id, const Kryvo::EncryptFileConfig& config);
 
-  bool decrypt(std::size_t id,
-               const QString& passphrase,
-               const QFileInfo& inputFileInfo,
-               const QFileInfo& outputFileInfo);
+  bool decrypt(std::size_t id, const Kryvo::DecryptFileConfig& config);
 
-  bool encryptFile(std::size_t id,
-                   const QString& compressionFormat,
-                   const QString& passphrase,
-                   const QFileInfo& inputFileInfo,
-                   const QFileInfo& outputFileInfo,
-                   const QString& algorithmName,
-                   std::size_t keySize);
+  bool encryptFile(std::size_t id, const Kryvo::EncryptFileConfig& config);
 
-  bool decryptFile(std::size_t id,
-                   const QString& passphrase,
-                   const QFileInfo& inputFileInfo,
-                   const QFileInfo& outputFileInfo);
+  bool decryptFile(std::size_t id, const Kryvo::DecryptFileConfig& config);
 
   bool executeCipher(std::size_t id,
                      CryptDirection direction,
@@ -60,18 +53,18 @@ class BotanProviderPrivate {
 
   SchedulerState* state{nullptr};
 
-  static const std::string kKeyLabel;
-  static const std::string kIVLabel;
-  static const std::size_t kPbkdfIterations;
+  static const std::string keyLabel;
+  static const std::string ivLabel;
+  static const std::size_t pbkdfIterations;
 };
 
-const std::string BotanProviderPrivate::kKeyLabel =
+const std::string BotanProviderPrivate::keyLabel =
   std::string("user secret");
 
-const std::string BotanProviderPrivate::kIVLabel =
+const std::string BotanProviderPrivate::ivLabel =
   std::string("initialization vector");
 
-const std::size_t BotanProviderPrivate::kPbkdfIterations = 50000;
+const std::size_t BotanProviderPrivate::pbkdfIterations = 50000;
 
 BotanProviderPrivate::BotanProviderPrivate(BotanProvider* bp)
   : q_ptr(bp) {
@@ -81,14 +74,8 @@ void BotanProviderPrivate::init(SchedulerState* s) {
   state = s;
 }
 
-bool BotanProviderPrivate::encrypt(const std::size_t id,
-                                   const QString& compressionFormat,
-                                   const QString& passphrase,
-                                   const QFileInfo& inputFileInfo,
-                                   const QFileInfo& outputFileInfo,
-                                   const QString& cipher,
-                                   const std::size_t keySize,
-                                   const QString& modeOfOperation) {
+bool BotanProviderPrivate::encrypt(std::size_t id,
+                                   const Kryvo::EncryptFileConfig& config) {
   Q_Q(BotanProvider);
   Q_ASSERT(state);
 
@@ -99,53 +86,41 @@ bool BotanProviderPrivate::encrypt(const std::size_t id,
   }
 
   if (state->isAborted() || state->isStopped(id)) {
-    emit q->errorMessage(Constants::messages[3], inputFileInfo);
+    emit q->errorMessage(Constants::messages[3], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
 
-  const QString algorithm = [&cipher, &keySize, &modeOfOperation]() {
-    QString algo = QString(cipher % QStringLiteral("/") % modeOfOperation);
-
-    if (QStringLiteral("AES") == cipher) {
-      algo = QString(cipher % QStringLiteral("-") % QString::number(keySize) %
-                     QStringLiteral("/") % modeOfOperation);
-    }
-
-    return algo;
-  }();
-
   bool success = false;
 
   try {
-    success = encryptFile(id, compressionFormat, passphrase, inputFileInfo,
-                          outputFileInfo, algorithm, keySize);
+    success = encryptFile(id, config);
   } catch (const Botan::Stream_IO_Error&) {
-    emit q->errorMessage(Constants::messages[8], inputFileInfo);
+    emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   } catch (const Botan::Invalid_Argument&) {
-    emit q->errorMessage(Constants::messages[8], inputFileInfo);
+    emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   } catch (const Botan::Exception& e) {
     emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
-                         inputFileInfo);
+                         config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   } catch (const std::invalid_argument&) {
-    emit q->errorMessage(Constants::messages[8], inputFileInfo);
+    emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   } catch (const std::exception& e) {
     emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
-                         inputFileInfo);
+                         config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
 
   if (state->isAborted() || state->isStopped(id)) {
-    emit q->errorMessage(Constants::messages[3], inputFileInfo);
+    emit q->errorMessage(Constants::messages[3], config.inputFileInfo);
     emit q->fileFailed(id);
 
     return false;
@@ -154,9 +129,8 @@ bool BotanProviderPrivate::encrypt(const std::size_t id,
   return success;
 }
 
-bool BotanProviderPrivate::decrypt(
-  const std::size_t id, const QString& passphrase,
-  const QFileInfo& inputFileInfo, const QFileInfo& outputFileInfo) {
+bool BotanProviderPrivate::decrypt(std::size_t id,
+                                   const Kryvo::DecryptFileConfig& config) {
   Q_Q(BotanProvider);
   Q_ASSERT(state);
 
@@ -167,7 +141,7 @@ bool BotanProviderPrivate::decrypt(
   }
 
   if (state->isAborted() || state->isStopped(id)) {
-    emit q->errorMessage(Constants::messages[4], inputFileInfo);
+    emit q->errorMessage(Constants::messages[4], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -175,37 +149,37 @@ bool BotanProviderPrivate::decrypt(
   bool success = false;
 
   try {
-    success = decryptFile(id, passphrase, inputFileInfo, outputFileInfo);
+    success = decryptFile(id, config);
   } catch (const Botan::Stream_IO_Error&) {
-    emit q->errorMessage(Constants::messages[7], inputFileInfo);
+    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   } catch (const Botan::Invalid_Argument&) {
-    emit q->errorMessage(Constants::messages[7], inputFileInfo);
+    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   } catch (const Botan::Lookup_Error&) {
-    emit q->errorMessage(Constants::messages[7], inputFileInfo);
+    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   } catch (const Botan::Exception& e) {
     emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
-                         inputFileInfo);
+                         config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   } catch (const std::invalid_argument&) {
-    emit q->errorMessage(Constants::messages[7], inputFileInfo);
+    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   } catch (const std::exception& e) {
     emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
-                         inputFileInfo);
+                         config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
 
   if (state->isAborted() || state->isStopped(id)) {
-    emit q->errorMessage(Constants::messages[4], inputFileInfo);
+    emit q->errorMessage(Constants::messages[4], config.inputFileInfo);
     emit q->fileFailed(id);
 
     return false;
@@ -214,11 +188,8 @@ bool BotanProviderPrivate::decrypt(
   return success;
 }
 
-bool BotanProviderPrivate::encryptFile(
-  const std::size_t id, const QString& compressionFormat,
-  const QString& passphrase, const QFileInfo& inputFileInfo,
-  const QFileInfo& outputFileInfo, const QString& algorithmName,
-  const std::size_t keySize) {
+bool BotanProviderPrivate::encryptFile(std::size_t id,
+                                       const Kryvo::EncryptFileConfig& config) {
   Q_Q(BotanProvider);
   Q_ASSERT(state);
 
@@ -233,9 +204,9 @@ bool BotanProviderPrivate::encryptFile(
     return false;
   }
 
-  if (!inputFileInfo.exists() || !inputFileInfo.isFile() ||
-      !inputFileInfo.isReadable()) {
-    emit q->errorMessage(Constants::messages[5], inputFileInfo);
+  if (!config.inputFileInfo.exists() || !config.inputFileInfo.isFile() ||
+      !config.inputFileInfo.isReadable()) {
+    emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -262,14 +233,14 @@ bool BotanProviderPrivate::encryptFile(
   // Create the PBKDF key
   const std::size_t pbkdfKeySize = 256;
 
-  const std::string passphraseString = passphrase.toStdString();
+  const std::string passphraseString = config.passphrase.toStdString();
 
   Botan::secure_vector<Botan::byte> pbkdfKey =
     pbkdf.derive_key(pbkdfKeySize, passphraseString, &pbkdfSalt[0],
-                     pbkdfSalt.size(), kPbkdfIterations).bits_of();
+                     pbkdfSalt.size(), pbkdfIterations).bits_of();
 
   // Create the key and IV
-  const QByteArray kdfHash = QByteArrayLiteral("KDF2(SHA-3(512))");
+  const QByteArray kdfHash = QByteArrayLiteral("HKDF(SHA-3(512))");
 
   std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdfHash.toStdString()));
 
@@ -280,16 +251,16 @@ bool BotanProviderPrivate::encryptFile(
   rng.randomize(&keySalt[0], keySalt.size());
 
   // Key is constrained to sizes allowed by algorithm
-  const std::size_t keySizeInBytes = keySize / 8;
+  const std::size_t keySizeInBytes = config.keySize / 8;
   const auto* keyLabelVector =
-    reinterpret_cast<const Botan::byte*>(kKeyLabel.data());
+    reinterpret_cast<const Botan::byte*>(keyLabel.data());
   Botan::SymmetricKey key(kdf->derive_key(keySizeInBytes,
                                           pbkdfKey.data(),
                                           pbkdfKey.size(),
                                           keySalt.data(),
                                           keySalt.size(),
                                           keyLabelVector,
-                                          kKeyLabel.size()));
+                                          keyLabel.size()));
 
   // Set up IV salt size
   const std::size_t ivSaltSize = 64;
@@ -299,30 +270,30 @@ bool BotanProviderPrivate::encryptFile(
 
   const std::size_t ivSize = 256;
   const auto* ivLabelVector =
-    reinterpret_cast<const Botan::byte*>(kIVLabel.data());
+    reinterpret_cast<const Botan::byte*>(ivLabel.data());
   Botan::InitializationVector iv(kdf->derive_key(ivSize,
                                                  pbkdfKey.data(),
                                                  pbkdfKey.size(),
                                                  ivSalt.data(),
                                                  ivSalt.size(),
                                                  ivLabelVector,
-                                                 kIVLabel.size()));
+                                                 ivLabel.size()));
 
-  QFile inFile(inputFileInfo.absoluteFilePath());
+  QFile inFile(config.inputFileInfo.absoluteFilePath());
   const bool inFileOpen = inFile.open(QIODevice::ReadOnly);
 
   if (!inFileOpen) {
-    emit q->errorMessage(Constants::messages[5], inputFileInfo);
+    emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
 
-  QSaveFile outFile(outputFileInfo.absoluteFilePath());
+  QSaveFile outFile(config.outputFileInfo.absoluteFilePath());
   const bool outFileOpen = outFile.open(QIODevice::WriteOnly);
 
   if (!outFileOpen) {
     outFile.cancelWriting();
-    emit q->errorMessage(Constants::messages[8], inputFileInfo);
+    emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -334,17 +305,18 @@ bool BotanProviderPrivate::encryptFile(
   headerData.insert(QByteArrayLiteral("Cryptography provider"),
                     QByteArrayLiteral("Botan"));
 
-  if (!compressionFormat.isEmpty() &&
-      compressionFormat != QStringLiteral("None")) {
+  if (!config.compressionFormat.isEmpty() &&
+      config.compressionFormat != QStringLiteral("None")) {
     headerData.insert(QByteArrayLiteral("Compression format"),
-                      compressionFormat.toUtf8());
+                      config.compressionFormat.toUtf8());
   }
 
-  headerData.insert(QByteArrayLiteral("Algorithm name"),
-                    algorithmName.toUtf8());
+  headerData.insert(QByteArrayLiteral("Cipher"), config.cipher.toUtf8());
+
+  headerData.insert(QByteArrayLiteral("Mode"), config.modeOfOperation.toUtf8());
 
   headerData.insert(QByteArrayLiteral("Key size"),
-                    QByteArray::number(static_cast<uint>(keySize)));
+                    QByteArray::number(static_cast<uint>(config.keySize)));
 
   headerData.insert(QByteArrayLiteral("Hash function"),
                     QByteArrayLiteral("SHA-3"));
@@ -374,15 +346,19 @@ bool BotanProviderPrivate::encryptFile(
 
   Botan::Pipe pipe;
 
-  pipe.append_filter(Botan::get_cipher(algorithmName.toStdString(), key, iv,
-                                       Botan::ENCRYPTION));
+  const QString algorithm = algorithmString(config.cipher,
+                                            config.modeOfOperation,
+                                            config.keySize);
+
+  pipe.append_filter(Botan::get_cipher(algorithm.toStdString(), key,
+                                       iv, Botan::ENCRYPTION));
 
   const bool success = executeCipher(id, CryptDirection::Encrypt,
                                      &inFile, &outFile, &pipe);
 
   if (!success) {
     outFile.cancelWriting();
-    emit q->errorMessage(Constants::messages[8], inputFileInfo);
+    emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -400,16 +376,15 @@ bool BotanProviderPrivate::encryptFile(
 
   // Encryption success message
   emit q->statusMessage(
-    Constants::messages[1].arg(inputFileInfo.absoluteFilePath()));
+    Constants::messages[1].arg(config.inputFileInfo.absoluteFilePath()));
 
   emit q->fileCompleted(id);
 
   return success;
 }
 
-bool BotanProviderPrivate::decryptFile(
-  const std::size_t id, const QString& passphrase,
-  const QFileInfo& inputFileInfo, const QFileInfo& outputFileInfo) {
+bool BotanProviderPrivate::decryptFile(std::size_t id,
+                                       const Kryvo::DecryptFileConfig& config) {
   Q_Q(BotanProvider);
   Q_ASSERT(state);
 
@@ -424,21 +399,21 @@ bool BotanProviderPrivate::decryptFile(
     return false;
   }
 
-  if (!inputFileInfo.exists() || !inputFileInfo.isFile() ||
-      !inputFileInfo.isReadable()) {
-    emit q->errorMessage(Constants::messages[5], inputFileInfo);
+  if (!config.inputFileInfo.exists() || !config.inputFileInfo.isFile() ||
+      !config.inputFileInfo.isReadable()) {
+    emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
 
   emit q->fileProgress(id, QObject::tr("Decrypting"), 0);
 
-  QFile inFile(inputFileInfo.absoluteFilePath());
+  QFile inFile(config.inputFileInfo.absoluteFilePath());
 
   const bool inFileOpen = inFile.open(QIODevice::ReadOnly);
 
   if (!inFileOpen) {
-    emit q->errorMessage(Constants::messages[5], inputFileInfo);
+    emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -446,13 +421,13 @@ bool BotanProviderPrivate::decryptFile(
   // Seek file to after header
   const QHash<QByteArray, QByteArray> header = readHeader(&inFile);
 
-  QSaveFile outFile(outputFileInfo.absoluteFilePath());
+  QSaveFile outFile(config.outputFileInfo.absoluteFilePath());
 
   const bool outFileOpen = outFile.open(QIODevice::WriteOnly);
 
   if (!outFileOpen) {
     outFile.cancelWriting();
-    emit q->errorMessage(Constants::messages[7], inputFileInfo);
+    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -462,7 +437,8 @@ bool BotanProviderPrivate::decryptFile(
 
   bool conversionOk = false;
 
-  const int fileVersion = versionString.toInt(&conversionOk);
+// Need to check file version when file format stabilizes
+//  const int fileVersion = versionString.toInt(&conversionOk);
 
   const QByteArray cryptoProviderByteArray =
     header.value(QByteArrayLiteral("Cryptography provider"));
@@ -470,8 +446,11 @@ bool BotanProviderPrivate::decryptFile(
   const QByteArray compressionFormatByteArray =
     header.value(QByteArrayLiteral("Compression format"));
 
-  const QByteArray algorithmNameByteArray =
-    header.value(QByteArrayLiteral("Algorithm name"));
+  const QByteArray cipherByteArray =
+    header.value(QByteArrayLiteral("Cipher"));
+
+  const QByteArray modeOfOperationByteArray =
+    header.value(QByteArrayLiteral("Mode"));
 
   const QByteArray keySizeByteArray =
     header.value(QByteArrayLiteral("Key size"));
@@ -506,14 +485,14 @@ bool BotanProviderPrivate::decryptFile(
 
   const std::size_t pbkdfKeySize = 256;
 
-  const std::string passphraseString = passphrase.toStdString();
+  const std::string passphraseString = config.passphrase.toStdString();
 
   const Botan::secure_vector<Botan::byte> pbkdfKey =
     pbkdf.derive_key(pbkdfKeySize, passphraseString, &pbkdfSalt[0],
-                     pbkdfSalt.size(), kPbkdfIterations).bits_of();
+                     pbkdfSalt.size(), pbkdfIterations).bits_of();
 
   // Create the key and IV
-  const QByteArray kdfHash = QByteArrayLiteral("KDF2(") +
+  const QByteArray kdfHash = QByteArrayLiteral("HKDF(") +
                              hashFunctionByteArray +
                              QByteArrayLiteral("(") +
                              hashSizeByteArray +
@@ -531,7 +510,7 @@ bool BotanProviderPrivate::decryptFile(
 
   if (!keySizeIntOk) {
     outFile.cancelWriting();
-    emit q->errorMessage(Constants::messages[7], inputFileInfo);
+    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -541,7 +520,7 @@ bool BotanProviderPrivate::decryptFile(
   const std::size_t keySizeInBytes = keySize / 8;
 
   const auto* keyLabelVector =
-    reinterpret_cast<const Botan::byte*>(kKeyLabel.data());
+    reinterpret_cast<const Botan::byte*>(keyLabel.data());
 
   Botan::SymmetricKey key(kdf->derive_key(keySizeInBytes,
                                           pbkdfKey.data(),
@@ -549,24 +528,27 @@ bool BotanProviderPrivate::decryptFile(
                                           keySalt.data(),
                                           keySalt.size(),
                                           keyLabelVector,
-                                          kKeyLabel.size()));
+                                          keyLabel.size()));
 
   const Botan::secure_vector<Botan::byte> ivSalt =
     Botan::base64_decode(ivSaltByteArray.toStdString());
   const std::size_t ivSize = 256;
   const auto* ivLabelVector =
-    reinterpret_cast<const Botan::byte*>(kIVLabel.data());
+    reinterpret_cast<const Botan::byte*>(ivLabel.data());
   Botan::InitializationVector iv(kdf->derive_key(ivSize,
                                                  pbkdfKey.data(),
                                                  pbkdfKey.size(),
                                                  ivSalt.data(),
                                                  ivSalt.size(),
                                                  ivLabelVector,
-                                                 kIVLabel.size()));
+                                                 ivLabel.size()));
 
   Botan::Pipe pipe;
 
-  pipe.append_filter(Botan::get_cipher(algorithmNameByteArray.toStdString(),
+  const QString algorithm = algorithmString(cipherByteArray,
+                                            modeOfOperationByteArray, keySize);
+
+  pipe.append_filter(Botan::get_cipher(algorithm.toStdString(),
                                        key, iv, Botan::DECRYPTION));
 
   const bool success = executeCipher(id, CryptDirection::Decrypt,
@@ -574,7 +556,7 @@ bool BotanProviderPrivate::decryptFile(
 
   if (!success) {
     outFile.cancelWriting();
-    emit q->errorMessage(Constants::messages[7], inputFileInfo);
+    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
     emit q->fileFailed(id);
     return false;
   }
@@ -592,7 +574,7 @@ bool BotanProviderPrivate::decryptFile(
 
   // Decryption success message
   emit q->statusMessage(
-    Constants::messages[2].arg(inputFileInfo.absoluteFilePath()));
+    Constants::messages[2].arg(config.inputFileInfo.absoluteFilePath()));
 
   emit q->fileCompleted(id);
 
@@ -721,27 +703,18 @@ void BotanProvider::init(SchedulerState* state) {
   d->init(state);
 }
 
-bool BotanProvider::encrypt(const std::size_t id,
-                            const QString& compressionFormat,
-                            const QString& passphrase,
-                            const QFileInfo& inputFileInfo,
-                            const QFileInfo& outputFileInfo,
-                            const QString& cipher,
-                            const std::size_t keySize,
-                            const QString& modeOfOperation) {
+bool BotanProvider::encrypt(std::size_t id,
+                            const Kryvo::EncryptFileConfig& config) {
   Q_D(BotanProvider);
 
-  return d->encrypt(id, compressionFormat, passphrase, inputFileInfo,
-                    outputFileInfo, cipher, keySize, modeOfOperation);
+  return d->encrypt(id, config);
 }
 
-bool BotanProvider::decrypt(const std::size_t id,
-                                   const QString& passphrase,
-                                   const QFileInfo& inputFileInfo,
-                                   const QFileInfo& outputFileInfo) {
+bool BotanProvider::decrypt(std::size_t id,
+                            const Kryvo::DecryptFileConfig& config) {
   Q_D(BotanProvider);
 
-  return d->decrypt(id, passphrase, inputFileInfo, outputFileInfo);
+  return d->decrypt(id, config);
 }
 
 QObject* BotanProvider::qObject() {

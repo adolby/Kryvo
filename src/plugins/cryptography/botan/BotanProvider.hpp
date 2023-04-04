@@ -2,6 +2,8 @@
 #define KRYVO_PLUGINS_CRYPTOGRAPHY_BOTANPROVIDER_HPP_
 
 #include "cryptography/CryptoProvider.hpp"
+#include "cryptography/EncryptFileConfig.hpp"
+#include "cryptography/DecryptFileConfig.hpp"
 #include "utility/pimpl.h"
 
 #include <QtGlobal>
@@ -36,6 +38,7 @@
   #endif
 #endif
 
+#include <QFileInfo>
 #include <QObject>
 #include <QString>
 #include <memory>
@@ -81,7 +84,7 @@ class BotanProvider : public QObject,
   /*!
    * \brief errorMessage Emitted when an error occurs
    * \param message String containing the error message to display
-   * \param fileInfo File that encountered an error
+   * \param config Config for this crypto operation
    */
   void errorMessage(const QString& message, const QFileInfo& fileInfo) override;
 
@@ -90,36 +93,20 @@ class BotanProvider : public QObject,
 
   /*!
    * \brief encrypt Encrypt a file
-   * \param id ID representing file to encrypt
-   * \param passphrase String representing the user-entered passphrase
-   * \param inputFileInfo File to encrypt
-   * \param outputFileInfo Encrypted file
-   * \param cipher String representing name of the cipher
-   * \param keySize Key size in bits
-   * \param modeOfOperation String representing mode of operation
-   * \param compress Boolean representing compression mode
+   * \param id
+   * \param config Encrypt file config
    */
    bool encrypt(std::size_t id,
-                const QString& compressionFormat,
-                const QString& passphrase,
-                const QFileInfo& inputFileInfo,
-                const QFileInfo& outputFileInfo,
-                const QString& cipher,
-                std::size_t keySize,
-                const QString& modeOfOperation) override;
+                const Kryvo::EncryptFileConfig& config) override;
 
   /*!
    * \brief decrypt Decrypt a file. The algorithm is determined from
    * the file header.
    * \param id
-   * \param passphrase String representing the user-entered passphrase
-   * \param inputFileInfo File to decrypt
-   * \param outputFileInfo Output file path
+   * \param config Decrypt file config
    */
   bool decrypt(std::size_t id,
-               const QString& passphrase,
-               const QFileInfo& inputFileInfo,
-               const QFileInfo& outputFileInfo) override;
+               const Kryvo::DecryptFileConfig& config) override;
 
   /*!
    * \brief qObject Provide a constant cost QObject conversion

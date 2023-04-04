@@ -6,7 +6,7 @@ TARGET = openssl
 
 TEMPLATE = lib
 
-CONFIG += plugin static c++14
+CONFIG += plugin static c++17
 
 # Qt Creator Debug/Release Differentiation
 # Ensure one "debug_and_release" in CONFIG, for clarity.
@@ -32,6 +32,8 @@ HEADERS += \
   $$PWD/../../../core/Constants.hpp \
   $$PWD/../../../core/DispatcherState.hpp
 
+OTHER_FILES += openssl.json
+
 # Platform-specific configuration
 linux {
   message(Linux)
@@ -41,6 +43,10 @@ linux {
 
     contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
       message(armeabi-v7a)
+
+      INCLUDEPATH += openssl/android/armv7/include
+
+      LIBS += -Lopenssl/android/armv7/lib -lcrypto
 
       debug {
         message(Debug)
@@ -54,6 +60,10 @@ linux {
 
     contains(ANDROID_TARGET_ARCH, arm64-v8a) {
       message(arm64-v8a)
+
+      INCLUDEPATH += openssl/android/arm64_v8a/include
+
+      LIBS += -Lopenssl/android/arm64_v8a/lib -lcrypto
 
       debug {
         message(Debug)
@@ -69,6 +79,12 @@ linux {
   linux-clang {
     message(clang)
 
+    INCLUDEPATH += openssl/linux/clang/x86_64/include
+
+    LIBS += -Lopenssl/linux/clang/x86_64/lib -lcrypto
+
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
     debug {
@@ -81,9 +97,15 @@ linux {
     }
   } # End linux-clang
 
-  linux-g++-64 {
-    message(g++ x86_64)
+  linux-g++ {
+    message(g++)
 
+    INCLUDEPATH += openssl/linux/gcc/x86_64/include
+
+    LIBS += -Lopenssl/linux/gcc/x86_64/lib -lcrypto
+
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
     debug {
@@ -98,17 +120,17 @@ linux {
 } # End linux
 
 darwin {
-#  QMAKE_MAC_SDK = macosx10.13
-#  QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.13
-
-  QMAKE_CXXFLAGS += -fstack-protector #-maes -mpclmul -mssse3 -mavx2
-  QMAKE_LFLAGS += -fstack-protector
-
 #  LIBS += -framework Security
 
   ios {
     message(iOS)
     message(clang)
+
+    CONFIG -= simulator
+
+    INCLUDEPATH += openssl/ios/include
+
+    LIBS += -Lopenssl/ios/lib -lcrypto
 
     debug {
       message(Debug)
@@ -120,9 +142,16 @@ darwin {
     }
   } # End ios
 
-  macx {
+  macos {
     message(macOS)
     message(clang)
+
+    INCLUDEPATH += openssl/macOS/include
+
+    LIBS += -Lopenssl/macOS/lib -lcrypto
+
+    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+    QMAKE_LFLAGS += -fstack-protector
 
     debug {
       message(Debug)
@@ -141,12 +170,16 @@ win32 {
   win32-msvc {
     message(MSVC)
 
-    LIBS += advapi32.lib user32.lib ws2_32.lib
+    LIBS += -ladvapi32 -luser32 -lws2_32
 
     QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
     contains(QT_ARCH, x86_64) {
       message(x86_64)
+
+      INCLUDEPATH += openssl/windows/msvc/x86_64/include
+
+      LIBS += -Lopenssl/windows/msvc/x86_64/lib -lcrypto
 
       debug {
         message(Debug)
@@ -157,7 +190,7 @@ win32 {
         DESTDIR = $$PWD/../../../../build/windows/msvc/x86_64/release/plugins/cryptography/openssl
       }
     }
-  }
+  } # End win32-msvc
 } # End win32
 
 OBJECTS_DIR = $${DESTDIR}/obj

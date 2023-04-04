@@ -5,7 +5,6 @@
 #include "cryptography/Crypto.hpp"
 #include "FileUtility.h"
 #include "Constants.hpp"
-#include "utility/Thread.hpp"
 #include <QSaveFile>
 #include <QTimer>
 #include <QStringBuilder>
@@ -260,15 +259,29 @@ void SchedulerPrivate::encrypt(const QString& cryptoProvider,
 
     id = id + 1;
 
+    EncryptFileConfig encryptConfig;
+    encryptConfig.provider = cryptoProvider;
+    encryptConfig.compressionFormat = compressionFormat;
+    encryptConfig.passphrase = passphrase;
+    encryptConfig.cipher = cipher;
+    encryptConfig.keySize = keySize;
+    encryptConfig.modeOfOperation = modeOfOperation;
+
     if (QStringLiteral("gzip") == compressionFormat) {
       const QString compressedFilePath =
         QString(outPath % QStringLiteral("/") % inputFile.fileName() %
                 Constants::dot %
                 Constants::compressedFileExtension);
 
+      const QFileInfo compressedFileInfo(compressedFilePath);
+
+      CompressFileConfig compressConfig;
+      compressConfig.inputFileInfo = inputFile;
+      compressConfig.outputFileInfo = compressedFileInfo;
+
       auto compressFunction =
-        [this, q, inputFile, compressedFilePath](std::size_t id) {
-          emit q->compressFile(id, inputFile, QFileInfo(compressedFilePath));
+        [q, compressConfig](std::size_t id) {
+          emit q->compressFile(id, compressConfig);
         };
 
       pipeline.stages.push_back(compressFunction);
@@ -277,21 +290,19 @@ void SchedulerPrivate::encrypt(const QString& cryptoProvider,
         QString(compressedFilePath % Constants::dot %
                 Constants::encryptedFileExtension);
 
+      encryptConfig.inputFileInfo = compressedFileInfo;
+      encryptConfig.outputFileInfo = QFileInfo(encryptedFilePath);
+
       auto encryptFunction =
-        [this, q, cryptoProvider, compressionFormat, passphrase,
-         compressedFilePath, encryptedFilePath, cipher, keySize,
-         modeOfOperation](std::size_t id) {
-          emit q->encryptFile(id, cryptoProvider, compressionFormat,
-                              passphrase, QFileInfo(compressedFilePath),
-                              QFileInfo(encryptedFilePath), cipher, keySize,
-                              modeOfOperation);
+        [q, encryptConfig](std::size_t id) {
+          emit q->encryptFile(id, encryptConfig);
         };
 
       pipeline.stages.push_back(encryptFunction);
 
       if (removeIntermediateFiles) {
         auto removeIntermediateFilesFunction =
-          [this, q, compressedFilePath](std::size_t id) {
+          [q, compressedFilePath](std::size_t id) {
             QFile::remove(compressedFilePath);
             emit q->fileCompleted(id);
           };
@@ -303,13 +314,12 @@ void SchedulerPrivate::encrypt(const QString& cryptoProvider,
         QString(outPath % QStringLiteral("/") % inputFile.fileName() %
                 Constants::dot % Constants::encryptedFileExtension);
 
+      encryptConfig.inputFileInfo = inputFile;
+      encryptConfig.outputFileInfo = QFileInfo(encryptedFilePath);
+
       auto encryptFunction =
-        [this, q, cryptoProvider, compressionFormat, passphrase, inputFile,
-         encryptedFilePath, cipher, keySize, modeOfOperation](std::size_t id) {
-          emit q->encryptFile(id, cryptoProvider, compressionFormat,
-                              passphrase, inputFile,
-                              QFileInfo(encryptedFilePath), cipher, keySize,
-                              modeOfOperation);
+        [q, encryptConfig](std::size_t id) {
+          emit q->encryptFile(id, encryptConfig);
         };
 
       pipeline.stages.push_back(encryptFunction);
@@ -395,11 +405,15 @@ void SchedulerPrivate::decrypt(const QString& passphrase,
     // Create a unique file name for the file in this directory
     const QFileInfo uniqueDecryptedFilePath(uniqueFilePath(decryptedFilePath));
 
+    DecryptFileConfig decryptConfig;
+    decryptConfig.provider = cryptoProvider;
+    decryptConfig.passphrase = passphrase;
+    decryptConfig.inputFileInfo = inputFile;
+    decryptConfig.outputFileInfo = uniqueDecryptedFilePath;
+
     auto decryptFunction =
-      [this, q, cryptoProvider, passphrase, inputFile, uniqueDecryptedFilePath,
-       header](std::size_t id) {
-        emit q->decryptFile(id, cryptoProvider, passphrase, inputFile,
-                            uniqueDecryptedFilePath);
+      [q, decryptConfig](std::size_t id) {
+        emit q->decryptFile(id, decryptConfig);
       };
 
     pipeline.stages.push_back(decryptFunction);
@@ -414,18 +428,20 @@ void SchedulerPrivate::decrypt(const QString& passphrase,
       const QFileInfo uniqueDecompressedFilePath(
         uniqueFilePath(decompressedFilePath));
 
+      DecompressFileConfig decompressConfig;
+      decompressConfig.inputFileInfo = uniqueDecryptedFilePath;
+      decompressConfig.outputFileInfo = uniqueDecompressedFilePath;
+
       auto decompressFunction =
-        [this, q, uniqueDecryptedFilePath,
-         uniqueDecompressedFilePath](std::size_t id) {
-          emit q->decompressFile(id, uniqueDecryptedFilePath,
-                                 uniqueDecompressedFilePath);
+        [q, decompressConfig](std::size_t id) {
+          emit q->decompressFile(id, decompressConfig);
         };
 
       pipeline.stages.push_back(decompressFunction);
 
       if (removeIntermediateFiles) {
         auto removeIntermediateFilesFunction =
-          [this, q, uniqueDecryptedFilePath](std::size_t id) {
+          [q, uniqueDecryptedFilePath](std::size_t id) {
             QFile::remove(uniqueDecryptedFilePath.absoluteFilePath());
             emit q->fileCompleted(id);
           };
