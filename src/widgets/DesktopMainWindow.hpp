@@ -29,6 +29,8 @@ class DesktopMainWindow : public MainWindow {
                              QWidget* parent = nullptr);
 
  protected:
+  void settingsImported() override;
+
   /*!
   * \brief closeEvent Executed when the main window is closed
   * \param event Close event

@@ -128,9 +128,10 @@ darwin {
 
     CONFIG -= simulator
 
-    INCLUDEPATH += openssl/ios/include
+#    INCLUDEPATH += openssl/ios/include
+    INCLUDEPATH += /usr/local/opt/openssl@3/include
 
-    LIBS += -Lopenssl/ios/lib -lcrypto
+    LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
 
     debug {
       message(Debug)
@@ -146,9 +147,10 @@ darwin {
     message(macOS)
     message(clang)
 
-    INCLUDEPATH += openssl/macOS/include
+#    INCLUDEPATH += openssl/macOS/include
+    INCLUDEPATH += /usr/local/opt/openssl@3/include
 
-    LIBS += -Lopenssl/macOS/lib -lcrypto
+    LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector

@@ -17,9 +17,12 @@ namespace Kryvo {
 
 class MainWindowPrivate {
   Q_DISABLE_COPY(MainWindowPrivate)
+  Q_DECLARE_PUBLIC(MainWindow)
 
  public:
-  MainWindowPrivate();
+  MainWindowPrivate(MainWindow* mw);
+
+  MainWindow* const q_ptr{nullptr};
 
   // Messages to display to user
   const QStringList messages{
@@ -27,18 +30,18 @@ class MainWindowPrivate {
                 "files. Please enter one to continue.")};
 };
 
-MainWindowPrivate::MainWindowPrivate() = default;
+MainWindowPrivate::MainWindowPrivate(MainWindow* mw)
+  : q_ptr(mw) {
+}
 
 MainWindow::MainWindow(Settings* s, QWidget* parent)
-  : QMainWindow(parent), d_ptr(std::make_unique<MainWindowPrivate>()) {
+  : QMainWindow(parent), d_ptr(std::make_unique<MainWindowPrivate>(this)),
+    settings(s) {
   // Set object name
   this->setObjectName(QStringLiteral("mainWindow"));
 
   // Title
   this->setWindowTitle(tr("Kryvo"));
-
-  // Keep settings object
-  settings = s;
 
   auto slidingStackedWidget = new SlidingStackedWidget(this);
 
@@ -64,7 +67,9 @@ MainWindow::MainWindow(Settings* s, QWidget* parent)
   // Archive file name frame
   outputFrame = new OutputFrame(contentFrame);
   outputFrame->setObjectName(QStringLiteral("outputFrame"));
-  outputFrame->outputPath(settings->outputPath());
+
+  connect(outputFrame, &OutputFrame::outputPathChanged,
+          this, &MainWindow::outputPathChanged);
   connect(outputFrame, &OutputFrame::selectOutputDir,
           this, &MainWindow::selectOutputDir);
 
@@ -87,14 +92,7 @@ MainWindow::MainWindow(Settings* s, QWidget* parent)
 
   slidingStackedWidget->addWidget(contentFrame);
 
-  settingsFrame = new SettingsFrame(settings->cryptoProvider(),
-                                    settings->compressionFormat(),
-                                    settings->cipher(),
-                                    settings->keySize(),
-                                    settings->modeOfOperation(),
-                                    settings->removeIntermediateFiles(),
-                                    settings->containerMode(),
-                                    slidingStackedWidget);
+  settingsFrame = new SettingsFrame(slidingStackedWidget);
   settingsFrame->setObjectName(QStringLiteral("settingsFrame"));
 
   slidingStackedWidget->addWidget(settingsFrame);
@@ -116,14 +114,8 @@ MainWindow::MainWindow(Settings* s, QWidget* parent)
           this, &MainWindow::removeFiles);
 
   // Settings frame connections
-  connect(settingsFrame, &SettingsFrame::updateCipher,
-          this, &MainWindow::updateCipher);
-
   connect(settingsFrame, &SettingsFrame::updateKeySize,
           this, &MainWindow::updateKeySize);
-
-  connect(settingsFrame, &SettingsFrame::updateModeOfOperation,
-          this, &MainWindow::updateModeOfOperation);
 
   connect(settingsFrame, &SettingsFrame::updateCompressionFormat,
           this, &MainWindow::updateCompressionFormat);
@@ -148,6 +140,10 @@ MainWindow::~MainWindow() {
 void MainWindow::addFiles() {
   Q_ASSERT(settings);
   Q_ASSERT(fileListFrame);
+
+  if (!settings) {
+    return;
+  }
 
   // Open a file dialog to get files
   const QStringList fileNames =
@@ -197,22 +193,26 @@ void MainWindow::processFiles(
         files.push_back(fileInfo);
       }
 
-      const QString outputPath = outputFrame->outputPath();
+      const QString outputPath = settings->outputPath();
       const QDir outputDir(outputPath);
 
       if (CryptDirection::Encrypt == direction) {
-        emit encrypt(settings->cryptoProvider(),
-                     settings->compressionFormat(),
-                     passphrase,
-                     files,
-                     outputDir,
-                     settings->cipher(),
-                     settings->keySize(),
-                     settings->modeOfOperation(),
-                     settings->removeIntermediateFiles());
+        EncryptConfig config;
+        config.provider = settings->cryptoProvider();
+        config.compressionFormat = settings->compressionFormat();
+        config.passphrase = passphrase;
+        config.cipher = settings->cipher();
+        config.keySize = settings->keySize();
+        config.modeOfOperation = settings->modeOfOperation();
+        config.removeIntermediateFiles = settings->removeIntermediateFiles();
+
+        emit encrypt(config, files, outputDir);
       } else {
-        emit decrypt(passphrase, files, outputDir,
-                     settings->removeIntermediateFiles());
+        DecryptConfig config;
+        config.passphrase = passphrase;
+        config.removeIntermediateFiles = settings->removeIntermediateFiles();
+
+        emit decrypt(config, files, outputDir);
       }
     }
   } else { // Inform user that a password is required to encrypt or decrypt
@@ -246,28 +246,99 @@ void MainWindow::updateError(const QString& message,
 }
 
 void MainWindow::updateCipher(const QString& cipher) {
+  Q_ASSERT(settings);
+
+  if (!settings) {
+    return;
+  }
+
   settings->cipher(cipher);
 }
 
 void MainWindow::updateKeySize(const std::size_t keySize) {
+  Q_ASSERT(settings);
+
+  if (!settings) {
+    return;
+  }
+
   settings->keySize(keySize);
 }
 
-void MainWindow::updateModeOfOperation(const QString& mode) {
-  settings->modeOfOperation(mode);
-}
-
 void MainWindow::updateCompressionFormat(const QString& format) {
+  Q_ASSERT(settings);
+
+  if (!settings) {
+    return;
+  }
+
   settings->compressionFormat(format);
 }
 
-void MainWindow::updateRemoveIntermediateFiles(
-  const bool removeIntermediate) {
+void MainWindow::updateRemoveIntermediateFiles(const bool removeIntermediate) {
+  Q_ASSERT(settings);
+
+  if (!settings) {
+    return;
+  }
+
   settings->removeIntermediateFiles(removeIntermediate);
 }
 
 void MainWindow::updateContainerMode(const bool container) {
+  Q_ASSERT(settings);
+
+  if (!settings) {
+    return;
+  }
+
   settings->containerMode(container);
+}
+
+void MainWindow::outputPathChanged(const QString& path) {
+  Q_ASSERT(settings);
+
+  if (!settings) {
+    return;
+  }
+
+  if (!path.isEmpty()) {
+    settings->outputPath(path);
+  }
+}
+
+void MainWindow::selectOutputDir() {
+  Q_ASSERT(settings);
+
+  if (!settings) {
+    return;
+  }
+
+  // Open a directory select dialog to get the output directory
+  const QString outputDir =
+    QFileDialog::getExistingDirectory(this, tr("Select Folder"),
+                                      settings->outputPath());
+
+  if (!outputDir.isEmpty()) { // Save this directory for returning to later
+    settings->outputPath(outputDir);
+    outputFrame->outputPath(outputDir);
+  }
+}
+
+void MainWindow::settingsImported() {
+  Q_ASSERT(settings);
+
+  if (!settings) {
+    return;
+  }
+
+  settingsFrame->init(settings->cryptoProvider(),
+                      settings->compressionFormat(),
+                      settings->keySize(),
+                      settings->removeIntermediateFiles(),
+                      settings->containerMode());
+
+  outputFrame->outputPath(settings->outputPath());
 }
 
 QString MainWindow::loadStyleSheet(const QString& styleFile,
@@ -299,25 +370,6 @@ QString MainWindow::loadStyleSheet(const QString& styleFile,
   }
 
   return styleSheet;
-}
-
-void MainWindow::selectOutputDir() {
-  Q_ASSERT(settings);
-
-  if (!settings) {
-    return;
-  }
-
-  // Open a directory select dialog to get the output directory
-  const QString outputDir =
-    QFileDialog::getExistingDirectory(this, tr("Select Folder"),
-                                      settings->outputPath());
-
-  if (!outputDir.isEmpty()) { // Save this directory for returning to later
-    settings->outputPath(outputDir);
-
-    outputFrame->outputPath(outputDir);
-  }
 }
 
 } // namespace Kryvo

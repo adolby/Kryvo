@@ -2,6 +2,8 @@
 #define KRYVO_UI_UI_HPP_
 
 #include "settings/Settings.hpp"
+#include "cryptography/EncryptConfig.hpp"
+#include "cryptography/DecryptConfig.hpp"
 #include "utility/pimpl.h"
 #include "Constants.hpp"
 #include <QFileInfo>
@@ -25,7 +27,8 @@ class Ui : public QObject {
   Q_PROPERTY(QUrl outputPath READ outputPath NOTIFY outputPathChanged)
   Q_PROPERTY(QString outputPathString READ outputPathString
              NOTIFY outputPathChanged)
-  Q_PROPERTY(QString cipher READ cipher NOTIFY cipherChanged)
+  Q_PROPERTY(QString cryptoProvider READ cryptoProvider
+             NOTIFY cryptoProviderChanged)
   Q_PROPERTY(QString keySize READ keySize NOTIFY keySizeChanged)
   Q_PROPERTY(QString modeOfOperation READ modeOfOperation
              NOTIFY modeOfOperationChanged)
@@ -67,7 +70,7 @@ class Ui : public QObject {
   QString password() const;
 
   // Settings data
-  QString cipher() const;
+  QString cryptoProvider() const;
   QString keySize() const;
   QString modeOfOperation() const;
   QString compressionFormat() const;
@@ -80,35 +83,25 @@ class Ui : public QObject {
  signals:
   /*!
    * \brief encrypt Emitted when the user provides all required data for
-   * encryption and clicks the Encrypt push button
-   * \param passphrase String representing the user supplied passphrase
-   * \param inputFilePath Files to encrypt
-   * \param outputPath Output file path
-   * \param cipher String representing the current cipher
-   * \param keySize Key size
-   * \param modeOfOperation String representing mode of operation
+   * encryption and clicks the Encrypt button
+   * \param config Encrypt config
+   * \param inputFiles Files to encrypt
+   * \param outputDir Output dir
    */
-  void encrypt(const QString& cryptoProvider,
-               const QString& compressionFormat,
-               const QString& passphrase,
+  void encrypt(const Kryvo::EncryptConfig& config,
                const std::vector<QFileInfo>& inputFiles,
-               const QDir& outputPath,
-               const QString& cipher,
-               std::size_t keySize,
-               const QString& modeOfOperation,
-               bool removeIntermediateFiles);
+               const QDir& outputDir);
 
   /*!
    * \brief decrypt Emitted when the user provides all required data for
-   * decryption and clicks the Decrypt push button
-   * \param passphrase String representing the user supplied passphrase
+   * decryption and clicks the Decrypt button
+   * \param config Decrypt config
    * \param inputFiles Files to decrypt
-   * \param outputPath Output path
+   * \param outputDir Output dir
    */
-  void decrypt(const QString& passphrase,
+  void decrypt(const Kryvo::DecryptConfig& config,
                const std::vector<QFileInfo>& inputFiles,
-               const QDir& outputPath,
-               bool removeIntermediateFiles);
+               const QDir& outputDir);
 
   /*!
    * \brief pause Emitted when the user toggles the Pause push button
@@ -131,7 +124,7 @@ class Ui : public QObject {
 
   void pushPage(const QVariantMap& page);
   void popPage();
-  void cipherChanged(const QString& cipher);
+  void cryptoProviderChanged(const QString& cipher);
   void keySizeChanged(const QString& keySize);
   void modeOfOperationChanged(const QString& modeOfOperation);
   void compressionFormatChanged(const QString& format);
@@ -220,11 +213,11 @@ class Ui : public QObject {
   void appendErrorMessage(const QString& message, const QFileInfo& fileName);
 
   /*!
-   * \brief updateCipher Executed when the cipher is updated by the user in the
-   * settings frame
-   * \param cipher String representing the new cipher
+   * \brief updateCryptoProvider Executed when the crypto provider is updated by
+   * the user in the settings frame
+   * \param provider String representing the new crypto provider
    */
-  void updateCipher(const QString& cipher);
+  void updateCryptoProvider(const QString& provider);
 
   /*!
    * \brief updateKeySize Executed when the key size is updated by the user in

@@ -5,12 +5,130 @@
 #include <QSaveFile>
 #include <QFile>
 #include <QFileInfo>
+#include <QIODevice>
 #include <QDir>
 #include <QStringBuilder>
 #include <QString>
 #include <QHash>
+#include <openssl/evp.h>
+#include <openssl/kdf.h>
+#include <openssl/ossl_typ.h>
+#include <openssl/core_names.h>
+#include <openssl/rand.h>
+#include <openssl/aes.h>
+#include <openssl/err.h>
 
 namespace Kryvo {
+
+const std::size_t ivSize = 12; // 96-bit IV
+const std::size_t tagSize = 16; // 128-bit tag
+const std::size_t saltSize = 16; // 128-bit salt
+const std::size_t chunkSize = 4096;
+const std::size_t pbkdfIterations = 100000;
+
+int pbkdf2(const QByteArray& password, const QByteArray& salt,
+           const std::size_t iterations, QByteArray& key) {
+  const int rc =
+    PKCS5_PBKDF2_HMAC(password.constData(), password.size(),
+                      (const unsigned char*)salt.constData(), salt.size(),
+                      iterations, EVP_sha3_512(), key.size(),
+                      (unsigned char*)key.data());
+
+  return rc;
+}
+
+int deriveKeyAndIv(const QByteArray& passphrase,
+                   const std::size_t keySizeInBytes, const QByteArray& salt,
+                   const std::size_t iterations, QByteArray& key,
+                   QByteArray& iv) {
+  QByteArray stretchedKey(keySizeInBytes, Qt::Uninitialized);
+  int rc = pbkdf2(passphrase, salt, iterations, stretchedKey);
+
+  if (rc <= 0) {
+    return rc;
+  }
+
+  EVP_KDF* kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+
+  if (!kdf) {
+    return -1;
+  }
+
+  EVP_KDF_CTX* kctx = EVP_KDF_CTX_new(kdf);
+  EVP_KDF_free(kdf);
+
+  if (!kctx) {
+    return -1;
+  }
+
+  OSSL_PARAM params[4];
+
+  params[0] = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST,
+                                               const_cast<char*>(SN_sha3_512),
+                                               strlen(SN_sha3_512));
+  params[1] = OSSL_PARAM_construct_octet_string(
+                OSSL_KDF_PARAM_KEY, const_cast<char*>(stretchedKey.data()),
+                stretchedKey.size());
+  params[2] = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT,
+                                                const_cast<char*>(salt.data()),
+                                                salt.size());
+  params[3] = OSSL_PARAM_construct_end();
+
+  rc = EVP_KDF_CTX_set_params(kctx, params);
+
+  if (rc <= 0) {
+    return rc;
+  }
+
+  rc = EVP_KDF_derive(kctx, reinterpret_cast<unsigned char*>(key.data()),
+                      key.size(), params);
+
+  if (rc <= 0) {
+    return rc;
+  }
+
+  rc = EVP_KDF_derive(kctx, reinterpret_cast<unsigned char*>(iv.data()),
+                      iv.size(), params);
+
+  if (rc <= 0) {
+    return rc;
+  }
+
+  EVP_KDF_CTX_free(kctx);
+
+  return rc;
+}
+
+QHash<QByteArray, QByteArray> buildHeader(
+  const Kryvo::EncryptFileConfig& config, const QByteArray& salt) {
+  QHash<QByteArray, QByteArray> headerData;
+
+  headerData.insert(QByteArrayLiteral("Version"),
+                    QByteArray::number(Constants::fileVersion));
+  headerData.insert(QByteArrayLiteral("Cryptography provider"),
+                    QByteArrayLiteral("OpenSsl"));
+
+  const QString compressionFormat = config.encrypt.compressionFormat;
+
+  if (!compressionFormat.isEmpty() &&
+      compressionFormat != QStringLiteral("None")) {
+    headerData.insert(QByteArrayLiteral("Compression format"),
+                      compressionFormat.toUtf8());
+  }
+
+  headerData.insert(QByteArrayLiteral("Cipher"), QByteArrayLiteral("AES"));
+
+  headerData.insert(QByteArrayLiteral("Mode"),
+                    config.encrypt.modeOfOperation.toUtf8());
+
+  headerData.insert(QByteArrayLiteral("Key size"),
+                    QByteArray::number(
+                      static_cast<uint>(config.encrypt.keySize)));
+
+  headerData.insert(QByteArrayLiteral("Salt"), salt.toBase64());
+
+  return headerData;
+}
 
 class OpenSslProviderPrivate {
   Q_DISABLE_COPY(OpenSslProviderPrivate)
@@ -20,373 +138,262 @@ class OpenSslProviderPrivate {
   OpenSslProviderPrivate(OpenSslProvider* op);
 
   void init(SchedulerState* s);
-
-  bool encrypt(const Kryvo::EncryptFileConfig& config);
-
-  bool decrypt(const Kryvo::DecryptFileConfig& config);
-
-  bool encryptFile(const Kryvo::EncryptFileConfig& config);
-
-  bool decryptFile(const Kryvo::DecryptFileConfig& config);
-
-  bool executeCipher(std::size_t id,
-                     CryptDirection direction,
-                     QFile* inFile,
-                     QSaveFile* outFile);
+  int encrypt(std::size_t id, const Kryvo::EncryptFileConfig& config);
+  int decrypt(std::size_t id, const Kryvo::DecryptFileConfig& config);
 
   OpenSslProvider* const q_ptr{nullptr};
 
   SchedulerState* state{nullptr};
-
-  static const std::size_t pbkdfIterations;
 };
 
-const std::size_t OpenSslProviderPrivate::pbkdfIterations = 50000;
-
-OpenSslProviderPrivate::OpenSslProviderPrivate(OpenSslProvider* bp)
-  : q_ptr(bp) {
+OpenSslProviderPrivate::OpenSslProviderPrivate(OpenSslProvider* os)
+  : q_ptr(os) {
 }
 
 void OpenSslProviderPrivate::init(SchedulerState* s) {
   state = s;
 }
 
-bool OpenSslProviderPrivate::encrypt(const Kryvo::EncryptFileConfig& config) {
+int OpenSslProviderPrivate::encrypt(std::size_t id,
+                                    const Kryvo::EncryptFileConfig& config) {
   Q_Q(OpenSslProvider);
   Q_ASSERT(state);
 
   if (!state) {
     emit q->errorMessage(Constants::messages[0], QFileInfo());
-    emit q->fileFailed(config.id);
-    return false;
+    emit q->fileFailed(id);
+    return -1;
   }
 
-  if (state->isAborted() || state->isStopped(config.id)) {
-    emit q->errorMessage(Constants::messages[3], config.inputFileInfo);
-    emit q->fileFailed(config.id);
-    return false;
-  }
-
-  EncryptFileConfig updatedConfig = config;
-
-  updatedConfig.algorithmName = QString(config.cipher % QStringLiteral("/") %
-                                        config.modeOfOperation);
-
-  if (QStringLiteral("AES") == config.cipher) {
-    updatedConfig.algorithmName =
-        QString(config.cipher % QStringLiteral("-") %
-                QString::number(config.keySize) %
-                QStringLiteral("/") % config.modeOfOperation);
-  }
-
-  bool success = false;
-
-//  try {
-    success = encryptFile(config);
-//  } catch (const Botan::Stream_IO_Error&) {
-//    emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  } catch (const Botan::Invalid_Argument&) {
-//    emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  } catch (const Botan::Exception& e) {
-//    emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
-//                         config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  } catch (const std::invalid_argument&) {
-//    emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  } catch (const std::exception& e) {
-//    emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
-//                         config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  }
-
-  if (state->isAborted() || state->isStopped(config.id)) {
-    emit q->errorMessage(Constants::messages[3], config.inputFileInfo);
-    emit q->fileFailed(config.id);
-
-    return false;
-  }
-
-  return success;
-}
-
-bool OpenSslProviderPrivate::decrypt(const Kryvo::DecryptFileConfig& config) {
-  Q_Q(OpenSslProvider);
-  Q_ASSERT(state);
-
-  if (!state) {
-    emit q->errorMessage(Constants::messages[0], QFileInfo());
-    emit q->fileFailed(config.id);
-    return false;
-  }
-
-  if (state->isAborted() || state->isStopped(config.id)) {
-    emit q->errorMessage(Constants::messages[4], config.inputFileInfo);
-    emit q->fileFailed(config.id);
-    return false;
-  }
-
-  bool success = false;
-
-//  try {
-    success = decryptFile(config);
-//  } catch (const Botan::Stream_IO_Error&) {
-//    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  } catch (const Botan::Invalid_Argument&) {
-//    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  } catch (const Botan::Lookup_Error&) {
-//    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  } catch (const Botan::Exception& e) {
-//    emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
-//                         config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  } catch (const std::invalid_argument&) {
-//    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  } catch (const std::exception& e) {
-//    emit q->errorMessage(QStringLiteral("Error: ") % QString(e.what()),
-//                         config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  }
-
-//  if (state->isAborted() || state->isStopped(config.id)) {
-//    emit q->errorMessage(Constants::messages[4], config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-
-//    return false;
-//  }
-
-  return success;
-}
-
-bool OpenSslProviderPrivate::encryptFile(const Kryvo::EncryptFileConfig& config) {
-  Q_Q(OpenSslProvider);
-  Q_ASSERT(state);
-
-  if (!state) {
-    emit q->errorMessage(Constants::messages[0], QFileInfo());
-    emit q->fileFailed(config.id);
-    return false;
-  }
-
-  if (state->isAborted() || state->isStopped(config.id)) {
-    emit q->fileFailed(config.id);
-    return false;
+  if (state->isAborted() || state->isStopped(id)) {
+    emit q->fileFailed(id);
+    return -1;
   }
 
   if (!config.inputFileInfo.exists() || !config.inputFileInfo.isFile() ||
       !config.inputFileInfo.isReadable()) {
     emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
-    emit q->fileFailed(config.id);
-    return false;
+    emit q->fileFailed(id);
+    return -1;
   }
 
-  emit q->fileProgress(config.id, QObject::tr("Encrypting"), 0);
-
-//  Botan::AutoSeeded_RNG rng;
-
-//  // Define a size for the PBKDF salt vector
-//  const std::size_t pbkdfSaltSize = 256;
-//  Botan::secure_vector<Botan::byte> pbkdfSalt;
-//  pbkdfSalt.resize(pbkdfSaltSize);
-
-//  // Create random PBKDF salt
-//  rng.randomize(&pbkdfSalt[0], pbkdfSalt.size());
-
-//  // Set up the key derive functions
-//  const std::size_t hashSize = 512;
-
-//  // PKCS5_PBKDF2 takes ownership of the new HMAC and the HMAC takes ownership
-//  // of the SHA3 hash function object (both via unique_ptr)
-//  Botan::PKCS5_PBKDF2 pbkdf(new Botan::HMAC(new Botan::SHA_3(hashSize)));
-
-//  // Create the PBKDF key
-//  const std::size_t pbkdfKeySize = 256;
-
-//  const std::string passphraseString = config.passphrase.toStdString();
-
-//  Botan::secure_vector<Botan::byte> pbkdfKey =
-//    pbkdf.derive_key(pbkdfKeySize, passphraseString, &pbkdfSalt[0],
-//                     pbkdfSalt.size(), pbkdfIterations).bits_of();
-
-//  // Create the key and IV
-//  const QByteArray kdfHash = QByteArrayLiteral("KDF2(SHA-3(512))");
-
-//  std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdfHash.toStdString()));
-
-//  // Set up key salt size
-//  const std::size_t keySaltSize = 64;
-//  Botan::secure_vector<Botan::byte> keySalt;
-//  keySalt.resize(keySaltSize);
-//  rng.randomize(&keySalt[0], keySalt.size());
-
-//  // Key is constrained to sizes allowed by algorithm
-//  const std::size_t keySizeInBytes = config.keySize / 8;
-//  const auto* keyLabelVector =
-//    reinterpret_cast<const Botan::byte*>(keyLabel.data());
-//  Botan::SymmetricKey key(kdf->derive_key(keySizeInBytes,
-//                                          pbkdfKey.data(),
-//                                          pbkdfKey.size(),
-//                                          keySalt.data(),
-//                                          keySalt.size(),
-//                                          keyLabelVector,
-//                                          keyLabel.size()));
-
-//  // Set up IV salt size
-//  const std::size_t ivSaltSize = 64;
-//  Botan::secure_vector<Botan::byte> ivSalt;
-//  ivSalt.resize(ivSaltSize);
-//  rng.randomize(&ivSalt[0], ivSalt.size());
-
-//  const std::size_t ivSize = 256;
-//  const auto* ivLabelVector =
-//    reinterpret_cast<const Botan::byte*>(ivLabel.data());
-//  Botan::InitializationVector iv(kdf->derive_key(ivSize,
-//                                                 pbkdfKey.data(),
-//                                                 pbkdfKey.size(),
-//                                                 ivSalt.data(),
-//                                                 ivSalt.size(),
-//                                                 ivLabelVector,
-//                                                 ivLabel.size()));
+  emit q->fileProgress(id, QObject::tr("Encrypting"), 0);
 
   QFile inFile(config.inputFileInfo.absoluteFilePath());
   const bool inFileOpen = inFile.open(QIODevice::ReadOnly);
 
   if (!inFileOpen) {
     emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
-    emit q->fileFailed(config.id);
-    return false;
+    emit q->fileFailed(id);
+    return -1;
   }
 
   QSaveFile outFile(config.outputFileInfo.absoluteFilePath());
   const bool outFileOpen = outFile.open(QIODevice::WriteOnly);
 
   if (!outFileOpen) {
-    outFile.cancelWriting();
     emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
-    emit q->fileFailed(config.id);
-    return false;
+    emit q->fileFailed(id);
+    return -1;
   }
 
-  QHash<QByteArray, QByteArray> headerData;
+  QByteArray salt(saltSize, Qt::Uninitialized);
+  RAND_bytes((unsigned char*)salt.data(), salt.size());
 
-  headerData.insert(QByteArrayLiteral("Version"),
-                    QByteArray::number(Constants::fileVersion));
-  headerData.insert(QByteArrayLiteral("Cryptography provider"),
-                    QByteArrayLiteral("Botan"));
+  const QHash<QByteArray, QByteArray> headerData = buildHeader(config, salt);
+  writeHeader(&outFile, headerData);
 
-  if (!config.compressionFormat.isEmpty() &&
-      config.compressionFormat != QStringLiteral("None")) {
-    headerData.insert(QByteArrayLiteral("Compression format"),
-                      config.compressionFormat.toUtf8());
+  const QByteArray passphrase = config.encrypt.passphrase.toUtf8();
+
+  const std::size_t keySizeInBytes = config.encrypt.keySize / 8;
+
+  QByteArray key(keySizeInBytes, Qt::Uninitialized);
+  QByteArray iv(ivSize, Qt::Uninitialized);
+  int rc = deriveKeyAndIv(passphrase, keySizeInBytes, salt, pbkdfIterations,
+                          key, iv);
+
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
   }
 
-  headerData.insert(QByteArrayLiteral("Algorithm name"),
-                    config.algorithmName.toUtf8());
+  EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
 
-  headerData.insert(QByteArrayLiteral("Key size"),
-                    QByteArray::number(static_cast<uint>(config.keySize)));
+  if (!ctx) {
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return -1;
+  }
 
-  headerData.insert(QByteArrayLiteral("Hash function"),
-                    QByteArrayLiteral("SHA-3"));
+  const EVP_CIPHER* cipher = (config.encrypt.keySize == 128) ?
+                             EVP_aes_128_gcm() :
+                             EVP_aes_256_gcm();
 
-  headerData.insert(QByteArrayLiteral("Hash output size"),
-                    QByteArrayLiteral("512"));
+  // Initialize the encryption operation
+  rc = EVP_EncryptInit_ex(ctx, cipher, nullptr, nullptr, nullptr);
 
-//  const std::string pbkdfSaltString =
-//    Botan::base64_encode(&pbkdfSalt[0], pbkdfSalt.size());
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
 
-//  headerData.insert(QByteArrayLiteral("PBKDF salt"),
-//                    QString::fromStdString(pbkdfSaltString).toUtf8());
+  // Set IV size
+  rc = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, ivSize, nullptr);
 
-//  const std::string keySaltString =
-//    Botan::base64_encode(&keySalt[0], keySalt.size());
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
 
-//  headerData.insert(QByteArrayLiteral("Key salt"),
-//                    QString::fromStdString(keySaltString).toUtf8());
+  // Init key and IV
+  rc =
+    EVP_EncryptInit_ex(
+      ctx, nullptr, nullptr,
+      reinterpret_cast<const unsigned char*>(key.constData()),
+      reinterpret_cast<const unsigned char*>(iv.constData()));
 
-//  const std::string ivSaltString =
-//    Botan::base64_encode(&ivSalt[0], ivSalt.size());
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
 
-//  headerData.insert(QByteArrayLiteral("IV salt"),
-//                    QString::fromStdString(ivSaltString).toUtf8());
+  QByteArray inBuffer(chunkSize, Qt::Uninitialized);
 
-//  writeHeader(&outFile, headerData);
+  QByteArray outBuffer(chunkSize + EVP_CIPHER_get_block_size(cipher),
+                       Qt::Uninitialized);
+  int outSize = 0;
 
-//  Botan::Pipe pipe;
+  const qint64 fileSize = inFile.size();
 
-//  pipe.append_filter(Botan::get_cipher(config.algorithmName.toStdString(), key,
-//                                       iv, Botan::ENCRYPTION));
+  qint64 fileIndex = 0ll;
+  qint64 percent = -1;
 
-  const bool success = executeCipher(config.id, CryptDirection::Encrypt,
-                                     &inFile, &outFile);
+  while (!inFile.atEnd() && !state->isAborted() && !state->isStopped(id)) {
+    state->pauseWait(id);
 
-  if (!success) {
-    outFile.cancelWriting();
+    if (state->isAborted() || state->isStopped(id)) {
+      emit q->fileFailed(id);
+      return -1;
+    }
+
+    const qint64 bytesRead = inFile.read(inBuffer.data(), inBuffer.size());
+
+    if (bytesRead < 0) {
+      emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
+      emit q->fileFailed(id);
+      return -1;
+    }
+
+    fileIndex += bytesRead;
+
+    // Encrypt a block
+    rc =
+      EVP_EncryptUpdate(
+        ctx, reinterpret_cast<unsigned char*>(outBuffer.data()), &outSize,
+        reinterpret_cast<const unsigned char*>(inBuffer.constData()),
+        bytesRead);
+
+    if (rc <= 0) {
+      emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
+      emit q->fileFailed(id);
+      return rc;
+    }
+
+    outFile.write(outBuffer.constData(), outSize);
+
+    // Calculate progress in percent
+    const double fractionalProgress = static_cast<double>(fileIndex) /
+                                      static_cast<double>(fileSize);
+
+    const double percentProgress = fractionalProgress * 100.0;
+
+    const int percentProgressInteger = static_cast<int>(percentProgress);
+
+    if (percentProgressInteger > percent && percentProgressInteger < 100) {
+      percent = percentProgressInteger;
+      emit q->fileProgress(id, QObject::tr("Encrypting"), percent);
+    }
+  }
+
+  // Encrypt final block and finalize (doesn't encrypt for GCM)
+  rc = EVP_EncryptFinal_ex(ctx,
+                           reinterpret_cast<unsigned char*>(outBuffer.data()),
+                           &outSize);
+
+  if (rc <= 0) {
     emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
-    emit q->fileFailed(config.id);
-    return false;
+    emit q->fileFailed(id);
+    return rc;
   }
 
-  if (state->isAborted() || state->isStopped(config.id)) {
-    outFile.cancelWriting();
-    emit q->fileFailed(config.id);
-    return false;
+  QByteArray tag(tagSize, Qt::Uninitialized);
+
+  // Retrieve authentication tag
+  rc = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, tag.size(), tag.data());
+
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
+
+  outFile.write(tag);
+
+  EVP_CIPHER_CTX_free(ctx);
+
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
+
+  if (state->isAborted() || state->isStopped(id)) {
+    emit q->fileFailed(id);
+    return -1;
   }
 
   outFile.commit();
 
   // Progress: finished
-  emit q->fileProgress(config.id, QObject::tr("Encrypted"), 100);
+  emit q->fileProgress(id, QObject::tr("Encrypted"), 100);
 
   // Encryption success message
   emit q->statusMessage(
     Constants::messages[1].arg(config.inputFileInfo.absoluteFilePath()));
 
-  emit q->fileCompleted(config.id);
+  emit q->fileCompleted(id);
 
-  return success;
+  return 0;
 }
 
-bool OpenSslProviderPrivate::decryptFile(const Kryvo::DecryptFileConfig& config) {
+int OpenSslProviderPrivate::decrypt(std::size_t id,
+                                    const Kryvo::DecryptFileConfig& config) {
   Q_Q(OpenSslProvider);
   Q_ASSERT(state);
 
   if (!state) {
     emit q->errorMessage(Constants::messages[0], QFileInfo());
-    emit q->fileFailed(config.id);
-    return false;
+    emit q->fileFailed(id);
+    return -1;
   }
 
   if (state->isAborted()) {
-    emit q->fileFailed(config.id);
-    return false;
+    emit q->fileFailed(id);
+    return -1;
   }
 
   if (!config.inputFileInfo.exists() || !config.inputFileInfo.isFile() ||
       !config.inputFileInfo.isReadable()) {
     emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
-    emit q->fileFailed(config.id);
-    return false;
+    emit q->fileFailed(id);
+    return -1;
   }
 
-  emit q->fileProgress(config.id, QObject::tr("Decrypting"), 0);
+  emit q->fileProgress(id, QObject::tr("Decrypting"), 0);
 
   QFile inFile(config.inputFileInfo.absoluteFilePath());
 
@@ -394,8 +401,8 @@ bool OpenSslProviderPrivate::decryptFile(const Kryvo::DecryptFileConfig& config)
 
   if (!inFileOpen) {
     emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
-    emit q->fileFailed(config.id);
-    return false;
+    emit q->fileFailed(id);
+    return -1;
   }
 
   // Seek file to after header
@@ -406,266 +413,211 @@ bool OpenSslProviderPrivate::decryptFile(const Kryvo::DecryptFileConfig& config)
   const bool outFileOpen = outFile.open(QIODevice::WriteOnly);
 
   if (!outFileOpen) {
-    outFile.cancelWriting();
     emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
-    emit q->fileFailed(config.id);
-    return false;
+    emit q->fileFailed(id);
+    return -1;
   }
 
-  const QString versionString =
-    QString(header.value(QByteArrayLiteral("Version")));
+  const QString versionString(header.value(QByteArrayLiteral("Version")));
 
-  bool conversionOk = false;
+  // Need to check file version when file format stabilizes
+  //  bool conversionOk = false;
+  //  const int fileVersion = versionString.toInt(&conversionOk);
 
-// Need to check file version when file format stabilizes
-//  const int fileVersion = versionString.toInt(&conversionOk);
-
-  const QByteArray cryptoProviderByteArray =
+  const QByteArray cryptoProvider =
     header.value(QByteArrayLiteral("Cryptography provider"));
 
-  const QByteArray compressionFormatByteArray =
+  const QByteArray compressionFormat =
     header.value(QByteArrayLiteral("Compression format"));
 
-  const QByteArray algorithmNameByteArray =
-    header.value(QByteArrayLiteral("Algorithm name"));
+  const QByteArray cipherName = header.value(QByteArrayLiteral("Cipher"));
+
+  const QByteArray modeOfOperation = header.value(QByteArrayLiteral("Mode"));
 
   const QByteArray keySizeByteArray =
     header.value(QByteArrayLiteral("Key size"));
 
-  const QByteArray pbkdfSaltByteArray =
-    header.value(QByteArrayLiteral("PBKDF salt"));
+  bool keySizeIntOk = false;
 
-  const QByteArray keySaltByteArray =
-    header.value(QByteArrayLiteral("Key salt"));
+  const int keySizeInt = keySizeByteArray.toInt(&keySizeIntOk);
 
-  const QByteArray ivSaltByteArray =
-    header.value(QByteArrayLiteral("IV salt"));
-
-  const QByteArray hashFunctionByteArray =
-    header.value(QByteArrayLiteral("Hash function"));
-
-  const QByteArray hashSizeByteArray =
-    header.value(QByteArrayLiteral("Hash output size"));
-
-  const std::size_t hashSize =
-    static_cast<std::size_t>(hashSizeByteArray.toInt());
-
-  // Set up the key derive functions
-
-//  // PKCS5_PBKDF2 takes ownership of the new HMAC and the HMAC takes ownership
-//  // of the SHA3 hash function object (via unique_ptr)
-//  Botan::PKCS5_PBKDF2 pbkdf(new Botan::HMAC(new Botan::SHA_3(hashSize)));
-
-//  // Create the PBKDF key
-//  const Botan::secure_vector<Botan::byte> pbkdfSalt =
-//    Botan::base64_decode(pbkdfSaltByteArray.toStdString());
-
-//  const std::size_t pbkdfKeySize = 256;
-
-//  const std::string passphraseString = config.passphrase.toStdString();
-
-//  const Botan::secure_vector<Botan::byte> pbkdfKey =
-//    pbkdf.derive_key(pbkdfKeySize, passphraseString, &pbkdfSalt[0],
-//                     pbkdfSalt.size(), pbkdfIterations).bits_of();
-
-//  // Create the key and IV
-//  const QByteArray kdfHash = QByteArrayLiteral("HKDF(") +
-//                             hashFunctionByteArray +
-//                             QByteArrayLiteral("(") +
-//                             hashSizeByteArray +
-//                             QByteArrayLiteral("))");
-
-//  std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdfHash.toStdString()));
-
-//  // Key salt
-//  const Botan::secure_vector<Botan::byte> keySalt =
-//    Botan::base64_decode(keySaltByteArray.toStdString());
-
-//  bool keySizeIntOk = false;
-
-//  const int keySizeInt = keySizeByteArray.toInt(&keySizeIntOk);
-
-//  if (!keySizeIntOk) {
-//    outFile.cancelWriting();
-//    emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
-//    emit q->fileFailed(config.id);
-//    return false;
-//  }
-
-//  const std::size_t keySize = static_cast<std::size_t>(keySizeInt);
-
-//  const std::size_t keySizeInBytes = keySize / 8;
-
-//  const auto* keyLabelVector =
-//    reinterpret_cast<const Botan::byte*>(keyLabel.data());
-
-//  Botan::SymmetricKey key(kdf->derive_key(keySizeInBytes,
-//                                          pbkdfKey.data(),
-//                                          pbkdfKey.size(),
-//                                          keySalt.data(),
-//                                          keySalt.size(),
-//                                          keyLabelVector,
-//                                          keyLabel.size()));
-
-//  const Botan::secure_vector<Botan::byte> ivSalt =
-//    Botan::base64_decode(ivSaltByteArray.toStdString());
-//  const std::size_t ivSize = 256;
-//  const auto* ivLabelVector =
-//    reinterpret_cast<const Botan::byte*>(ivLabel.data());
-//  Botan::InitializationVector iv(kdf->derive_key(ivSize,
-//                                                 pbkdfKey.data(),
-//                                                 pbkdfKey.size(),
-//                                                 ivSalt.data(),
-//                                                 ivSalt.size(),
-//                                                 ivLabelVector,
-//                                                 ivLabel.size()));
-
-//  Botan::Pipe pipe;
-
-//  pipe.append_filter(Botan::get_cipher(algorithmNameByteArray.toStdString(),
-//                                       key, iv, Botan::DECRYPTION));
-
-  const bool success = executeCipher(config.id, CryptDirection::Decrypt,
-                                     &inFile, &outFile);
-
-  if (!success) {
-    outFile.cancelWriting();
+  if (!keySizeIntOk) {
     emit q->errorMessage(Constants::messages[7], config.inputFileInfo);
-    emit q->fileFailed(config.id);
+    emit q->fileFailed(id);
     return false;
   }
 
-  if (state->isAborted() || state->isStopped(config.id)) {
-    outFile.cancelWriting();
-    emit q->fileFailed(config.id);
-    return false;
+  const std::size_t keySize = static_cast<std::size_t>(keySizeInt);
+  const std::size_t keySizeInBytes = keySize / 8;
+
+  const QByteArray salt =
+    QByteArray::fromBase64(header.value(QByteArrayLiteral("Salt")));
+
+  const QByteArray passphrase = config.decrypt.passphrase.toUtf8();
+
+  QByteArray key(keySizeInBytes, Qt::Uninitialized);
+  QByteArray iv(ivSize, Qt::Uninitialized);
+  int rc = deriveKeyAndIv(passphrase, keySizeInBytes, salt, pbkdfIterations,
+                          key, iv);
+
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
+
+  EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+
+  if (!ctx) {
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return -1;
+  }
+
+  const EVP_CIPHER* cipher = (keySize == 128) ?
+                             EVP_aes_128_gcm() :
+                             EVP_aes_256_gcm();
+
+  // Initialize the decryption operation
+  rc = EVP_DecryptInit_ex(ctx, cipher, nullptr, nullptr, nullptr);
+
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
+
+  // Set IV size
+  rc = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, ivSize, nullptr);
+
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
+
+  // Init key and IV
+  rc =
+    EVP_DecryptInit_ex(ctx, nullptr, nullptr,
+                       reinterpret_cast<const unsigned char*>(key.constData()),
+                       reinterpret_cast<const unsigned char*>(iv.constData()));
+
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
+
+  QByteArray inBuffer(chunkSize, Qt::Uninitialized);
+
+  QByteArray outBuffer(chunkSize + EVP_CIPHER_get_block_size(cipher),
+                       Qt::Uninitialized);
+  int outSize = 0;
+
+  QByteArray tag(tagSize, Qt::Uninitialized);
+
+  const qint64 fileSize = inFile.size();
+  qint64 fileIndex = 0ll;
+  qint64 percent = -1;
+
+  while (!inFile.atEnd() && !state->isAborted() && !state->isStopped(id)) {
+    state->pauseWait(id);
+
+    if (state->isAborted() || state->isStopped(id)) {
+      emit q->fileFailed(id);
+      return -1;
+    }
+
+    const qint64 bytesRead = inFile.read(inBuffer.data(), inBuffer.size());
+
+    if (bytesRead < 0) {
+      emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
+      emit q->fileFailed(id);
+      return -1;
+    }
+
+    fileIndex += bytesRead;
+
+    qint64 inBufferDataSize = bytesRead;
+
+    if (bytesRead < chunkSize) { // Separate last ciphertext block and tag data
+      inBufferDataSize = bytesRead - tagSize;
+      tag = inBuffer.sliced(inBufferDataSize, tagSize);
+    }
+
+    // Decrypt a block
+    rc =
+      EVP_DecryptUpdate(
+        ctx, reinterpret_cast<unsigned char*>(outBuffer.data()), &outSize,
+        reinterpret_cast<const unsigned char*>(inBuffer.constData()),
+        inBufferDataSize);
+
+    if (rc <= 0) {
+      emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
+      emit q->fileFailed(id);
+      return rc;
+    }
+
+    outFile.write(outBuffer, outSize);
+
+    // Calculate progress in percent
+    const double fractionalProgress = static_cast<double>(fileIndex) /
+                                      static_cast<double>(fileSize);
+
+    const double percentProgress = fractionalProgress * 100.0;
+
+    const int percentProgressInteger = static_cast<int>(percentProgress);
+
+    if (percentProgressInteger > percent && percentProgressInteger < 100) {
+      percent = percentProgressInteger;
+      emit q->fileProgress(id, QObject::tr("Decrypting"), percent);
+    }
+  }
+
+  // Set authentication tag obtained from encrypted file
+  rc = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tag.size(), tag.data());
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
+
+  // Decrypt last block and finalize (doesn't decrypt with GCM). Computes a tag
+  // and checks it against the authentication tag that was computed during
+  // encryption. A non-positive return code indicates the verification failed.
+  rc = EVP_DecryptFinal_ex(ctx,
+                           reinterpret_cast<unsigned char*>(outBuffer.data()),
+                           &outSize);
+
+  if (rc <= 0) {
+    emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
+
+  EVP_CIPHER_CTX_free(ctx);
+
+  if (state->isAborted() || state->isStopped(id)) {
+    emit q->fileFailed(id);
+    return -1;
   }
 
   outFile.commit();
 
   // Progress: finished
-  emit q->fileProgress(config.id, QObject::tr("Decrypted"), 100);
+  emit q->fileProgress(id, QObject::tr("Decrypted"), 100);
 
   // Decryption success message
   emit q->statusMessage(
     Constants::messages[2].arg(config.inputFileInfo.absoluteFilePath()));
 
-  emit q->fileCompleted(config.id);
+  emit q->fileCompleted(id);
 
-  return true;
-}
-
-bool OpenSslProviderPrivate::executeCipher(
-  const std::size_t id, const CryptDirection direction, QFile* inFile,
-  QSaveFile* outFile) {
-  Q_Q(OpenSslProvider);
-  Q_ASSERT(state);
-  Q_ASSERT(inFile);
-  Q_ASSERT(outFile);
-
-//  // Define a size for the buffer vector
-//  const std::size_t bufferSize = 4096;
-//  Botan::secure_vector<Botan::byte> buffer;
-//  buffer.resize(bufferSize);
-
-  // Get file size for percent progress calculation
-  const qint64 size = inFile->size();
-
-  qint64 fileIndex = 0;
-  qint64 percent = -1;
-
-//  pipe->start_msg();
-
-  while (!inFile->atEnd() && !state->isAborted() && !state->isStopped(id)) {
-    state->pauseWait(id);
-
-    if (state->isAborted() || state->isStopped(id)) {
-        outFile->cancelWriting();
-        emit q->fileFailed(id);
-        return false;
-    }
-
-//    const qint64 readSize =
-//      inFile->read(reinterpret_cast<char*>(&buffer[0]), buffer.size());
-
-//    if (readSize < 0) {
-//      outFile->cancelWriting();
-//      emit q->errorMessage(Constants::messages[5],
-//                           QFileInfo(inFile->fileName()));
-//      emit q->fileFailed(id);
-//      return false;
-//    }
-
-//    pipe->write(&buffer[0], static_cast<std::size_t>(readSize));
-
-//    // Calculate progress in percent
-//    fileIndex += readSize;
-
-//    const double fractionalProgress = static_cast<double>(fileIndex) /
-//                                      static_cast<double>(size);
-
-//    const double percentProgress = fractionalProgress * 100.0;
-
-//    const int percentProgressInteger = static_cast<int>(percentProgress);
-
-//    if (percentProgressInteger > percent && percentProgressInteger < 100) {
-//      percent = percentProgressInteger;
-
-//      const QString task = CryptDirection::Encrypt == direction ?
-//                           QObject::tr("Encrypting") :
-//                           QObject::tr("Decrypting");
-
-//      emit q->fileProgress(id, task, percent);
-//    }
-
-//    if (inFile->atEnd()) {
-//      pipe->end_msg();
-//    }
-
-//    while (pipe->remaining() > 0) {
-//      const std::size_t buffered = pipe->read(&buffer[0], buffer.size());
-
-//      if (buffered < 0) {
-//        outFile->cancelWriting();
-
-//        if (CryptDirection::Encrypt == direction) {
-//          emit q->errorMessage(Constants::messages[8],
-//                               QFileInfo(inFile->fileName()));
-//        } else {
-//          emit q->errorMessage(Constants::messages[7],
-//                               QFileInfo(inFile->fileName()));
-//        }
-
-//        emit q->fileFailed(id);
-//        return false;
-//      }
-
-//      const qint64 writeSize =
-//        outFile->write(reinterpret_cast<const char*>(&buffer[0]), buffered);
-
-//      if (writeSize < 0) {
-//        outFile->cancelWriting();
-
-//        if (CryptDirection::Encrypt == direction) {
-//          emit q->errorMessage(Constants::messages[8],
-//                               QFileInfo(inFile->fileName()));
-//        } else {
-//          emit q->errorMessage(Constants::messages[7],
-//                               QFileInfo(inFile->fileName()));
-//        }
-
-//        emit q->fileFailed(id);
-//        return false;
-//      }
-//    }
-  }
-
-  return true;
+  return 0;
 }
 
 OpenSslProvider::OpenSslProvider(QObject* parent)
-  : QObject(parent),
-    d_ptr(std::make_unique<OpenSslProviderPrivate>(this)) {
+  : QObject(parent), d_ptr(std::make_unique<OpenSslProviderPrivate>(this)) {
 }
 
 OpenSslProvider::~OpenSslProvider() = default;
@@ -676,16 +628,18 @@ void OpenSslProvider::init(SchedulerState* state) {
   d->init(state);
 }
 
-bool OpenSslProvider::encrypt(const Kryvo::EncryptFileConfig& config) {
+int OpenSslProvider::encrypt(std::size_t id,
+                             const Kryvo::EncryptFileConfig& config) {
   Q_D(OpenSslProvider);
 
-  return d->encrypt(config);
+  return d->encrypt(id, config);
 }
 
-bool OpenSslProvider::decrypt(const Kryvo::DecryptFileConfig& config) {
+int OpenSslProvider::decrypt(std::size_t id,
+                             const Kryvo::DecryptFileConfig& config) {
   Q_D(OpenSslProvider);
 
-  return d->decrypt(config);
+  return d->decrypt(id, config);
 }
 
 QObject* OpenSslProvider::qObject() {

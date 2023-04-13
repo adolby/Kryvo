@@ -75,10 +75,9 @@ inline QString uniqueFilePath(const QString& filePath) {
   return uniqueFilePath;
 }
 
+// Read header metadata from encrypted file
 inline QHash<QByteArray, QByteArray> readHeader(QFile* file) {
   QHash<QByteArray, QByteArray> headerData;
-
-  // Read metadata from file
 
   // Read line but skip \n
   auto readLine = [](QFile* file) {

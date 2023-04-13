@@ -149,9 +149,9 @@ QString Ui::password() const {
   return d->password;
 }
 
-QString Ui::cipher() const {
+QString Ui::cryptoProvider() const {
   Q_D(const Ui);
-  return d->settings->cipher();
+  return d->settings->cryptoProvider();
 }
 
 QString Ui::keySize() const {
@@ -318,26 +318,30 @@ void Ui::processFiles(const QString& passphrase,
     }
 
     if (files.empty()) {
-      appendStatusMessage(d->errorMessages.at(1));
+      appendStatusMessage(d->errorMessages[1]);
       return;
     }
 
     if (CryptDirection::Encrypt == cryptDirection) {
-      emit encrypt(d->settings->cryptoProvider(),
-                   d->settings->compressionFormat(),
-                   passphrase,
-                   files,
-                   d->settings->outputPath(),
-                   d->settings->cipher(),
-                   d->settings->keySize(),
-                   d->settings->modeOfOperation(),
-                   d->settings->removeIntermediateFiles());
+      EncryptConfig config;
+      config.provider = d->settings->cryptoProvider();
+      config.compressionFormat = d->settings->compressionFormat();
+      config.passphrase = passphrase;
+      config.cipher = d->settings->cipher();
+      config.keySize = d->settings->keySize();
+      config.modeOfOperation = d->settings->modeOfOperation();
+      config.removeIntermediateFiles = d->settings->removeIntermediateFiles();
+
+      emit encrypt(config, files, QDir(d->settings->outputPath()));
     } else if (CryptDirection::Decrypt == cryptDirection) {
-      emit decrypt(passphrase, files, d->settings->outputPath(),
-                   d->settings->removeIntermediateFiles());
+      DecryptConfig config;
+      config.passphrase = passphrase;
+      config.removeIntermediateFiles = d->settings->removeIntermediateFiles();
+
+      emit decrypt(config, files, QDir(d->settings->outputPath()));
     }
   } else { // Inform user that a password is required to encrypt or decrypt
-    appendStatusMessage(d->errorMessages.at(0));
+    appendStatusMessage(d->errorMessages[0]);
   }
 }
 
@@ -379,10 +383,13 @@ void Ui::appendErrorMessage(const QString& message,
   updateFileProgress(QFileInfo(fileInfo.absoluteFilePath()), QString(), 0);
 }
 
-void Ui::updateCipher(const QString& cipher) {
+void Ui::updateCryptoProvider(const QString& cryptoProvider) {
   Q_D(Ui);
 
-  d->settings->cipher(cipher);
+  if (cryptoProvider != d->settings->cryptoProvider()) {
+    d->settings->cryptoProvider(cryptoProvider);
+    emit cryptoProviderChanged(d->settings->modeOfOperation());
+  }
 }
 
 void Ui::updateKeySize(const QString& keySizeString) {

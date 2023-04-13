@@ -41,18 +41,15 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   buttonFrame->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
   headerLayout->addWidget(buttonFrame);
 
-  const QIcon pauseIcon(QStringLiteral(":/images/pauseIcon.png"));
-  d->pauseButton = new QPushButton(pauseIcon, tr(" Pause"), buttonFrame);
-  d->pauseButton->setObjectName(QStringLiteral("pauseButton"));
-  d->pauseButton->setCheckable(true);
-  d->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-
   const QIcon addFilesIcon(QStringLiteral(":/images/addFilesIcon.png"));
   d->addFilesButton = new QPushButton(addFilesIcon,
                                       tr(" Add file(s)"),
                                       buttonFrame);
   d->addFilesButton->setObjectName(QStringLiteral("addButton"));
   d->addFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+  connect(d->addFilesButton, &QPushButton::clicked,
+          this, &HeaderFrame::addFiles);
 
   const QIcon clearFilesIcon{QStringLiteral(":/images/clearFilesIcon.png")};
   d->clearFilesButton = new QPushButton(clearFilesIcon,
@@ -61,6 +58,20 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   d->clearFilesButton->setObjectName(QStringLiteral("clearButton"));
   d->clearFilesButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
+  connect(d->clearFilesButton, &QPushButton::clicked,
+          this, &HeaderFrame::removeAllFiles);
+
+  const QIcon pauseIcon(QStringLiteral(":/images/pauseIcon.png"));
+  d->pauseButton = new QPushButton(pauseIcon, tr(" Pause"), buttonFrame);
+  d->pauseButton->setObjectName(QStringLiteral("pauseButton"));
+  d->pauseButton->setCheckable(true);
+  d->pauseButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+  connect(d->pauseButton, &QPushButton::toggled,
+          this, &HeaderFrame::pause);
+  connect(d->pauseButton, &QPushButton::toggled,
+          this, &HeaderFrame::pauseIconChecked);
+
   const QIcon settingsIcon{QStringLiteral(":/images/gearIcon.png")};
   d->settingsButton = new QPushButton(settingsIcon,
                                       tr(" Settings"),
@@ -68,22 +79,14 @@ HeaderFrame::HeaderFrame(QWidget* parent)
   d->settingsButton->setObjectName(QStringLiteral("settingsButton"));
   d->settingsButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-  auto buttonLayout = new FlowLayout(buttonFrame, 2);
-  buttonLayout->addWidget(d->pauseButton);
-  buttonLayout->addWidget(d->addFilesButton);
-  buttonLayout->addWidget(d->clearFilesButton);
-  buttonLayout->addWidget(d->settingsButton);
-
-  connect(d->pauseButton, &QPushButton::toggled,
-          this, &HeaderFrame::pause);
-  connect(d->pauseButton, &QPushButton::toggled,
-          this, &HeaderFrame::pauseIconChecked);
-  connect(d->addFilesButton, &QPushButton::clicked,
-          this, &HeaderFrame::addFiles);
-  connect(d->clearFilesButton, &QPushButton::clicked,
-          this, &HeaderFrame::removeAllFiles);
   connect(d->settingsButton, &QPushButton::clicked,
           this, &HeaderFrame::switchFrame);
+
+  auto buttonLayout = new FlowLayout(buttonFrame, 2);
+  buttonLayout->addWidget(d->addFilesButton);
+  buttonLayout->addWidget(d->clearFilesButton);
+  buttonLayout->addWidget(d->pauseButton);
+  buttonLayout->addWidget(d->settingsButton);
 }
 
 HeaderFrame::~HeaderFrame() = default;

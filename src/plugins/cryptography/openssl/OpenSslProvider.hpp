@@ -32,26 +32,26 @@ class OpenSslProvider : public QObject,
   void fileFailed(std::size_t id);
 
   /*!
-   * \brief fileProgress Emitted when the cipher operation file progress changes
-   * \param id ID representing file to update progress on
-   * \param task String containing task name
-   * \param percent Integer representing the current progress as a percent
-   */
+  * \brief fileProgress Emitted when the cipher operation file progress changes
+  * \param id ID representing file to update progress on
+  * \param task String containing task name
+  * \param percent Integer representing the current progress as a percent
+  */
   void fileProgress(std::size_t id, const QString& task,
                     qint64 percentProgress) override;
 
   /*!
-   * \brief statusMessage Emitted when a message about the current cipher
-   * operation should be displayed to the user
-   * \param message String containing the information message to display
-   */
+  * \brief statusMessage Emitted when a message about the current cipher
+  * operation should be displayed to the user
+  * \param message String containing the information message to display
+  */
   void statusMessage(const QString& message) override;
 
   /*!
-   * \brief errorMessage Emitted when an error occurs
-   * \param message String containing the error message to display
-   * \param fileInfo File that encountered an error
-   */
+  * \brief errorMessage Emitted when an error occurs
+  * \param message String containing the error message to display
+  * \param config Config for this crypto operation
+  */
   void errorMessage(const QString& message, const QFileInfo& fileInfo) override;
 
  public:
@@ -59,21 +59,25 @@ class OpenSslProvider : public QObject,
 
   /*!
   * \brief encrypt Encrypt a file
+  * \param id
   * \param config Encrypt file config
   */
-  virtual bool encrypt(const Kryvo::EncryptFileConfig& config) override;
+  int encrypt(std::size_t id,
+              const Kryvo::EncryptFileConfig& config) override;
 
   /*!
-   * \brief decrypt Decrypt a file. The algorithm is determined from
-   * the file header.
-   * \param config Decrypt file config
-   */
-  virtual bool decrypt(const Kryvo::DecryptFileConfig& config) override;
+  * \brief decrypt Decrypt a file. The algorithm is determined from
+  * the file header.
+  * \param id
+  * \param config Decrypt file config
+  */
+  int decrypt(std::size_t id,
+              const Kryvo::DecryptFileConfig& config) override;
 
   /*!
-   * \brief qObject Provide a constant cost QObject conversion
-   * \return
-   */
+  * \brief qObject Provide a constant cost QObject conversion
+  * \return
+  */
   QObject* qObject() override;
 };
 

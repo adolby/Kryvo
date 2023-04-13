@@ -33,6 +33,17 @@ DesktopMainWindow::DesktopMainWindow(Settings* s, QWidget* parent)
           this, &QMainWindow::close);
   this->addAction(quitAction);
 
+  // Enable drag and drop
+  this->setAcceptDrops(true);
+
+  connect(settings, &Settings::settingsImported,
+          this, &DesktopMainWindow::settingsImported);
+}
+
+void DesktopMainWindow::settingsImported() {
+  qInfo() << Q_FUNC_INFO;
+  MainWindow::settingsImported();
+
   this->move(settings->position());
 
   if (settings->maximized()) {
@@ -41,9 +52,6 @@ DesktopMainWindow::DesktopMainWindow(Settings* s, QWidget* parent)
   } else {
     this->resize(settings->size());
   }
-
-  // Enable drag and drop
-  this->setAcceptDrops(true);
 
   // Load stylesheet
   const QString styleSheet = loadStyleSheet(settings->styleSheetPath(),

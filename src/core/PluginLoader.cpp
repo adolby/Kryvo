@@ -5,10 +5,11 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QDirIterator>
-#include <QVector>
+#include <QList>
 #include <QCoreApplication>
 
 Q_IMPORT_PLUGIN(BotanProvider)
+Q_IMPORT_PLUGIN(OpenSslProvider)
 
 namespace Kryvo {
 
@@ -45,7 +46,7 @@ Plugin PluginLoaderPrivate::loadPluginFromFile(const QString& filePath) {
 void PluginLoaderPrivate::loadPlugins() {
   Q_Q(PluginLoader);
 
-  const QVector<QStaticPlugin> staticPlugins = QPluginLoader::staticPlugins();
+  const QList<QStaticPlugin> staticPlugins = QPluginLoader::staticPlugins();
 
   for (const QStaticPlugin& staticPlugin : staticPlugins) {
     const Plugin plugin(staticPlugin);

@@ -3,11 +3,15 @@
 
 #include "cryptography/EncryptFileConfig.hpp"
 #include "cryptography/DecryptFileConfig.hpp"
+#include "cryptography/EncryptConfig.hpp"
+#include "cryptography/DecryptConfig.hpp"
 #include "archive/CompressFileConfig.hpp"
 #include "archive/DecompressFileConfig.hpp"
+#include "Plugin.hpp"
 #include "utility/pimpl.h"
 #include <QObject>
 #include <QFileInfo>
+#include <QHash>
 #include <QStringList>
 #include <QString>
 #include <functional>
@@ -73,38 +77,30 @@ class Scheduler : public QObject {
 
   void decryptFile(std::size_t id, const Kryvo::DecryptFileConfig& config);
 
+  void cryptoProvidersChanged(const QHash<QString, Plugin>& providers);
+
  public slots:
   /*!
    * \brief encrypt Executed when a signal is received for encryption with a
    * passphrase, a list of input file paths, and the algorithm name
-   * \param passphrase String representing the user-entered passphrase
+   * \param config Encrypt config
    * \param inputFiles List of files to encrypt
    * \param outputPath Output path
-   * \param cipher String representing name of the cipher
-   * \param inputKeySize Key size in bits
-   * \param modeOfOperation String representing mode of operation
    */
-  void encrypt(const QString& cryptoProvider,
-               const QString& compressionFormat,
-               const QString& passphrase,
+  void encrypt(const EncryptConfig& config,
                const std::vector<QFileInfo>& inputFiles,
-               const QDir& outputPath,
-               const QString& cipher,
-               std::size_t inputKeySize,
-               const QString& modeOfOperation,
-               bool removeIntermediateFiles);
+               const QDir& outputPath);
 
   /*!
    * \brief decrypt Executed when a signal is received for decryption with a
    * passphrase and a list of input file paths
-   * \param passphrase String representing the user-entered passphrase
+   * \param config Decrypt config
    * \param inputFiles List of files to decrypt
    * \param outputPath Output path
    */
-  void decrypt(const QString& passphrase,
+  void decrypt(const DecryptConfig& config,
                const std::vector<QFileInfo>& inputFiles,
-               const QDir& outputPath,
-               bool removeIntermediateFiles);
+               const QDir& outputPath);
 
   /*!
    * \brief abort Executed when a signal is received to set the abort status.

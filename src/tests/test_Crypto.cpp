@@ -70,10 +70,24 @@ SCENARIO("testEncryptDecrypt") {
                               QFileInfo(QStringLiteral("test1.txt.enc")),
                               QFileInfo(QStringLiteral("test1 (2).txt")));
 
+  testDataVector.emplace_back(QStringLiteral("OpenSsl"), QStringLiteral("gzip"),
+                              QStringLiteral("password"),
+                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              QFileInfo(QStringLiteral("test1.txt")),
+                              QFileInfo(QStringLiteral("test1.txt.enc")),
+                              QFileInfo(QStringLiteral("test1 (2).txt")));
+
   // Executable file without compression
   testDataVector.emplace_back(QStringLiteral("Botan"), QStringLiteral("gzip"),
                               QStringLiteral("password2"),
-                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              QStringLiteral("AES"), 256, QStringLiteral("GCM"),
+                              QFileInfo(QStringLiteral("test2.exe")),
+                              QFileInfo(QStringLiteral("test2.exe.enc")),
+                              QFileInfo(QStringLiteral("test2 (2).exe")));
+
+  testDataVector.emplace_back(QStringLiteral("OpenSsl"), QStringLiteral("gzip"),
+                              QStringLiteral("password"),
+                              QStringLiteral("AES"), 256, QStringLiteral("GCM"),
                               QFileInfo(QStringLiteral("test2.exe")),
                               QFileInfo(QStringLiteral("test2.exe.enc")),
                               QFileInfo(QStringLiteral("test2 (2).exe")));
@@ -81,7 +95,14 @@ SCENARIO("testEncryptDecrypt") {
   // Zip file without compression
   testDataVector.emplace_back(QStringLiteral("Botan"), QStringLiteral("gzip"),
                               QStringLiteral("password3"),
-                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              QStringLiteral("AES"), 256, QStringLiteral("GCM"),
+                              QFileInfo(QStringLiteral("test3.zip")),
+                              QFileInfo(QStringLiteral("test3.zip.enc")),
+                              QFileInfo(QStringLiteral("test3 (2).zip")));
+
+  testDataVector.emplace_back(QStringLiteral("OpenSsl"), QStringLiteral("gzip"),
+                              QStringLiteral("password3"),
+                              QStringLiteral("AES"), 256, QStringLiteral("GCM"),
                               QFileInfo(QStringLiteral("test3.zip")),
                               QFileInfo(QStringLiteral("test3.zip.enc")),
                               QFileInfo(QStringLiteral("test3 (2).zip")));
@@ -118,16 +139,16 @@ SCENARIO("testEncryptDecrypt") {
 
         // Test encryption and decryption
         Kryvo::EncryptFileConfig encryptFileConfig;
-        encryptFileConfig.provider = etd.cryptoProvider;
-        encryptFileConfig.compressionFormat = etd.compressionFormat;
-        encryptFileConfig.passphrase = etd.passphrase;
-        encryptFileConfig.cipher = etd.cipher;
-        encryptFileConfig.keySize = static_cast<std::size_t>(etd.keySize);
-        encryptFileConfig.modeOfOperation = etd.modeOfOperation;
+        encryptFileConfig.encrypt.provider = etd.cryptoProvider;
+        encryptFileConfig.encrypt.compressionFormat = etd.compressionFormat;
+        encryptFileConfig.encrypt.passphrase = etd.passphrase;
+        encryptFileConfig.encrypt.keySize =
+          static_cast<std::size_t>(etd.keySize);
+        encryptFileConfig.encrypt.modeOfOperation = etd.modeOfOperation;
         encryptFileConfig.inputFileInfo = etd.inputFileInfo;
         encryptFileConfig.outputFileInfo = etd.encryptedFileInfo;
 
-        const bool encrypted = cryptographer.encryptFile(id, encryptFileConfig);
+        const int encrypted = cryptographer.encryptFile(id, encryptFileConfig);
 
         QFile inFile(etd.encryptedFileInfo.absoluteFilePath());
 
@@ -152,8 +173,8 @@ SCENARIO("testEncryptDecrypt") {
         inFile.close();
 
         Kryvo::DecryptFileConfig decryptFileConfig;
-        decryptFileConfig.provider = etd.cryptoProvider;
-        decryptFileConfig.passphrase = etd.passphrase;
+        decryptFileConfig.decrypt.provider = etd.cryptoProvider;
+        decryptFileConfig.decrypt.passphrase = etd.passphrase;
         decryptFileConfig.inputFileInfo = etd.encryptedFileInfo;
         decryptFileConfig.outputFileInfo = etd.decryptedFileInfo;
 
@@ -178,8 +199,8 @@ SCENARIO("testEncryptDecrypt") {
         }
 
         THEN("Decrypted file matches plaintext file") {
-          REQUIRE(encrypted);
-          REQUIRE(decrypted);
+          REQUIRE(encrypted == 1);
+          REQUIRE(decrypted == 1);
           REQUIRE(equivalentTest);
         }
       }

@@ -28,9 +28,17 @@ OutputFrame::OutputFrame(QWidget* parent)
   d->outputLineEdit = new QLineEdit(this);
   d->outputLineEdit->setObjectName(QStringLiteral("outputLineEdit"));
 
+  connect(d->outputLineEdit, &QLineEdit::editingFinished,
+          this,
+          [this]() {
+            Q_D(OutputFrame);
+            emit outputPathChanged(d->outputLineEdit->text());
+          });
+
   d->outputPushButton = new QPushButton(this);
   d->outputPushButton->setText(QStringLiteral("Select Folder"));
   d->outputPushButton->setObjectName(QStringLiteral("outputButton"));
+
   connect(d->outputPushButton, &QPushButton::clicked,
           this, &OutputFrame::selectOutputDir);
 

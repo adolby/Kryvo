@@ -1,6 +1,8 @@
 #ifndef KRYVO_SETTINGS_SETTINGS_HPP_
 #define KRYVO_SETTINGS_SETTINGS_HPP_
 
+#include <QObject>
+#include "Plugin.hpp"
 #include "utility/pimpl.h"
 #include <QPoint>
 #include <QSize>
@@ -11,10 +13,9 @@ namespace Kryvo {
 
 class SettingsPrivate;
 
-/*!
- * \brief The Settings class keeps settings data for the application.
- */
-class Settings {
+class Settings : public QObject {
+  Q_OBJECT
+  Q_DISABLE_COPY(Settings)
   DECLARE_PRIVATE(Settings)
   std::unique_ptr<SettingsPrivate> const d_ptr;
 
@@ -22,12 +23,12 @@ class Settings {
   /*!
    * \brief Settings Constructs an instance of the settings management class
    */
-  Settings();
+  explicit Settings(QObject* parent = nullptr);
 
   /*!
    * \brief ~Settings Destroys an instance of the settings management class
    */
-  ~Settings();
+  virtual ~Settings();
 
   /*!
    * \brief position Sets the main window position
@@ -173,6 +174,24 @@ class Settings {
    * \return String containing the stylesheet path
    */
   QString styleSheetPath() const;
+
+ signals:
+  void settingsImported();
+  void positionChanged(const QPoint& position);
+  void maximizedChanged(bool maximized);
+  void sizeChanged(const QSize& size);
+  void cryptoProviderChanged(const QString& provider);
+  void compressionFormatChanged(const QString& format);
+  void cipherChanged(const QString& cipher);
+  void keySizeChanged(std::size_t keySize);
+  void modeOfOperationChanged(const QString& mode);
+  void removeIntermediateFilesChanged(bool removeIntermediate);
+  void containerModeChanged(bool container);
+  void outputPathChanged(const QString& path);
+  void inputPathChanged(const QString& path);
+
+ public slots:
+  void cryptoProvidersChanged(const QHash<QString, Plugin>& providers);
 };
 
 } // namespace Kryvo

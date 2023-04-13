@@ -2,6 +2,8 @@
 #include "Ui.hpp"
 #include "cryptography/EncryptFileConfig.hpp"
 #include "cryptography/DecryptFileConfig.hpp"
+#include "cryptography/EncryptConfig.hpp"
+#include "cryptography/DecryptConfig.hpp"
 #include "archive/CompressFileConfig.hpp"
 #include "archive/DecompressFileConfig.hpp"
 #include "settings/Settings.hpp"
@@ -61,19 +63,23 @@ class ApplicationPrivate {
 
 ApplicationPrivate::ApplicationPrivate(Application* app)
   : q_ptr(app) {
+  Q_Q(Application);
+
   qRegisterMetaType<std::size_t>("std::size_t");
   qRegisterMetaType<QFileInfo>("QFileInfo");
   qRegisterMetaType<std::vector<QFileInfo>>("std::vector<QFileInfo>");
   qRegisterMetaType<QDir>("QDir");
   qRegisterMetaType<QHash<QString, Plugin>>("QHash<QString, Plugin>");
+  qRegisterMetaType<Kryvo::EncryptConfig>("Kryvo::EncryptConfig");
+  qRegisterMetaType<Kryvo::DecryptConfig>("Kryvo::DecryptConfig");
   qRegisterMetaType<Kryvo::EncryptFileConfig>("Kryvo::EncryptFileConfig");
   qRegisterMetaType<Kryvo::DecryptFileConfig>("Kryvo::DecryptFileConfig");
   qRegisterMetaType<Kryvo::CompressFileConfig>("Kryvo::CompressFileConfig");
   qRegisterMetaType<Kryvo::DecompressFileConfig>("Kryvo::DecompressFileConfig");
 
-  QObject::connect(q_ptr, &Application::back, &gui, &Ui::navigateBack);
+  QObject::connect(q, &Application::back, &gui, &Ui::navigateBack);
 
-  QObject::connect(&gui, &Ui::quitApp, q_ptr, &Application::quit);
+  QObject::connect(&gui, &Ui::quitApp, q, &Application::quit);
 
   // Connect GUI encrypt/decrypt actions
   QObject::connect(&gui, &Ui::encrypt,
@@ -107,6 +113,9 @@ ApplicationPrivate::ApplicationPrivate(Application* app)
   // Update error message
   QObject::connect(&scheduler, &Scheduler::errorMessage,
                    &gui, &Ui::appendErrorMessage);
+
+  QObject::connect(&scheduler, &Scheduler::cryptoProvidersChanged,
+                   &settings, &Settings::cryptoProvidersChanged);
 
   scheduler.moveToThread(&schedulerThread);
 

@@ -35,14 +35,14 @@ class Crypto : public Pipe {
    * \param id
    * \param config Encrypt file config
    */
-  bool encryptFile(std::size_t id, const Kryvo::EncryptFileConfig& config);
+  int encryptFile(std::size_t id, const Kryvo::EncryptFileConfig& config);
 
   /*!
    * \brief decryptFile Executed when a signal is received for decryption
    * \param id
    * \param config Decrypt file config
    */
-  bool decryptFile(std::size_t id, const Kryvo::DecryptFileConfig& config);
+  int decryptFile(std::size_t id, const Kryvo::DecryptFileConfig& config);
 
  public slots:
   void updateProviders(const QHash<QString, Plugin>& loadedProviders);

@@ -49,16 +49,16 @@ class CryptoProvider {
   * \brief encrypt Encrypt a file
   * \param config Encrypt file config
   */
-  virtual bool encrypt(std::size_t id,
-                       const Kryvo::EncryptFileConfig& config) = 0;
+  virtual int encrypt(std::size_t id,
+                      const Kryvo::EncryptFileConfig& config) = 0;
 
   /*!
    * \brief decrypt Decrypt a file. The algorithm is determined from
    * the file header.
    * \param config Decrypt file config
    */
-  virtual bool decrypt(std::size_t id,
-                       const Kryvo::DecryptFileConfig& config) = 0;
+  virtual int decrypt(std::size_t id,
+                      const Kryvo::DecryptFileConfig& config) = 0;
 
   /*!
    * \brief qObject Provide a constant cost QObject conversion

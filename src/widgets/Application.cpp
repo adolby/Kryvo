@@ -3,6 +3,8 @@
 #include "DesktopMainWindow.hpp"
 #include "cryptography/EncryptFileConfig.hpp"
 #include "cryptography/DecryptFileConfig.hpp"
+#include "cryptography/EncryptConfig.hpp"
+#include "cryptography/DecryptConfig.hpp"
 #include "settings/Settings.hpp"
 #include "Scheduler.hpp"
 #include "Plugin.hpp"
@@ -16,9 +18,12 @@ namespace Kryvo {
 
 class ApplicationPrivate {
   Q_DISABLE_COPY(ApplicationPrivate)
+  Q_DECLARE_PUBLIC(Application)
 
  public:
-  ApplicationPrivate();
+  ApplicationPrivate(Application* a);
+
+  Application* const q_ptr{nullptr};
 
   Scheduler scheduler;
   Thread schedulerThread;
@@ -26,12 +31,17 @@ class ApplicationPrivate {
   DesktopMainWindow gui{&settings};
 };
 
-ApplicationPrivate::ApplicationPrivate() {
+ApplicationPrivate::ApplicationPrivate(Application* a)
+  : q_ptr(a) {
+  Q_Q(Application);
+
   qRegisterMetaType<std::size_t>("std::size_t");
   qRegisterMetaType<QFileInfo>("QFileInfo");
   qRegisterMetaType<std::vector<QFileInfo>>("std::vector<QFileInfo>");
   qRegisterMetaType<QDir>("QDir");
   qRegisterMetaType<QHash<QString, Plugin>>("QHash<QString, Plugin>");
+  qRegisterMetaType<Kryvo::EncryptConfig>("Kryvo::EncryptConfig");
+  qRegisterMetaType<Kryvo::DecryptConfig>("Kryvo::DecryptConfig");
   qRegisterMetaType<Kryvo::EncryptFileConfig>("Kryvo::EncryptFileConfig");
   qRegisterMetaType<Kryvo::DecryptFileConfig>("Kryvo::DecryptFileConfig");
 
@@ -68,15 +78,22 @@ ApplicationPrivate::ApplicationPrivate() {
   QObject::connect(&scheduler, &Scheduler::errorMessage,
                    &gui, &MainWindow::updateError);
 
+  QObject::connect(&scheduler, &Scheduler::cryptoProvidersChanged,
+                   &settings, &Settings::cryptoProvidersChanged);
+
   scheduler.moveToThread(&schedulerThread);
 
   schedulerThread.start();
 
-  gui.show();
+  QTimer::singleShot(0, q,
+                     [this]() {
+                       gui.show();
+                     });
 }
 
 Application::Application(int& argc, char** argv)
-  : QApplication(argc, argv), d_ptr(std::make_unique<ApplicationPrivate>()) {
+  : QApplication(argc, argv),
+    d_ptr(std::make_unique<ApplicationPrivate>(this)) {
 }
 
 Application::~Application() {

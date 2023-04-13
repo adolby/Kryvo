@@ -44,6 +44,7 @@ class OutputFrame : public QFrame {
   QString outputPath() const;
 
  signals:
+  void outputPathChanged(const QString& path);
   void selectOutputDir();
 };
 
