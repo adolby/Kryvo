@@ -77,6 +77,7 @@ int deriveKeyAndIv(const QByteArray& passphrase,
   rc = EVP_KDF_CTX_set_params(kctx, params);
 
   if (rc <= 0) {
+    EVP_KDF_CTX_free(kctx);
     return rc;
   }
 
@@ -84,15 +85,12 @@ int deriveKeyAndIv(const QByteArray& passphrase,
                       key.size(), params);
 
   if (rc <= 0) {
+    EVP_KDF_CTX_free(kctx);
     return rc;
   }
 
   rc = EVP_KDF_derive(kctx, reinterpret_cast<unsigned char*>(iv.data()),
                       iv.size(), params);
-
-  if (rc <= 0) {
-    return rc;
-  }
 
   EVP_KDF_CTX_free(kctx);
 
@@ -236,6 +234,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
     emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
 
@@ -245,6 +244,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
     emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
 
@@ -258,6 +258,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
     emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
 
@@ -277,6 +278,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
 
     if (state->isAborted() || state->isStopped(id)) {
       emit q->fileFailed(id);
+      EVP_CIPHER_CTX_free(ctx);
       return -1;
     }
 
@@ -285,6 +287,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
     if (bytesRead < 0) {
       emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
       emit q->fileFailed(id);
+      EVP_CIPHER_CTX_free(ctx);
       return -1;
     }
 
@@ -300,6 +303,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
     if (rc <= 0) {
       emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
       emit q->fileFailed(id);
+      EVP_CIPHER_CTX_free(ctx);
       return rc;
     }
 
@@ -327,6 +331,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
     emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
 
@@ -338,6 +343,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
     emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
 
@@ -484,6 +490,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
     emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
 
@@ -493,6 +500,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
     emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
 
@@ -505,6 +513,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
     emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
 
@@ -525,6 +534,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
 
     if (state->isAborted() || state->isStopped(id)) {
       emit q->fileFailed(id);
+      EVP_CIPHER_CTX_free(ctx);
       return -1;
     }
 
@@ -533,6 +543,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
     if (bytesRead < 0) {
       emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
       emit q->fileFailed(id);
+      EVP_CIPHER_CTX_free(ctx);
       return -1;
     }
 
@@ -555,6 +566,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
     if (rc <= 0) {
       emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
       emit q->fileFailed(id);
+      EVP_CIPHER_CTX_free(ctx);
       return rc;
     }
 
@@ -577,8 +589,9 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
   // Set authentication tag obtained from encrypted file
   rc = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tag.size(), tag.data());
   if (rc <= 0) {
-    emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
+    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
     emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
 
@@ -592,6 +605,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
     emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
 
