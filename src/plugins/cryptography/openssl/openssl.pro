@@ -79,7 +79,7 @@ linux {
   linux-clang {
     message(clang)
 
-    INCLUDEPATH += /usr/include/openssl/
+    INCLUDEPATH += /usr/include/
 
     LIBS += -L/usr/lib/x86_64-linux-gnu/ -lssl -lcrypto
 
@@ -100,7 +100,7 @@ linux {
   linux-g++ {
     message(g++)
 
-    INCLUDEPATH += /usr/include/openssl/
+    INCLUDEPATH += /usr/include/
 
     LIBS += -L/usr/lib/x86_64-linux-gnu/ -lssl -lcrypto
 
