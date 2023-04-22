@@ -46,7 +46,7 @@ linux {
 
       INCLUDEPATH += openssl/android/armv7/include
 
-      LIBS += -Lopenssl/android/armv7/lib -lcrypto
+      LIBS += -Lopenssl/android/armv7/lib -lssl -lcrypto
 
       debug {
         message(Debug)
@@ -63,7 +63,7 @@ linux {
 
       INCLUDEPATH += openssl/android/arm64_v8a/include
 
-      LIBS += -Lopenssl/android/arm64_v8a/lib -lcrypto
+      LIBS += -Lopenssl/android/arm64_v8a/lib -lssl -lcrypto
 
       debug {
         message(Debug)
@@ -79,9 +79,9 @@ linux {
   linux-clang {
     message(clang)
 
-    INCLUDEPATH += openssl/linux/clang/x86_64/include
+    INCLUDEPATH += /usr/include/openssl/
 
-    LIBS += -Lopenssl/linux/clang/x86_64/lib -lcrypto
+    LIBS += -L/usr/lib/x86_64-linux-gnu/ -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -100,9 +100,9 @@ linux {
   linux-g++ {
     message(g++)
 
-    INCLUDEPATH += openssl/linux/gcc/x86_64/include
+    INCLUDEPATH += /usr/include/openssl/
 
-    LIBS += -Lopenssl/linux/gcc/x86_64/lib -lcrypto
+    LIBS += -L/usr/lib/x86_64-linux-gnu/ -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -128,7 +128,6 @@ darwin {
 
     CONFIG -= simulator
 
-#    INCLUDEPATH += openssl/ios/include
     INCLUDEPATH += /usr/local/opt/openssl@3/include
 
     LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
@@ -147,7 +146,6 @@ darwin {
     message(macOS)
     message(clang)
 
-#    INCLUDEPATH += openssl/macOS/include
     INCLUDEPATH += /usr/local/opt/openssl@3/include
 
     LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
@@ -181,7 +179,7 @@ win32 {
 
       INCLUDEPATH += openssl/windows/msvc/x86_64/include
 
-      LIBS += -Lopenssl/windows/msvc/x86_64/lib -lcrypto
+      LIBS += -Lopenssl/windows/msvc/x86_64/lib -lssl -lcrypto
 
       debug {
         message(Debug)

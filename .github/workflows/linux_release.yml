@@ -36,6 +36,7 @@ jobs:
         run: |
           sudo apt-get -qq install chrpath
           sudo apt-get -qq install libxkbcommon-x11-0
+          sudo apt-get -qq install libssl-dev
 
       - name: (4) Build
         working-directory: ${{ env.SOURCE_DIR }}

@@ -22,7 +22,13 @@ jobs:
       - name: (1) Checkout repo
         uses: actions/checkout@v3
 
-      - name: (2) Install Qt
+      - name: (2) Install OpenSSL
+        run: |
+          brew update
+          brew install openssl@3
+          brew upgrade
+
+      - name: (3) Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           version: ${{ env.QT_VERSION }}
@@ -31,20 +37,20 @@ jobs:
           arch: clang_64
           cache: true
 
-      - name: (3) Build
+      - name: (4) Build
         working-directory: ${{ env.SOURCE_DIR }}
         run: |
           cd "${{ env.SOURCE_DIR }}"
           chmod +x build_macOS_ci.sh
           ./build_macOS_ci.sh
 
-      - name: (4) Upload build artifact
+      - name: (5) Upload build artifact
         uses: actions/upload-artifact@v3
         with:
           name: "kryvo_${{ env.KRYVO_VERSION }}_macos.tar.gz"
           path: "${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_macos.tar.gz"
 
-      - name: (5) Create release
+      - name: (6) Create release
         uses: softprops/action-gh-release@v1
         with:
           draft: false

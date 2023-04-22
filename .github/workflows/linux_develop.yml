@@ -38,6 +38,7 @@ jobs:
         run: |
           sudo apt-get -qq install chrpath
           sudo apt-get -qq install libxkbcommon-x11-0
+          sudo apt-get -qq install libssl-dev
 
       - name: (4) Get short SHA for artifact naming
         run: echo "KRYVO_VERSION=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
