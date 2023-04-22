@@ -31,22 +31,10 @@ class Settings : public QObject {
   virtual ~Settings();
 
   /*!
-   * \brief position Sets the main window position
-   * \param position Upper left corner position of the main window
-   */
-  void position(const QPoint& position);
-
-  /*!
    * \brief position Returns the main window's position
    * \return Upper left corner position of the main window
    */
   QPoint position() const;
-
-  /*!
-   * \brief maximized Sets the maximized state
-   * \param maximized Boolean representing maximized state
-   */
-  void maximized(bool maximized);
 
   /*!
    * \brief maximized Returns the main window's maximized state
@@ -55,26 +43,12 @@ class Settings : public QObject {
   bool maximized() const;
 
   /*!
-   * \brief size Sets the main window size
-   * \param size Size of the main window
-   */
-  void size(const QSize& size);
-
-  /*!
    * \brief size Returns the main window's last size
    * \return Size of the main window
    */
   QSize size() const;
 
-  void cryptoProvider(const QString& provider);
-
   QString cryptoProvider() const;
-
-  /*!
-   * \brief compressionFormat Sets the compression format
-   * \param format String representing the compression format
-   */
-  void compressionFormat(const QString& format);
 
   /*!
    * \brief compressionFormat Returns the compression format
@@ -83,22 +57,10 @@ class Settings : public QObject {
   QString compressionFormat() const;
 
   /*!
-   * \brief cipher Sets the cipher for later storage
-   * \param cipherName String containing the cipher name
-   */
-  void cipher(const QString& cipherName);
-
-  /*!
    * \brief cipher Returns the name of the last cipher
    * \return String containing the cipher name
    */
   QString cipher() const;
-
-  /*!
-   * \brief keySize Sets the key size
-   * \param keySize Key size in bits
-   */
-  void keySize(std::size_t keySize);
 
   /*!
    * \brief keySize Returns the key size
@@ -107,24 +69,10 @@ class Settings : public QObject {
   std::size_t keySize() const;
 
   /*!
-   * \brief modeOfOperation Sets the mode of operation
-   * \param modeOfOperation String containing the mode of operation
-   */
-  void modeOfOperation(const QString& modeOfOperation);
-
-  /*!
    * \brief modeOfOperation Returns the mode of operation
    * \return String containing the mode of operation
    */
   QString modeOfOperation() const;
-
-  /*!
-   * \brief removeIntermediateFiles Sets the remove intermediate files
-   * preference
-   * \param removeIntermediate Boolean indicating whether to remove intermediate
-   * files
-   */
-  void removeIntermediateFiles(bool removeIntermediate);
 
   /*!
    * \brief removeIntermediateFiles Returns the remove intermediate files
@@ -134,34 +82,16 @@ class Settings : public QObject {
   bool removeIntermediateFiles() const;
 
   /*!
-   * \brief containerMode Sets the container mode
-   * \param container Boolean representing the container mode
-   */
-  void containerMode(bool container);
-
-  /*!
    * \brief containerMode Returns the container mode
    * \return Boolean representing the container mode
    */
   bool containerMode() const;
 
   /*!
-   * \brief outputPath Sets the output path
-   * \param path String containing the output path
-   */
-  void outputPath(const QString& path);
-
-  /*!
    * \brief outputPath Returns the name of the output path
    * \return String containing the output path
    */
   QString outputPath() const;
-
-  /*!
-   * \brief inputPath Sets the input path
-   * \param path String containing the path
-   */
-  void inputPath(const QString& path);
 
   /*!
    * \brief inputPath Returns the name of the input path
@@ -191,7 +121,77 @@ class Settings : public QObject {
   void inputPathChanged(const QString& path);
 
  public slots:
-  void cryptoProvidersChanged(const QHash<QString, Plugin>& providers);
+  /*!
+   * \brief position Sets the main window position
+   * \param position Upper left corner position of the main window
+   */
+  void position(const QPoint& position);
+
+  /*!
+   * \brief maximized Sets the maximized state
+   * \param maximized Boolean representing maximized state
+   */
+  void maximized(bool maximized);
+
+  /*!
+   * \brief size Sets the main window size
+   * \param size Size of the main window
+   */
+  void size(const QSize& size);
+
+  void cryptoProvider(const QString& provider);
+
+  /*!
+   * \brief compressionFormat Sets the compression format
+   * \param format String representing the compression format
+   */
+  void compressionFormat(const QString& format);
+
+  /*!
+   * \brief cipher Sets the cipher for later storage
+   * \param cipherName String containing the cipher name
+   */
+  void cipher(const QString& cipherName);
+
+  /*!
+   * \brief keySize Sets the key size
+   * \param keySize Key size in bits
+   */
+  void keySize(std::size_t keySize);
+
+  /*!
+   * \brief modeOfOperation Sets the mode of operation
+   * \param modeOfOperation String containing the mode of operation
+   */
+  void modeOfOperation(const QString& modeOfOperation);
+
+  /*!
+   * \brief removeIntermediateFiles Sets the remove intermediate files
+   * preference
+   * \param removeIntermediate Boolean indicating whether to remove intermediate
+   * files
+   */
+  void removeIntermediateFiles(bool removeIntermediate);
+
+  /*!
+   * \brief containerMode Sets the container mode
+   * \param container Boolean representing the container mode
+   */
+  void containerMode(bool container);
+
+  /*!
+   * \brief outputPath Sets the output path
+   * \param path String containing the output path
+   */
+  void outputPath(const QString& path);
+
+  /*!
+   * \brief inputPath Sets the input path
+   * \param path String containing the path
+   */
+  void inputPath(const QString& path);
+
+  void cryptoProvidersLoaded(const QHash<QString, Plugin>& providers);
 };
 
 } // namespace Kryvo

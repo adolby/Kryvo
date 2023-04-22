@@ -26,7 +26,7 @@ class SchedulerPrivate {
 
   void processPipeline(std::size_t id);
 
-  void abortPipeline(std::size_t id);
+  void cancelPipeline(std::size_t id);
 
   void encrypt(const Kryvo::EncryptConfig& config,
                const std::vector<QFileInfo>& inputFiles,
@@ -56,11 +56,11 @@ SchedulerPrivate::SchedulerPrivate(Scheduler* s)
                    q, &Scheduler::processPipeline,
                    Qt::QueuedConnection);
 
-  QObject::connect(&pluginLoader, &PluginLoader::cryptoProvidersChanged,
-                   q, &Scheduler::cryptoProvidersChanged,
+  QObject::connect(&pluginLoader, &PluginLoader::cryptoProvidersLoaded,
+                   q, &Scheduler::cryptoProvidersLoaded,
                    Qt::QueuedConnection);
 
-  QObject::connect(q, &Scheduler::cryptoProvidersChanged,
+  QObject::connect(q, &Scheduler::cryptoProvidersLoaded,
                    &cryptographer, &Crypto::updateProviders,
                    Qt::QueuedConnection);
 
@@ -73,7 +73,7 @@ SchedulerPrivate::SchedulerPrivate(Scheduler* s)
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::fileFailed,
-                   q, &Scheduler::abortPipeline,
+                   q, &Scheduler::cancelPipeline,
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::statusMessage,
@@ -101,7 +101,7 @@ SchedulerPrivate::SchedulerPrivate(Scheduler* s)
                    Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::fileFailed,
-                   q, &Scheduler::abortPipeline,
+                   q, &Scheduler::cancelPipeline,
                    Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::statusMessage,
@@ -184,7 +184,7 @@ void SchedulerPrivate::processPipeline(const std::size_t id) {
   func(id);
 }
 
-void SchedulerPrivate::abortPipeline(const std::size_t id) {
+void SchedulerPrivate::cancelPipeline(const std::size_t id) {
   Q_Q(Scheduler);
   Q_ASSERT(id < pipelines.size());
 
@@ -227,16 +227,6 @@ void SchedulerPrivate::encrypt(const Kryvo::EncryptConfig& config,
   std::size_t id = 0;
 
   for (const QFileInfo& inputFile : inputFiles) {
-    const std::size_t keySize = [&config]() {
-      std::size_t size = 128;
-
-      if (config.keySize > 0) {
-        size = config.keySize;
-      }
-
-      return size;
-    }();
-
     // Create output path if it doesn't exist
     if (!outputDir.exists()) {
       outputDir.mkpath(outputDir.absolutePath());
@@ -472,11 +462,11 @@ void Scheduler::decrypt(const Kryvo::DecryptConfig& config,
   d->decrypt(config, inputFiles, outputDir);
 }
 
-void Scheduler::abort() {
+void Scheduler::cancel() {
   Q_D(Scheduler);
 
   if (d->state.isRunning()) {
-    d->state.abort(true);
+    d->state.cancel(true);
   }
 }
 
@@ -515,10 +505,10 @@ void Scheduler::processPipeline(const std::size_t id) {
   d->processPipeline(id);
 }
 
-void Scheduler::abortPipeline(const std::size_t id) {
+void Scheduler::cancelPipeline(const std::size_t id) {
   Q_D(Scheduler);
 
-  d->abortPipeline(id);
+  d->cancelPipeline(id);
 }
 
 void Scheduler::updateFileProgress(const std::size_t id,

@@ -32,7 +32,7 @@ class Application : public QApplication {
   explicit Application(int& argc, char** argv);
 
   /*!
-   * \brief ~Application Destroys the application. Aborts the current threaded
+   * \brief ~Application Destroys the application. Cancels the current threaded
    * operation and then quits the thread. If the thread doesn't respond, it will
    * be terminated so the application can exit.
    */

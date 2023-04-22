@@ -58,8 +58,8 @@ ApplicationPrivate::ApplicationPrivate(Application* a)
                    &scheduler, &Scheduler::pause,
                    Qt::DirectConnection);
 
-  QObject::connect(&gui, &MainWindow::abort,
-                   &scheduler, &Scheduler::abort,
+  QObject::connect(&gui, &MainWindow::cancel,
+                   &scheduler, &Scheduler::cancel,
                    Qt::DirectConnection);
 
   QObject::connect(&gui, &MainWindow::stopFile,
@@ -78,8 +78,8 @@ ApplicationPrivate::ApplicationPrivate(Application* a)
   QObject::connect(&scheduler, &Scheduler::errorMessage,
                    &gui, &MainWindow::updateError);
 
-  QObject::connect(&scheduler, &Scheduler::cryptoProvidersChanged,
-                   &settings, &Settings::cryptoProvidersChanged);
+  QObject::connect(&scheduler, &Scheduler::cryptoProvidersLoaded,
+                   &settings, &Settings::cryptoProvidersLoaded);
 
   scheduler.moveToThread(&schedulerThread);
 
@@ -99,8 +99,8 @@ Application::Application(int& argc, char** argv)
 Application::~Application() {
   Q_D(Application);
 
-  // Abort current threaded operation
-  d->scheduler.abort();
+  // Cancel current threaded operation
+  d->scheduler.cancel();
 }
 
 } // namespace Kryvo

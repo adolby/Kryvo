@@ -77,7 +77,7 @@ class Scheduler : public QObject {
 
   void decryptFile(std::size_t id, const Kryvo::DecryptFileConfig& config);
 
-  void cryptoProvidersChanged(const QHash<QString, Plugin>& providers);
+  void cryptoProvidersLoaded(const QHash<QString, Plugin>& providers);
 
  public slots:
   /*!
@@ -103,13 +103,13 @@ class Scheduler : public QObject {
                const QDir& outputPath);
 
   /*!
-   * \brief abort Executed when a signal is received to set the abort status.
-   * The abort status, when set, will stop the execution of the current cipher
+   * \brief cancel Executed when a signal is received to set the cancel status.
+   * The cancel status, when set, will stop the execution of the current cipher
    * operation and prevent further cipher operations from starting until it is
    * reset to false. The current cipher operation is abandoned and cannot be
    * continued.
    */
-  void abort();
+  void cancel();
 
   /*!
    * \brief pause Executed when a signal is received to set or clear the pause
@@ -132,7 +132,7 @@ class Scheduler : public QObject {
 
   void processPipeline(std::size_t id);
 
-  void abortPipeline(std::size_t id);
+  void cancelPipeline(std::size_t id);
 
   void updateFileProgress(std::size_t id, const QString& task,
                           qint64 percentProgress);

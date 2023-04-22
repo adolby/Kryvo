@@ -73,15 +73,21 @@ class MainWindow : public QMainWindow {
   void pause(bool pauseStatus);
 
   /*!
-   * \brief abort Emitted when the user clicks the Clear Files push
+   * \brief cancel Emitted when the user clicks the Clear Files push
    * button
    */
-  void abort();
+  void cancel();
 
   /*!
    * \brief stopFile Emitted when the user clicks a remove file button
    */
   void stopFile(const QFileInfo& fileInfo);
+
+  void requestUpdateInputPath(const QString& path);
+  void requestUpdateOutputPath(const QString& path);
+  void requestUpdateClosePosition(const QPoint& pos);
+  void requestUpdateCloseSize(const QSize& size);
+  void requestUpdateCloseMaximized(bool maximized);
 
  public slots:
   /*!
@@ -128,37 +134,6 @@ class MainWindow : public QMainWindow {
    */
   void updateError(const QString& message, const QFileInfo& fileInfo);
 
-  /*!
-   * \brief updateCipher Executed when the cipher is updated by the user in the
-   * settings frame
-   * \param cipher String representing the new cipher
-   */
-  void updateCipher(const QString& cipher);
-
-  /*!
-   * \brief updateKeySize Executed when the key size is updated by the user in
-   * the settings frame
-   * \param keySize Key size in bits
-   */
-  void updateKeySize(std::size_t keySize);
-
-  /*!
-   * \brief updateCompressionFormat Executed when the compression format is
-   * updated by the user in the settings frame
-   * \param format String representing the new compression format
-   */
-  void updateCompressionFormat(const QString& format);
-
-  void updateRemoveIntermediateFiles(bool removeIntermediate);
-
-  /*!
-   * \brief updateContainerMode Executed when the container mode is updated
-   * by the user in the settings frame
-   * \param compress Boolean representing the new container mode
-   */
-  void updateContainerMode(bool container);
-
-  void outputPathChanged(const QString& path);
   void selectOutputDir();
 
  protected:

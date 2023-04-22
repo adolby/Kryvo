@@ -17,14 +17,11 @@
 namespace Kryvo {
 
 const QString keySizeToolTip =
-  QObject::tr("The cipher key size is the number of bits "
-              "in the key that is created from your "
-              "password via a secure hash function. A "
-              "larger key size does not necessarily "
-              "yield a more secure encrypted output. Key "
-              "sizes of 128, 192, and 256 are all "
-              "currently considered to be secure key "
-              "sizes.");
+  QObject::tr("The cipher key size is the number of bits in the key that is "
+              "created from your password via a secure hash function. A larger "
+              "key size does not necessarily yield a more secure encrypted "
+              "output. Key sizes of 128 and 256 are currently considered to be "
+              "secure key sizes.");
 
 QString splitToolTip(const QString& text, const int width) {
   const QFontMetrics fm(QToolTip::font());
@@ -147,7 +144,7 @@ SettingsFrame::SettingsFrame(QWidget* parent)
   d->providerComboBox->addItem(QStringLiteral("OpenSsl"));
 
   connect(d->providerComboBox, &QComboBox::currentIndexChanged,
-          this, &SettingsFrame::changeCryptoProvider);
+          this, &SettingsFrame::updateCryptoProvider);
 
   auto providerLayout = new QHBoxLayout(providerFrame);
   providerLayout->addWidget(providerLabel);
@@ -166,12 +163,11 @@ SettingsFrame::SettingsFrame(QWidget* parent)
   d->keySizeComboBox = new QComboBox(keySizeFrame);
   d->keySizeComboBox->setObjectName(QStringLiteral("settingsComboBox"));
   d->keySizeComboBox->addItem(QStringLiteral("128"));
-  d->keySizeComboBox->addItem(QStringLiteral("192"));
   d->keySizeComboBox->addItem(QStringLiteral("256"));
   d->keySizeComboBox->setToolTip(keySizeSplitToolTip);
 
   connect(d->keySizeComboBox, &QComboBox::currentIndexChanged,
-          this, &SettingsFrame::changeKeySize);
+          this, &SettingsFrame::updateKeySize);
 
   auto keySizeLayout = new QHBoxLayout(keySizeFrame);
   keySizeLayout->addWidget(keySizeLabel);
@@ -205,7 +201,7 @@ SettingsFrame::SettingsFrame(QWidget* parent)
   d->compressionComboBox->addItem(QStringLiteral("None"));
 
   connect(d->compressionComboBox, &QComboBox::currentIndexChanged,
-          this, &SettingsFrame::changeCompressionFormat);
+          this, &SettingsFrame::updateCompressionFormat);
 
   auto compressionLayout = new QHBoxLayout(compressionFrame);
   compressionLayout->addWidget(compressionLabel);
@@ -221,7 +217,7 @@ SettingsFrame::SettingsFrame(QWidget* parent)
     QStringLiteral("settingsCheckBox"));
 
   connect(d->removeIntermediateFilesCheckBox, &QCheckBox::stateChanged,
-          this, &SettingsFrame::changeRemoveIntermediateFiles);
+          this, &SettingsFrame::updateRemoveIntermediateFiles);
 
   auto removeIntermediateFilesLayout =
     new QHBoxLayout(removeIntermediateFilesFrame);
@@ -278,9 +274,16 @@ void SettingsFrame::init(const QString& cryptoProvider,
                          const std::size_t keySize,
                          const bool removeIntermediateFiles,
                          const bool containerMode) {
-  Q_D(SettingsFrame);
+  Q_D(const SettingsFrame);
 
-  d->keySizeComboBox->setCurrentText(QString::number(keySize));
+  const int keySizeIdx =
+    d->keySizeComboBox->findText(QString::number(keySize));
+
+  if (keySizeIdx > 0) {
+    d->keySizeComboBox->setCurrentIndex(keySizeIdx);
+  } else {
+    d->keySizeComboBox->setCurrentIndex(0);
+  }
 
   const int providerIdx = d->providerComboBox->findText(cryptoProvider);
 
@@ -302,44 +305,100 @@ void SettingsFrame::init(const QString& cryptoProvider,
   d->removeIntermediateFilesCheckBox->setChecked(removeIntermediateFiles);
 }
 
-void SettingsFrame::changeCryptoProvider() {
-  Q_D(SettingsFrame);
+void SettingsFrame::updateCryptoProvider() {
+  Q_D(const SettingsFrame);
   Q_ASSERT(d->providerComboBox);
 
-  emit updateCryptoProvider(d->providerComboBox->currentText());
+  emit requestUpdateCryptoProvider(d->providerComboBox->currentText());
 }
 
-void SettingsFrame::changeKeySize() {
-  Q_D(SettingsFrame);
+void SettingsFrame::updateKeySize() {
+  Q_D(const SettingsFrame);
   Q_ASSERT(d->keySizeComboBox);
 
   const QString keySizeString = d->keySizeComboBox->currentText();
 
   const std::size_t keySize = keySizeString.toInt();
 
-  emit updateKeySize(keySize);
+  emit requestUpdateKeySize(keySize);
 }
 
-void SettingsFrame::changeCompressionFormat() {
-  Q_D(SettingsFrame);
+void SettingsFrame::updateCompressionFormat() {
+  Q_D(const SettingsFrame);
   Q_ASSERT(d->compressionComboBox);
 
-  emit updateCompressionFormat(d->compressionComboBox->currentText());
+  emit requestUpdateCompressionFormat(d->compressionComboBox->currentText());
 }
 
-void SettingsFrame::changeRemoveIntermediateFiles() {
-  Q_D(SettingsFrame);
+void SettingsFrame::updateRemoveIntermediateFiles() {
+  Q_D(const SettingsFrame);
   Q_ASSERT(d->removeIntermediateFilesCheckBox);
 
-  emit updateRemoveIntermediateFiles(
+  emit requestUpdateRemoveIntermediateFiles(
     d->removeIntermediateFilesCheckBox->isChecked());
 }
 
-void SettingsFrame::changeContainerMode() {
-  Q_D(SettingsFrame);
+void SettingsFrame::updateContainerMode() {
+  Q_D(const SettingsFrame);
   Q_ASSERT(d->containerCheckBox);
 
-  emit updateContainerMode(d->containerCheckBox->isChecked());
+  emit requestUpdateContainerMode(d->containerCheckBox->isChecked());
+}
+
+void SettingsFrame::cryptoProviderChanged(const QString& provider)
+{
+  Q_D(const SettingsFrame);
+  Q_ASSERT(d->providerComboBox);
+
+  const int providerIdx = d->providerComboBox->findText(provider);
+
+  if (providerIdx > 0) {
+    d->providerComboBox->setCurrentIndex(providerIdx);
+  } else {
+    d->providerComboBox->setCurrentIndex(0);
+  }
+}
+
+void SettingsFrame::keySizeChanged(std::size_t keySize)
+{
+  Q_D(const SettingsFrame);
+  Q_ASSERT(d->keySizeComboBox);
+
+  const int keySizeIdx =
+    d->keySizeComboBox->findText(QString::number(keySize));
+
+  if (keySizeIdx > 0) {
+    d->keySizeComboBox->setCurrentIndex(keySizeIdx);
+  } else {
+    d->keySizeComboBox->setCurrentIndex(0);
+  }
+}
+
+void SettingsFrame::compressionFormatChanged(const QString& format)
+{
+  Q_D(const SettingsFrame);
+  Q_ASSERT(d->compressionComboBox);
+
+  const int compressionIdx = d->compressionComboBox->findText(format);
+
+  if (compressionIdx > 0) {
+    d->compressionComboBox->setCurrentIndex(compressionIdx);
+  } else {
+    d->compressionComboBox->setCurrentIndex(0);
+  }
+}
+
+void SettingsFrame::removeIntermediateFilesChanged(bool removeIntermediate)
+{
+  Q_D(const SettingsFrame);
+  Q_ASSERT(d->removeIntermediateFilesCheckBox);
+
+  d->removeIntermediateFilesCheckBox->setChecked(removeIntermediate);
+}
+
+void SettingsFrame::containerModeChanged(bool container)
+{
+  Q_UNUSED(container);
 }
 
 } // namespace Kryvo

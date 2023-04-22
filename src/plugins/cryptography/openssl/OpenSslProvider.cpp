@@ -163,7 +163,8 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
     return -1;
   }
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
+    emit q->errorMessage(Constants::messages[3], config.inputFileInfo);
     emit q->fileFailed(id);
     return -1;
   }
@@ -268,15 +269,21 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
                        Qt::Uninitialized);
   int outSize = 0;
 
-  const qint64 fileSize = inFile.size();
-
   qint64 fileIndex = 0ll;
   qint64 percent = -1;
 
-  while (!inFile.atEnd() && !state->isAborted() && !state->isStopped(id)) {
+  while (!inFile.atEnd()) {
+    if (state->isCancelled() || state->isStopped(id)) {
+      emit q->errorMessage(Constants::messages[3], config.inputFileInfo);
+      emit q->fileFailed(id);
+      EVP_CIPHER_CTX_free(ctx);
+      return -1;
+    }
+
     state->pauseWait(id);
 
-    if (state->isAborted() || state->isStopped(id)) {
+    if (state->isCancelled() || state->isStopped(id)) {
+      emit q->errorMessage(Constants::messages[3], config.inputFileInfo);
       emit q->fileFailed(id);
       EVP_CIPHER_CTX_free(ctx);
       return -1;
@@ -311,7 +318,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
 
     // Calculate progress in percent
     const double fractionalProgress = static_cast<double>(fileIndex) /
-                                      static_cast<double>(fileSize);
+                                      static_cast<double>(inFile.size());
 
     const double percentProgress = fractionalProgress * 100.0;
 
@@ -323,7 +330,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
     }
   }
 
-  // Encrypt final block and finalize (doesn't encrypt for GCM)
+  // Encrypt final block and finalize (doesn't actually encrypt data for GCM)
   rc = EVP_EncryptFinal_ex(ctx,
                            reinterpret_cast<unsigned char*>(outBuffer.data()),
                            &outSize);
@@ -357,7 +364,8 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
     return rc;
   }
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
+    emit q->errorMessage(Constants::messages[3], config.inputFileInfo);
     emit q->fileFailed(id);
     return -1;
   }
@@ -373,7 +381,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
 
   emit q->fileCompleted(id);
 
-  return 0;
+  return rc;
 }
 
 int OpenSslProviderPrivate::decrypt(std::size_t id,
@@ -387,7 +395,8 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
     return -1;
   }
 
-  if (state->isAborted()) {
+  if (state->isCancelled() || state->isStopped(id)) {
+    emit q->errorMessage(Constants::messages[4], config.inputFileInfo);
     emit q->fileFailed(id);
     return -1;
   }
@@ -523,22 +532,36 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
                        Qt::Uninitialized);
   int outSize = 0;
 
-  QByteArray tag(tagSize, Qt::Uninitialized);
+  const qint64 cipherTextEnd = inFile.size() - tagSize;
+  qint64 cipherTextIndex = inFile.pos(); // ciphertext data starts after header
+  qint64 percent = -1ll;
 
-  const qint64 fileSize = inFile.size();
-  qint64 fileIndex = 0ll;
-  qint64 percent = -1;
-
-  while (!inFile.atEnd() && !state->isAborted() && !state->isStopped(id)) {
-    state->pauseWait(id);
-
-    if (state->isAborted() || state->isStopped(id)) {
+  while (cipherTextIndex < cipherTextEnd) {
+    if (state->isCancelled() || state->isStopped(id)) {
+      emit q->errorMessage(Constants::messages[4], config.inputFileInfo);
       emit q->fileFailed(id);
       EVP_CIPHER_CTX_free(ctx);
       return -1;
     }
 
-    const qint64 bytesRead = inFile.read(inBuffer.data(), inBuffer.size());
+    state->pauseWait(id);
+
+    if (state->isCancelled() || state->isStopped(id)) {
+      emit q->errorMessage(Constants::messages[4], config.inputFileInfo);
+      emit q->fileFailed(id);
+      EVP_CIPHER_CTX_free(ctx);
+      return -1;
+    }
+
+    const qint64 remainingBytes = cipherTextEnd - cipherTextIndex;
+
+    qint64 inBufferMaxSize = inBuffer.size();
+
+    if (remainingBytes < chunkSize) { // Last partial ciphertext chunk size
+      inBufferMaxSize = remainingBytes;
+    }
+
+    const qint64 bytesRead = inFile.read(inBuffer.data(), inBufferMaxSize);
 
     if (bytesRead < 0) {
       emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
@@ -547,21 +570,14 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
       return -1;
     }
 
-    fileIndex += bytesRead;
-
-    qint64 inBufferDataSize = bytesRead;
-
-    if (bytesRead < chunkSize) { // Separate last ciphertext block and tag data
-      inBufferDataSize = bytesRead - tagSize;
-      tag = inBuffer.sliced(inBufferDataSize, tagSize);
-    }
+    cipherTextIndex += bytesRead;
 
     // Decrypt a block
     rc =
       EVP_DecryptUpdate(
         ctx, reinterpret_cast<unsigned char*>(outBuffer.data()), &outSize,
         reinterpret_cast<const unsigned char*>(inBuffer.constData()),
-        inBufferDataSize);
+        bytesRead);
 
     if (rc <= 0) {
       emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
@@ -573,8 +589,8 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
     outFile.write(outBuffer, outSize);
 
     // Calculate progress in percent
-    const double fractionalProgress = static_cast<double>(fileIndex) /
-                                      static_cast<double>(fileSize);
+    const double fractionalProgress = static_cast<double>(cipherTextIndex) /
+                                      static_cast<double>(cipherTextEnd);
 
     const double percentProgress = fractionalProgress * 100.0;
 
@@ -586,8 +602,19 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
     }
   }
 
+  // Read tag from file
+  QByteArray tag(tagSize, Qt::Uninitialized);
+  const qint64 tagBytesRead = inFile.read(tag.data(), tagSize);
+
+  if (tagBytesRead < tagSize) { // Tag too short, can't authenticate
+    emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
+    emit q->fileFailed(id);
+    EVP_CIPHER_CTX_free(ctx);
+  }
+
   // Set authentication tag obtained from encrypted file
   rc = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tag.size(), tag.data());
+
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
     emit q->fileFailed(id);
@@ -602,7 +629,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
                            reinterpret_cast<unsigned char*>(outBuffer.data()),
                            &outSize);
 
-  if (rc <= 0) {
+  if (rc <= 0) { // Authentication failed
     emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
     emit q->fileFailed(id);
     EVP_CIPHER_CTX_free(ctx);
@@ -611,7 +638,8 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
 
   EVP_CIPHER_CTX_free(ctx);
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
+    emit q->errorMessage(Constants::messages[4], config.inputFileInfo);
     emit q->fileFailed(id);
     return -1;
   }
@@ -627,7 +655,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
 
   emit q->fileCompleted(id);
 
-  return 0;
+  return rc;
 }
 
 OpenSslProvider::OpenSslProvider(QObject* parent)

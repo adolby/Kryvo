@@ -102,7 +102,7 @@ void PluginLoaderPrivate::loadPlugins() {
   Q_ASSERT_X(loadedCryptoProviders.size() > 0, "loadProviders",
              "At least one provider plugin is required");
 
-  emit q->cryptoProvidersChanged(loadedCryptoProviders);
+  emit q->cryptoProvidersLoaded(loadedCryptoProviders);
 }
 
 PluginLoader::PluginLoader(QObject* parent)

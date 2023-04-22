@@ -110,10 +110,10 @@ class Ui : public QObject {
   void pause(bool pauseStatus);
 
   /*!
-   * \brief abort Emitted when the user clicks the Clear Files push
+   * \brief cancel Emitted when the user clicks the Clear Files push
    * button
    */
-  void abort();
+  void cancel();
 
   /*!
    * \brief stopFile Emitted when the user clicks a remove file button
@@ -124,14 +124,27 @@ class Ui : public QObject {
 
   void pushPage(const QVariantMap& page);
   void popPage();
+
+  // Request settings update
+  void requestUpdateCryptoProvider(const QString& cipher);
+  void requestUpdateKeySize(std::size_t size);
+  void requestUpdateModeOfOperation(const QString& modeOfOperation);
+  void requestUpdateCompressionFormat(const QString& format);
+  void requestUpdateRemoveIntermediateFiles(bool removeIntermediateFiles);
+  void requestUpdateContainerMode(bool containerMode);
+  void requestUpdateInputPath(const QString& path);
+  void requestUpdateOutputPath(const QString& path);
+
+  // Receive settings update notification
   void cryptoProviderChanged(const QString& cipher);
   void keySizeChanged(const QString& keySize);
   void modeOfOperationChanged(const QString& modeOfOperation);
   void compressionFormatChanged(const QString& format);
   void removeIntermediateFilesChanged(bool removeIntermediateFiles);
-  void containerModeChanged(bool contianerMode);
+  void containerModeChanged(bool containerMode);
   void inputPathChanged(const QUrl& url);
   void outputPathChanged(const QUrl& url);
+
   void statusMessageChanged(const QString& message);
   void passwordChanged(const QString& password);
 

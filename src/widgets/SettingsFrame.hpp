@@ -42,39 +42,40 @@ class SettingsFrame : public QFrame {
   void switchFrame();
 
   /*!
-   * \brief updateCryptoProvider Emitted when the user has changed the crypto
-   * provider via the combobox representing it
+   * \brief requestUpdateCryptoProvider Emitted when the user has changed the
+   * crypto provider via the combobox representing it
    * \param provider String containing the provider name
    */
-  void updateCryptoProvider(const QString& provider);
+  void requestUpdateCryptoProvider(const QString& provider);
 
   /*!
-   * \brief updateKeySize Emitted when the user has changed the key size via the
-   * combobox representing it
+   * \brief requestUpdateKeySize Emitted when the user has changed the key size
+   * via the combobox representing it
    * \param keySize Key size in bits
    */
-  void updateKeySize(std::size_t keySize);
+  void requestUpdateKeySize(std::size_t keySize);
 
   /*!
-   * \brief updateCompressionMode Emitted when the user has changed the
+   * \brief requestUpdateCompressionMode Emitted when the user has changed the
    * compression mode via the checkbox representing it
    * \param format String representing compression format
    */
-  void updateCompressionFormat(const QString& format);
+  void requestUpdateCompressionFormat(const QString& format);
 
   /*!
-   * \brief updateRemoveIntermediateFiles Emitted when the user has changed the
-   * remove intermediate files preference via the checkbox representing it
+   * \brief requestUpdateRemoveIntermediateFiles Emitted when the user has
+   * changed the remove intermediate files preference via the checkbox
+   * representing it
    * \param compress Boolean representing remove intermediate files preference
    */
-  void updateRemoveIntermediateFiles(bool removeIntermediate);
+  void requestUpdateRemoveIntermediateFiles(bool removeIntermediate);
 
   /*!
-   * \brief updateContainerMode Emitted when the user has changed the container
-   * mode via the checkbox representing it
+   * \brief requestUpdateContainerMode Emitted when the user has changed the
+   * container mode via the checkbox representing it
    * \param container Boolean representing container
    */
-  void updateContainerMode(bool container);
+  void requestUpdateContainerMode(bool container);
 
 public:
   void init(const QString& cryptoProvider,
@@ -85,30 +86,36 @@ public:
 
  public slots:
   /*!
-   * \brief changeCryptoProvider Executed when the crypto provider changes
+   * \brief updateCryptoProvider Executed when the crypto provider changes
    */
-  void changeCryptoProvider();
+  void updateCryptoProvider();
 
   /*!
-   * \brief changeKeySize Executed when the key size changes
+   * \brief updateKeySize Executed when the key size changes
    */
-  void changeKeySize();
+  void updateKeySize();
 
   /*!
-   * \brief changeCompressionFormat Executed when the compression format changes
+   * \brief updateCompressionFormat Executed when the compression format changes
    */
-  void changeCompressionFormat();
+  void updateCompressionFormat();
 
   /*!
-   * \brief changeRemoveIntermediateFiles Executed when the remove intermediate
+   * \brief updateRemoveIntermediateFiles Executed when the remove intermediate
    * files preference changes
    */
-  void changeRemoveIntermediateFiles();
+  void updateRemoveIntermediateFiles();
 
   /*!
    * \brief changeContainerMode Executed when the container mode changes
    */
-  void changeContainerMode();
+  void updateContainerMode();
+
+  void cryptoProviderChanged(const QString& provider);
+  void keySizeChanged(std::size_t keySize);
+  void compressionFormatChanged(const QString& format);
+  void removeIntermediateFilesChanged(bool removeIntermediate);
+  void containerModeChanged(bool container);
 };
 
 } // namespace Kryvo

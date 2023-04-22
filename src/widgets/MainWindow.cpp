@@ -68,11 +68,6 @@ MainWindow::MainWindow(Settings* s, QWidget* parent)
   outputFrame = new OutputFrame(contentFrame);
   outputFrame->setObjectName(QStringLiteral("outputFrame"));
 
-  connect(outputFrame, &OutputFrame::outputPathChanged,
-          this, &MainWindow::outputPathChanged);
-  connect(outputFrame, &OutputFrame::selectOutputDir,
-          this, &MainWindow::selectOutputDir);
-
   // Password entry frame
   passwordFrame = new PasswordFrame(contentFrame);
   passwordFrame->setObjectName(QStringLiteral("passwordFrame"));
@@ -113,29 +108,59 @@ MainWindow::MainWindow(Settings* s, QWidget* parent)
   connect(headerFrame, &HeaderFrame::removeFiles,
           this, &MainWindow::removeFiles);
 
-  // Settings frame connections
-  connect(settingsFrame, &SettingsFrame::updateKeySize,
-          this, &MainWindow::updateKeySize);
+  // Request setting update
+  connect(settingsFrame, &SettingsFrame::requestUpdateCryptoProvider,
+          settings, qOverload<const QString&>(&Settings::cryptoProvider));
+  connect(settingsFrame, &SettingsFrame::requestUpdateKeySize,
+          settings, qOverload<std::size_t>(&Settings::keySize));
+  connect(settingsFrame, &SettingsFrame::requestUpdateCompressionFormat,
+          settings, qOverload<const QString&>(&Settings::compressionFormat));
+  connect(settingsFrame, &SettingsFrame::requestUpdateRemoveIntermediateFiles,
+          settings, qOverload<bool>(&Settings::removeIntermediateFiles));
+  connect(settingsFrame, &SettingsFrame::requestUpdateContainerMode,
+          settings, qOverload<bool>(&Settings::containerMode));
 
-  connect(settingsFrame, &SettingsFrame::updateCompressionFormat,
-          this, &MainWindow::updateCompressionFormat);
+  // Receive settings changed
+  connect(settings, qOverload<const QString&>(&Settings::cryptoProviderChanged),
+          settingsFrame, &SettingsFrame::cryptoProviderChanged);
+  connect(settings, qOverload<std::size_t>(&Settings::keySizeChanged),
+          settingsFrame, &SettingsFrame::keySizeChanged);
+  connect(settings, &Settings::compressionFormatChanged,
+          settingsFrame, &SettingsFrame::compressionFormatChanged);
+  connect(settings, &Settings::removeIntermediateFilesChanged,
+          settingsFrame, &SettingsFrame::removeIntermediateFilesChanged);
+  connect(settings, &Settings::containerModeChanged,
+          settingsFrame, &SettingsFrame::containerModeChanged);
 
-  connect(settingsFrame, &SettingsFrame::updateRemoveIntermediateFiles,
-          this, &MainWindow::updateRemoveIntermediateFiles);
-
-  connect(settingsFrame, &SettingsFrame::updateContainerMode,
-          this, &MainWindow::updateContainerMode);
+  // Output frame
+  connect(outputFrame, &OutputFrame::requestUpdateOutputPath,
+          settings, qOverload<const QString&>(&Settings::outputPath));
+  connect(settings,
+          &Settings::outputPathChanged,
+          outputFrame,
+          qOverload<const QString&>(&OutputFrame::outputPath));
+  connect(outputFrame, &OutputFrame::selectOutputDir,
+          this, &MainWindow::selectOutputDir);
 
   // Forwarded connections
   connect(fileListFrame, &FileListFrame::stopFile,
           this, &MainWindow::stopFile, Qt::DirectConnection);
   connect(controlButtonFrame, &ControlButtonFrame::processFiles,
           this, &MainWindow::processFiles);
+
+  connect(this, &MainWindow::requestUpdateInputPath,
+          settings, qOverload<const QString&>(&Settings::inputPath));
+  connect(this, &MainWindow::requestUpdateOutputPath,
+          settings, qOverload<const QString&>(&Settings::outputPath));
+  connect(this, &MainWindow::requestUpdateClosePosition,
+          settings, qOverload<const QPoint&>(&Settings::position));
+  connect(this, &MainWindow::requestUpdateCloseSize,
+          settings, qOverload<const QSize&>(&Settings::size));
+  connect(this, &MainWindow::requestUpdateCloseMaximized,
+          settings, qOverload<bool>(&Settings::maximized));
 }
 
-MainWindow::~MainWindow() {
-  settings->outputPath(outputFrame->outputPath());
-}
+MainWindow::~MainWindow() = default;
 
 void MainWindow::addFiles() {
   Q_ASSERT(settings);
@@ -159,21 +184,20 @@ void MainWindow::addFiles() {
 
     // Save this directory for returning to later
     const QFileInfo lastFileInfo(fileNames.last());
-    settings->inputPath(lastFileInfo.absolutePath());
+    emit requestUpdateInputPath(lastFileInfo.absolutePath());
   }
 }
 
 void MainWindow::removeFiles() {
   Q_ASSERT(fileListFrame);
 
-  // Signal to abort current cipher operation if it's in progress
-  emit abort();
+  // Signal to cancel current cipher operation if it's in progress
+  emit cancel();
 
   fileListFrame->clear();
 }
 
-void MainWindow::processFiles(
-  const CryptDirection direction) {
+void MainWindow::processFiles(const CryptDirection direction) {
   Q_D(MainWindow);
   Q_ASSERT(settings);
   Q_ASSERT(passwordFrame);
@@ -245,68 +269,6 @@ void MainWindow::updateError(const QString& message,
   updateFileProgress(QFileInfo(fileInfo.absoluteFilePath()), QString(), 0);
 }
 
-void MainWindow::updateCipher(const QString& cipher) {
-  Q_ASSERT(settings);
-
-  if (!settings) {
-    return;
-  }
-
-  settings->cipher(cipher);
-}
-
-void MainWindow::updateKeySize(const std::size_t keySize) {
-  Q_ASSERT(settings);
-
-  if (!settings) {
-    return;
-  }
-
-  settings->keySize(keySize);
-}
-
-void MainWindow::updateCompressionFormat(const QString& format) {
-  Q_ASSERT(settings);
-
-  if (!settings) {
-    return;
-  }
-
-  settings->compressionFormat(format);
-}
-
-void MainWindow::updateRemoveIntermediateFiles(const bool removeIntermediate) {
-  Q_ASSERT(settings);
-
-  if (!settings) {
-    return;
-  }
-
-  settings->removeIntermediateFiles(removeIntermediate);
-}
-
-void MainWindow::updateContainerMode(const bool container) {
-  Q_ASSERT(settings);
-
-  if (!settings) {
-    return;
-  }
-
-  settings->containerMode(container);
-}
-
-void MainWindow::outputPathChanged(const QString& path) {
-  Q_ASSERT(settings);
-
-  if (!settings) {
-    return;
-  }
-
-  if (!path.isEmpty()) {
-    settings->outputPath(path);
-  }
-}
-
 void MainWindow::selectOutputDir() {
   Q_ASSERT(settings);
 
@@ -320,8 +282,7 @@ void MainWindow::selectOutputDir() {
                                       settings->outputPath());
 
   if (!outputDir.isEmpty()) { // Save this directory for returning to later
-    settings->outputPath(outputDir);
-    outputFrame->outputPath(outputDir);
+    emit requestUpdateOutputPath(outputDir);
   }
 }
 

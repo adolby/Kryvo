@@ -474,10 +474,9 @@ QString Settings::styleSheetPath() const {
   return d->styleSheetPath_;
 }
 
-void Settings::cryptoProvidersChanged(const QHash<QString, Plugin>& providers) {
+void Settings::cryptoProvidersLoaded(const QHash<QString, Plugin>& providers) {
   Q_D(Settings);
 
-  qInfo() << Q_FUNC_INFO;
   d->cryptoProviders_ = providers;
 
   d->importSettings();

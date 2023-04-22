@@ -23,7 +23,7 @@ class PluginLoader : public QObject {
   ~PluginLoader() override;
 
  signals:
-  void cryptoProvidersChanged(const QHash<QString, Plugin>& providers);
+  void cryptoProvidersLoaded(const QHash<QString, Plugin>& providers);
 
  public slots:
   void loadPlugins();

@@ -67,7 +67,7 @@ Page {
         }
 
         ComboBox {
-          model: ["Botan", "OpenSsl"]
+          model: ["OpenSsl", "Botan"]
 
           onActivated: {
             ui.updateCryptoProvider(currentText);

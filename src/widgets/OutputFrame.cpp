@@ -32,7 +32,7 @@ OutputFrame::OutputFrame(QWidget* parent)
           this,
           [this]() {
             Q_D(OutputFrame);
-            emit outputPathChanged(d->outputLineEdit->text());
+            emit requestUpdateOutputPath(d->outputLineEdit->text());
           });
 
   d->outputPushButton = new QPushButton(this);
@@ -51,18 +51,18 @@ OutputFrame::OutputFrame(QWidget* parent)
 
 OutputFrame::~OutputFrame() = default;
 
-void OutputFrame::outputPath(const QString& path) {
-  Q_D(OutputFrame);
-  Q_ASSERT(d->outputLineEdit);
-
-  d->outputLineEdit->setText(path);
-}
-
 QString OutputFrame::outputPath() const {
   Q_D(const OutputFrame);
   Q_ASSERT(d->outputLineEdit);
 
   return d->outputLineEdit->text();
+}
+
+void OutputFrame::outputPath(const QString& path) {
+  Q_D(OutputFrame);
+  Q_ASSERT(d->outputLineEdit);
+
+  d->outputLineEdit->setText(path);
 }
 
 } // namespace Kryvo

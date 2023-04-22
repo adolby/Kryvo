@@ -94,8 +94,8 @@ ApplicationPrivate::ApplicationPrivate(Application* app)
                    &scheduler, &Scheduler::pause,
                    Qt::DirectConnection);
 
-  QObject::connect(&gui, &Ui::abort,
-                   &scheduler, &Scheduler::abort,
+  QObject::connect(&gui, &Ui::cancel,
+                   &scheduler, &Scheduler::cancel,
                    Qt::DirectConnection);
 
   QObject::connect(&gui, &Ui::stopFile,
@@ -114,8 +114,8 @@ ApplicationPrivate::ApplicationPrivate(Application* app)
   QObject::connect(&scheduler, &Scheduler::errorMessage,
                    &gui, &Ui::appendErrorMessage);
 
-  QObject::connect(&scheduler, &Scheduler::cryptoProvidersChanged,
-                   &settings, &Settings::cryptoProvidersChanged);
+  QObject::connect(&scheduler, &Scheduler::cryptoProvidersLoaded,
+                   &settings, &Settings::cryptoProvidersLoaded);
 
   scheduler.moveToThread(&schedulerThread);
 
@@ -134,8 +134,8 @@ Application::Application(int& argc, char** argv)
 Application::~Application() {
   Q_D(Application);
 
-  // Abort current threaded operations
-  d->scheduler.abort();
+  // Cancel current threaded operations
+  d->scheduler.cancel();
 }
 
 bool Application::notify(QObject* receiver, QEvent* event) {

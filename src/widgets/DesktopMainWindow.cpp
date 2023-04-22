@@ -63,13 +63,13 @@ void DesktopMainWindow::settingsImported() {
 }
 
 void DesktopMainWindow::closeEvent(QCloseEvent* event) {
-  settings->position(this->pos());
+  emit requestUpdateClosePosition(this->pos());
 
   if (this->isMaximized()) {
-    settings->maximized(true);
+    emit requestUpdateCloseMaximized(true);
   } else {
-    settings->maximized(false);
-    settings->size(this->size());
+    emit requestUpdateCloseMaximized(false);
+    emit requestUpdateCloseSize(this->size());
   }
 
   QMainWindow::closeEvent(event);

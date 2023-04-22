@@ -31,9 +31,12 @@ QString qmlUrlToPath(const QUrl& url) {
 
 class UiPrivate {
   Q_DISABLE_COPY(UiPrivate)
+  Q_DECLARE_PUBLIC(Ui)
 
  public:
-  UiPrivate(Settings* s);
+  explicit UiPrivate(Ui* ui, Settings* s);
+
+  Ui* const q_ptr{nullptr};
 
   Settings* settings = nullptr;
 
@@ -58,13 +61,61 @@ class UiPrivate {
   QString password;
 };
 
-UiPrivate::UiPrivate(Settings* s)
-  : settings(s), mainPageUrl(QStringLiteral("qrc:/qml/main.qml")) {
-    statusMessageIterator = statusMessages.cbegin();
+UiPrivate::UiPrivate(Ui* ui, Settings* s)
+  : q_ptr(ui), settings(s), mainPageUrl(QStringLiteral("qrc:/qml/main.qml")) {
+  Q_Q(Ui);
+
+  statusMessageIterator = statusMessages.cbegin();
+
+  // Request settings updates
+  QObject::connect(q,
+                   &Ui::requestUpdateCryptoProvider,
+                   settings,
+                   qOverload<const QString&>(&Settings::cryptoProvider));
+  QObject::connect(q, &Ui::requestUpdateKeySize,
+                   settings, qOverload<std::size_t>(&Settings::keySize));
+  QObject::connect(q,
+                   &Ui::requestUpdateModeOfOperation,
+                   settings,
+                   qOverload<const QString&>(&Settings::modeOfOperation));
+  QObject::connect(q,
+                   &Ui::requestUpdateCompressionFormat,
+                   settings,
+                   qOverload<const QString&>(&Settings::compressionFormat));
+  QObject::connect(q,
+                   &Ui::requestUpdateRemoveIntermediateFiles,
+                   settings,
+                   qOverload<bool>(&Settings::removeIntermediateFiles));
+  QObject::connect(q, &Ui::requestUpdateContainerMode,
+                   settings, qOverload<bool>(&Settings::containerMode));
+  QObject::connect(q, &Ui::requestUpdateInputPath,
+                   settings, qOverload<const QString&>(&Settings::inputPath));
+  QObject::connect(q, &Ui::requestUpdateOutputPath,
+                   settings, qOverload<const QString&>(&Settings::outputPath));
+
+  // Receive settings updates
+  QObject::connect(settings, &Settings::cryptoProviderChanged,
+                   q, &Ui::cryptoProviderChanged);
+  QObject::connect(settings,
+                   &Settings::keySizeChanged,
+                   q,
+                   [q](std::size_t size) {
+                     emit q->keySizeChanged(QString::number(size));
+                   });
+  QObject::connect(settings, &Settings::compressionFormatChanged,
+                   q, &Ui::compressionFormatChanged);
+  QObject::connect(settings, &Settings::removeIntermediateFilesChanged,
+                   q, &Ui::removeIntermediateFilesChanged);
+  QObject::connect(settings, &Settings::containerModeChanged,
+                   q, &Ui::containerModeChanged);
+  QObject::connect(settings, &Settings::inputPathChanged,
+                   q, &Ui::inputPathChanged);
+  QObject::connect(settings, &Settings::outputPathChanged,
+                   q, &Ui::outputPathChanged);
 }
 
 Ui::Ui(Settings* s, QObject* parent)
-  : QObject(parent), d_ptr(std::make_unique<UiPrivate>(s)) {
+  : QObject(parent), d_ptr(std::make_unique<UiPrivate>(this, s)) {
   connect(&d_ptr->engine,
           &QQmlApplicationEngine::objectCreated,
           this,
@@ -128,19 +179,19 @@ bool Ui::canNavigateBack() const {
 
 QUrl Ui::inputPath() const {
   Q_D(const Ui);
-  const QDir inputDir = d->settings->inputPath();
+  const QDir inputDir(d->settings->inputPath());
   return QUrl::fromLocalFile(inputDir.absolutePath());
 }
 
 QUrl Ui::outputPath() const {
   Q_D(const Ui);
-  const QDir outputDir = d->settings->outputPath();
+  const QDir outputDir(d->settings->outputPath());
   return QUrl::fromLocalFile(outputDir.absolutePath());
 }
 
 QString Ui::outputPathString() const {
   Q_D(const Ui);
-  const QDir outputDir = d->settings->outputPath();
+  const QDir outputDir(d->settings->outputPath());
   return outputDir.absolutePath();
 }
 
@@ -254,7 +305,6 @@ void Ui::addFile(const QUrl& fileUrl) {
 
 void Ui::addFiles(const QList<QUrl>& fileUrls) {
   Q_D(Ui);
-
   Q_ASSERT(d->settings);
 
   if (!fileUrls.isEmpty()) { // If files were selected, add them to the model
@@ -265,30 +315,24 @@ void Ui::addFiles(const QList<QUrl>& fileUrls) {
 
       if (fileInfo.exists() && fileInfo.isFile()) {
         d->fileListModel.appendRow(FileItem(fileInfo.absoluteFilePath()));
-      } else {
-        // TODO Emit error
       }
     }
 
     // Save the last file directory for returning to later
     const QUrl lastInputUrl = fileUrls.last();
-    const QString inputPath = qmlUrlToPath(lastInputUrl);
+    const QString inPath = qmlUrlToPath(lastInputUrl);
 
-    const QDir inputDir(inputPath);
+    const QDir inDir(inPath);
 
-    if (inputDir != QDir(d->settings->inputPath())) {
-      d->settings->inputPath(inputDir.absolutePath());
-
-      emit inputPathChanged(lastInputUrl);
-    }
+    emit requestUpdateInputPath(inDir.absolutePath());
   }
 }
 
 void Ui::removeFiles() {
   Q_D(Ui);
 
-  // Signal to abort current cipher operation if it's in progress
-  emit abort();
+  // Signal to cancel current cipher operation if it's in progress
+  emit cancel();
 
   d->fileListModel.clear();
 }
@@ -303,45 +347,45 @@ void Ui::decryptFiles(const QString& passphrase) {
 
 void Ui::processFiles(const QString& passphrase,
                       const CryptDirection cryptDirection) {
-  Q_D(Ui);
-
+  Q_D(const Ui);
   Q_ASSERT(d->settings);
 
-  if (!passphrase.isEmpty()) {
-    std::vector<QFileInfo> files;
-
-    const int rowCount = d->fileListModel.rowCount();
-
-    for (int row = 0; row < rowCount; ++row) {
-      const FileItem item = d->fileListModel.item(row);
-      files.push_back(QFileInfo(item.fileName()));
-    }
-
-    if (files.empty()) {
-      appendStatusMessage(d->errorMessages[1]);
-      return;
-    }
-
-    if (CryptDirection::Encrypt == cryptDirection) {
-      EncryptConfig config;
-      config.provider = d->settings->cryptoProvider();
-      config.compressionFormat = d->settings->compressionFormat();
-      config.passphrase = passphrase;
-      config.cipher = d->settings->cipher();
-      config.keySize = d->settings->keySize();
-      config.modeOfOperation = d->settings->modeOfOperation();
-      config.removeIntermediateFiles = d->settings->removeIntermediateFiles();
-
-      emit encrypt(config, files, QDir(d->settings->outputPath()));
-    } else if (CryptDirection::Decrypt == cryptDirection) {
-      DecryptConfig config;
-      config.passphrase = passphrase;
-      config.removeIntermediateFiles = d->settings->removeIntermediateFiles();
-
-      emit decrypt(config, files, QDir(d->settings->outputPath()));
-    }
-  } else { // Inform user that a password is required to encrypt or decrypt
+  if (passphrase.isEmpty()) { // Inform user that a passphrase is required
     appendStatusMessage(d->errorMessages[0]);
+    return;
+  }
+
+  std::vector<QFileInfo> files;
+
+  const int rowCount = d->fileListModel.rowCount();
+
+  for (int row = 0; row < rowCount; ++row) {
+    const FileItem item = d->fileListModel.item(row);
+    files.push_back(QFileInfo(item.fileName()));
+  }
+
+  if (files.empty()) {
+    appendStatusMessage(d->errorMessages[1]);
+    return;
+  }
+
+  if (CryptDirection::Encrypt == cryptDirection) {
+    EncryptConfig config;
+    config.provider = d->settings->cryptoProvider();
+    config.compressionFormat = d->settings->compressionFormat();
+    config.passphrase = passphrase;
+    config.cipher = d->settings->cipher();
+    config.keySize = d->settings->keySize();
+    config.modeOfOperation = d->settings->modeOfOperation();
+    config.removeIntermediateFiles = d->settings->removeIntermediateFiles();
+
+    emit encrypt(config, files, QDir(d->settings->outputPath()));
+  } else if (CryptDirection::Decrypt == cryptDirection) {
+    DecryptConfig config;
+    config.passphrase = passphrase;
+    config.removeIntermediateFiles = d->settings->removeIntermediateFiles();
+
+    emit decrypt(config, files, QDir(d->settings->outputPath()));
   }
 }
 
@@ -383,75 +427,34 @@ void Ui::appendErrorMessage(const QString& message,
   updateFileProgress(QFileInfo(fileInfo.absoluteFilePath()), QString(), 0);
 }
 
-void Ui::updateCryptoProvider(const QString& cryptoProvider) {
-  Q_D(Ui);
-
-  if (cryptoProvider != d->settings->cryptoProvider()) {
-    d->settings->cryptoProvider(cryptoProvider);
-    emit cryptoProviderChanged(d->settings->modeOfOperation());
-  }
+void Ui::updateCryptoProvider(const QString& provider) {
+  emit requestUpdateCryptoProvider(provider);
 }
 
 void Ui::updateKeySize(const QString& keySizeString) {
-  Q_D(Ui);
-
-  const std::size_t keySize = static_cast<std::size_t>(keySizeString.toInt());
-
-  if (keySize != d->settings->keySize()) {
-    d->settings->keySize(keySize);
-
-    const QString updatedKeySizeString =
-      QString::number(d->settings->keySize());
-
-    emit keySizeChanged(updatedKeySizeString);
-  }
+  const std::size_t size = static_cast<std::size_t>(keySizeString.toInt());
+  emit requestUpdateKeySize(size);
 }
 
 void Ui::updateModeOfOperation(const QString& mode) {
-  Q_D(Ui);
-
-  if (mode != d->settings->modeOfOperation()) {
-    d->settings->modeOfOperation(mode);
-    emit modeOfOperationChanged(d->settings->modeOfOperation());
-  }
+  emit requestUpdateModeOfOperation(mode);
 }
 
 void Ui::updateCompressionFormat(const QString& format) {
-  Q_D(Ui);
-
-  if (format != d->settings->compressionFormat()) {
-    d->settings->compressionFormat(format);
-    emit compressionFormatChanged(d->settings->compressionFormat());
-  }
+  emit requestUpdateCompressionFormat(format);
 }
 
 void Ui::updateRemoveIntermediateFiles(const bool removeIntermediate) {
-  Q_D(Ui);
-
-  if (removeIntermediate != d->settings->removeIntermediateFiles()) {
-    d->settings->removeIntermediateFiles(removeIntermediate);
-    emit removeIntermediateFilesChanged(d->settings->removeIntermediateFiles());
-  }
+  emit requestUpdateRemoveIntermediateFiles(removeIntermediate);
 }
 
 void Ui::updateContainerMode(const bool container) {
-  Q_D(Ui);
-
-  if (container != d->settings->containerMode()) {
-    d->settings->containerMode(container);
-    emit containerModeChanged(d->settings->containerMode());
-  }
+  emit requestUpdateContainerMode(container);
 }
 
 void Ui::updateOutputPath(const QUrl& url) {
-  Q_D(Ui);
-
-  const QString outputPath = qmlUrlToPath(url);
-
-  if (outputPath != d->settings->outputPath()) {
-    d->settings->outputPath(outputPath);
-    emit outputPathChanged(url);
-  }
+  const QString outPath = qmlUrlToPath(url);
+  emit requestUpdateOutputPath(outPath);
 }
 
 void Ui::navigateMessageLeft() {

@@ -84,7 +84,7 @@ int ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
   do {
     state->pauseWait(id);
 
-    if (state->isAborted() || state->isStopped(id)) {
+    if (state->isCancelled() || state->isStopped(id)) {
       deflateEnd(&strm);
       return Z_ERRNO;
     }
@@ -196,7 +196,7 @@ int ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
   do {
     state->pauseWait(id);
 
-    if (state->isAborted() || state->isStopped(id)) {
+    if (state->isCancelled() || state->isStopped(id)) {
       inflateEnd(&strm);
       return Z_ERRNO;
     }
@@ -285,7 +285,7 @@ bool ArchiverPrivate::compressFile(const std::size_t id,
     return false;
   }
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
     emit q->fileFailed(id);
     return false;
   }
@@ -321,7 +321,7 @@ bool ArchiverPrivate::compressFile(const std::size_t id,
     return false;
   }
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
     emit q->fileFailed(id);
     return false;
   }
@@ -347,7 +347,7 @@ bool ArchiverPrivate::decompressFile(
     return false;
   }
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
     emit q->fileFailed(id);
     return false;
   }
@@ -381,7 +381,7 @@ bool ArchiverPrivate::decompressFile(
     return false;
   }
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
     emit q->fileFailed(id);
     return false;
   }
