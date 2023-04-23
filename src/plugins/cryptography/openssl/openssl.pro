@@ -79,11 +79,9 @@ linux {
   linux-clang {
     message(clang)
 
-#    INCLUDEPATH += /usr/include/
+    INCLUDEPATH += $${QT_TOOLS}/OpenSSLv3/linux/include
 
-#    LIBS += -L/usr/lib/x86_64-linux-gnu/ -lssl -lcrypto
-
-    PKGCONFIG += openssl
+    LIBS += -L$${QT_TOOLS}/OpenSSLv3/linux/lib -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -102,11 +100,9 @@ linux {
   linux-g++ {
     message(g++)
 
-#    INCLUDEPATH += /usr/include/
+    INCLUDEPATH += $${QT_TOOLS}/OpenSSLv3/linux/include
 
-#    LIBS += -L/usr/lib/x86_64-linux-gnu/ -lssl -lcrypto
-
-    PKGCONFIG += openssl
+    LIBS += -L$${QT_TOOLS}/OpenSSLv3/linux/lib -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -120,21 +116,23 @@ linux {
       message(Release)
       DESTDIR = $$PWD/../../../../build/linux/gcc/x86_64/release/plugins/cryptography/openssl
     }
-  } # End linux-g++-64
+  } # End linux-g++
 } # End linux
 
 darwin {
-#  LIBS += -framework Security
+  # Install OpenSSL v3 from Homebrew
+  INCLUDEPATH += /usr/local/opt/openssl@3/include
+
+  LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
+
+  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+  QMAKE_LFLAGS += -fstack-protector
 
   ios {
     message(iOS)
     message(clang)
 
     CONFIG -= simulator
-
-    INCLUDEPATH += /usr/local/opt/openssl@3/include
-
-    LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
 
     debug {
       message(Debug)
@@ -149,13 +147,6 @@ darwin {
   macos {
     message(macOS)
     message(clang)
-
-    INCLUDEPATH += /usr/local/opt/openssl@3/include
-
-    LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
-
-    QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-    QMAKE_LFLAGS += -fstack-protector
 
     debug {
       message(Debug)
@@ -181,9 +172,9 @@ win32 {
     contains(QT_ARCH, x86_64) {
       message(x86_64)
 
-      INCLUDEPATH += openssl/windows/msvc/x86_64/include
+      INCLUDEPATH += $${QT_TOOLS}/OpenSSLv3/Win_x64/include
 
-      LIBS += -Lopenssl/windows/msvc/x86_64/lib -lssl -lcrypto
+      LIBS += -L$${QT_TOOLS}/OpenSSLv3/Win_x64/lib -lssl -lcrypto
 
       debug {
         message(Debug)
