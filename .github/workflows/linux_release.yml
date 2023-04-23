@@ -30,7 +30,7 @@ jobs:
           target: desktop
           arch: gcc_64
           cache: true
-          tools: 'tools_ifw tools_opensslv3_x64 tools_opensslv3_src'
+          tools: tools_ifw
 
       - name: (3) Install extra Linux dependencies
         run: |
