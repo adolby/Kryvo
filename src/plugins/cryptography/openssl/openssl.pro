@@ -79,9 +79,11 @@ linux {
   linux-clang {
     message(clang)
 
-    INCLUDEPATH += /usr/include/
+#    INCLUDEPATH += /usr/include/
 
-    LIBS += -L/usr/lib/x86_64-linux-gnu/ -lssl -lcrypto
+#    LIBS += -L/usr/lib/x86_64-linux-gnu/ -lssl -lcrypto
+
+    PKGCONFIG += openssl
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -100,9 +102,11 @@ linux {
   linux-g++ {
     message(g++)
 
-    INCLUDEPATH += /usr/include/
+#    INCLUDEPATH += /usr/include/
 
-    LIBS += -L/usr/lib/x86_64-linux-gnu/ -lssl -lcrypto
+#    LIBS += -L/usr/lib/x86_64-linux-gnu/ -lssl -lcrypto
+
+    PKGCONFIG += openssl
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector

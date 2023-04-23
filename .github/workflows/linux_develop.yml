@@ -14,7 +14,7 @@ defaults:
 
 env:
   SOURCE_DIR: ${{ github.workspace }}
-  QT_VERSION: 6.4.2
+  QT_VERSION: 6.5.0
 
 jobs:
   build:
@@ -31,8 +31,8 @@ jobs:
           host: linux
           target: desktop
           arch: gcc_64
-          tools: tools_ifw
           cache: true
+          tools: 'tools_ifw tools_opensslv3_x64 tools_opensslv3_src'
 
       - name: (3) Install extra Linux dependencies
         run: |
