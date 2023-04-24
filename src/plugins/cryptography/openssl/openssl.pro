@@ -79,9 +79,9 @@ linux {
   linux-clang {
     message(clang)
 
-    INCLUDEPATH += $${IQTA_TOOLS}/OpenSSLv3/linux/include
+    INCLUDEPATH += /usr/local/ssl/include
 
-    LIBS += -L$${IQTA_TOOLS}/OpenSSLv3/linux/lib -lssl -lcrypto
+    LIBS += -L/usr/local/ssl/lib -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -100,9 +100,9 @@ linux {
   linux-g++ {
     message(g++)
 
-    INCLUDEPATH += $${IQTA_TOOLS}/OpenSSLv3/linux/include
+    INCLUDEPATH += /usr/local/ssl/include
 
-    LIBS += -L$${IQTA_TOOLS}/OpenSSLv3/linux/lib -lssl -lcrypto
+    LIBS += -L/usr/local/ssl/lib -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
