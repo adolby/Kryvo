@@ -25,12 +25,14 @@ jobs:
       - name: (2) Install Qt
         uses: jurplel/install-qt-action@v3
         with:
+          aqtversion: '==3.1.*'
+          py7zrversion: '>=0.20.2'
           version: ${{ env.QT_VERSION }}
           host: linux
           target: desktop
           arch: gcc_64
           cache: true
-          tools: tools_ifw
+          tools: 'tools_ifw tools_opensslv3_x64'
 
       - name: (3) Install extra Linux dependencies
         run: |
