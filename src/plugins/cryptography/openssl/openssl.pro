@@ -172,11 +172,11 @@ win32 {
     contains(QT_ARCH, x86_64) {
       message(x86_64)
 
-      message($${IQTA_TOOLS}/OpenSSLv3/Win_x64/include)
+      message($${QT_TOOLS}/OpenSSLv3/Win_x64/include)
 
-      INCLUDEPATH += $${IQTA_TOOLS}/OpenSSLv3/Win_x64/include
+      INCLUDEPATH += $${QT_TOOLS}/OpenSSLv3/Win_x64/include
 
-      LIBS += -L$${IQTA_TOOLS}/OpenSSLv3/Win_x64/lib -lssl -lcrypto
+      LIBS += -L$${QT_TOOLS}/OpenSSLv3/Win_x64/lib -lssl -lcrypto
 
       debug {
         message(Debug)

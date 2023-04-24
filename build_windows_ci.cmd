@@ -4,6 +4,7 @@ echo "Setting up environment..."
 
 SET PROJECT_DIR="%SOURCE_DIR%"
 SET QT_PATH="%Qt6_DIR%"
+SETX QT_TOOLS "%IQTA_TOOLS%"
 
 SET PATH=%QT_PATH%\bin\;%IQTA_TOOLS%\QtInstallerFramework\4.5\bin;%PATH%
 call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
