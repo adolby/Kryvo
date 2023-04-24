@@ -4,12 +4,11 @@ set -o errexit -o nounset
 
 PROJECT_DIR="${SOURCE_DIR}"
 QT_PATH="${Qt6_DIR}"
-QT_TOOLS="${IQTA_TOOLS}"
 KRYVO_VERSION="${KRYVO_VERSION:-dev}"
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
-PATH="${QT_PATH}/bin/:${QT_TOOLS}/QtInstallerFramework/4.5/bin/:${PATH}"
+PATH="${QT_PATH}/bin/:${IQTA_TOOLS}/QtInstallerFramework/4.5/bin/:${PATH}"
 
 # Check qmake version
 qmake --version
@@ -66,8 +65,8 @@ cp -a "${QT_PATH}/lib/libQt6Test.so.6.4.2" "libQt6Test.so.6.4.2"
 ln -s "libQt6Test.so.6.4.2" "libQtTest.so"
 ln -s "libQt6Test.so.6.4.2" "libQtTest.so.6"
 
-cp -a "${QT_TOOLS}\OpenSSLv3\linux\bin\libcrypto-3-x64.so" "libcrypto-3-x64.so"
-cp -a "${QT_TOOLS}\OpenSSLv3\linux\bin\libssl-3-x64.so" "libssl-3-x64.so"
+cp -a "${IQTA_TOOLS}\OpenSSLv3\linux\bin\libcrypto-3-x64.so" "libcrypto-3-x64.so"
+cp -a "${IQTA_TOOLS}\OpenSSLv3\linux\bin\libssl-3-x64.so" "libssl-3-x64.so"
 
 # Copy plugins for test app
 # echo "Copying plugins for test app..."
@@ -155,8 +154,8 @@ ln -s "libQt6Widgets.so.6.4.2" "libQt6Widgets.so.6"
 chrpath -r \$ORIGIN/.. platforms/libqxcb.so
 chrpath -r \$ORIGIN/.. platforms/libqminimal.so
 
-cp -a "${QT_TOOLS}\OpenSSLv3\linux\bin\libcrypto-3-x64.so" "libcrypto-3-x64.so"
-cp -a "${QT_TOOLS}\OpenSSLv3\linux\bin\libssl-3-x64.so" "libssl-3-x64.so"
+cp -a "${IQTA_TOOLS}\OpenSSLv3\linux\bin\libcrypto-3-x64.so" "libcrypto-3-x64.so"
+cp -a "${IQTA_TOOLS}\OpenSSLv3\linux\bin\libssl-3-x64.so" "libssl-3-x64.so"
 
 cp -a "${PROJECT_DIR}/Release Notes" "Release Notes"
 cp -a "${PROJECT_DIR}/README.md" "README.md"

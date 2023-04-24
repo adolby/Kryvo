@@ -79,9 +79,9 @@ linux {
   linux-clang {
     message(clang)
 
-    INCLUDEPATH += $${QT_TOOLS}/OpenSSLv3/linux/include
+    INCLUDEPATH += $${IQTA_TOOLS}/OpenSSLv3/linux/include
 
-    LIBS += -L$${QT_TOOLS}/OpenSSLv3/linux/lib -lssl -lcrypto
+    LIBS += -L$${IQTA_TOOLS}/OpenSSLv3/linux/lib -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -100,9 +100,9 @@ linux {
   linux-g++ {
     message(g++)
 
-    INCLUDEPATH += $${QT_TOOLS}/OpenSSLv3/linux/include
+    INCLUDEPATH += $${IQTA_TOOLS}/OpenSSLv3/linux/include
 
-    LIBS += -L$${QT_TOOLS}/OpenSSLv3/linux/lib -lssl -lcrypto
+    LIBS += -L$${IQTA_TOOLS}/OpenSSLv3/linux/lib -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -172,11 +172,11 @@ win32 {
     contains(QT_ARCH, x86_64) {
       message(x86_64)
 
-      message($${QT_TOOLS}/OpenSSLv3/Win_x64/include)
+      message($${IQTA_TOOLS}/OpenSSLv3/Win_x64/include)
 
-      INCLUDEPATH += $${QT_TOOLS}/OpenSSLv3/Win_x64/include
+      INCLUDEPATH += $${IQTA_TOOLS}/OpenSSLv3/Win_x64/include
 
-      LIBS += -L$${QT_TOOLS}/OpenSSLv3/Win_x64/lib -lssl -lcrypto
+      LIBS += -L$${IQTA_TOOLS}/OpenSSLv3/Win_x64/lib -lssl -lcrypto
 
       debug {
         message(Debug)
