@@ -39,7 +39,7 @@ if [ -f "${PROJECT_DIR}/Makefile" ]; then
   make distclean
 fi
 
-qmake -makefile -spec linux-g++ CONFIG+=release DEFINES+="QT_TOOLS=${QT_TOOLS}"
+qmake -makefile -spec linux-g++ CONFIG+=release OPENSSL_PATH=TODO
 make
 
 # Copy Qt dependencies for test app

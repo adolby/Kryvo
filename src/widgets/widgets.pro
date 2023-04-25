@@ -168,9 +168,6 @@ linux {
 } # End linux
 
 darwin {
-  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-  QMAKE_LFLAGS += -fstack-protector
-
   macos {
     message(macOS)
     message(clang)
@@ -180,10 +177,6 @@ darwin {
 
     QMAKE_TARGET_BUNDLE_PREFIX = app.kryvo
     ICON = $$PWD/../../resources/icons/kryvo.icns
-
-    INCLUDEPATH += /usr/local/opt/openssl@3/include
-
-    LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
 
     debug {
       message(Debug)
@@ -202,6 +195,13 @@ darwin {
       DESTDIR = $$PWD/../../build/macOS/clang/x86_64/release/widgets
     }
   } # End macos
+
+  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+  QMAKE_LFLAGS += -fstack-protector
+
+  # Install OpenSSL v3 from Homebrew
+  INCLUDEPATH += /usr/local/opt/openssl@3/include
+  LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
 } # End darwin
 
 win32 {
@@ -236,6 +236,8 @@ win32 {
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/widgets
       }
+
+      LIBS += -L$$(OPENSSL_PATH)/OpenSSLv3/Win_x64/lib -lssl -lcrypto
     }
   } # End win32-msvc
 
