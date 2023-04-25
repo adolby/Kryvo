@@ -128,6 +128,8 @@ linux {
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/linux/clang/x86_64/release/quick
     }
+
+    LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
   } # End linux-clang
 
   linux-g++ {
@@ -153,6 +155,8 @@ linux {
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/quick
     }
+
+    LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
   } # End linux-g++
 } # End linux
 
@@ -224,7 +228,7 @@ darwin {
 
   # Install OpenSSL v3 from Homebrew
   INCLUDEPATH += $${OPENSSL_PATH}/include
-  LIBS += -L$${OPENSSL_PATH} -lssl -lcrypto
+  LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
 } # End darwin
 
 win32 {
@@ -257,7 +261,7 @@ win32 {
         DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/quick
       }
 
-      LIBS += -L$${OPENSSL_PATH}/OpenSSLv3/Win_x64/lib -lssl -lcrypto
+      LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
     }
   } # End win32-msvc
 

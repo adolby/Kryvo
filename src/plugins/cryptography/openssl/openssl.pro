@@ -30,7 +30,7 @@ SOURCES += OpenSslProvider.cpp
 HEADERS += \
   OpenSslProvider.hpp \
   $$PWD/../../../core/Constants.hpp \
-  $$PWD/../../../core/DispatcherState.hpp
+  $$PWD/../../../core/SchedulerState.hpp
 
 OTHER_FILES += openssl.json
 
@@ -45,8 +45,6 @@ linux {
       message(armeabi-v7a)
 
       INCLUDEPATH += openssl/android/armv7/include
-
-      LIBS += -Lopenssl/android/armv7/lib -lssl -lcrypto
 
       debug {
         message(Debug)
@@ -63,8 +61,6 @@ linux {
 
       INCLUDEPATH += openssl/android/arm64_v8a/include
 
-      LIBS += -Lopenssl/android/arm64_v8a/lib -lssl -lcrypto
-
       debug {
         message(Debug)
         DESTDIR = $$PWD/../../../../build/android/arm64_v8a/debug/plugins/cryptography/openssl
@@ -80,8 +76,6 @@ linux {
     message(clang)
 
     INCLUDEPATH += $${OPENSSL_PATH}/include
-
-    LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -102,8 +96,6 @@ linux {
 
     INCLUDEPATH += $${OPENSSL_PATH}/include
 
-    LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
-
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
@@ -122,8 +114,6 @@ linux {
 darwin {
   # Install OpenSSL v3 from Homebrew
   INCLUDEPATH += $${OPENSSL_PATH}/include
-
-  LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
 
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
@@ -165,18 +155,16 @@ win32 {
   win32-msvc {
     message(MSVC)
 
-    LIBS += -ladvapi32 -luser32 -lws2_32
+#    LIBS += -ladvapi32 -luser32 -lws2_32
 
     QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
     contains(QT_ARCH, x86_64) {
       message(x86_64)
 
-      message($${OPENSSL_PATH}/OpenSSLv3/Win_x64/include)
+      message($${OPENSSL_PATH}/include)
 
-      INCLUDEPATH += $${OPENSSL_PATH}/OpenSSLv3/Win_x64/include
-
-      LIBS += -L$${OPENSSL_PATH}/OpenSSLv3/Win_x64/lib -lssl -lcrypto
+      INCLUDEPATH += $${OPENSSL_PATH}/include
 
       debug {
         message(Debug)
