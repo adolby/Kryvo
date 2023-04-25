@@ -198,8 +198,6 @@ darwin {
     message(macOS)
     message(clang)
 
-    INCLUDEPATH += /usr/local/opt/openssl@3/include
-
     QMAKE_TARGET_BUNDLE_PREFIX = app.kryvo
     ICON = $$PWD/../../resources/icons/kryvo.icns
 
@@ -225,8 +223,8 @@ darwin {
   QMAKE_LFLAGS += -fstack-protector
 
   # Install OpenSSL v3 from Homebrew
-  INCLUDEPATH += /usr/local/opt/openssl@3/include
-  LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
+  INCLUDEPATH += $${OPENSSL_PATH}/include
+  LIBS += -L$${OPENSSL_PATH} -lssl -lcrypto
 } # End darwin
 
 win32 {

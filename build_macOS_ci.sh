@@ -47,7 +47,7 @@ if [ -f "${PROJECT_DIR}/Makefile" ]; then
   make distclean
 fi
 
-qmake -makefile CONFIG+=release
+qmake -makefile CONFIG+=release OPENSSL_PATH=/usr/local/opt/openssl@3
 make
 
 echo "Skipping tests..."

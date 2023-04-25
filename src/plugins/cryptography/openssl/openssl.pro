@@ -79,9 +79,9 @@ linux {
   linux-clang {
     message(clang)
 
-    INCLUDEPATH += /usr/local/ssl/include
+    INCLUDEPATH += $${OPENSSL_PATH}/include
 
-    LIBS += -L/usr/local/ssl/lib -lssl -lcrypto
+    LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -100,9 +100,9 @@ linux {
   linux-g++ {
     message(g++)
 
-    INCLUDEPATH += /usr/local/ssl/include
+    INCLUDEPATH += $${OPENSSL_PATH}/include
 
-    LIBS += -L/usr/local/ssl/lib -lssl -lcrypto
+    LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -121,9 +121,9 @@ linux {
 
 darwin {
   # Install OpenSSL v3 from Homebrew
-  INCLUDEPATH += /usr/local/opt/openssl@3/include
+  INCLUDEPATH += $${OPENSSL_PATH}/include
 
-  LIBS += -L/usr/local/opt/openssl@3/lib -lssl -lcrypto
+  LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
 
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
