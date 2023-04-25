@@ -241,7 +241,7 @@ win32 {
         DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/widgets
       }
 
-      LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
+      LIBS += -L$${OPENSSL_PATH}/lib -llibssl -llibcrypto
     }
   } # End win32-msvc
 

@@ -155,8 +155,6 @@ win32 {
   win32-msvc {
     message(MSVC)
 
-#    LIBS += -ladvapi32 -luser32 -lws2_32
-
     QMAKE_CXXFLAGS += -bigobj -arch:AVX2
 
     contains(QT_ARCH, x86_64) {

@@ -75,16 +75,10 @@ linux {
 
       debug {
         message(Debug)
-        LIBS += -L$$PWD/../../build/android/armv7/debug/lib/zlib -lz
-#        LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/botan -lbotan
-#        LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/android/armv7/debug/core
       }
       release {
         message(Release)
-        LIBS += -L$$PWD/../../build/android/armv7/release/lib/zlib -lz
-#        LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/botan -lbotan
-#        LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/android/armv7/release/core
       }
     }
@@ -94,16 +88,10 @@ linux {
 
       debug {
         message(Debug)
-        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/lib/zlib -lz
-#        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/plugins/cryptography/botan -lbotan
-#        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/android/arm64_v8a/debug/core
       }
       release {
         message(Release)
-        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/lib/zlib -lz
-#        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/plugins/cryptography/botan -lbotan
-#        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/android/arm64_v8a/release/core
       }
     }
@@ -117,16 +105,10 @@ linux {
 
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/lib/zlib -lz
-#      LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/plugins/cryptography/botan -lbotan
-#      LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/linux/clang/x86_64/debug/core
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/lib/zlib -lz
-#      LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/plugins/cryptography/botan -lbotan
-#      LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/linux/clang/x86_64/release/core
     }
   } # End clang
@@ -139,16 +121,10 @@ linux {
 
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/lib/zlib -lz
-#      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/plugins/cryptography/botan -lbotan
-#      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/debug/core
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/lib/zlib -lz
-#      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/plugins/cryptography/botan -lbotan
-#      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/core
     }
   } # End linux-g++
@@ -163,20 +139,12 @@ darwin {
 
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/iOS/debug/lib/zlib -lz
-#      LIBS += -L$$PWD/../../build/iOS/debug/plugins/cryptography/botan -lbotan
-#      LIBS += -L$$PWD/../../build/iOS/debug/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/iOS/debug/core
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/iOS/release/lib/zlib -lz
-#      LIBS += -L$$PWD/../../build/iOS/release/plugins/cryptography/botan -lbotan
-#      LIBS += -L$$PWD/../../build/iOS/release/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/iOS/release/core
     }
-
-    LIBS += -framework Foundation -framework CoreFoundation -framework UIKit
   } # End ios
 
   macos {
@@ -188,16 +156,10 @@ darwin {
 
     debug {
       message(Debug)
-      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/lib/zlib -lz
-#      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/plugins/cryptography/botan -lbotan
-#      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/macOS/clang/x86_64/debug/core
     }
     release {
       message(Release)
-      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/lib/zlib -lz
-#      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/plugins/cryptography/botan -lbotan
-#      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/macOS/clang/x86_64/release/core
     }
   } # End macos
@@ -218,16 +180,10 @@ win32 {
 
       debug {
         message(Debug)
-        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/lib/zlib -lz
-#        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/plugins/cryptography/botan -lbotan
-#        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/windows/msvc/x86_64/debug/core
       }
       release {
         message(Release)
-        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/lib/zlib -lz
-#        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/plugins/cryptography/botan -lbotan
-#        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/core
       }
     }
