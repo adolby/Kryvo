@@ -12,7 +12,7 @@ call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Buil
 cd %PROJECT_DIR%
 
 echo "Building Kryvo..."
-qmake -makefile -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release DEFINES+="QT_TOOLS=%QT_TOOLS%"
+qmake -makefile -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release QT_TOOLS=%QT_TOOLS%
 nmake
 
 REM echo "Copying Qt dependencies to test app..."
