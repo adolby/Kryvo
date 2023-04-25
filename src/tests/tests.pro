@@ -222,7 +222,7 @@ win32 {
         DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/test
       }
 
-      LIBS += -L$$(OPENSSL_PATH)/OpenSSLv3/Win_x64/lib -lssl -lcrypto
+      LIBS += -L$${OPENSSL_PATH}/OpenSSLv3/Win_x64/lib -lssl -lcrypto
     }
   } # End win32-msvc
 } # End win32

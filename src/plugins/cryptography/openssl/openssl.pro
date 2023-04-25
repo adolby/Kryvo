@@ -172,11 +172,11 @@ win32 {
     contains(QT_ARCH, x86_64) {
       message(x86_64)
 
-      message($$(OPENSSL_PATH)/OpenSSLv3/Win_x64/include)
+      message($${OPENSSL_PATH}/OpenSSLv3/Win_x64/include)
 
-      INCLUDEPATH += $$(OPENSSL_PATH)/OpenSSLv3/Win_x64/include
+      INCLUDEPATH += $${OPENSSL_PATH}/OpenSSLv3/Win_x64/include
 
-      LIBS += -L$$(OPENSSL_PATH)/OpenSSLv3/Win_x64/lib -lssl -lcrypto
+      LIBS += -L$${OPENSSL_PATH}/OpenSSLv3/Win_x64/lib -lssl -lcrypto
 
       debug {
         message(Debug)
