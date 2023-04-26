@@ -6,6 +6,7 @@ PROJECT_DIR="${SOURCE_DIR}"
 QT_PATH="${Qt6_DIR}"
 QT_TOOLS="${IQTA_TOOLS}"
 KRYVO_VERSION="${KRYVO_VERSION:-dev}"
+OPENSSL_PATH="/usr/lib/x86_64-linux-gnu"
 
 # Add Qt binaries to path
 echo "Adding Qt binaries to path..."
@@ -39,7 +40,7 @@ if [ -f "${PROJECT_DIR}/Makefile" ]; then
   make distclean
 fi
 
-qmake -makefile -spec linux-g++ CONFIG+=release OPENSSL_PATH=/usr/lib/x86_64-linux-gnu
+qmake -makefile -spec linux-g++ CONFIG+=release OPENSSL_PATH=${OPENSSL_PATH}
 make
 
 # Copy Qt dependencies for test app
@@ -155,8 +156,9 @@ ln -s "libQt6Widgets.so.6.5.0" "libQt6Widgets.so.6"
 chrpath -r \$ORIGIN/.. platforms/libqxcb.so
 chrpath -r \$ORIGIN/.. platforms/libqminimal.so
 
-cp -a "${QT_TOOLS}\OpenSSLv3\linux\bin\libcrypto-3-x64.so" "libcrypto-3-x64.so"
-cp -a "${QT_TOOLS}\OpenSSLv3\linux\bin\libssl-3-x64.so" "libssl-3-x64.so"
+ls -la ${OPENSSL_PATH}/bin/
+cp -a "${OPENSSL_PATH}/bin/libcrypto-3-x64.so" "libcrypto-3-x64.so"
+cp -a "${OPENSSL_PATH}/bin/libssl-3-x64.so" "libssl-3-x64.so"
 
 cp -a "${PROJECT_DIR}/Release Notes" "Release Notes"
 cp -a "${PROJECT_DIR}/README.md" "README.md"
