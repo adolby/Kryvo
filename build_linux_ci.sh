@@ -67,8 +67,9 @@ cp -a "${QT_PATH}/lib/libQt6Test.so.6.5.0" "libQt6Test.so.6.5.0"
 ln -s "libQt6Test.so.6.5.0" "libQtTest.so"
 ln -s "libQt6Test.so.6.5.0" "libQtTest.so.6"
 
-cp -a "${QT_TOOLS}\OpenSSLv3\linux\bin\libcrypto-3-x64.so" "libcrypto-3-x64.so"
-cp -a "${QT_TOOLS}\OpenSSLv3\linux\bin\libssl-3-x64.so" "libssl-3-x64.so"
+ls -la ${OPENSSL_PATH}/bin/
+cp -a "${OPENSSL_PATH}/bin/libcrypto-3-x64.so" "libcrypto-3-x64.so"
+cp -a "${OPENSSL_PATH}/bin/libssl-3-x64.so" "libssl-3-x64.so"
 
 # Copy plugins for test app
 # echo "Copying plugins for test app..."
