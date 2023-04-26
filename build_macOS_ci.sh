@@ -5,6 +5,7 @@ set -o errexit -o nounset
 PROJECT_DIR="${SOURCE_DIR}"
 QT_PATH="${Qt6_DIR}"
 KRYVO_VERSION="${KRYVO_VERSION:-dev}"
+OPENSSL_PATH="/usr/local/opt/openssl@3"
 
 # Output macOS version
 sw_vers
@@ -20,6 +21,7 @@ echo "Adding Qt binaries to path..."
 PATH="${QT_PATH}/bin/:${PATH}"
 
 # Check qmake version
+echo "Check qmake version..."
 qmake --version
 
 cd "${PROJECT_DIR}"
@@ -47,7 +49,7 @@ if [ -f "${PROJECT_DIR}/Makefile" ]; then
   make distclean
 fi
 
-qmake -makefile CONFIG+=release OPENSSL_PATH=/usr/local/opt/openssl@3
+qmake -makefile CONFIG+=release OPENSSL_INCLUDE_PATH=${OPENSSL_PATH}/include OPENSSL_LIB_PATH=${OPENSSL_PATH}/lib
 make
 
 echo "Skipping tests..."
@@ -93,6 +95,9 @@ cd "${PROJECT_DIR}/build/macOS/clang/x86_64/release/Kryvo/"
 rm -rf moc
 rm -rf obj
 rm -rf qrc
+
+cp -a "${OPENSSL_PATH}/lib/libcrypto.3.dylib" "Kryvo.app/Contents/Frameworks/libcrypto.3.dylib"
+ln -s "Kryvo.app/Contents/Frameworks/libcrypto.3.dylib" "Kryvo.app/Contents/Frameworks/libcrypto.dylib"
 
 echo "Copying Qt dependencies and creating dmg archive..."
 macdeployqt Kryvo.app -dmg

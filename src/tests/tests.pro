@@ -112,7 +112,7 @@ linux {
       DESTDIR = $$PWD/../../build/linux/clang/x86_64/release/test
     }
 
-    LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
+    LIBS += -L$${OPENSSL_LIB_PATH} -lcrypto
   } # End linux-clang
 
   linux-g++ {
@@ -139,7 +139,7 @@ linux {
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/test
     }
 
-    LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
+    LIBS += -L$${OPENSSL_LIB_PATH} -lcrypto
   } # End linux-g++
 } # End linux
 
@@ -193,9 +193,7 @@ darwin {
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
 
-  # Install OpenSSL v3 from Homebrew
-  INCLUDEPATH += $${OPENSSL_PATH}/include
-  LIBS += -L$${OPENSSL_PATH}/lib -lssl -lcrypto
+  LIBS += -L$${OPENSSL_LIB_PATH} -lcrypto
 } # End darwin
 
 win32 {
@@ -226,7 +224,7 @@ win32 {
         DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/test
       }
 
-      LIBS += -L$${OPENSSL_PATH}/lib -llibssl -llibcrypto
+      LIBS += -L$${OPENSSL_LIB_PATH} -llibcrypto
     }
   } # End win32-msvc
 } # End win32

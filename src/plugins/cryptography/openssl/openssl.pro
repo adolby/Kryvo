@@ -34,6 +34,8 @@ HEADERS += \
 
 OTHER_FILES += openssl.json
 
+INCLUDEPATH += $${OPENSSL_INCLUDE_PATH}
+
 # Platform-specific configuration
 linux {
   message(Linux)
@@ -43,8 +45,6 @@ linux {
 
     contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
       message(armeabi-v7a)
-
-      INCLUDEPATH += openssl/android/armv7/include
 
       debug {
         message(Debug)
@@ -59,8 +59,6 @@ linux {
     contains(ANDROID_TARGET_ARCH, arm64-v8a) {
       message(arm64-v8a)
 
-      INCLUDEPATH += openssl/android/arm64_v8a/include
-
       debug {
         message(Debug)
         DESTDIR = $$PWD/../../../../build/android/arm64_v8a/debug/plugins/cryptography/openssl
@@ -74,8 +72,6 @@ linux {
 
   linux-clang {
     message(clang)
-
-    INCLUDEPATH += $${OPENSSL_PATH}/include
 
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
@@ -94,8 +90,6 @@ linux {
   linux-g++ {
     message(g++)
 
-    INCLUDEPATH += $${OPENSSL_PATH}/include
-
     QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
     QMAKE_LFLAGS += -fstack-protector
     QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
@@ -112,9 +106,6 @@ linux {
 } # End linux
 
 darwin {
-  # Install OpenSSL v3 from Homebrew
-  INCLUDEPATH += $${OPENSSL_PATH}/include
-
   QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
   QMAKE_LFLAGS += -fstack-protector
 
@@ -159,10 +150,6 @@ win32 {
 
     contains(QT_ARCH, x86_64) {
       message(x86_64)
-
-      message($${OPENSSL_PATH}/include)
-
-      INCLUDEPATH += $${OPENSSL_PATH}/include
 
       debug {
         message(Debug)

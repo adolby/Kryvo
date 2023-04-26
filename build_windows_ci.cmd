@@ -5,14 +5,18 @@ echo "Setting up environment..."
 SET PROJECT_DIR=%SOURCE_DIR%
 SET QT_PATH=%Qt6_DIR%
 SET QT_TOOLS=%IQTA_TOOLS%
+SET OPENSSL_PATH=%QT_TOOLS%/OpenSSLv3/Win_x64
 
 SET PATH=%QT_PATH%\bin\;%QT_TOOLS%\QtInstallerFramework\4.5\bin;%PATH%
 call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
 
+echo "Check qmake version..."
+qmake --version
+
 cd %PROJECT_DIR%
 
 echo "Building Kryvo..."
-qmake -makefile -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release OPENSSL_PATH=%QT_TOOLS%/OpenSSLv3/Win_x64
+qmake -makefile -spec win32-msvc CONFIG+=x86_64 CONFIG-=debug CONFIG+=release OPENSSL_INCLUDE_PATH=%OPENSSL_PATH%/include OPENSSL_LIB_PATH=%OPENSSL_PATH%/lib
 nmake
 
 REM echo "Copying Qt dependencies to test app..."
@@ -58,8 +62,7 @@ copy "%PROJECT_DIR%\Qt License" "Kryvo\Qt License.txt"
 mkdir "%PROJECT_DIR%\build\windows\msvc\x86_64\release\Kryvo\themes"
 copy "%PROJECT_DIR%\resources\stylesheets\kryvo.qss" "Kryvo\themes\kryvo.qss"
 
-copy "%QT_TOOLS%\OpenSSLv3\Win_x64\bin\libcrypto-3-x64.dll" "Kryvo\libcrypto-3-x64.dll"
-copy "%QT_TOOLS%\OpenSSLv3\Win_x64\bin\libssl-3-x64.dll" "Kryvo\libssl-3-x64.dll"
+copy "%OPENSSL_PATH%\bin\libcrypto-3-x64.dll" "Kryvo\libcrypto-3-x64.dll"
 
 echo "Copying files for installer..."
 mkdir "%PROJECT_DIR%\installer\windows\x86_64\packages\app.kryvo\data\"
