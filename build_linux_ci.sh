@@ -49,28 +49,28 @@ make
 echo "Copying Qt dependencies to test app..."
 cd "${PROJECT_DIR}/build/linux/gcc/x86_64/release/test/"
 
-cp -a "${QT_PATH}/lib/libicui18n.so.56.1" "libicui18n.so.56.1"
-ln -s "libicui18n.so.56.1" "libicui18n.so"
-ln -s "libicui18n.so.56.1" "libicui18n.so.56"
+cp -a "${QT_PATH}/lib/libicui18n.so.56.1" "./libicui18n.so.56.1"
+ln -s "./libicui18n.so.56.1" "./libicui18n.so"
+ln -s "./libicui18n.so.56.1" "./libicui18n.so.56"
 
-cp -a "${QT_PATH}/lib/libicuuc.so.56.1" "libicuuc.so.56.1"
-ln -s "libicuuc.so.56.1" "libicuuc.so"
-ln -s "libicuuc.so.56.1" "libicuuc.so.56"
+cp -a "${QT_PATH}/lib/libicuuc.so.56.1" "./libicuuc.so.56.1"
+ln -s "./libicuuc.so.56.1" "./libicuuc.so"
+ln -s "./libicuuc.so.56.1" "./libicuuc.so.56"
 
-cp -a "${QT_PATH}/lib/libicudata.so.56.1" "libicudata.so.56.1"
-ln -s "libicudata.so.56.1" "libicudata.so"
-ln -s "libicudata.so.56.1" "libicudata.so.56"
+cp -a "${QT_PATH}/lib/libicudata.so.56.1" "./libicudata.so.56.1"
+ln -s "./libicudata.so.56.1" "./libicudata.so"
+ln -s "./libicudata.so.56.1" "./libicudata.so.56"
 
-cp -a "${QT_PATH}/lib/libQt6Core.so.6.5.0" "libQt6Core.so.6.5.0"
-ln -s "libQt6Core.so.6.5.0" "libQtCore.so"
-ln -s "libQt6Core.so.6.5.0" "libQtCore.so.6"
+cp -a "${QT_PATH}/lib/libQt6Core.so.6.5.0" "./libQt6Core.so.6.5.0"
+ln -s "./libQt6Core.so.6.5.0" "./libQtCore.so"
+ln -s "./libQt6Core.so.6.5.0" "./libQtCore.so.6"
 
-cp -a "${QT_PATH}/lib/libQt6Test.so.6.5.0" "libQt6Test.so.6.5.0"
-ln -s "libQt6Test.so.6.5.0" "libQtTest.so"
-ln -s "libQt6Test.so.6.5.0" "libQtTest.so.6"
+cp -a "${QT_PATH}/lib/libQt6Test.so.6.5.0" "./libQt6Test.so.6.5.0"
+ln -s "./libQt6Test.so.6.5.0" "./libQtTest.so"
+ln -s "./libQt6Test.so.6.5.0" "./libQtTest.so.6"
 
-cp -a "${OPENSSL_LIB_PATH}/libcrypto.so.3" "libcrypto.so.3"
-ln -s "libcrypto.so.3" "libcrypto.so"
+cp -a "${OPENSSL_LIB_PATH}/libcrypto.so.3" "./libcrypto.so.3"
+ln -s "./libcrypto.so.3" "./libcrypto.so"
 
 # Copy plugins for test app
 # echo "Copying plugins for test app..."
@@ -81,7 +81,7 @@ ln -s "libcrypto.so.3" "libcrypto.so"
 # Copy test data
 echo "Copying test data archive..."
 cd "${PROJECT_DIR}/build/linux/gcc/x86_64/release/test/"
-cp "${PROJECT_DIR}/src/tests/data/test-data.zip" test-data.zip
+cp "${PROJECT_DIR}/src/tests/data/test-data.zip" "./test-data.zip"
 
 echo "Extracting test data..."
 7z e test-data.zip -aos &> /dev/null
@@ -111,63 +111,63 @@ rm -rf qrc
 
 echo "Copying Qt dependencies..."
 
-cp -a "${QT_PATH}/lib/libicui18n.so.56.1" "libicui18n.so.56.1"
-ln -s "libicui18n.so.56.1" "libicui18n.so"
-ln -s "libicui18n.so.56.1" "libicui18n.so.56"
+cp -a "${QT_PATH}/lib/libicui18n.so.56.1" "./libicui18n.so.56.1"
+ln -s "./libicui18n.so.56.1" "./libicui18n.so"
+ln -s "./libicui18n.so.56.1" "./libicui18n.so.56"
 
-cp -a "${QT_PATH}/lib/libicuuc.so.56.1" "libicuuc.so.56.1"
-ln -s "libicuuc.so.56.1" "libicuuc.so"
-ln -s "libicuuc.so.56.1" "libicuuc.so.56"
+cp -a "${QT_PATH}/lib/libicuuc.so.56.1" "./libicuuc.so.56.1"
+ln -s "./libicuuc.so.56.1" "./libicuuc.so"
+ln -s "./libicuuc.so.56.1" "./libicuuc.so.56"
 
-cp -a "${QT_PATH}/lib/libicudata.so.56.1" "libicudata.so.56.1"
-ln -s "libicudata.so.56.1" "libicudata.so"
-ln -s "libicudata.so.56.1" "libicudata.so.56"
+cp -a "${QT_PATH}/lib/libicudata.so.56.1" "./libicudata.so.56.1"
+ln -s "./libicudata.so.56.1" "./libicudata.so"
+ln -s "./libicudata.so.56.1" "./libicudata.so.56"
 
 mkdir platforms
-cp -a "${QT_PATH}/plugins/platforms/libqxcb.so" "platforms/libqxcb.so"
-cp -a "${QT_PATH}/plugins/platforms/libqminimal.so" "platforms/libqminimal.so"
+cp -a "${QT_PATH}/plugins/platforms/libqxcb.so" "./platforms/libqxcb.so"
+cp -a "${QT_PATH}/plugins/platforms/libqminimal.so" "./platforms/libqminimal.so"
 
-cp -a "${QT_PATH}/lib/libQt6Core.so.6.5.0" "libQt6Core.so.6.5.0"
-ln -s "libQt6Core.so.6.5.0" "libQt6Core.so"
-ln -s "libQt6Core.so.6.5.0" "libQt6Core.so.6"
+cp -a "${QT_PATH}/lib/libQt6Core.so.6.5.0" "./libQt6Core.so.6.5.0"
+ln -s "./libQt6Core.so.6.5.0" "./libQt6Core.so"
+ln -s "./libQt6Core.so.6.5.0" "./libQt6Core.so.6"
 
-cp -a "${QT_PATH}/lib/libQt6Gui.so.6.5.0" "libQt6Gui.so.6.5.0"
-ln -s "libQt6Gui.so.6.5.0" "libQt6Gui.so"
-ln -s "libQt6Gui.so.6.5.0" "libQt6Gui.so.6"
+cp -a "${QT_PATH}/lib/libQt6Gui.so.6.5.0" "./libQt6Gui.so.6.5.0"
+ln -s "./libQt6Gui.so.6.5.0" "./libQt6Gui.so"
+ln -s "./libQt6Gui.so.6.5.0" "./libQt6Gui.so.6"
 
-cp -a "${QT_PATH}/lib/libQt6OpenGL.so.6.5.0" "libQt6OpenGL.so.6.5.0"
-ln -s "libQt6OpenGL.so.6.5.0" "libQt6OpenGL.so"
-ln -s "libQt6OpenGL.so.6.5.0" "libQt6OpenGL.so.6"
+cp -a "${QT_PATH}/lib/libQt6OpenGL.so.6.5.0" "./libQt6OpenGL.so.6.5.0"
+ln -s "./libQt6OpenGL.so.6.5.0" "./libQt6OpenGL.so"
+ln -s "./libQt6OpenGL.so.6.5.0" "./libQt6OpenGL.so.6"
 
-cp -a "${QT_PATH}/lib/libQt6Svg.so.6.5.0" "libQt6Svg.so.6.5.0"
-ln -s "libQt6Svg.so.6.5.0" "libQt6Svg.so"
-ln -s "libQt6Svg.so.6.5.0" "libQt6Svg.so.6"
+cp -a "${QT_PATH}/lib/libQt6Svg.so.6.5.0" "./libQt6Svg.so.6.5.0"
+ln -s "./libQt6Svg.so.6.5.0" "./libQt6Svg.so"
+ln -s "./libQt6Svg.so.6.5.0" "./libQt6Svg.so.6"
 
-cp -a "${QT_PATH}/lib/libQt6DBus.so.6.5.0" "libQt6DBus.so.6.5.0"
-ln -s "libQt6DBus.so.6.5.0" "libQt6DBus.so"
-ln -s "libQt6DBus.so.6.5.0" "libQt6DBus.so.6"
+cp -a "${QT_PATH}/lib/libQt6DBus.so.6.5.0" "./libQt6DBus.so.6.5.0"
+ln -s "./libQt6DBus.so.6.5.0" "./libQt6DBus.so"
+ln -s "./libQt6DBus.so.6.5.0" "./libQt6DBus.so.6"
 
 cp -a "${QT_PATH}/lib/libQt6XcbQpa.so.6.5.0" "libQt6XcbQpa.so.6.5.0"
-ln -s "libQt6XcbQpa.so.6.5.0" "libQt6XcbQpa.so"
-ln -s "libQt6XcbQpa.so.6.5.0" "libQt6XcbQpa.so.6"
+ln -s "./libQt6XcbQpa.so.6.5.0" "./libQt6XcbQpa.so"
+ln -s "./libQt6XcbQpa.so.6.5.0" "./libQt6XcbQpa.so.6"
 
-cp -a "${QT_PATH}/lib/libQt6Widgets.so.6.5.0" "libQt6Widgets.so.6.5.0"
-ln -s "libQt6Widgets.so.6.5.0" "libQt6Widgets.so"
-ln -s "libQt6Widgets.so.6.5.0" "libQt6Widgets.so.6"
+cp -a "${QT_PATH}/lib/libQt6Widgets.so.6.5.0" "./libQt6Widgets.so.6.5.0"
+ln -s "./libQt6Widgets.so.6.5.0" "./libQt6Widgets.so"
+ln -s "./libQt6Widgets.so.6.5.0" "./libQt6Widgets.so.6"
 
-chrpath -r \$ORIGIN/.. platforms/libqxcb.so
-chrpath -r \$ORIGIN/.. platforms/libqminimal.so
+chrpath -r \$ORIGIN/.. ./platforms/libqxcb.so
+chrpath -r \$ORIGIN/.. ./platforms/libqminimal.so
 
-cp -a "${OPENSSL_LIB_PATH}/libcrypto.so.3" "libcrypto.so.3"
-ln -s "libcrypto.so.3" "libcrypto.so"
+cp -a "${OPENSSL_LIB_PATH}/libcrypto.so.3" "./libcrypto.so.3"
+ln -s "./libcrypto.so.3" "./libcrypto.so"
 
-cp -a "${PROJECT_DIR}/Release Notes" "Release Notes"
-cp -a "${PROJECT_DIR}/README.md" "README.md"
-cp -a "${PROJECT_DIR}/LICENSE" "LICENSE"
-cp -a "${PROJECT_DIR}/Botan License" "Botan License"
-cp -a "${PROJECT_DIR}/Qt License" "Qt License"
+cp -a "${PROJECT_DIR}/Release Notes" "./Release Notes"
+cp -a "${PROJECT_DIR}/README.md" "./README.md"
+cp -a "${PROJECT_DIR}/LICENSE" "./LICENSE"
+cp -a "${PROJECT_DIR}/Botan License" "./Botan License"
+cp -a "${PROJECT_DIR}/Qt License" "./Qt License"
 mkdir themes
-cp -a "${PROJECT_DIR}/resources/stylesheets/kryvo.qss" "themes/kryvo.qss"
+cp -a "${PROJECT_DIR}/resources/stylesheets/kryvo.qss" "./themes/kryvo.qss"
 
 echo "Copying files for installer..."
 mkdir -p "${PROJECT_DIR}/installer/linux/packages/app.kryvo/data/"

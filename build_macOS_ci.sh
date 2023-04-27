@@ -96,29 +96,29 @@ rm -rf moc
 rm -rf obj
 rm -rf qrc
 
-cp -a "${OPENSSL_PATH}/lib/libcrypto.3.dylib" "Kryvo.app/Contents/Frameworks/libcrypto.3.dylib"
-ln -s "Kryvo.app/Contents/Frameworks/libcrypto.3.dylib" "Kryvo.app/Contents/Frameworks/libcrypto.dylib"
+cp -a "${OPENSSL_PATH}/lib/libcrypto.3.dylib" "./Kryvo.app/Contents/Frameworks/libcrypto.3.dylib"
+ln -s "./Kryvo.app/Contents/Frameworks/libcrypto.3.dylib" "./Kryvo.app/Contents/Frameworks/libcrypto.dylib"
 
 echo "Copying Qt dependencies and creating dmg archive..."
-macdeployqt Kryvo.app -dmg
+macdeployqt ./Kryvo.app -dmg
 
 mv Kryvo.dmg "Kryvo_${KRYVO_VERSION}.dmg"
 # appdmg json-path Kryvo_${TRAVIS_TAG}.dmg
 
-cp -a "${PROJECT_DIR}/Release Notes" "Release Notes"
-cp -a "${PROJECT_DIR}/README.md" "README.md"
-cp -a "${PROJECT_DIR}/LICENSE" "LICENSE"
-cp -a "${PROJECT_DIR}/Botan License" "Botan License"
-cp -a "${PROJECT_DIR}/Qt License" "Qt License"
+cp -a "${PROJECT_DIR}/Release Notes" "./Release Notes"
+cp -a "${PROJECT_DIR}/README.md" "./README.md"
+cp -a "${PROJECT_DIR}/LICENSE" "./LICENSE"
+cp -a "${PROJECT_DIR}/Botan License" "./Botan License"
+cp -a "${PROJECT_DIR}/Qt License" "./Qt License"
 mkdir themes
-cp -a "${PROJECT_DIR}/resources/stylesheets/kryvo.qss" "themes/kryvo.qss"
+cp -a "${PROJECT_DIR}/resources/stylesheets/kryvo.qss" "./themes/kryvo.qss"
 
 echo "Packaging archive..."
 tar czvf "kryvo_${KRYVO_VERSION}_macos.tar.gz" "Kryvo_${KRYVO_VERSION}.dmg" "Release Notes" "README.md" "LICENSE" "Botan License" "Qt License"
 
 cd "${PROJECT_DIR}/build/macOS/clang/x86_64/release/"
 
-mv "Kryvo/kryvo_${KRYVO_VERSION}_macos.tar.gz" "kryvo_${KRYVO_VERSION}_macos.tar.gz"
+mv "./Kryvo/kryvo_${KRYVO_VERSION}_macos.tar.gz" "./kryvo_${KRYVO_VERSION}_macos.tar.gz"
 
 echo "Done!"
 
