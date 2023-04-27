@@ -96,6 +96,7 @@ rm -rf moc
 rm -rf obj
 rm -rf qrc
 
+mkdir -p "./Kryvo.app/Contents/Frameworks/"
 cp -a "${OPENSSL_PATH}/lib/libcrypto.3.dylib" "./Kryvo.app/Contents/Frameworks/libcrypto.3.dylib"
 ln -s "./Kryvo.app/Contents/Frameworks/libcrypto.3.dylib" "./Kryvo.app/Contents/Frameworks/libcrypto.dylib"
 
