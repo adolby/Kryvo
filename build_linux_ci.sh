@@ -166,7 +166,7 @@ cp -a "${PROJECT_DIR}/README.md" "./README.md"
 cp -a "${PROJECT_DIR}/LICENSE" "./LICENSE"
 cp -a "${PROJECT_DIR}/Botan License" "./Botan License"
 cp -a "${PROJECT_DIR}/Qt License" "./Qt License"
-mkdir themes
+mkdir ./themes
 cp -a "${PROJECT_DIR}/resources/stylesheets/kryvo.qss" "./themes/kryvo.qss"
 
 echo "Copying files for installer..."

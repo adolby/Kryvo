@@ -140,18 +140,17 @@ class MainWindow : public QMainWindow {
   virtual void settingsImported();
 
   /*!
-   * \brief loadStyleSheet Attempts to load a Qt stylesheet from the local
-   * themes folder with the name specified in the local settings file. If the
-   * load fails, the method will load the default stylesheet from the
-   * application resources.
-   * \param styleFile String representing the name of the stylesheet without
-   * a file extension
-   * \param defaultFile String containing the name of the default stylesheet,
-   * which will be used if the selected stylesheet file doesn't exist
+   * \brief loadStyleSheet Attempts to load a Qt stylesheet from the filepath
+   * specified in the settings file. If the load fails, the default stylesheet
+   * will be loaded from the application resources.
+   * \param styleFilePath String representing the filepath of the stylesheet
+   * \param defaultStyleFilePath String containing the filepath of the default
+   * stylesheet, which will be used if the selected stylesheet file doesn't
+   * exist
    * \return String containing the stylesheet file contents
    */
-  QString loadStyleSheet(const QString& styleFile,
-                         const QString& defaultFile) const;
+  QString loadStyleSheet(const QString& styleFilePath,
+                         const QString& defaultStyleFilePath) const;
 
  protected:
   Settings* settings = nullptr;

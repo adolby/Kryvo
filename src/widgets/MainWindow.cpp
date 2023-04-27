@@ -1,5 +1,6 @@
 #include "MainWindow.hpp"
 #include "SlidingStackedWidget.hpp"
+#include "FileUtility.h"
 #include <QFrame>
 #include <QFileDialog>
 #include <QBoxLayout>
@@ -302,35 +303,21 @@ void MainWindow::settingsImported() {
   outputFrame->outputPath(settings->outputPath());
 }
 
-QString MainWindow::loadStyleSheet(const QString& styleFile,
-                                   const QString& defaultFile) const {
-  // Try to load user theme, if it exists
-  const QString styleSheetPath = QStringLiteral("themes") %
-                                 QStringLiteral("/") % styleFile;
-  QFile userTheme(styleSheetPath);
+QString MainWindow::loadStyleSheet(const QString& styleFilePath,
+                                   const QString& defaultStyleFilePath) const {
+  // Try to load user style, if it exists
+  QFileInfo userStyleFileInfo(styleFilePath);
+  QFileInfo defaultStyleFileInfo(defaultStyleFilePath);
 
-  QString styleSheet;
+  QByteArray styleSheetByteArray;
 
-  if (userTheme.exists()) {
-    const bool themeOpen = userTheme.open(QFile::ReadOnly);
+  const int ec = readConfigFile(userStyleFileInfo, styleSheetByteArray);
 
-    if (themeOpen) {
-      styleSheet = QString(userTheme.readAll());
-      userTheme.close();
-    }
-  } else { // Otherwise, load default theme
-    const QString localPath = QStringLiteral(":/stylesheets/") % defaultFile;
-    QFile defaultTheme(localPath);
-
-    const bool defaultThemeOpen = defaultTheme.open(QFile::ReadOnly);
-
-    if (defaultThemeOpen) {
-      styleSheet = QString(defaultTheme.readAll());
-      defaultTheme.close();
-    }
+  if (ec < 1) {
+    readConfigFile(defaultStyleFileInfo, styleSheetByteArray);
   }
 
-  return styleSheet;
+  return QString(styleSheetByteArray);
 }
 
 } // namespace Kryvo

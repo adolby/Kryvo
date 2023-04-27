@@ -41,21 +41,21 @@ DesktopMainWindow::DesktopMainWindow(Settings* s, QWidget* parent)
 }
 
 void DesktopMainWindow::settingsImported() {
-  qInfo() << Q_FUNC_INFO;
   MainWindow::settingsImported();
 
   this->move(settings->position());
+  this->resize(settings->size());
 
   if (settings->maximized()) {
     // Move window, then maximize to ensure maximize occurs on correct screen
     this->setWindowState(this->windowState() | Qt::WindowMaximized);
-  } else {
-    this->resize(settings->size());
   }
 
   // Load stylesheet
+  const QString defaultStylePath = QStringLiteral(":/stylesheets/kryvo.qss");
+
   const QString styleSheet = loadStyleSheet(settings->styleSheetPath(),
-                                            QStringLiteral("kryvo.qss"));
+                                            defaultStylePath);
 
   if (!styleSheet.isEmpty()) {
     this->setStyleSheet(styleSheet);

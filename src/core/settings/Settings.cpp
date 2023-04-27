@@ -1,4 +1,5 @@
 #include "settings/Settings.hpp"
+#include "FileUtility.h"
 #include "Constants.hpp"
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -29,6 +30,8 @@ class SettingsPrivate {
  public:
   SettingsPrivate(Settings* settings);
 
+  void loadDefaults();
+
   /*!
    * \brief importSettings Imports settings from the local settings file
    */
@@ -51,12 +54,12 @@ class SettingsPrivate {
   QString cryptoProvider_;
   QString compressionFormat_;
   QString cipher_;
-  std::size_t keySize_{128};
+  std::size_t keySize_{256};
   QString modeOfOperation_;
   bool removeIntermediateFiles_{true};
   bool containerMode_{false};
-  QString outputPath_{Constants::documentsPath};
-  QString inputPath_{Constants::documentsPath};
+  QString outputPath_;
+  QString inputPath_;
   QString styleSheetPath_;
 };
 
@@ -64,39 +67,41 @@ SettingsPrivate::SettingsPrivate(Settings* s)
   : q_ptr(s) {
 }
 
+void SettingsPrivate::loadDefaults() {
+  position_ = QPoint(100, 100);
+  maximized_ = false;
+  size_ = QSize(800, 600);
+  cryptoProvider_ = QStringLiteral("OpenSsl");
+  compressionFormat_ = QStringLiteral("gzip");
+  cipher_ = QStringLiteral("AES");
+  keySize_ = static_cast<std::size_t>(256);
+  modeOfOperation_ = QStringLiteral("GCM");
+  removeIntermediateFiles_ = true;
+  containerMode_ = false;
+  outputPath_ = Constants::documentsPath;
+  inputPath_ = Constants::documentsPath;
+  styleSheetPath_ =
+    QString(QCoreApplication::instance()->applicationDirPath() %
+            QStringLiteral("/themes/kryvo.qss"));
+}
+
 void SettingsPrivate::importSettings() {
   Q_Q(Settings);
 
-#if defined(Q_OS_MACOS)
-  const QString settingsPath =
+  const QString settingsFilePath =
     QString(QCoreApplication::instance()->applicationDirPath() %
-            QStringLiteral("/") %
-            QStringLiteral("settings.json"));
-#else
-  const QString settingsPath = QStringLiteral("settings.json");
-#endif
+            QStringLiteral("/settings.json"));
 
-  QFile settingsFile(settingsPath);
-  const bool fileOpen = settingsFile.open(QIODevice::ReadOnly);
+  QFileInfo settingsFileInfo(settingsFilePath);
+  QByteArray settingsData;
 
-  if (!fileOpen) { // Settings file couldn't be opened, so use defaults
-    position_ = QPoint(100, 100);
-    maximized_ = false;
-    size_ = QSize(800, 600);
-    cryptoProvider_ = QStringLiteral("OpenSsl");
-    compressionFormat_ = QStringLiteral("gzip");
-    cipher_ = QStringLiteral("AES");
-    keySize_ = static_cast<std::size_t>(256);
-    modeOfOperation_ = QStringLiteral("GCM");
-    removeIntermediateFiles_ = true;
-    containerMode_ = true;
-    outputPath_ = Constants::documentsPath;
-    inputPath_ = Constants::documentsPath;
-    styleSheetPath_ = QStringLiteral("kryvo.qss");
+  const int ec = readConfigFile(settingsFileInfo, settingsData);
+
+  if (ec < 1) { // Settings file couldn't be read, so use defaults
+    loadDefaults();
+    emit q->settingsImported();
     return;
   }
-
-  const QByteArray settingsData = settingsFile.readAll();
 
   const QJsonDocument settingsDoc = QJsonDocument::fromJson(settingsData);
   const QJsonObject settings = settingsDoc.object();
@@ -108,38 +113,19 @@ void SettingsPrivate::importSettings() {
 
   maximized_ = settings[QStringLiteral("maximized")].toBool(false);
 
-  if (!maximized_) {
-    const QJsonObject sizeObject =
-      settings[QStringLiteral("size")].toObject();
-    size_ = QSize(sizeObject[QStringLiteral("width")].toInt(800),
-                 sizeObject[QStringLiteral("height")].toInt(600));
-  }
+  const QJsonObject sizeObject =
+    settings[QStringLiteral("size")].toObject();
+  size_ = QSize(sizeObject[QStringLiteral("width")].toInt(800),
+                sizeObject[QStringLiteral("height")].toInt(600));
 
   const QString provider =
     settings[QStringLiteral("cryptoProvider")].toString();
 
-  auto end = cryptoProviders_.cend();
-
-  for (auto providerIterator = cryptoProviders_.cbegin();
-       providerIterator != end;
-       ++providerIterator) {
-    const Plugin providerPlugin = providerIterator.value();
-    qInfo() << "PROVIDER DATA:";
-    qInfo() << "LOOKUP NAME:" << providerIterator.key();
-    qInfo() << "NAME:" << providerPlugin.name();
-    qInfo() << "CATEGORY:" << providerPlugin.category();
-    qInfo() << "META:" << providerPlugin.metaData();
-  }
-
   if (!cryptoProviders_.contains(provider)) {
-    qInfo() << "SETTINGS TEST:" << provider;
     cryptoProvider_ = QStringLiteral("OpenSsl");
   } else {
-    qInfo() << "SETTINGS TEST2 :" << provider;
     cryptoProvider_ = provider;
   }
-
-  qInfo() << "CHOSEN CRYPTO PROVIDER:" << cryptoProvider_;
 
   const QString compressionFormat =
     settings[QStringLiteral("compressionFormat")].toString();
@@ -163,7 +149,7 @@ void SettingsPrivate::importSettings() {
   removeIntermediateFiles_ =
     settings[QStringLiteral("removeIntermediateFiles")].toBool(true);
 
-  containerMode_ = settings[QStringLiteral("containerMode")].toBool(true);
+  containerMode_ = settings[QStringLiteral("containerMode")].toBool(false);
 
   outputPath_ =
     settings[QStringLiteral("outputPath")].toString(Constants::documentsPath);
@@ -172,7 +158,10 @@ void SettingsPrivate::importSettings() {
     settings[QStringLiteral("inputPath")].toString(Constants::documentsPath);
 
   const QJsonValue styleObject = settings[QStringLiteral("styleSheetPath")];
-  styleSheetPath_ = styleObject.toString(QStringLiteral("kryvo.qss"));
+
+  styleSheetPath_ =
+    QString(QCoreApplication::instance()->applicationDirPath() %
+            QStringLiteral("/themes/kryvo.qss"));
 
   emit q->settingsImported();
 }
@@ -200,12 +189,10 @@ void SettingsPrivate::exportSettings() const {
     settings[QStringLiteral("position")] = positionObject;
     settings[QStringLiteral("maximized")] = maximized_;
 
-    if (!maximized_) {
-      QJsonObject sizeObject;
-      sizeObject[QStringLiteral("width")] = size_.width();
-      sizeObject[QStringLiteral("height")] = size_.height();
-      settings[QStringLiteral("size")] = sizeObject;
-    }
+    QJsonObject sizeObject;
+    sizeObject[QStringLiteral("width")] = size_.width();
+    sizeObject[QStringLiteral("height")] = size_.height();
+    settings[QStringLiteral("size")] = sizeObject;
 
     settings[QStringLiteral("cryptoProvider")] = cryptoProvider_;
     settings[QStringLiteral("compressionFormat")] = compressionFormat_;

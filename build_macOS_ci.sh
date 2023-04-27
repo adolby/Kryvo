@@ -100,6 +100,9 @@ mkdir -p "./Kryvo.app/Contents/Frameworks/"
 cp -a "${OPENSSL_PATH}/lib/libcrypto.3.dylib" "./Kryvo.app/Contents/Frameworks/libcrypto.3.dylib"
 ln -s "./Kryvo.app/Contents/Frameworks/libcrypto.3.dylib" "./Kryvo.app/Contents/Frameworks/libcrypto.dylib"
 
+mkdir -p "./Kryvo.app/Contents/MacOS/themes/"
+cp -a "${PROJECT_DIR}/resources/stylesheets/kryvo.qss" "./Kryvo.app/Contents/MacOS/themes/kryvo.qss"
+
 echo "Copying Qt dependencies and creating dmg archive..."
 macdeployqt ./Kryvo.app -dmg
 
