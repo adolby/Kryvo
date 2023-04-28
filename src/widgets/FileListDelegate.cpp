@@ -23,7 +23,7 @@ void FileListDelegate::paint(QPainter* painter,
 #if defined(Q_OS_MACOS)
       updatedOption.font.setPointSize(20);
 #else
-      updatedOption.font.setPointSize(18);
+      updatedOption.font.setPointSize(16);
 #endif
 
       QStyledItemDelegate::paint(painter, updatedOption, index);
@@ -37,7 +37,7 @@ void FileListDelegate::paint(QPainter* painter,
 #if defined(Q_OS_MACOS)
       updatedOption.font.setPointSize(20);
 #else
-      updatedOption.font.setPointSize(18);
+      updatedOption.font.setPointSize(16);
 #endif
 
       QStyledItemDelegate::paint(painter, updatedOption, index);
