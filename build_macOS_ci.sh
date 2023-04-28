@@ -112,6 +112,7 @@ mv Kryvo.dmg "Kryvo_${KRYVO_VERSION}.dmg"
 cp -a "${PROJECT_DIR}/Release Notes" "./Release Notes"
 cp -a "${PROJECT_DIR}/README.md" "./README.md"
 cp -a "${PROJECT_DIR}/LICENSE" "./LICENSE"
+cp -a "${PROJECT_DIR}/OpenSSL License" "./OpenSSL License"
 cp -a "${PROJECT_DIR}/Botan License" "./Botan License"
 cp -a "${PROJECT_DIR}/Qt License" "./Qt License"
 mkdir themes
