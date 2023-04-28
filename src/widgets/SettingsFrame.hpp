@@ -23,21 +23,14 @@ class SettingsFrame : public QFrame {
  public:
   /*!
    * \brief SettingsFrame Constructs a settings frame
-   * \param cipher String representing the cipher name
+   * \param cryptoProvider String representing the crypto provider name
+   * \param compressionFormat String representing compression format
    * \param keySize String representing the key size
-   * \param mode String representing the mode of operation
    * \param removeIntermediateFiles Remove intermediate files enable/disable
    * \param containerMode Container mode archives multiple input files together
    * \param parent QWidget parent
    */
-  explicit SettingsFrame(const QString& cryptoProvider,
-                         const QString& compressionFormat,
-                         const QString& cipher,
-                         std::size_t keySize,
-                         const QString& mode,
-                         bool removeIntermediateFiles,
-                         bool containerMode,
-                         QWidget* parent = nullptr);
+  explicit SettingsFrame(QWidget* parent = nullptr);
 
   ~SettingsFrame() override;
 
@@ -49,78 +42,80 @@ class SettingsFrame : public QFrame {
   void switchFrame();
 
   /*!
-   * \brief updateCipher Emitted when the user has changed the cipher algorithm
-   * via the combobox representing it
-   * \param cipher String containing the cipher name
+   * \brief requestUpdateCryptoProvider Emitted when the user has changed the
+   * crypto provider via the combobox representing it
+   * \param provider String containing the provider name
    */
-  void updateCipher(const QString& cipher);
+  void requestUpdateCryptoProvider(const QString& provider);
 
   /*!
-   * \brief updateKeySize Emitted when the user has changed the key size via the
-   * combobox representing it
+   * \brief requestUpdateKeySize Emitted when the user has changed the key size
+   * via the combobox representing it
    * \param keySize Key size in bits
    */
-  void updateKeySize(std::size_t keySize);
+  void requestUpdateKeySize(std::size_t keySize);
 
   /*!
-   * \brief updateModeOfOperation Emitted when the user has changed the cipher
-   * mode of operation via the combobox representing it
-   * \param modeOfOperation String containing the mode of operation
-   */
-  void updateModeOfOperation(const QString& modeOfOperation);
-
-  /*!
-   * \brief updateCompressionMode Emitted when the user has changed the
+   * \brief requestUpdateCompressionMode Emitted when the user has changed the
    * compression mode via the checkbox representing it
    * \param format String representing compression format
    */
-  void updateCompressionFormat(const QString& format);
+  void requestUpdateCompressionFormat(const QString& format);
 
   /*!
-   * \brief updateRemoveIntermediateFiles Emitted when the user has changed the
-   * remove intermediate files preference via the checkbox representing it
+   * \brief requestUpdateRemoveIntermediateFiles Emitted when the user has
+   * changed the remove intermediate files preference via the checkbox
+   * representing it
    * \param compress Boolean representing remove intermediate files preference
    */
-  void updateRemoveIntermediateFiles(bool removeIntermediate);
+  void requestUpdateRemoveIntermediateFiles(bool removeIntermediate);
 
   /*!
-   * \brief updateContainerMode Emitted when the user has changed the container
-   * mode via the checkbox representing it
+   * \brief requestUpdateContainerMode Emitted when the user has changed the
+   * container mode via the checkbox representing it
    * \param container Boolean representing container
    */
-  void updateContainerMode(bool container);
+  void requestUpdateContainerMode(bool container);
+
+public:
+  void init(const QString& cryptoProvider,
+            const QString& compressionFormat,
+            std::size_t keySize,
+            bool removeIntermediateFiles,
+            bool containerMode);
 
  public slots:
   /*!
-   * \brief changeCipher Executed when the cipher changes
+   * \brief updateCryptoProvider Executed when the crypto provider changes
    */
-  void changeCipher();
+  void updateCryptoProvider();
 
   /*!
-   * \brief changeKeySize Executed when the key size changes
+   * \brief updateKeySize Executed when the key size changes
    */
-  void changeKeySize();
+  void updateKeySize();
 
   /*!
-   * \brief changeModeOfOperation Executed when the mode of operation changes
+   * \brief updateCompressionFormat Executed when the compression format changes
    */
-  void changeModeOfOperation();
+  void updateCompressionFormat();
 
   /*!
-   * \brief changeCompressionFormat Executed when the compression format changes
-   */
-  void changeCompressionFormat();
-
-  /*!
-   * \brief changeRemoveIntermediateFiles Executed when the remove intermediate
+   * \brief updateRemoveIntermediateFiles Executed when the remove intermediate
    * files preference changes
    */
-  void changeRemoveIntermediateFiles();
+  void updateRemoveIntermediateFiles();
 
   /*!
    * \brief changeContainerMode Executed when the container mode changes
    */
-  void changeContainerMode();
+  void updateContainerMode();
+
+  void cryptoProviderChanged(const QString& provider);
+  void keySizeChanged(std::size_t keySize);
+  void compressionFormatChanged(const QString& format);
+  void removeIntermediateFilesChanged(bool removeIntermediate);
+  void containerModeChanged(bool container);
 };
 
 } // namespace Kryvo

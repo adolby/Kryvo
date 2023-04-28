@@ -33,21 +33,29 @@ DesktopMainWindow::DesktopMainWindow(Settings* s, QWidget* parent)
           this, &QMainWindow::close);
   this->addAction(quitAction);
 
+  // Enable drag and drop
+  this->setAcceptDrops(true);
+
+  connect(settings, &Settings::settingsImported,
+          this, &DesktopMainWindow::settingsImported);
+}
+
+void DesktopMainWindow::settingsImported() {
+  MainWindow::settingsImported();
+
   this->move(settings->position());
+  this->resize(settings->size());
 
   if (settings->maximized()) {
     // Move window, then maximize to ensure maximize occurs on correct screen
     this->setWindowState(this->windowState() | Qt::WindowMaximized);
-  } else {
-    this->resize(settings->size());
   }
 
-  // Enable drag and drop
-  this->setAcceptDrops(true);
-
   // Load stylesheet
+  const QString defaultStylePath = QStringLiteral(":/stylesheets/kryvo.qss");
+
   const QString styleSheet = loadStyleSheet(settings->styleSheetPath(),
-                                            QStringLiteral("kryvo.qss"));
+                                            defaultStylePath);
 
   if (!styleSheet.isEmpty()) {
     this->setStyleSheet(styleSheet);
@@ -55,13 +63,13 @@ DesktopMainWindow::DesktopMainWindow(Settings* s, QWidget* parent)
 }
 
 void DesktopMainWindow::closeEvent(QCloseEvent* event) {
-  settings->position(this->pos());
+  emit requestUpdateClosePosition(this->pos());
 
   if (this->isMaximized()) {
-    settings->maximized(true);
+    emit requestUpdateCloseMaximized(true);
   } else {
-    settings->maximized(false);
-    settings->size(this->size());
+    emit requestUpdateCloseMaximized(false);
+    emit requestUpdateCloseSize(this->size());
   }
 
   QMainWindow::closeEvent(event);

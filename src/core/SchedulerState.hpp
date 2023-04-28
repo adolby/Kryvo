@@ -15,21 +15,21 @@ class SchedulerState {
   SchedulerState();
 
   /*!
-   * \brief init Reset the abort flag and initialize the stop flags
+   * \brief init Reset the cancel flag and initialize the stop flags
    */
   void init(std::size_t maxPipelineId);
 
   /*!
-   * \brief abort Updates the abort status
-   * \param abort Boolean representing the abort status
+   * \brief cancel Updates the cancel status
+   * \param cancel Boolean representing the cancel status
    */
-  void abort(bool abort);
+  void cancel(bool cancel);
 
   /*!
-   * \brief isAborted Returns the current abort status
-   * \return Boolean representing the abort status
+   * \brief isCancelled Returns the current cancel status
+   * \return Boolean representing the cancel status
    */
-  bool isAborted() const;
+  bool isCancelled() const;
 
   /*!
    * \brief pause Updates the pause status
@@ -73,16 +73,17 @@ class SchedulerState {
   enum ExecutionState {
     Idle,
     Running,
-    Paused };
+    Paused
+  };
 
   ExecutionState state_;
   QReadWriteLock stateLock_;
   QWaitCondition pauseWaitCondition_;
 
-  // The abort status, when set to true, will stop an executing job
+  // The cancel status, when set to true, will stop an executing job
   // operation and prevent new job operations from starting until it is reset
   // to false.
-  std::atomic<bool> aborted_;
+  std::atomic<bool> cancelled_;
 
   // The container of stopped flags, which are used to stop
   // encrypting/decrypting a file.

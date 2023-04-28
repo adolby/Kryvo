@@ -30,13 +30,6 @@ class OutputFrame : public QFrame {
   ~OutputFrame() override;
 
   /*!
-   * \brief outputPath Updates the output file path string of the output line
-   * edit
-   * \param String containing output file path
-   */
-  void outputPath(const QString& path);
-
-  /*!
    * \brief outputPath Returns the output file path string from the output line
    * edit
    * \return String containing output file path
@@ -44,7 +37,16 @@ class OutputFrame : public QFrame {
   QString outputPath() const;
 
  signals:
+  void requestUpdateOutputPath(const QString& path);
   void selectOutputDir();
+
+ public slots:
+  /*!
+   * \brief outputPath Updates the output file path string of the output line
+   * edit
+   * \param String containing output file path
+   */
+  void outputPath(const QString& path);
 };
 
 } // namespace Kryvo

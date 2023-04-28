@@ -4,11 +4,12 @@
 #include "SettingsFrame.hpp"
 #include "HeaderFrame.hpp"
 #include "FileListFrame.hpp"
-#include "ProgressFrame.hpp"
 #include "MessageFrame.hpp"
 #include "OutputFrame.hpp"
 #include "PasswordFrame.hpp"
 #include "ControlButtonFrame.hpp"
+#include "cryptography/EncryptConfig.hpp"
+#include "cryptography/DecryptConfig.hpp"
 #include "settings/Settings.hpp"
 #include "utility/pimpl.h"
 #include <QMainWindow>
@@ -46,35 +47,24 @@ class MainWindow : public QMainWindow {
   /*!
    * \brief encrypt Emitted when the user provides all required data for
    * encryption and clicks the Encrypt push button
-   * \param passphrase String representing the user supplied passphrase
+   * \param config Encrypt config
    * \param inputFiles Input files
-   * \param outputPath Output path
-   * \param cipher String representing the current cipher
-   * \param keySize Key size
-   * \param modeOfOperation String representing mode of operation
-   * \param compress Boolean representing compression mode
+   * \param outputDir Output dir
    */
-  void encrypt(const QString& cryptoProvider,
-               const QString& compressionFormat,
-               const QString& passphrase,
+  void encrypt(const Kryvo::EncryptConfig& config,
                const std::vector<QFileInfo>& inputFiles,
-               const QDir& outputPath,
-               const QString& cipher,
-               std::size_t keySize,
-               const QString& modeOfOperation,
-               bool removeIntermediateFiles);
+               const QDir& outputDir);
 
   /*!
    * \brief decrypt Emitted when the user provides all required data for
    * decryption and clicks the Decrypt push button
-   * \param passphrase String representing the user supplied passphrase
+   * \param config Decrypt config
    * \param inputFile Input files
-   * \param outputPath Output path
+   * \param outputDir Output dir
    */
-  void decrypt(const QString& passphrase,
+  void decrypt(const Kryvo::DecryptConfig& config,
                const std::vector<QFileInfo>& inputFiles,
-               const QDir& outputPath,
-               bool removeIntermediateFiles);
+               const QDir& outputDir);
 
   /*!
    * \brief pause Emitted when the user toggles the Pause push button
@@ -83,15 +73,21 @@ class MainWindow : public QMainWindow {
   void pause(bool pauseStatus);
 
   /*!
-   * \brief abort Emitted when the user clicks the Clear Files push
+   * \brief cancel Emitted when the user clicks the Clear Files push
    * button
    */
-  void abort();
+  void cancel();
 
   /*!
    * \brief stopFile Emitted when the user clicks a remove file button
    */
   void stopFile(const QFileInfo& fileInfo);
+
+  void requestUpdateInputPath(const QString& path);
+  void requestUpdateOutputPath(const QString& path);
+  void requestUpdateClosePosition(const QPoint& pos);
+  void requestUpdateCloseSize(const QSize& size);
+  void requestUpdateCloseMaximized(bool maximized);
 
  public slots:
   /*!
@@ -138,59 +134,23 @@ class MainWindow : public QMainWindow {
    */
   void updateError(const QString& message, const QFileInfo& fileInfo);
 
-  /*!
-   * \brief updateCipher Executed when the cipher is updated by the user in the
-   * settings frame
-   * \param cipher String representing the new cipher
-   */
-  void updateCipher(const QString& cipher);
-
-  /*!
-   * \brief updateKeySize Executed when the key size is updated by the user in
-   * the settings frame
-   * \param keySize Key size in bits
-   */
-  void updateKeySize(std::size_t keySize);
-
-  /*!
-   * \brief updateModeOfOperation Executed when the mode of operation is updated
-   * by the user in the settings frame
-   * \param mode String representing the new mode of operation
-   */
-  void updateModeOfOperation(const QString& mode);
-
-  /*!
-   * \brief updateCompressionFormat Executed when the compression format is
-   * updated by the user in the settings frame
-   * \param format String representing the new compression format
-   */
-  void updateCompressionFormat(const QString& format);
-
-  void updateRemoveIntermediateFiles(bool removeIntermediate);
-
-  /*!
-   * \brief updateContainerMode Executed when the container mode is updated
-   * by the user in the settings frame
-   * \param compress Boolean representing the new container mode
-   */
-  void updateContainerMode(bool container);
-
   void selectOutputDir();
 
  protected:
+  virtual void settingsImported();
+
   /*!
-   * \brief loadStyleSheet Attempts to load a Qt stylesheet from the local
-   * themes folder with the name specified in the local settings file. If the
-   * load fails, the method will load the default stylesheet from the
-   * application resources.
-   * \param styleFile String representing the name of the stylesheet without
-   * a file extension
-   * \param defaultFile String containing the name of the default stylesheet,
-   * which will be used if the selected stylesheet file doesn't exist
+   * \brief loadStyleSheet Attempts to load a Qt stylesheet from the filepath
+   * specified in the settings file. If the load fails, the default stylesheet
+   * will be loaded from the application resources.
+   * \param styleFilePath String representing the filepath of the stylesheet
+   * \param defaultStyleFilePath String containing the filepath of the default
+   * stylesheet, which will be used if the selected stylesheet file doesn't
+   * exist
    * \return String containing the stylesheet file contents
    */
-  QString loadStyleSheet(const QString& styleFile,
-                         const QString& defaultFile) const;
+  QString loadStyleSheet(const QString& styleFilePath,
+                         const QString& defaultStyleFilePath) const;
 
  protected:
   Settings* settings = nullptr;

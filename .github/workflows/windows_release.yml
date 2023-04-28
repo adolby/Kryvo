@@ -12,7 +12,7 @@ defaults:
 env:
   SOURCE_DIR: ${{ github.workspace }}
   ARCH: amd64
-  QT_VERSION: 6.4.2
+  QT_VERSION: 6.5.0
   KRYVO_VERSION: ${{ github.ref_name }}
 
 jobs:
@@ -26,12 +26,14 @@ jobs:
       - name: (2) Install Qt
         uses: jurplel/install-qt-action@v3
         with:
+          aqtversion: '==3.1.*'
+          py7zrversion: '>=0.20.2'
           version: ${{ env.QT_VERSION }}
           host: windows
           target: desktop
           arch: win64_msvc2019_64
-          tools: tools_ifw
           cache: true
+          tools: 'tools_ifw tools_opensslv3_x64'
 
       - name: (3) Build
         working-directory: ${{ env.SOURCE_DIR }}

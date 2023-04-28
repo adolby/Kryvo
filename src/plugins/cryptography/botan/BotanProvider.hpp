@@ -96,8 +96,8 @@ class BotanProvider : public QObject,
    * \param id
    * \param config Encrypt file config
    */
-   bool encrypt(std::size_t id,
-                const Kryvo::EncryptFileConfig& config) override;
+   int encrypt(std::size_t id,
+               const Kryvo::EncryptFileConfig& config) override;
 
   /*!
    * \brief decrypt Decrypt a file. The algorithm is determined from
@@ -105,8 +105,8 @@ class BotanProvider : public QObject,
    * \param id
    * \param config Decrypt file config
    */
-  bool decrypt(std::size_t id,
-               const Kryvo::DecryptFileConfig& config) override;
+  int decrypt(std::size_t id,
+              const Kryvo::DecryptFileConfig& config) override;
 
   /*!
    * \brief qObject Provide a constant cost QObject conversion

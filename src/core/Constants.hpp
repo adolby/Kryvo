@@ -24,6 +24,7 @@ class Constants {
   static const QStringList defaultPaths;
   static const QString documentsPath;
   static const QStringList messages;
+  static constexpr std::size_t maxConfigFileSize = 100000000; // 100 MB
 };
 
 } // namespace Kryvo

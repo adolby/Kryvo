@@ -31,7 +31,7 @@ class ArchiverPrivate {
 
   DispatchQueue queue;
 
-  static constexpr qint64 kChunk{256000};
+  static constexpr qint64 chunkSize{256000};
 };
 
 ArchiverPrivate::ArchiverPrivate(Archiver* archiver, SchedulerState* s)
@@ -62,11 +62,8 @@ int ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
   int flush = 0;
   unsigned have = 0;
 
-  QByteArray in;
-  in.resize(kChunk);
-
-  QByteArray out;
-  out.resize(kChunk);
+  QByteArray inBuffer(chunkSize, Qt::Uninitialized);
+  QByteArray outBuffer(chunkSize, Qt::Uninitialized);
 
   /* allocate deflate state */
   z_stream strm;
@@ -87,17 +84,15 @@ int ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
   do {
     state->pauseWait(id);
 
-    if (state->isAborted() || state->isStopped(id)) {
+    if (state->isCancelled() || state->isStopped(id)) {
       deflateEnd(&strm);
-      dest->cancelWriting();
       return Z_ERRNO;
     }
 
-    const qint64 bytesRead = source->read(in.data(), kChunk);
+    const qint64 bytesRead = source->read(inBuffer.data(), chunkSize);
 
     if (bytesRead < 0) {
       deflateEnd(&strm);
-      dest->cancelWriting();
       return Z_ERRNO;
     }
 
@@ -105,26 +100,25 @@ int ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
 
     flush = source->atEnd() ? Z_FINISH : Z_NO_FLUSH;
 
-    strm.next_in = reinterpret_cast<unsigned char*>(in.data());
+    strm.next_in = reinterpret_cast<unsigned char*>(inBuffer.data());
 
     /* run deflate() on input until output buffer not full, finish
        compression if all of source has been read in */
     do {
       state->pauseWait(id);
 
-      strm.avail_out = kChunk;
-      strm.next_out = reinterpret_cast<unsigned char*>(out.data());
+      strm.avail_out = chunkSize;
+      strm.next_out = reinterpret_cast<unsigned char*>(outBuffer.data());
       ret = deflate(&strm, flush); /* no bad return value */
 
       Q_ASSERT(ret != Z_STREAM_ERROR); /* state not clobbered */
 
-      have = kChunk - strm.avail_out;
+      have = chunkSize - strm.avail_out;
 
-      const qint64 bytesWritten = dest->write(out.data(), have);
+      const qint64 bytesWritten = dest->write(outBuffer.data(), have);
 
       if (bytesWritten != have || bytesWritten < 0) {
         deflateEnd(&strm);
-        dest->cancelWriting();
         return Z_ERRNO;
       }
     } while (0 == strm.avail_out);
@@ -180,11 +174,8 @@ int ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
 
   z_stream strm;
 
-  QByteArray in;
-  in.resize(kChunk);
-
-  QByteArray out;
-  out.resize(kChunk);
+  QByteArray inBuffer(chunkSize, Qt::Uninitialized);
+  QByteArray outBuffer(chunkSize, Qt::Uninitialized);
 
   /* allocate inflate state */
   strm.zalloc = Z_NULL;
@@ -196,7 +187,6 @@ int ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
   ret = inflateInit2(&strm, MAX_WBITS + 16);
 
   if (ret != Z_OK) {
-    dest->cancelWriting();
     return ret;
   }
 
@@ -206,17 +196,15 @@ int ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
   do {
     state->pauseWait(id);
 
-    if (state->isAborted() || state->isStopped(id)) {
+    if (state->isCancelled() || state->isStopped(id)) {
       inflateEnd(&strm);
-      dest->cancelWriting();
       return Z_ERRNO;
     }
 
-    const qint64 bytesRead = source->read(in.data(), kChunk);
+    const qint64 bytesRead = source->read(inBuffer.data(), chunkSize);
 
     if (bytesRead < 0) {
       inflateEnd(&strm);
-      dest->cancelWriting();
       return Z_ERRNO;
     }
 
@@ -226,14 +214,14 @@ int ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
       break;
     }
 
-    strm.next_in = reinterpret_cast<unsigned char*>(in.data());
+    strm.next_in = reinterpret_cast<unsigned char*>(inBuffer.data());
 
     /* run inflate() on input until output buffer not full */
     do {
       state->pauseWait(id);
 
-      strm.avail_out = kChunk;
-      strm.next_out = reinterpret_cast<unsigned char*>(out.data());
+      strm.avail_out = chunkSize;
+      strm.next_out = reinterpret_cast<unsigned char*>(outBuffer.data());
       ret = inflate(&strm, Z_NO_FLUSH);
 
       Q_ASSERT(ret != Z_STREAM_ERROR); /* state not clobbered */
@@ -250,18 +238,16 @@ int ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
 
         case Z_MEM_ERROR: {
           inflateEnd(&strm);
-          dest->cancelWriting();
           return ret;
         }
       }
 
-      have = kChunk - strm.avail_out;
+      have = chunkSize - strm.avail_out;
 
-      const qint64 bytesWritten = dest->write(out.data(), have);
+      const qint64 bytesWritten = dest->write(outBuffer.data(), have);
 
       if (bytesWritten != have || bytesWritten < 0) {
         inflateEnd(&strm);
-        dest->cancelWriting();
         return Z_ERRNO;
       }
     } while (0 == strm.avail_out);
@@ -299,7 +285,7 @@ bool ArchiverPrivate::compressFile(const std::size_t id,
     return false;
   }
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
     emit q->fileFailed(id);
     return false;
   }
@@ -335,7 +321,7 @@ bool ArchiverPrivate::compressFile(const std::size_t id,
     return false;
   }
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
     emit q->fileFailed(id);
     return false;
   }
@@ -361,7 +347,7 @@ bool ArchiverPrivate::decompressFile(
     return false;
   }
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
     emit q->fileFailed(id);
     return false;
   }
@@ -395,7 +381,7 @@ bool ArchiverPrivate::decompressFile(
     return false;
   }
 
-  if (state->isAborted() || state->isStopped(id)) {
+  if (state->isCancelled() || state->isStopped(id)) {
     emit q->fileFailed(id);
     return false;
   }

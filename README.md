@@ -32,11 +32,13 @@ Example: You created a new theme and saved the stylesheet to myTheme.qss in the 
 
 ## Plugins
 
-Kryvo uses cryptography provider plugins to perform cryptographic operations. The default cryptography provider is [Botan](https://botan.randombit.net/).
+Kryvo uses cryptography provider plugins to perform cryptographic operations. The default cryptography provider is [OpenSSL](https://www.openssl.org/).
 
 ## Licenses
 
 Kryvo is licensed under the MIT License. Read the LICENSE file or go to https://opensource.org/licenses/MIT for more information about the license.
+
+OpenSSL is licensed under the Apache License Version 2.0. Read the OpenSSL LICENSE.txt file for more information about the license. OpenSSL source code is available at: https://www.openssl.org
 
 Botan is licensed under the Simplified BSD License. Read the Botan License file for more information about the license. The license file can also be found at https://botan.randombit.net/license.txt.
 Botan source code is available at https://botan.randombit.net/download.html.
@@ -56,39 +58,13 @@ Development is performed in Qt Creator with qmake as the Makefile generator.
 ### Plugins
 Kryvo uses encryption provider plugins to interface with encryption libraries.
 
-Currently there is only the Botan plugin which is built with the project to ensure it is always available. Future plugins can be built as static or dynamic libraries that are loaded at runtime. A build script will be required to copy dynamic plugins into the app build directory. The build_macOS.sh, build_linux.sh, and build_windows.cmd scripts will copy plugins and produce a working app build as output.
+Plugins can be built as static or dynamic libraries that are loaded at runtime. The OpenSSL and Botan provider plugins are compiled as static libraries to be always available. A build script will be required to copy dynamic plugins into the app build directory. The build_macOS.sh, build_linux.sh, and build_windows.cmd scripts will copy plugins and produce a working app build as output.
+
+### OpenSSL
+The OpenSSL encryption provider plugin uses header and library files from the Qt OpenSSL 3 installer package on Windows and Linux. On macOS it uses the OpenSSL 3 brew package.
 
 ### Botan
 The Botan encryption provider plugin includes and builds the source files of Botan 2.9 (amalgamation).
-
-Amalgamation configurations of Botan are included in the source tree to simplify the build setup.
-
-### Updating Botan
-If you would like to update Botan, you'll need to produce a new amalgamation build. The configuration commands used to generate Botan amalgamation files follows for each platform:
-
-### Android ARM armv7
-python configure.py --cpu=arm32 --os=android --amalgamation --disable-shared --disable-modules=pkcs11 --disable-neon
-
-### Linux GCC x86_64
-python configure.py --cc=gcc --amalgamation --disable-shared --disable-modules=pkcs11
-
-### Linux Clang x86_64
-python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11
-
-### macOS Clang x86_64
-python configure.py --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11
-
-### iOS Clang armv8-a
-python configure.py --os=ios --cpu=arm64 --cc=clang --amalgamation --disable-shared --disable-modules=pkcs11
-
-### Windows Visual Studio x86_64
-python configure.py --cpu=x86_64 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11
-
-### Windows Visual Studio x86
-python configure.py --cpu=x86_32 --cc=msvc --os=windows --amalgamation --disable-shared --disable-modules=pkcs11
-
-### Windows MinGW-w64 x86
-python configure.py --cpu=x86_32 --cc=gcc --os=mingw --amalgamation --disable-shared --disable-modules=pkcs11
 
 ## Contact
 

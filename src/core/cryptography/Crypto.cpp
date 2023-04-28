@@ -18,11 +18,11 @@ class CryptoPrivate {
 
   void updateProviders(const QHash<QString, Plugin>& loadedProviders);
 
-  bool encryptFile(std::size_t id,
-                   const Kryvo::EncryptFileConfig& config);
+  int encryptFile(std::size_t id,
+                  const Kryvo::EncryptFileConfig& config);
 
-  bool decryptFile(std::size_t id,
-                   const Kryvo::DecryptFileConfig& config);
+  int decryptFile(std::size_t id,
+                  const Kryvo::DecryptFileConfig& config);
 
   void encrypt(std::size_t id,
                const Kryvo::EncryptFileConfig& config);
@@ -62,30 +62,30 @@ void CryptoPrivate::updateProviders(
     QObject* provider = providerPlugin.instance();
 
     QObject::connect(provider, SIGNAL(fileCompleted(std::size_t)),
-                     q_ptr, SIGNAL(fileCompleted(std::size_t)),
+                     q, SIGNAL(fileCompleted(std::size_t)),
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
     QObject::connect(provider, SIGNAL(fileFailed(std::size_t)),
-                     q_ptr, SIGNAL(fileFailed(std::size_t)),
+                     q, SIGNAL(fileFailed(std::size_t)),
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
     QObject::connect(provider,
                      SIGNAL(fileProgress(std::size_t,const QString&,qint64)),
-                     q_ptr,
+                     q,
                      SIGNAL(fileProgress(std::size_t,const QString&,qint64)),
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
     QObject::connect(provider, SIGNAL(statusMessage(const QString&)),
-                     q_ptr, SIGNAL(statusMessage(const QString&)),
+                     q, SIGNAL(statusMessage(const QString&)),
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
 
     QObject::connect(provider,
                      SIGNAL(errorMessage(const QString&,const QFileInfo&)),
-                     q_ptr,
+                     q,
                      SIGNAL(errorMessage(const QString&,const QFileInfo&)),
                      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
                                                      Qt::UniqueConnection));
@@ -98,45 +98,45 @@ void CryptoPrivate::updateProviders(
   }
 }
 
-bool CryptoPrivate::encryptFile(std::size_t id,
-                                const Kryvo::EncryptFileConfig& config) {
+int CryptoPrivate::encryptFile(std::size_t id,
+                               const Kryvo::EncryptFileConfig& config) {
   Q_Q(Crypto);
 
   std::shared_lock<std::shared_timed_mutex> lock(providersMutex);
 
-  if (!providers.contains(config.provider)) {
+  if (!providers.contains(config.encrypt.provider)) {
     emit q->fileFailed(id);
-    return false;
+    return -1;
   }
 
-  CryptoProvider* provider = providers.value(config.provider);
+  CryptoProvider* provider = providers.value(config.encrypt.provider);
 
   if (!provider) {
     emit q->fileFailed(id);
     emit q->errorMessage(Constants::messages[11], QFileInfo());
-    return false;
+    return -1;
   }
 
   return provider->encrypt(id, config);
 }
 
-bool CryptoPrivate::decryptFile(std::size_t id,
-                                const Kryvo::DecryptFileConfig& config) {
+int CryptoPrivate::decryptFile(std::size_t id,
+                               const Kryvo::DecryptFileConfig& config) {
   Q_Q(Crypto);
 
   std::shared_lock<std::shared_timed_mutex> lock(providersMutex);
 
-  if (!providers.contains(config.provider)) {
+  if (!providers.contains(config.decrypt.provider)) {
     emit q->fileFailed(id);
-    return false;
+    return -1;
   }
 
-  CryptoProvider* provider = providers.value(config.provider);
+  CryptoProvider* provider = providers.value(config.decrypt.provider);
 
   if (!provider) {
     emit q->fileFailed(id);
     emit q->errorMessage(Constants::messages[11], QFileInfo());
-    return false;
+    return -1;
   }
 
   return provider->decrypt(id, config);
@@ -174,20 +174,20 @@ Crypto::Crypto(SchedulerState* state, QObject* parent)
 
 Crypto::~Crypto() = default;
 
-bool Crypto::encryptFile(std::size_t id,
-                         const Kryvo::EncryptFileConfig& config) {
+int Crypto::encryptFile(std::size_t id,
+                        const Kryvo::EncryptFileConfig& config) {
   Q_D(Crypto);
 
-  const bool encrypted = d->encryptFile(id, config);
+  const int encrypted = d->encryptFile(id, config);
 
   return encrypted;
 }
 
-bool Crypto::decryptFile(std::size_t id,
+int Crypto::decryptFile(std::size_t id,
                          const Kryvo::DecryptFileConfig& config) {
   Q_D(Crypto);
 
-  const bool decrypted = d->decryptFile(id, config);
+  const int decrypted = d->decryptFile(id, config);
 
   return decrypted;
 }

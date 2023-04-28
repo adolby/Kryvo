@@ -13,6 +13,36 @@
 
 namespace Kryvo {
 
+inline bool configFileInvalid(const QFileInfo& fileInfo) {
+  if (!fileInfo.exists()) {
+    return true;
+  }
+
+  return fileInfo.size() > Constants::maxConfigFileSize;
+}
+
+inline int readConfigFile(const QFileInfo& fileInfo, QByteArray& outData) {
+  if (configFileInvalid(fileInfo)) {
+    return -1;
+  }
+
+  QFile configFile(fileInfo.absoluteFilePath());
+
+  const bool configFileOpen = configFile.open(QFile::ReadOnly);
+
+  if (!configFileOpen) {
+    return -2;
+  }
+
+  outData = configFile.readAll();
+
+  if (outData.isEmpty()) {
+    return -3;
+  }
+
+  return 1;
+}
+
 /*!
  * \brief removeExtension Attempts to return the file path string input
  * without the last extension. It's used to extract an extension to determine
@@ -75,10 +105,9 @@ inline QString uniqueFilePath(const QString& filePath) {
   return uniqueFilePath;
 }
 
+// Read header metadata from encrypted file
 inline QHash<QByteArray, QByteArray> readHeader(QFile* file) {
   QHash<QByteArray, QByteArray> headerData;
-
-  // Read metadata from file
 
   // Read line but skip \n
   auto readLine = [](QFile* file) {

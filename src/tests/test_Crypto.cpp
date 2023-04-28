@@ -11,6 +11,14 @@
 #include <QString>
 #include <vector>
 
+void removeTestFile(const QFileInfo& info) {
+  QFile testFile(info.absoluteFilePath());
+
+  if (testFile.exists()) {
+    testFile.remove();
+  }
+}
+
 class EncryptionTestData {
  public:
   EncryptionTestData();
@@ -70,10 +78,24 @@ SCENARIO("testEncryptDecrypt") {
                               QFileInfo(QStringLiteral("test1.txt.enc")),
                               QFileInfo(QStringLiteral("test1 (2).txt")));
 
+  testDataVector.emplace_back(QStringLiteral("OpenSsl"), QStringLiteral("gzip"),
+                              QStringLiteral("password"),
+                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              QFileInfo(QStringLiteral("test1.txt")),
+                              QFileInfo(QStringLiteral("test1.txt.enc")),
+                              QFileInfo(QStringLiteral("test1 (2).txt")));
+
   // Executable file without compression
   testDataVector.emplace_back(QStringLiteral("Botan"), QStringLiteral("gzip"),
                               QStringLiteral("password2"),
-                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              QStringLiteral("AES"), 256, QStringLiteral("GCM"),
+                              QFileInfo(QStringLiteral("test2.exe")),
+                              QFileInfo(QStringLiteral("test2.exe.enc")),
+                              QFileInfo(QStringLiteral("test2 (2).exe")));
+
+  testDataVector.emplace_back(QStringLiteral("OpenSsl"), QStringLiteral("gzip"),
+                              QStringLiteral("password2"),
+                              QStringLiteral("AES"), 256, QStringLiteral("GCM"),
                               QFileInfo(QStringLiteral("test2.exe")),
                               QFileInfo(QStringLiteral("test2.exe.enc")),
                               QFileInfo(QStringLiteral("test2 (2).exe")));
@@ -81,7 +103,14 @@ SCENARIO("testEncryptDecrypt") {
   // Zip file without compression
   testDataVector.emplace_back(QStringLiteral("Botan"), QStringLiteral("gzip"),
                               QStringLiteral("password3"),
-                              QStringLiteral("AES"), 128, QStringLiteral("GCM"),
+                              QStringLiteral("AES"), 256, QStringLiteral("GCM"),
+                              QFileInfo(QStringLiteral("test3.zip")),
+                              QFileInfo(QStringLiteral("test3.zip.enc")),
+                              QFileInfo(QStringLiteral("test3 (2).zip")));
+
+  testDataVector.emplace_back(QStringLiteral("OpenSsl"), QStringLiteral("gzip"),
+                              QStringLiteral("password3"),
+                              QStringLiteral("AES"), 256, QStringLiteral("GCM"),
                               QFileInfo(QStringLiteral("test3.zip")),
                               QFileInfo(QStringLiteral("test3.zip.enc")),
                               QFileInfo(QStringLiteral("test3 (2).zip")));
@@ -99,6 +128,10 @@ SCENARIO("testEncryptDecrypt") {
   cryptographer.updateProviders(providers);
 
   for (const EncryptionTestData& etd : testDataVector) {
+    // Clean up old test files
+    removeTestFile(etd.encryptedFileInfo);
+    removeTestFile(etd.decryptedFileInfo);
+
     const QString inputFilePath = etd.inputFileInfo.absoluteFilePath();
 
     GIVEN("A test file") {
@@ -118,25 +151,25 @@ SCENARIO("testEncryptDecrypt") {
 
         // Test encryption and decryption
         Kryvo::EncryptFileConfig encryptFileConfig;
-        encryptFileConfig.provider = etd.cryptoProvider;
-        encryptFileConfig.compressionFormat = etd.compressionFormat;
-        encryptFileConfig.passphrase = etd.passphrase;
-        encryptFileConfig.cipher = etd.cipher;
-        encryptFileConfig.keySize = static_cast<std::size_t>(etd.keySize);
-        encryptFileConfig.modeOfOperation = etd.modeOfOperation;
+        encryptFileConfig.encrypt.provider = etd.cryptoProvider;
+        encryptFileConfig.encrypt.compressionFormat = etd.compressionFormat;
+        encryptFileConfig.encrypt.passphrase = etd.passphrase;
+        encryptFileConfig.encrypt.cipher = etd.cipher;
+        encryptFileConfig.encrypt.keySize =
+          static_cast<std::size_t>(etd.keySize);
+        encryptFileConfig.encrypt.modeOfOperation = etd.modeOfOperation;
         encryptFileConfig.inputFileInfo = etd.inputFileInfo;
         encryptFileConfig.outputFileInfo = etd.encryptedFileInfo;
 
-        const bool encrypted = cryptographer.encryptFile(id, encryptFileConfig);
+        const int encrypted = cryptographer.encryptFile(id, encryptFileConfig);
 
         QFile inFile(etd.encryptedFileInfo.absoluteFilePath());
 
         const bool inFileOpen = inFile.open(QIODevice::ReadOnly);
 
         if (!inFileOpen) {
-          FAIL(
-            msgMissing.arg(
-              etd.encryptedFileInfo.absoluteFilePath()).toStdString());
+          FAIL(msgMissing.arg(
+                 etd.encryptedFileInfo.absoluteFilePath()).toStdString());
         }
 
         const QHash<QByteArray, QByteArray> headers =
@@ -144,16 +177,15 @@ SCENARIO("testEncryptDecrypt") {
 
         if (!headers.contains(QByteArrayLiteral("Version"))) {
           const QString headerError = QStringLiteral("Header error in %1");
-          FAIL(
-            headerError.arg(
-              etd.encryptedFileInfo.absoluteFilePath()).toStdString());
+          FAIL(headerError.arg(
+                 etd.encryptedFileInfo.absoluteFilePath()).toStdString());
         }
 
         inFile.close();
 
         Kryvo::DecryptFileConfig decryptFileConfig;
-        decryptFileConfig.provider = etd.cryptoProvider;
-        decryptFileConfig.passphrase = etd.passphrase;
+        decryptFileConfig.decrypt.provider = etd.cryptoProvider;
+        decryptFileConfig.decrypt.passphrase = etd.passphrase;
         decryptFileConfig.inputFileInfo = etd.encryptedFileInfo;
         decryptFileConfig.outputFileInfo = etd.decryptedFileInfo;
 
@@ -165,21 +197,12 @@ SCENARIO("testEncryptDecrypt") {
                                      etd.decryptedFileInfo.absoluteFilePath());
 
         // Clean up test files
-        QFile encryptedFile(etd.encryptedFileInfo.absoluteFilePath());
-
-        if (encryptedFile.exists()) {
-          encryptedFile.remove();
-        }
-
-        QFile decryptedFile(etd.decryptedFileInfo.absoluteFilePath());
-
-        if (decryptedFile.exists()) {
-          decryptedFile.remove();
-        }
+        removeTestFile(etd.encryptedFileInfo);
+        removeTestFile(etd.decryptedFileInfo);
 
         THEN("Decrypted file matches plaintext file") {
-          REQUIRE(encrypted);
-          REQUIRE(decrypted);
+          REQUIRE(encrypted == 1);
+          REQUIRE(decrypted == 1);
           REQUIRE(equivalentTest);
         }
       }

@@ -8,9 +8,6 @@
  * \return Integer exit code
  */
 int main(int argc, char* argv[]) {
-  QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-  QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-
   Kryvo::Application app(argc, argv);
 
   QCoreApplication::setOrganizationName(

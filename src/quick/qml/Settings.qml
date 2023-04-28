@@ -63,18 +63,18 @@ Page {
         Label {
           id: cipherLabel
           font.pixelSize: 18
-          text: qsTr("Cipher")
+          text: qsTr("Cryptography provider")
         }
 
         ComboBox {
-          model: ["AES", "Serpent"]
+          model: ["OpenSsl", "Botan"]
 
           onActivated: {
-            ui.updateCipher(currentText);
+            ui.updateCryptoProvider(currentText);
           }
 
           Component.onCompleted: {
-            currentIndex = find(ui.cipher);
+            currentIndex = find(ui.cryptoProvider);
           }
         }
       }
@@ -98,7 +98,7 @@ Page {
         }
 
         ComboBox {
-          model: ["128", "192", "256"]
+          model: ["256", "128"]
 
           onActivated: {
             ui.updateKeySize(currentText);
@@ -114,31 +114,6 @@ Page {
         width: parent.width
         height: 1
         color: "white"
-      }
-
-      RowLayout {
-        height: 50
-        spacing: 15
-
-        Layout.leftMargin: 10
-
-        Label {
-          id: modeLabel
-          font.pixelSize: 18
-          text: qsTr("Mode")
-        }
-
-        ComboBox {
-          model: ["GCM", "EAX"]
-
-          onActivated: {
-            ui.updateModeOfOperation(currentText);
-          }
-
-          Component.onCompleted: {
-            currentIndex = find(ui.modeOfOperation);
-          }
-        }
       }
 
       Rectangle {

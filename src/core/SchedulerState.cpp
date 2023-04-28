@@ -5,23 +5,23 @@
 namespace Kryvo {
 
 SchedulerState::SchedulerState()
-  : state_(ExecutionState::Idle), aborted_(false) {
+  : state_(ExecutionState::Idle), cancelled_(false) {
 }
 
 void SchedulerState::init(const std::size_t maxPipelineId) {
-  aborted_ = false;
+  cancelled_ = false;
 
   QWriteLocker locker(&stoppedLock_);
   stopped_.clear();
   stopped_.resize(maxPipelineId);
 }
 
-void SchedulerState::abort(const bool abort) {
-  aborted_ = abort;
+void SchedulerState::cancel(const bool cancel) {
+  cancelled_ = cancel;
 }
 
-bool SchedulerState::isAborted() const {
-  return aborted_;
+bool SchedulerState::isCancelled() const {
+  return cancelled_;
 }
 
 void SchedulerState::pause(const bool pause) {
@@ -53,7 +53,7 @@ bool SchedulerState::isPaused() {
 void SchedulerState::pauseWait(const std::size_t pipelineId) {
   QReadLocker lock(&stateLock_);
 
-  while (isPaused() && !(isAborted() || isStopped(pipelineId))) {
+  while (isPaused() && !(isCancelled() || isStopped(pipelineId))) {
     pauseWaitCondition_.wait(&stateLock_);
   }
 }

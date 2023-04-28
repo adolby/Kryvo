@@ -1,22 +1,18 @@
 #ifndef KRYVO_CRYPTOGRAPHY_ENCRYPTFILECONFIG_HPP_
 #define KRYVO_CRYPTOGRAPHY_ENCRYPTFILECONFIG_HPP_
 
+#include "EncryptConfig.hpp"
 #include <QFileInfo>
 #include <QString>
 
 namespace Kryvo {
 
 struct EncryptFileConfig {
-  QString provider;
-  QString compressionFormat;
-  QString passphrase;
+  Kryvo::EncryptConfig encrypt;
   QFileInfo inputFileInfo;
   QFileInfo outputFileInfo;
-  QString cipher;
-  std::size_t keySize = 0;
-  QString modeOfOperation;
 };
 
-}
+} // namespace Kryvo
 
 #endif // KRYVO_CRYPTOGRAPHY_ENCRYPTFILECONFIG_HPP_

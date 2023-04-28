@@ -26,22 +26,15 @@ class SchedulerPrivate {
 
   void processPipeline(std::size_t id);
 
-  void abortPipeline(std::size_t id);
+  void cancelPipeline(std::size_t id);
 
-  void encrypt(const QString& cryptoProvider,
-               const QString& compressionFormat,
-               const QString& passphrase,
+  void encrypt(const Kryvo::EncryptConfig& config,
                const std::vector<QFileInfo>& inputFiles,
-               const QDir& outputPath,
-               const QString& cipher,
-               std::size_t inputKeySize,
-               const QString& modeOfOperation,
-               bool removeIntermediateFiles);
+               const QDir& outputPath);
 
-  void decrypt(const QString& passphrase,
-               const std::vector<QFileInfo>& inputFilePaths,
-               const QDir& outputPath,
-               bool removeIntermediateFiles);
+  void decrypt(const Kryvo::DecryptConfig& config,
+               const std::vector<QFileInfo>& inputFiles,
+               const QDir& outputPath);
 
   Scheduler* const q_ptr{nullptr};
 
@@ -57,71 +50,77 @@ class SchedulerPrivate {
 
 SchedulerPrivate::SchedulerPrivate(Scheduler* s)
   : q_ptr(s), archiver(&state), cryptographer(&state) {
-  QObject::connect(q_ptr, &Scheduler::fileCompleted,
-                   q_ptr, &Scheduler::processPipeline,
+  Q_Q(Scheduler);
+
+  QObject::connect(q, &Scheduler::fileCompleted,
+                   q, &Scheduler::processPipeline,
                    Qt::QueuedConnection);
 
-  QObject::connect(&pluginLoader, &PluginLoader::cryptoProvidersChanged,
+  QObject::connect(&pluginLoader, &PluginLoader::cryptoProvidersLoaded,
+                   q, &Scheduler::cryptoProvidersLoaded,
+                   Qt::QueuedConnection);
+
+  QObject::connect(q, &Scheduler::cryptoProvidersLoaded,
                    &cryptographer, &Crypto::updateProviders,
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::fileProgress,
-                   q_ptr, &Scheduler::updateFileProgress,
+                   q, &Scheduler::updateFileProgress,
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::fileCompleted,
-                   q_ptr, &Scheduler::fileCompleted,
+                   q, &Scheduler::fileCompleted,
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::fileFailed,
-                   q_ptr, &Scheduler::abortPipeline,
+                   q, &Scheduler::cancelPipeline,
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::statusMessage,
-                   q_ptr, &Scheduler::statusMessage,
+                   q, &Scheduler::statusMessage,
                    Qt::QueuedConnection);
 
   QObject::connect(&archiver, &Archiver::errorMessage,
-                   q_ptr, &Scheduler::errorMessage,
+                   q, &Scheduler::errorMessage,
                    Qt::QueuedConnection);
 
-  QObject::connect(q_ptr, &Scheduler::compressFile,
+  QObject::connect(q, &Scheduler::compressFile,
                    &archiver, &Archiver::compress,
                    Qt::DirectConnection);
 
-  QObject::connect(q_ptr, &Scheduler::decompressFile,
+  QObject::connect(q, &Scheduler::decompressFile,
                    &archiver, &Archiver::decompress,
                    Qt::DirectConnection);
 
   QObject::connect(&cryptographer, &Crypto::fileProgress,
-                   q_ptr, &Scheduler::updateFileProgress,
+                   q, &Scheduler::updateFileProgress,
                    Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::fileCompleted,
-                   q_ptr, &Scheduler::fileCompleted,
+                   q, &Scheduler::fileCompleted,
                    Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::fileFailed,
-                   q_ptr, &Scheduler::abortPipeline,
+                   q, &Scheduler::cancelPipeline,
                    Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::statusMessage,
-                   q_ptr, &Scheduler::statusMessage,
+                   q, &Scheduler::statusMessage,
                    Qt::QueuedConnection);
 
   QObject::connect(&cryptographer, &Crypto::errorMessage,
-                   q_ptr, &Scheduler::errorMessage,
+                   q, &Scheduler::errorMessage,
                    Qt::QueuedConnection);
 
-  QObject::connect(q_ptr, &Scheduler::encryptFile,
+  QObject::connect(q, &Scheduler::encryptFile,
                    &cryptographer, &Crypto::encrypt,
                    Qt::DirectConnection);
 
-  QObject::connect(q_ptr, &Scheduler::decryptFile,
+  QObject::connect(q, &Scheduler::decryptFile,
                    &cryptographer, &Crypto::decrypt,
                    Qt::DirectConnection);
 
-  QTimer::singleShot(0, q_ptr,
+  QTimer::singleShot(0, q,
                      [this]() {
                        init();
                      });
@@ -185,7 +184,7 @@ void SchedulerPrivate::processPipeline(const std::size_t id) {
   func(id);
 }
 
-void SchedulerPrivate::abortPipeline(const std::size_t id) {
+void SchedulerPrivate::cancelPipeline(const std::size_t id) {
   Q_Q(Scheduler);
   Q_ASSERT(id < pipelines.size());
 
@@ -210,15 +209,9 @@ void SchedulerPrivate::abortPipeline(const std::size_t id) {
   }
 }
 
-void SchedulerPrivate::encrypt(const QString& cryptoProvider,
-                               const QString& compressionFormat,
-                               const QString& passphrase,
+void SchedulerPrivate::encrypt(const Kryvo::EncryptConfig& config,
                                const std::vector<QFileInfo>& inputFiles,
-                               const QDir& outputPath,
-                               const QString& cipher,
-                               const std::size_t inputKeySize,
-                               const QString& modeOfOperation,
-                               const bool removeIntermediateFiles) {
+                               const QDir& outputDir) {
   Q_Q(Scheduler);
 
   if (state.isRunning()) {
@@ -234,23 +227,13 @@ void SchedulerPrivate::encrypt(const QString& cryptoProvider,
   std::size_t id = 0;
 
   for (const QFileInfo& inputFile : inputFiles) {
-    const std::size_t keySize = [&inputKeySize]() {
-      std::size_t size = 128;
-
-      if (inputKeySize > 0) {
-        size = inputKeySize;
-      }
-
-      return size;
-    }();
-
     // Create output path if it doesn't exist
-    if (!outputPath.exists()) {
-      outputPath.mkpath(outputPath.absolutePath());
+    if (!outputDir.exists()) {
+      outputDir.mkpath(outputDir.absolutePath());
     }
 
-    const QString outPath = outputPath.exists() ?
-                            outputPath.absolutePath() :
+    const QString outPath = outputDir.exists() ?
+                            outputDir.absolutePath() :
                             inputFile.absolutePath();
 
     Pipeline pipeline;
@@ -259,15 +242,10 @@ void SchedulerPrivate::encrypt(const QString& cryptoProvider,
 
     id = id + 1;
 
-    EncryptFileConfig encryptConfig;
-    encryptConfig.provider = cryptoProvider;
-    encryptConfig.compressionFormat = compressionFormat;
-    encryptConfig.passphrase = passphrase;
-    encryptConfig.cipher = cipher;
-    encryptConfig.keySize = keySize;
-    encryptConfig.modeOfOperation = modeOfOperation;
+    EncryptFileConfig encryptFileConfig;
+    encryptFileConfig.encrypt = config;
 
-    if (QStringLiteral("gzip") == compressionFormat) {
+    if (QStringLiteral("gzip") == config.compressionFormat) {
       const QString compressedFilePath =
         QString(outPath % QStringLiteral("/") % inputFile.fileName() %
                 Constants::dot %
@@ -290,17 +268,17 @@ void SchedulerPrivate::encrypt(const QString& cryptoProvider,
         QString(compressedFilePath % Constants::dot %
                 Constants::encryptedFileExtension);
 
-      encryptConfig.inputFileInfo = compressedFileInfo;
-      encryptConfig.outputFileInfo = QFileInfo(encryptedFilePath);
+      encryptFileConfig.inputFileInfo = compressedFileInfo;
+      encryptFileConfig.outputFileInfo = QFileInfo(encryptedFilePath);
 
       auto encryptFunction =
-        [q, encryptConfig](std::size_t id) {
-          emit q->encryptFile(id, encryptConfig);
+        [q, encryptFileConfig](std::size_t id) {
+          emit q->encryptFile(id, encryptFileConfig);
         };
 
       pipeline.stages.push_back(encryptFunction);
 
-      if (removeIntermediateFiles) {
+      if (config.removeIntermediateFiles) {
         auto removeIntermediateFilesFunction =
           [q, compressedFilePath](std::size_t id) {
             QFile::remove(compressedFilePath);
@@ -314,12 +292,12 @@ void SchedulerPrivate::encrypt(const QString& cryptoProvider,
         QString(outPath % QStringLiteral("/") % inputFile.fileName() %
                 Constants::dot % Constants::encryptedFileExtension);
 
-      encryptConfig.inputFileInfo = inputFile;
-      encryptConfig.outputFileInfo = QFileInfo(encryptedFilePath);
+      encryptFileConfig.inputFileInfo = inputFile;
+      encryptFileConfig.outputFileInfo = QFileInfo(encryptedFilePath);
 
       auto encryptFunction =
-        [q, encryptConfig](std::size_t id) {
-          emit q->encryptFile(id, encryptConfig);
+        [q, encryptFileConfig](std::size_t id) {
+          emit q->encryptFile(id, encryptFileConfig);
         };
 
       pipeline.stages.push_back(encryptFunction);
@@ -339,10 +317,9 @@ void SchedulerPrivate::encrypt(const QString& cryptoProvider,
   dispatch();
 }
 
-void SchedulerPrivate::decrypt(const QString& passphrase,
+void SchedulerPrivate::decrypt(const DecryptConfig& config,
                                const std::vector<QFileInfo>& inputFiles,
-                               const QDir& outputPath,
-                               const bool removeIntermediateFiles) {
+                               const QDir& outputDir) {
   Q_Q(Scheduler);
 
   if (state.isRunning()) {
@@ -381,12 +358,12 @@ void SchedulerPrivate::decrypt(const QString& passphrase,
       header.value(QByteArrayLiteral("Compression format"));
 
     // Create output path if it doesn't exist
-    if (!outputPath.exists()) {
-      outputPath.mkpath(outputPath.absolutePath());
+    if (!outputDir.exists()) {
+      outputDir.mkpath(outputDir.absolutePath());
     }
 
-    const QString outPath = outputPath.exists() ?
-                            outputPath.absolutePath() :
+    const QString outPath = outputDir.exists() ?
+                            outputDir.absolutePath() :
                             inputFile.absolutePath();
 
     const QString outputFilePath = QString(outPath % QStringLiteral("/") %
@@ -405,15 +382,15 @@ void SchedulerPrivate::decrypt(const QString& passphrase,
     // Create a unique file name for the file in this directory
     const QFileInfo uniqueDecryptedFilePath(uniqueFilePath(decryptedFilePath));
 
-    DecryptFileConfig decryptConfig;
-    decryptConfig.provider = cryptoProvider;
-    decryptConfig.passphrase = passphrase;
-    decryptConfig.inputFileInfo = inputFile;
-    decryptConfig.outputFileInfo = uniqueDecryptedFilePath;
+    DecryptFileConfig decryptFileConfig;
+    decryptFileConfig.decrypt = config;
+    decryptFileConfig.decrypt.provider = cryptoProvider;
+    decryptFileConfig.inputFileInfo = inputFile;
+    decryptFileConfig.outputFileInfo = uniqueDecryptedFilePath;
 
     auto decryptFunction =
-      [q, decryptConfig](std::size_t id) {
-        emit q->decryptFile(id, decryptConfig);
+      [q, decryptFileConfig](std::size_t id) {
+        emit q->decryptFile(id, decryptFileConfig);
       };
 
     pipeline.stages.push_back(decryptFunction);
@@ -439,7 +416,7 @@ void SchedulerPrivate::decrypt(const QString& passphrase,
 
       pipeline.stages.push_back(decompressFunction);
 
-      if (removeIntermediateFiles) {
+      if (config.removeIntermediateFiles) {
         auto removeIntermediateFilesFunction =
           [q, uniqueDecryptedFilePath](std::size_t id) {
             QFile::remove(uniqueDecryptedFilePath.absoluteFilePath());
@@ -469,36 +446,27 @@ Scheduler::Scheduler(QObject* parent)
 
 Scheduler::~Scheduler() = default;
 
-void Scheduler::encrypt(const QString& cryptoProvider,
-                        const QString& compressionFormat,
-                        const QString& passphrase,
+void Scheduler::encrypt(const Kryvo::EncryptConfig& config,
                         const std::vector<QFileInfo>& inputFiles,
-                        const QDir& outputPath,
-                        const QString& cipher,
-                        const std::size_t inputKeySize,
-                        const QString& modeOfOperation,
-                        const bool removeIntermediateFiles) {
+                        const QDir& outputDir) {
   Q_D(Scheduler);
 
-  d->encrypt(cryptoProvider, compressionFormat, passphrase, inputFiles,
-             outputPath, cipher, inputKeySize, modeOfOperation,
-             removeIntermediateFiles);
+  d->encrypt(config, inputFiles, outputDir);
 }
 
-void Scheduler::decrypt(const QString& passphrase,
+void Scheduler::decrypt(const Kryvo::DecryptConfig& config,
                         const std::vector<QFileInfo>& inputFiles,
-                        const QDir& outputPath,
-                        const bool removeIntermediateFiles) {
+                        const QDir& outputDir) {
   Q_D(Scheduler);
 
-  d->decrypt(passphrase, inputFiles, outputPath, removeIntermediateFiles);
+  d->decrypt(config, inputFiles, outputDir);
 }
 
-void Scheduler::abort() {
+void Scheduler::cancel() {
   Q_D(Scheduler);
 
   if (d->state.isRunning()) {
-    d->state.abort(true);
+    d->state.cancel(true);
   }
 }
 
@@ -537,10 +505,10 @@ void Scheduler::processPipeline(const std::size_t id) {
   d->processPipeline(id);
 }
 
-void Scheduler::abortPipeline(const std::size_t id) {
+void Scheduler::cancelPipeline(const std::size_t id) {
   Q_D(Scheduler);
 
-  d->abortPipeline(id);
+  d->cancelPipeline(id);
 }
 
 void Scheduler::updateFileProgress(const std::size_t id,

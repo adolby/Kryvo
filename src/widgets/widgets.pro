@@ -75,6 +75,7 @@ linux {
         LIBS += -L$$PWD/../../build/android/armv7/debug/core -lcore
         LIBS += -L$$PWD/../../build/android/armv7/debug/lib/zlib -lz
         LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/botan -lbotan
+        LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/android/armv7/debug/widgets
       }
       release {
@@ -82,6 +83,7 @@ linux {
         LIBS += -L$$PWD/../../build/android/armv7/release/core -lcore
         LIBS += -L$$PWD/../../build/android/armv7/release/lib/zlib -lz
         LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/botan -lbotan
+        LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/android/armv7/release/widgets
       }
     }
@@ -94,6 +96,7 @@ linux {
         LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/core -lcore
         LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/lib/zlib -lz
         LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/plugins/cryptography/botan -lbotan
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/android/arm64_v8a/debug/widgets
       }
       release {
@@ -101,6 +104,7 @@ linux {
         LIBS += -L$$PWD/../../build/android/arm64_v8a/release/core -lcore
         LIBS += -L$$PWD/../../build/android/arm64_v8a/release/lib/zlib -lz
         LIBS += -L$$PWD/../../build/android/arm64_v8a/release/plugins/cryptography/botan -lbotan
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/android/arm64_v8a/release/widgets
       }
     }
@@ -121,6 +125,7 @@ linux {
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/core -lcore
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/lib/zlib -lz
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/plugins/cryptography/botan -lbotan
+      LIBS += -L$$PWD/../../build/linux/clang/x86_64/debug/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/linux/clang/x86_64/debug/widgets
     }
     release {
@@ -128,8 +133,11 @@ linux {
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/core -lcore
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/lib/zlib -lz
       LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/plugins/cryptography/botan -lbotan
+      LIBS += -L$$PWD/../../build/linux/clang/x86_64/release/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/linux/clang/x86_64/release/widgets
     }
+
+    LIBS += -L$${OPENSSL_LIB_PATH} -lcrypto
   } # End linux-clang
 
   linux-g++ {
@@ -147,6 +155,7 @@ linux {
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/core -lcore
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/lib/zlib -lz
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/plugins/cryptography/botan -lbotan
+      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/debug/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/debug/widgets
     }
     release {
@@ -154,15 +163,15 @@ linux {
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/core -lcore
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/lib/zlib -lz
       LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/plugins/cryptography/botan -lbotan
+      LIBS += -L$$PWD/../../build/linux/gcc/x86_64/release/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/linux/gcc/x86_64/release/widgets
     }
+
+    LIBS += -L$${OPENSSL_LIB_PATH} -lcrypto
   } # End linux-g++
 } # End linux
 
 darwin {
-  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
-  QMAKE_LFLAGS += -fstack-protector
-
   macos {
     message(macOS)
     message(clang)
@@ -178,6 +187,7 @@ darwin {
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/core -lcore
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/lib/zlib -lz
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/plugins/cryptography/botan -lbotan
+      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/debug/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/macOS/clang/x86_64/debug/widgets
     }
     release {
@@ -185,9 +195,15 @@ darwin {
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/core -lcore
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/lib/zlib -lz
       LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/plugins/cryptography/botan -lbotan
+      LIBS += -L$$PWD/../../build/macOS/clang/x86_64/release/plugins/cryptography/openssl -lopenssl
       DESTDIR = $$PWD/../../build/macOS/clang/x86_64/release/widgets
     }
   } # End macos
+
+  QMAKE_CXXFLAGS += -fstack-protector -maes -mpclmul -mssse3 -mavx2
+  QMAKE_LFLAGS += -fstack-protector
+
+  LIBS += -L$${OPENSSL_LIB_PATH} -lcrypto
 } # End darwin
 
 win32 {
@@ -211,6 +227,7 @@ win32 {
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/core -lcore
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/lib/zlib -lz
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/plugins/cryptography/botan -lbotan
+        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/debug/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/windows/msvc/x86_64/debug/widgets
       }
       release {
@@ -218,8 +235,11 @@ win32 {
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/core -lcore
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/lib/zlib -lz
         LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/plugins/cryptography/botan -lbotan
+        LIBS += -L$$PWD/../../build/windows/msvc/x86_64/release/plugins/cryptography/openssl -lopenssl
         DESTDIR = $$PWD/../../build/windows/msvc/x86_64/release/widgets
       }
+
+      LIBS += -L$${OPENSSL_LIB_PATH} -llibcrypto
     }
   } # End win32-msvc
 
