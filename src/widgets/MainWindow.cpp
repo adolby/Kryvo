@@ -206,42 +206,46 @@ void MainWindow::processFiles(const CryptDirection direction) {
 
   const QString passphrase = passwordFrame->password();
 
-  if (!passphrase.isEmpty()) {
-    const int rowCount = fileListFrame->rowCount();
-
-    if (rowCount > 0) {
-      std::vector<QFileInfo> files;
-
-      for (int row = 0; row < rowCount; ++row) {
-        auto item = fileListFrame->item(row);
-        const QFileInfo fileInfo(item->data().toString());
-        files.push_back(fileInfo);
-      }
-
-      const QString outputPath = settings->outputPath();
-      const QDir outputDir(outputPath);
-
-      if (CryptDirection::Encrypt == direction) {
-        EncryptConfig config;
-        config.provider = settings->cryptoProvider();
-        config.compressionFormat = settings->compressionFormat();
-        config.passphrase = passphrase;
-        config.cipher = settings->cipher();
-        config.keySize = settings->keySize();
-        config.modeOfOperation = settings->modeOfOperation();
-        config.removeIntermediateFiles = settings->removeIntermediateFiles();
-
-        emit encrypt(config, files, outputDir);
-      } else {
-        DecryptConfig config;
-        config.passphrase = passphrase;
-        config.removeIntermediateFiles = settings->removeIntermediateFiles();
-
-        emit decrypt(config, files, outputDir);
-      }
-    }
-  } else { // Inform user that a password is required to encrypt or decrypt
+  if (passphrase.isEmpty()) {
+    // Inform user that a password is required to encrypt or decrypt
     updateStatusMessage(d->messages[0]);
+    return;
+  }
+
+  const int rowCount = fileListFrame->rowCount();
+
+  if (rowCount < 1) {
+    return;
+  }
+
+  std::vector<QFileInfo> files;
+
+  for (int row = 0; row < rowCount; ++row) {
+    auto item = fileListFrame->item(row);
+    const QFileInfo fileInfo(item->data().toString());
+    files.push_back(fileInfo);
+  }
+
+  const QString outputPath = settings->outputPath();
+  const QDir outputDir(outputPath);
+
+  if (CryptDirection::Encrypt == direction) {
+    EncryptConfig config;
+    config.provider = settings->cryptoProvider();
+    config.compressionFormat = settings->compressionFormat();
+    config.passphrase = passphrase;
+    config.cipher = settings->cipher();
+    config.keySize = settings->keySize();
+    config.modeOfOperation = settings->modeOfOperation();
+    config.removeIntermediateFiles = settings->removeIntermediateFiles();
+
+    emit encrypt(config, files, outputDir);
+  } else {
+    DecryptConfig config;
+    config.passphrase = passphrase;
+    config.removeIntermediateFiles = settings->removeIntermediateFiles();
+
+    emit decrypt(config, files, outputDir);
   }
 }
 
