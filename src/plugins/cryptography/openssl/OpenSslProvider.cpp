@@ -10,6 +10,7 @@
 #include <QStringBuilder>
 #include <QString>
 #include <QHash>
+#include <QMap>
 #include <openssl/evp.h>
 #include <openssl/kdf.h>
 #include <openssl/ossl_typ.h>
@@ -97,9 +98,9 @@ int deriveKeyAndIv(const QByteArray& passphrase,
   return rc;
 }
 
-QHash<QByteArray, QByteArray> buildHeader(
+QMap<QByteArray, QByteArray> buildHeader(
   const Kryvo::EncryptFileConfig& config, const QByteArray& salt) {
-  QHash<QByteArray, QByteArray> headerData;
+  QMap<QByteArray, QByteArray> headerData;
 
   headerData.insert(QByteArrayLiteral("Version"),
                     QByteArray::number(Constants::fileVersion));
@@ -199,7 +200,7 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
   QByteArray salt(saltSize, Qt::Uninitialized);
   RAND_bytes((unsigned char*)salt.data(), salt.size());
 
-  const QHash<QByteArray, QByteArray> headerData = buildHeader(config, salt);
+  const QMap<QByteArray, QByteArray> headerData = buildHeader(config, salt);
   writeHeader(&outFile, headerData);
 
   const QByteArray passphrase = config.encrypt.passphrase.toUtf8();

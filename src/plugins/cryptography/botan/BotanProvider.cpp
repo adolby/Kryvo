@@ -9,6 +9,7 @@
 #include <QStringBuilder>
 #include <QString>
 #include <QHash>
+#include <QMap>
 #include <string>
 #include <stdexcept>
 
@@ -61,10 +62,10 @@ void deriveKeyAndIv(const QString& passphrase,
                        salt.data(), salt.size());
 }
 
-QHash<QByteArray, QByteArray> buildHeader(
+QMap<QByteArray, QByteArray> buildHeader(
   const Kryvo::EncryptFileConfig& config,
   const Botan::secure_vector<Botan::byte>& salt) {
-  QHash<QByteArray, QByteArray> headerData;
+  QMap<QByteArray, QByteArray> headerData;
 
   headerData.insert(QByteArrayLiteral("Version"),
                     QByteArray::number(Constants::fileVersion));
@@ -300,7 +301,7 @@ int BotanProviderPrivate::encryptFile(std::size_t id,
     return -1;
   }
 
-  const QHash<QByteArray, QByteArray> headerData = buildHeader(config, salt);
+  const QMap<QByteArray, QByteArray> headerData = buildHeader(config, salt);
   writeHeader(&outFile, headerData);
 
   Botan::Pipe pipe;

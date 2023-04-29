@@ -10,6 +10,7 @@
 #include <QStringBuilder>
 #include <QByteArray>
 #include <QHash>
+#include <QMap>
 
 namespace Kryvo {
 
@@ -150,7 +151,7 @@ inline QHash<QByteArray, QByteArray> readHeader(QFile* file) {
 }
 
 inline void writeHeader(QSaveFile* file,
-                        const QHash<QByteArray, QByteArray>& headerData) {
+                        const QMap<QByteArray, QByteArray>& headerData) {
   file->write(QByteArrayLiteral("---------- Encrypted File ----------"));
   file->write(QByteArrayLiteral("\n"));
 
