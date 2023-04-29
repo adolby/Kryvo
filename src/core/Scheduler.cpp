@@ -5,7 +5,6 @@
 #include "cryptography/Crypto.hpp"
 #include "FileUtility.h"
 #include "Constants.hpp"
-#include <QSaveFile>
 #include <QTimer>
 #include <QStringBuilder>
 

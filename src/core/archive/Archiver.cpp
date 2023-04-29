@@ -16,9 +16,9 @@ class ArchiverPrivate {
  public:
   ArchiverPrivate(Archiver* archiver, SchedulerState* s);
 
-  int gzipDeflateFile(std::size_t id, QFile* source, QSaveFile* dest,
-                      int level = Z_DEFAULT_COMPRESSION);
-  int gzipInflateFile(std::size_t id, QFile* source, QSaveFile* dest);
+  int gzipDeflate(std::size_t id, QIODevice* source, QIODevice* dest,
+                  int level = Z_DEFAULT_COMPRESSION);
+  int gzipInflate(std::size_t id, QIODevice* source, QIODevice* dest);
   bool compressFile(std::size_t id, const Kryvo::CompressFileConfig& config);
   bool decompressFile(std::size_t id,
                       const Kryvo::DecompressFileConfig& config);
@@ -44,8 +44,8 @@ ArchiverPrivate::ArchiverPrivate(Archiver* archiver, SchedulerState* s)
    level is supplied, Z_VERSION_ERROR if the version of zlib.h and the
    version of the library linked do not match, or Z_ERRNO if there is
    an error reading or writing the files. */
-int ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
-                                     QSaveFile* dest, int level) {
+int ArchiverPrivate::gzipDeflate(const std::size_t id, QIODevice* source,
+                                 QIODevice* dest, int level) {
   Q_Q(Archiver);
   Q_ASSERT(state);
   Q_ASSERT(source);
@@ -155,8 +155,8 @@ int ArchiverPrivate::gzipDeflateFile(const std::size_t id, QFile* source,
    invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
    the version of the library linked do not match, or Z_ERRNO if there
    is an error reading or writing the files. */
-int ArchiverPrivate::gzipInflateFile(const std::size_t id, QFile* source,
-                                     QSaveFile* dest) {
+int ArchiverPrivate::gzipInflate(const std::size_t id, QIODevice* source,
+                                 QIODevice* dest) {
   Q_Q(Archiver);
   Q_ASSERT(state);
   Q_ASSERT(source);
@@ -312,8 +312,8 @@ bool ArchiverPrivate::compressFile(const std::size_t id,
     return false;
   }
 
-  const int ret = gzipDeflateFile(id, &inputFile, &outputFile,
-                                  Z_DEFAULT_COMPRESSION);
+  const int ret = gzipDeflate(id, &inputFile, &outputFile,
+                              Z_DEFAULT_COMPRESSION);
 
   if (ret != Z_OK) {
     emit q->errorMessage(Constants::messages[9], config.inputFileInfo);
@@ -373,7 +373,7 @@ bool ArchiverPrivate::decompressFile(
     return false;
   }
 
-  const int ret = gzipInflateFile(id, &inputFile, &outputFile);
+  const int ret = gzipInflate(id, &inputFile, &outputFile);
 
   if (ret != Z_OK) {
     emit q->errorMessage(Constants::messages[10], config.inputFileInfo);

@@ -4,7 +4,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
-#include <QFile>
 #include <QFileInfo>
 #include <QDir>
 #include <QStringBuilder>

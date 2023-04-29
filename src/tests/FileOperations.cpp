@@ -15,13 +15,13 @@ bool FileOperations::filesEqual(const QString& filePath1,
     return false;
   }
 
-  const bool file1Open = file1.open(QFile::ReadOnly);
+  const bool file1Open = file1.open(QIODevice::ReadOnly);
 
   if (!file1Open) {
     return false;
   }
 
-  const bool file2Open = file2.open(QFile::ReadOnly);
+  const bool file2Open = file2.open(QIODevice::ReadOnly);
 
   if (!file2Open) {
     return false;

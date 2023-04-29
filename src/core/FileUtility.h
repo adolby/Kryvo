@@ -3,9 +3,8 @@
 
 #include "Constants.hpp"
 #include <QDir>
-#include <QSaveFile>
 #include <QFileInfo>
-#include <QFile>
+#include <QIODevice>
 #include <QString>
 #include <QStringBuilder>
 #include <QByteArray>
@@ -29,7 +28,7 @@ inline int readConfigFile(const QFileInfo& fileInfo, QByteArray& outData) {
 
   QFile configFile(fileInfo.absoluteFilePath());
 
-  const bool configFileOpen = configFile.open(QFile::ReadOnly);
+  const bool configFileOpen = configFile.open(QIODevice::ReadOnly);
 
   if (!configFileOpen) {
     return -2;
@@ -107,11 +106,11 @@ inline QString uniqueFilePath(const QString& filePath) {
 }
 
 // Read header metadata from encrypted file
-inline QHash<QByteArray, QByteArray> readHeader(QFile* file) {
+inline QHash<QByteArray, QByteArray> readHeader(QIODevice* file) {
   QHash<QByteArray, QByteArray> headerData;
 
   // Read line but skip \n
-  auto readLine = [](QFile* file) {
+  auto readLine = [](QIODevice* file) {
     if (file) {
       QByteArray line = file->readLine();
       return line.replace(QByteArrayLiteral("\n"), QByteArrayLiteral(""));
@@ -150,7 +149,7 @@ inline QHash<QByteArray, QByteArray> readHeader(QFile* file) {
   return headerData;
 }
 
-inline void writeHeader(QSaveFile* file,
+inline void writeHeader(QIODevice* file,
                         const QMap<QByteArray, QByteArray>& headerData) {
   file->write(QByteArrayLiteral("---------- Encrypted File ----------"));
   file->write(QByteArrayLiteral("\n"));
