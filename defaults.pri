@@ -28,11 +28,11 @@ darwin {
 win32 {
   contains(QT_ARCH, x86_64) {
     isEmpty(OPENSSL_INCLUDE_PATH) {
-      OPENSSL_INCLUDE_PATH = %userprofile%/OpenSSLv3/Win_x64/include
+      OPENSSL_INCLUDE_PATH = $$(userprofile)\OpenSSLv3\Win_x64\include
     }
 
     isEmpty(OPENSSL_LIB_PATH) {
-      OPENSSL_LIB_PATH = %userprofile%/OpenSSLv3/Win_x64/lib
+      OPENSSL_LIB_PATH = $$(userprofile)\OpenSSLv3\Win_x64\lib
     }
   }
 }
