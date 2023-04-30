@@ -467,7 +467,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
   }
 
   rc = executeCipher(id, ctx, cipher, config.inputFileInfo, &inFile, &outFile,
-                     Kryvo::CryptDirection::Encrypt);
+                     Kryvo::CryptDirection::Decrypt);
 
   if (rc <= 0) {
     EVP_CIPHER_CTX_free(ctx);
@@ -482,6 +482,7 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
     emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
     emit q->fileFailed(id);
     EVP_CIPHER_CTX_free(ctx);
+    return -1;
   }
 
   // Set authentication tag obtained from encrypted file
