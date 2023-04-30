@@ -98,6 +98,38 @@ int deriveKeyAndIv(const QByteArray& passphrase,
   return rc;
 }
 
+int initCipherOperation(EVP_CIPHER_CTX* ctx, const EVP_CIPHER* cipher,
+                        const QByteArray& key, const QByteArray& iv,
+                        Kryvo::CryptDirection direction) {
+  const int cipherDirection = Kryvo::CryptDirection::Encrypt == direction ?
+                              1 :
+                              0;
+
+  // Initialize the cipher operation
+  int rc = EVP_CipherInit_ex(ctx, cipher, nullptr, nullptr, nullptr,
+                             cipherDirection);
+
+  if (rc <= 0) {
+    return rc;
+  }
+
+  // Set IV size
+  rc = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, ivSize, nullptr);
+
+  if (rc <= 0) {
+    return rc;
+  }
+
+  // Init key and IV
+  rc =
+    EVP_CipherInit_ex(ctx, nullptr, nullptr,
+                      reinterpret_cast<const unsigned char*>(key.constData()),
+                      reinterpret_cast<const unsigned char*>(iv.constData()),
+                      cipherDirection);
+
+  return rc;
+}
+
 QMap<QByteArray, QByteArray> buildHeader(
   const Kryvo::EncryptFileConfig& config, const QByteArray& salt) {
   QMap<QByteArray, QByteArray> headerData;
@@ -139,6 +171,13 @@ class OpenSslProviderPrivate {
   void init(SchedulerState* s);
   int encrypt(std::size_t id, const Kryvo::EncryptFileConfig& config);
   int decrypt(std::size_t id, const Kryvo::DecryptFileConfig& config);
+  int executeCipher(std::size_t id,
+                    EVP_CIPHER_CTX* ctx,
+                    const EVP_CIPHER* cipher,
+                    const QFileInfo& inputFileInfo,
+                    QIODevice* inFile,
+                    QIODevice* outFile,
+                    Kryvo::CryptDirection direction);
 
   OpenSslProvider* const q_ptr{nullptr};
 
@@ -231,7 +270,8 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
                              EVP_aes_256_gcm();
 
   // Initialize the encryption operation
-  rc = EVP_EncryptInit_ex(ctx, cipher, nullptr, nullptr, nullptr);
+  rc = initCipherOperation(ctx, cipher, key, iv,
+                           Kryvo::CryptDirection::Encrypt);
 
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
@@ -240,96 +280,17 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
     return rc;
   }
 
-  // Set IV size
-  rc = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, ivSize, nullptr);
+  rc = executeCipher(id, ctx, cipher, config.inputFileInfo, &inFile, &outFile,
+                     Kryvo::CryptDirection::Encrypt);
 
   if (rc <= 0) {
-    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
-    emit q->fileFailed(id);
     EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
-
-  // Init key and IV
-  rc =
-    EVP_EncryptInit_ex(
-      ctx, nullptr, nullptr,
-      reinterpret_cast<const unsigned char*>(key.constData()),
-      reinterpret_cast<const unsigned char*>(iv.constData()));
-
-  if (rc <= 0) {
-    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
-    emit q->fileFailed(id);
-    EVP_CIPHER_CTX_free(ctx);
-    return rc;
-  }
-
-  QByteArray inBuffer(chunkSize, Qt::Uninitialized);
 
   QByteArray outBuffer(chunkSize + EVP_CIPHER_get_block_size(cipher),
                        Qt::Uninitialized);
   int outSize = 0;
-
-  qint64 fileIndex = 0ll;
-  qint64 percent = -1;
-
-  while (!inFile.atEnd()) {
-    if (state->isCancelled() || state->isStopped(id)) {
-      emit q->errorMessage(Constants::messages[3], config.inputFileInfo);
-      emit q->fileFailed(id);
-      EVP_CIPHER_CTX_free(ctx);
-      return -1;
-    }
-
-    state->pauseWait(id);
-
-    if (state->isCancelled() || state->isStopped(id)) {
-      emit q->errorMessage(Constants::messages[3], config.inputFileInfo);
-      emit q->fileFailed(id);
-      EVP_CIPHER_CTX_free(ctx);
-      return -1;
-    }
-
-    const qint64 bytesRead = inFile.read(inBuffer.data(), inBuffer.size());
-
-    if (bytesRead < 0) {
-      emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
-      emit q->fileFailed(id);
-      EVP_CIPHER_CTX_free(ctx);
-      return -1;
-    }
-
-    fileIndex += bytesRead;
-
-    // Encrypt a block
-    rc =
-      EVP_EncryptUpdate(
-        ctx, reinterpret_cast<unsigned char*>(outBuffer.data()), &outSize,
-        reinterpret_cast<const unsigned char*>(inBuffer.constData()),
-        bytesRead);
-
-    if (rc <= 0) {
-      emit q->errorMessage(Constants::messages[8], config.inputFileInfo);
-      emit q->fileFailed(id);
-      EVP_CIPHER_CTX_free(ctx);
-      return rc;
-    }
-
-    outFile.write(outBuffer.constData(), outSize);
-
-    // Calculate progress in percent
-    const double fractionalProgress = static_cast<double>(fileIndex) /
-                                      static_cast<double>(inFile.size());
-
-    const double percentProgress = fractionalProgress * 100.0;
-
-    const int percentProgressInteger = static_cast<int>(percentProgress);
-
-    if (percentProgressInteger > percent && percentProgressInteger < 100) {
-      percent = percentProgressInteger;
-      emit q->fileProgress(id, QObject::tr("Encrypting"), percent);
-    }
-  }
 
   // Encrypt final block and finalize (doesn't actually encrypt data for GCM)
   rc = EVP_EncryptFinal_ex(ctx,
@@ -495,7 +456,8 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
                              EVP_aes_256_gcm();
 
   // Initialize the decryption operation
-  rc = EVP_DecryptInit_ex(ctx, cipher, nullptr, nullptr, nullptr);
+  rc = initCipherOperation(ctx, cipher, key, iv,
+                           Kryvo::CryptDirection::Decrypt);
 
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
@@ -504,103 +466,12 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
     return rc;
   }
 
-  // Set IV size
-  rc = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, ivSize, nullptr);
+  rc = executeCipher(id, ctx, cipher, config.inputFileInfo, &inFile, &outFile,
+                     Kryvo::CryptDirection::Encrypt);
 
   if (rc <= 0) {
-    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
-    emit q->fileFailed(id);
     EVP_CIPHER_CTX_free(ctx);
     return rc;
-  }
-
-  // Init key and IV
-  rc =
-    EVP_DecryptInit_ex(ctx, nullptr, nullptr,
-                       reinterpret_cast<const unsigned char*>(key.constData()),
-                       reinterpret_cast<const unsigned char*>(iv.constData()));
-
-  if (rc <= 0) {
-    emit q->errorMessage(Constants::messages[0], config.inputFileInfo);
-    emit q->fileFailed(id);
-    EVP_CIPHER_CTX_free(ctx);
-    return rc;
-  }
-
-  QByteArray inBuffer(chunkSize, Qt::Uninitialized);
-
-  QByteArray outBuffer(chunkSize + EVP_CIPHER_get_block_size(cipher),
-                       Qt::Uninitialized);
-  int outSize = 0;
-
-  const qint64 cipherTextEnd = inFile.size() - tagSize;
-  qint64 cipherTextIndex = inFile.pos(); // ciphertext data starts after header
-  qint64 percent = -1ll;
-
-  while (cipherTextIndex < cipherTextEnd) {
-    if (state->isCancelled() || state->isStopped(id)) {
-      emit q->errorMessage(Constants::messages[4], config.inputFileInfo);
-      emit q->fileFailed(id);
-      EVP_CIPHER_CTX_free(ctx);
-      return -1;
-    }
-
-    state->pauseWait(id);
-
-    if (state->isCancelled() || state->isStopped(id)) {
-      emit q->errorMessage(Constants::messages[4], config.inputFileInfo);
-      emit q->fileFailed(id);
-      EVP_CIPHER_CTX_free(ctx);
-      return -1;
-    }
-
-    const qint64 remainingBytes = cipherTextEnd - cipherTextIndex;
-
-    qint64 inBufferMaxSize = inBuffer.size();
-
-    if (remainingBytes < chunkSize) { // Last partial ciphertext chunk size
-      inBufferMaxSize = remainingBytes;
-    }
-
-    const qint64 bytesRead = inFile.read(inBuffer.data(), inBufferMaxSize);
-
-    if (bytesRead < 0) {
-      emit q->errorMessage(Constants::messages[5], config.inputFileInfo);
-      emit q->fileFailed(id);
-      EVP_CIPHER_CTX_free(ctx);
-      return -1;
-    }
-
-    cipherTextIndex += bytesRead;
-
-    // Decrypt a block
-    rc =
-      EVP_DecryptUpdate(
-        ctx, reinterpret_cast<unsigned char*>(outBuffer.data()), &outSize,
-        reinterpret_cast<const unsigned char*>(inBuffer.constData()),
-        bytesRead);
-
-    if (rc <= 0) {
-      emit q->errorMessage(Constants::messages[6], config.inputFileInfo);
-      emit q->fileFailed(id);
-      EVP_CIPHER_CTX_free(ctx);
-      return rc;
-    }
-
-    outFile.write(outBuffer, outSize);
-
-    // Calculate progress in percent
-    const double fractionalProgress = static_cast<double>(cipherTextIndex) /
-                                      static_cast<double>(cipherTextEnd);
-
-    const double percentProgress = fractionalProgress * 100.0;
-
-    const int percentProgressInteger = static_cast<int>(percentProgress);
-
-    if (percentProgressInteger > percent && percentProgressInteger < 100) {
-      percent = percentProgressInteger;
-      emit q->fileProgress(id, QObject::tr("Decrypting"), percent);
-    }
   }
 
   // Read tag from file
@@ -622,6 +493,10 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
     EVP_CIPHER_CTX_free(ctx);
     return rc;
   }
+
+  QByteArray outBuffer(chunkSize + EVP_CIPHER_get_block_size(cipher),
+                       Qt::Uninitialized);
+  int outSize = 0;
 
   // Decrypt last block and finalize (doesn't decrypt with GCM). Computes a tag
   // and checks it against the authentication tag that was computed during
@@ -657,6 +532,97 @@ int OpenSslProviderPrivate::decrypt(std::size_t id,
   emit q->fileCompleted(id);
 
   return rc;
+}
+
+int OpenSslProviderPrivate::executeCipher(std::size_t id,
+                                          EVP_CIPHER_CTX* ctx,
+                                          const EVP_CIPHER* cipher,
+                                          const QFileInfo& inputFileInfo,
+                                          QIODevice* inFile,
+                                          QIODevice* outFile,
+                                          Kryvo::CryptDirection direction) {
+  Q_Q(OpenSslProvider);
+
+  QByteArray inBuffer(chunkSize, Qt::Uninitialized);
+
+  QByteArray outBuffer(chunkSize + EVP_CIPHER_get_block_size(cipher),
+                       Qt::Uninitialized);
+  int outSize = 0;
+
+  const qint64 fileEnd = Kryvo::CryptDirection::Encrypt == direction ?
+                         inFile->size() :
+                         inFile->size() - tagSize;
+  qint64 fileIndex = inFile->pos(); // input data start position
+  qint64 percent = -1ll;
+
+  const QString encryptDecryptString =
+    Kryvo::CryptDirection::Encrypt == direction ?
+    QObject::tr("Encrypting") :
+    QObject::tr("Decrypting");
+
+  while (fileIndex < fileEnd) {
+    if (state->isCancelled() || state->isStopped(id)) {
+      emit q->errorMessage(Constants::messages[4], inputFileInfo);
+      emit q->fileFailed(id);
+      return -1;
+    }
+
+    state->pauseWait(id);
+
+    if (state->isCancelled() || state->isStopped(id)) {
+      emit q->errorMessage(Constants::messages[4], inputFileInfo);
+      emit q->fileFailed(id);
+      return -1;
+    }
+
+    const qint64 remainingBytes = fileEnd - fileIndex;
+
+    qint64 inBufferMaxSize = inBuffer.size();
+
+    if (remainingBytes < chunkSize) { // Last partial input chunk size
+      inBufferMaxSize = remainingBytes;
+    }
+
+    const qint64 bytesRead = inFile->read(inBuffer.data(), inBufferMaxSize);
+
+    if (bytesRead < 0) {
+      emit q->errorMessage(Constants::messages[5], inputFileInfo);
+      emit q->fileFailed(id);
+      return -1;
+    }
+
+    fileIndex += bytesRead;
+
+    // Encrypt or decrypt a block
+    int rc =
+      EVP_CipherUpdate(
+        ctx, reinterpret_cast<unsigned char*>(outBuffer.data()), &outSize,
+        reinterpret_cast<const unsigned char*>(inBuffer.constData()),
+        bytesRead);
+
+    if (rc <= 0) {
+      emit q->errorMessage(Constants::messages[6], inputFileInfo);
+      emit q->fileFailed(id);
+      return rc;
+    }
+
+    outFile->write(outBuffer, outSize);
+
+    // Calculate progress in percent
+    const double fractionalProgress = static_cast<double>(fileIndex) /
+                                      static_cast<double>(fileEnd);
+
+    const double percentProgress = fractionalProgress * 100.0;
+
+    const int percentProgressInteger = static_cast<int>(percentProgress);
+
+    if (percentProgressInteger > percent && percentProgressInteger < 100) {
+      percent = percentProgressInteger;
+      emit q->fileProgress(id, encryptDecryptString, percent);
+    }
+  }
+
+  return 1;
 }
 
 OpenSslProvider::OpenSslProvider(QObject* parent)
