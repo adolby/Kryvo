@@ -1,3 +1,6 @@
+v2.0.0
+- Add OpenSSL cryptography provider. Support Qt 6.
+
 v1.0.0
 - Add crypto plugins. Support Android and iOS.
 
