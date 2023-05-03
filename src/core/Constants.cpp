@@ -5,7 +5,7 @@
 
 namespace Kryvo {
 
-const QVersionNumber Constants::version({1, 1, 0});
+const QVersionNumber Constants::version({2, 0, 8});
 
 const QString Constants::dot = QStringLiteral(".");
 const QString Constants::encryptedFileExtension = QStringLiteral("enc");
