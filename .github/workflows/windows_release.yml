@@ -52,5 +52,5 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: true
           files: |
-            "${{ env.SOURCE_DIR }}\\build\\windows\\msvc\\x86_64\\release\\kryvo_${{ env.KRYVO_VERSION }}_windows_x86_64_portable.zip"
-            "${{ env.SOURCE_DIR }}\\installer\\windows\\x86_64\\kryvo_${{ env.KRYVO_VERSION }}_windows_x86_64_installer.exe"
+            "build/windows/msvc/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_windows_x86_64_portable.zip"
+            "installer/windows/x86_64/kryvo_${{ env.KRYVO_VERSION }}_windows_x86_64_installer.exe"

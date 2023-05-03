@@ -60,5 +60,5 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: true
           files: |
-            "${{ env.SOURCE_DIR }}/build/linux/gcc/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_linux_x86_64_portable.tar.gz"
-            "${{ env.SOURCE_DIR }}/installer/linux/x86_64/kryvo_${{ env.KRYVO_VERSION }}_linux_x86_64_installer"
+            "build/linux/gcc/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_linux_x86_64_portable.tar.gz"
+            "installer/linux/x86_64/kryvo_${{ env.KRYVO_VERSION }}_linux_x86_64_installer"

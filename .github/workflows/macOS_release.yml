@@ -59,4 +59,4 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: true
           files: |
-            "${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_macos.tar.gz"
+            "build/macOS/clang/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_macos.tar.gz"
