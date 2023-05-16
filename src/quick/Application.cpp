@@ -17,35 +17,6 @@
 
 namespace Kryvo {
 
-#if defined(Q_OS_ANDROID)
-#include <QtAndroid>
-
-bool checkPermissions() {
-  QtAndroid::PermissionResult result =
-    QtAndroid::checkPermission(
-      QStringLiteral("android.permission.WRITE_EXTERNAL_STORAGE"));
-
-  if (QtAndroid::PermissionResult::Denied == result) {
-    QStringList permissions;
-
-    permissions.append(
-      QStringLiteral("android.permission.WRITE_EXTERNAL_STORAGE"));
-
-    QtAndroid::requestPermissionsSync(permissions, 2000);
-
-    result =
-      QtAndroid::checkPermission(
-        QStringLiteral("android.permission.WRITE_EXTERNAL_STORAGE"));
-
-    if (QtAndroid::PermissionResult::Denied == result) {
-      return false;
-    }
-  }
-
-  return true;
-}
-#endif
-
 class ApplicationPrivate {
   Q_DISABLE_COPY(ApplicationPrivate)
   Q_DECLARE_PUBLIC(Application)
@@ -120,10 +91,6 @@ ApplicationPrivate::ApplicationPrivate(Application* app)
   scheduler.moveToThread(&schedulerThread);
 
   schedulerThread.start();
-
-#if defined(Q_OS_ANDROID)
-  checkPermissions();
-#endif
 }
 
 Application::Application(int& argc, char** argv)

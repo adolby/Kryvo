@@ -41,8 +41,6 @@ linux {
   android {
     message(Android)
 
-    QT += androidextras
-
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../../resources/android/package
 
     DISTFILES += \
@@ -66,18 +64,18 @@ linux {
 
       debug {
         message(Debug)
-        LIBS += -L$$PWD/../../build/android/armv7/debug/core -lcore
-        LIBS += -L$$PWD/../../build/android/armv7/debug/lib/zlib -lz
-        LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/botan -lbotan
-        LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/openssl -lopenssl
+        LIBS += -L$$PWD/../../build/android/armv7/debug/core -lcore_armeabi-v7a
+        LIBS += -L$$PWD/../../build/android/armv7/debug/lib/zlib -lz_armeabi-v7a
+        LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/botan -lbotan_armeabi-v7a
+        LIBS += -L$$PWD/../../build/android/armv7/debug/plugins/cryptography/openssl -lopenssl_armeabi-v7a
         DESTDIR = $$PWD/../../build/android/armv7/debug/quick
       }
       release {
         message(Release)
-        LIBS += -L$$PWD/../../build/android/armv7/release/core -lcore
-        LIBS += -L$$PWD/../../build/android/armv7/release/lib/zlib -lz
-        LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/botan -lbotan
-        LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/openssl -lopenssl
+        LIBS += -L$$PWD/../../build/android/armv7/release/core -lcore_armeabi-v7a
+        LIBS += -L$$PWD/../../build/android/armv7/release/lib/zlib -lz_armeabi-v7a
+        LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/botan -lbotan_armeabi-v7a
+        LIBS += -L$$PWD/../../build/android/armv7/release/plugins/cryptography/openssl -lopenssl_armeabi-v7a
         DESTDIR = $$PWD/../../build/android/armv7/release/quick
       }
     }
@@ -87,22 +85,23 @@ linux {
 
       debug {
         message(Debug)
-        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/core -lcore
-        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/lib/zlib -lz
-        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/plugins/cryptography/botan -lbotan
-        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/plugins/cryptography/openssl -lopenssl
-
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/core -lcore_arm64-v8a
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/lib/zlib -lz_arm64-v8a
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/plugins/cryptography/botan -lbotan_arm64-v8a
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/debug/plugins/cryptography/openssl -lopenssl_arm64-v8a
         DESTDIR = $$PWD/../../build/android/arm64_v8a/debug/quick
       }
       release {
         message(Release)
-        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/core -lcore
-        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/lib/zlib -lz
-        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/plugins/cryptography/botan -lbotan
-        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/plugins/cryptography/openssl -lopenssl
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/core -lcore_arm64-v8a
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/lib/zlib -lz_arm64-v8a
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/plugins/cryptography/botan -lbotan_arm64-v8a
+        LIBS += -L$$PWD/../../build/android/arm64_v8a/release/plugins/cryptography/openssl -lopenssl_arm64-v8a
         DESTDIR = $$PWD/../../build/android/arm64_v8a/release/quick
       }
     }
+
+    LIBS += -L$${OPENSSL_LIB_PATH} -lcrypto
   } # End android
 
   linux-clang {

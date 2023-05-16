@@ -65,7 +65,7 @@ linux {
   android {
     message(Android)
 
-    ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../resources/android
+    ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../../resources/android
 
     contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
       message(armeabi-v7a)
