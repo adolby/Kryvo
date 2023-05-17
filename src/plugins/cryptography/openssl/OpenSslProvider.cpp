@@ -237,7 +237,13 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
   }
 
   QByteArray salt(saltSize, Qt::Uninitialized);
-  RAND_bytes((unsigned char*)salt.data(), salt.size());
+  int rc = RAND_bytes((unsigned char*)salt.data(), salt.size());
+
+  if (rc <= 0) { // Critical failure: Not enough entropy in PRNG
+    emit q->errorMessage(Constants::messages[13], config.inputFileInfo);
+    emit q->fileFailed(id);
+    return rc;
+  }
 
   const QMap<QByteArray, QByteArray> headerData = buildHeader(config, salt);
   writeHeader(&outFile, headerData);
@@ -248,8 +254,8 @@ int OpenSslProviderPrivate::encrypt(std::size_t id,
 
   QByteArray key(keySizeInBytes, Qt::Uninitialized);
   QByteArray iv(ivSize, Qt::Uninitialized);
-  int rc = deriveKeyAndIv(passphrase, keySizeInBytes, salt, pbkdfIterations,
-                          key, iv);
+  rc = deriveKeyAndIv(passphrase, keySizeInBytes, salt, pbkdfIterations, key,
+                      iv);
 
   if (rc <= 0) {
     emit q->errorMessage(Constants::messages[0], config.inputFileInfo);

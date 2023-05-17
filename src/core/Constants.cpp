@@ -33,7 +33,9 @@ const QStringList Constants::messages {
   QObject::tr("Decompression stopped. File %1 not fully decompressed."), // 10
   QObject::tr("Error: No encryption providers found."), // 11
   QObject::tr("Encryption/decryption is already in progress. Please wait until "
-              "the current operation finishes.") // 12
+              "the current operation finishes."), // 12
+  QObject::tr("Error: Cryptographic provider random number generator didn't "
+              "have enough entropy. Try encrypting file %1 again now.") // 13
 };
 
 } // namespace Kryvo
