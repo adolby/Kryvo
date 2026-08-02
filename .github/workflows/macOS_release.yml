@@ -43,8 +43,8 @@ jobs:
       - name: (4) Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: "kryvo_${{ env.KRYVO_VERSION }}_macos.tar.gz"
-          path: "${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_macos.tar.gz"
+          name: "kryvo_${{ env.KRYVO_VERSION }}_macos.dmg"
+          path: "${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_macos.dmg"
 
       - name: (5) Create release
         uses: softprops/action-gh-release@v1
@@ -52,4 +52,4 @@ jobs:
           draft: false
           prerelease: false
           fail_on_unmatched_files: true
-          files: ${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_macos.tar.gz
+          files: ${{ env.SOURCE_DIR }}/build/macOS/clang/x86_64/release/kryvo_${{ env.KRYVO_VERSION }}_macos.dmg
